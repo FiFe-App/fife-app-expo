@@ -15,6 +15,9 @@ export default function Index() {
       <Link href='/mapTest' asChild>
         <Button mode='contained'>Térkép kereső</Button>
       </Link>
+      <Link href='/loginTest' asChild>
+        <Button mode='contained'>Bejelentkezés</Button>
+      </Link>
       <Link href='/notfound' asChild>
         <Button>Eltévedek</Button>
       </Link>

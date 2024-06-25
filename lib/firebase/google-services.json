@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "235592798960",
+    "firebase_url": "https://fife-app-default-rtdb.firebaseio.com",
+    "project_id": "fife-app",
+    "storage_bucket": "fife-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:235592798960:android:967d67c71e3983b9f82835",
+        "android_client_info": {
+          "package_name": "com.kristofakos.fifeapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "235592798960-569b3pqlsjhdau0qkm2520ohkr0mdcsv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kristofakos.fifeapp",
+            "certificate_hash": "449ffe37704bbd6e33efd82ca15d4d1584a225e8"
+          }
+        },
+        {
+          "client_id": "235592798960-k4e5pdo6ne5tt09bmaak6qg220prrmp7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCI1DvXl3kMgwRjslrLbmbFhHdlNEB70s8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "235592798960-k4e5pdo6ne5tt09bmaak6qg220prrmp7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
