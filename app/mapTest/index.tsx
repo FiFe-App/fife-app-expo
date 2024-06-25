@@ -38,13 +38,13 @@ export default function Index() {
         <Modal visible={visible} onDismiss={hideModal} contentContainerStyle={containerStyle} style={{}}>
           <MapSelector data={circle} setData={setCircle} searchEnabled/>
         </Modal>
-      </Portal>
-      <ThemedView style={styles.container}>      
+      </Portal>      
         <Button style={{marginBottom: 30}} onPress={showModal} mode='contained'>
           Válassz környéket
         </Button>
         {placeName ? <ThemedText>Kiválasztott környék: {placeName} és {circle?.radiusDisplay}-es körzete.</ThemedText> : <ThemedText>Nincs kiválasztva hely.</ThemedText>}
 
+      <ThemedView style={styles.container}>
       </ThemedView>
 
     </View>
