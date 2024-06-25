@@ -1,12 +1,12 @@
 import MapSelector from "@/components/MapSelector/MapSelector";
 import { MapCircleType } from "@/components/MapSelector/MapSelector.types";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import axios from "axios";
 import { useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { Modal, Card, PaperProvider, Portal, Text, Button } from "react-native-paper";
-import axios from "axios";
-import { ThemedView } from "@/components/ThemedView";
-import { ThemedText } from "@/components/ThemedText";
+import { Button, Modal, Portal } from "react-native-paper";
 
 export default function Index() {
   const [circle, setCircle] = useState<MapCircleType|undefined>(undefined);

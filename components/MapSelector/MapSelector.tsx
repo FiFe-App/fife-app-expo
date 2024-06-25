@@ -1,17 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
-import { MapView, Details, Region, Marker, Camera } from '../mapView/mapView';
-import { MapCircleType, MapSelectorProps } from './MapSelector.types';
-import styles from '../mapView/style';
 import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
-import MyLocationIcon from '../../assets/images/myLocationIcon'
-import { Button, FAB, IconButton, SegmentedButtons } from 'react-native-paper';
-import { useNavigation } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { Text, TextInput, View } from 'react-native';
+import { Button, FAB, IconButton } from 'react-native-paper';
+import MyLocationIcon from '../../assets/images/myLocationIcon';
+import { Camera, Details, MapView, Marker, Region } from '../mapView/mapView';
+import styles from '../mapView/style';
+import { MapCircleType, MapSelectorProps } from './MapSelector.types';
 
 
 const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
-    const navigation  = useNavigation()
     const [search, setSearch] = useState<string>('');
     const [mapHeight, setMapHeight] = useState<number>(0);
     const circleSize = mapHeight/3;
@@ -145,6 +143,7 @@ const MapSelector = ({style,searchEnabled,data,setData}:MapSelectorProps) => {
             <IconButton icon="plus" style={{borderBottomLeftRadius:0,borderBottomRightRadius:0,margin:0}} onPress={()=>zoom(1)} mode='contained-tonal'/>
             <IconButton icon="minus" style={{borderTopLeftRadius:0,borderTopRightRadius:0,margin:0}} onPress={()=>zoom(-1)} mode='contained-tonal'/>
         </View>
+        {errorMsg}
         <View style={{width:'100%',alignItems:'center'}}>
             <Button mode='contained' style={styles.submit} onPress={onSubmit}>
                 <Text>Helyzet mentése</Text>

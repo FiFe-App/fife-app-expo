@@ -2,7 +2,6 @@ import FirebaseProvider from '@/lib/firebase/firebase';
 import { persistor, store } from "@/lib/redux/store";
 import { NativeStackHeaderProps } from '@react-navigation/native-stack/lib/typescript/src/types';
 import { Stack, useNavigation } from "expo-router";
-import { useEffect } from 'react';
 import { Appbar, PaperProvider } from 'react-native-paper';
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";

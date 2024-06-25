@@ -3,23 +3,18 @@ import {
     AuthCredential,
     createUserWithEmailAndPassword,
     FacebookAuthProvider,
-    fetchSignInMethodsForEmail,
     getAuth,
-    linkWithCredential,
     sendPasswordResetEmail,
     signInWithEmailAndPassword,
     signInWithPopup,
-    signOut,
-    UserCredential
+    signOut
 } from 'firebase/auth';
 import { createContext, ReactElement } from 'react';
 
 import { FirebaseApp, FirebaseError, getApp } from 'firebase/app';
 import { Database, get, getDatabase, ref } from 'firebase/database';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
-import { RootState } from '../redux/store';
-import { UserState } from '../redux/store.type';
 import { setName, setUserData, login as sliceLogin, logout as sliceLogout } from '../redux/userReducer';
 import { app } from './firebaseConfig';
 
@@ -42,23 +37,19 @@ interface type {
 }
 
 
-const ctx = ({ children }:{children:ReactElement}) => {
+const Context = ({ children }:{children:ReactElement}) => {
     const dispatch = useDispatch()
-
-    const { uid, name }: UserState = useSelector(
-        (state: RootState) => state.user
-    );
 
     const forgotPassword = async (email:string) => {
         const retApp = getApp()
         const a = getAuth(retApp)
-        if (!email || email == '') return 'Email nélkül nem tudjuk visszaállítani a jelszavad'
+        if (!email || email === '') return 'Email nélkül nem tudjuk visszaállítani a jelszavad'
         return sendPasswordResetEmail(a,email).then(res=>{
             return 'Küldtünk egy emailt, amivel vissza tudod állítani a fiókodat a rendes kerékvágásba!\n(Nézd meg a spam mappát is!)'
         }).catch(err=>{
             console.log(err);
             console.log(err.code);
-            if (err.code == 'auth/invalid-email')
+            if (err.code === 'auth/invalid-email')
                 return 'Ez az email-cím nem szerepel a rendszerben:(';
             return 'Aj-aj hiba történt! Próbáld meg később légyszi'
         })
@@ -94,7 +85,7 @@ const ctx = ({ children }:{children:ReactElement}) => {
             if (firstLogin) {
                 const user = getAuth(getApp()).currentUser;
                 console.log(user);
-                if (user == null) {
+                if (user === null) {
                     console.log('USER NULL');
                     return
                 }
@@ -122,13 +113,13 @@ const ctx = ({ children }:{children:ReactElement}) => {
             const errorCode = error.code;
             const errorMessage = error.message;
         
-            if (errorCode == 'auth/invalid-email' || errorCode == 'auth/user-not-found')
+            if (errorCode === 'auth/invalid-email' || errorCode === 'auth/user-not-found')
                 response = {error:'Bakfitty! Nem jó az email cím, amit megadtál!'};
-            else if (errorCode == 'auth/internal-error')
+            else if (errorCode === 'auth/internal-error')
                 response = {error:'Azáldóját! A szerveren hiba történt, próbáld újra!'};
-            else if (errorCode == 'auth/wrong-password')
+            else if (errorCode === 'auth/wrong-password')
                 response = {error:'Azt a hét meg a nyolcát! Lehet elírtad a jelszavad.'};
-            else if (errorCode == 'auth/too-many-requests')
+            else if (errorCode === 'auth/too-many-requests')
                 response = {error:'Hoppá! Túl sokszor próbáltál bejelentkezni, próbálkozz később!'};
             else
                 response = {error:'error: ' + errorCode + ' - ' + errorMessage};
@@ -150,11 +141,11 @@ const ctx = ({ children }:{children:ReactElement}) => {
             .catch((error) => {
                 const errorCode = error.code;
                 const errorMessage = error.message;
-                if (errorCode == 'auth/invalid-email')
+                if (errorCode === 'auth/invalid-email')
                     response = {error:'Nem jó az email, amit megadtál :('};
-                else if (errorCode == 'auth/weak-password')
+                else if (errorCode === 'auth/weak-password')
                     response = {error:'A jelszavad nem elég bonyi\nlegyen legalább 6 karakter'};
-                else if (errorCode == 'auth/wrong-password')
+                else if (errorCode === 'auth/wrong-password')
                     response = {error:'Rossz jelszavat adtál meg :/'};
                 else
                     response = {error:'error: ' + errorCode + ' - ' + errorMessage};
@@ -166,6 +157,8 @@ const ctx = ({ children }:{children:ReactElement}) => {
             } catch (err) {
                 console.log('set error',err);
             }
+        console.log(userCredential);
+        
         return response
     }
 
@@ -174,9 +167,8 @@ const ctx = ({ children }:{children:ReactElement}) => {
         let response = null
         auth.languageCode = 'hu';
         console.log('fb-login');
-        let email;
         // Step 1: User tries to sign in using Facebook.
-        let result = await signInWithPopup(auth, new FacebookAuthProvider()).then((res)=>{
+        await signInWithPopup(auth, new FacebookAuthProvider()).then((res)=>{
             console.log('facebook login success',res);
         }).catch(async (error:FirebaseError)=>{
 
@@ -186,10 +178,10 @@ const ctx = ({ children }:{children:ReactElement}) => {
             if (error.code === "auth/account-exists-with-different-credential") {
                 // The pending Facebook credential.
                 if (error.customData?.email) {
-                    const credential = FacebookAuthProvider.credentialFromError(
+                    FacebookAuthProvider.credentialFromError(
                         error
                     ) as AuthCredential;
-                    const email = error.customData?.email
+                    //const email = error.customData?.email
                 }
             }
 
@@ -212,7 +204,7 @@ const ctx = ({ children }:{children:ReactElement}) => {
 
 }
 
-export default ctx;
+export default Context;
 
 const FirebaseContext = createContext<type>({}as type)
 export { FirebaseContext };

@@ -2,8 +2,8 @@ import { FirebaseContext } from "@/lib/firebase/firebase";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { useContext, useState } from "react";
-import { StyleSheet, View } from "react-native";
-import { Button, Icon, Text, TextInput } from "react-native-paper";
+import { View } from "react-native";
+import { Button, Text, TextInput } from "react-native-paper";
 import { useSelector } from "react-redux";
 
 export default function Index() {
