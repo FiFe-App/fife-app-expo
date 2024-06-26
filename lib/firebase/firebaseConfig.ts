@@ -3,7 +3,6 @@ import { initializeApp } from "firebase/app";
 import firebaseAuth, { getAuth, setPersistence, browserSessionPersistence,  } from "firebase/auth";
 import { Platform } from "react-native";
 
-const reactNativePersistence = (firebaseAuth as any).getReactNativePersistence;
 
 
 export const firebaseConfig = {
@@ -20,6 +19,7 @@ export const app = initializeApp(firebaseConfig);
 
 let persistance;
 if (Platform.OS !== 'web') {
+  const reactNativePersistence = (firebaseAuth as any).getReactNativePersistence;
   persistance = reactNativePersistence(AsyncStorage)
 } else {
   persistance = browserSessionPersistence
