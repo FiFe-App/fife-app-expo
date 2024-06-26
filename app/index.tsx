@@ -18,6 +18,9 @@ export default function Index() {
       <Link href='/loginTest' asChild>
         <Button mode='contained'>Bejelentkezés</Button>
       </Link>
+      <Link href='/commentsTest' asChild>
+        <Button mode='contained'>Kommentek</Button>
+      </Link>
       <Link href='/notfound' asChild>
         <Button>Eltévedek</Button>
       </Link>

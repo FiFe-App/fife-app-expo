@@ -1,9 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { initializeApp } from "firebase/app";
-import firebaseAuth, { getAuth, setPersistence, browserSessionPersistence,  } from "firebase/auth";
+import * as firebaseAuth from "firebase/auth";
 import { Platform } from "react-native";
 
-const reactNativePersistence = (firebaseAuth as any).getReactNativePersistence;
 
 
 export const firebaseConfig = {
@@ -18,13 +17,17 @@ export const firebaseConfig = {
 };
 export const app = initializeApp(firebaseConfig);
 
-let persistance;
+let persistence;
 if (Platform.OS !== 'web') {
-  persistance = reactNativePersistence(AsyncStorage)
+  const reactNativePersistence = (firebaseAuth as any).getReactNativePersistence;
+  persistence = reactNativePersistence(AsyncStorage)
 } else {
-  persistance = browserSessionPersistence
+  persistence = firebaseAuth.browserSessionPersistence
 }
-setPersistence(getAuth(),persistance);
+
+export const auth = firebaseAuth.initializeAuth(app,{
+  persistence
+})
 
 
 
