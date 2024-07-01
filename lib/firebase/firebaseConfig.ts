@@ -20,7 +20,7 @@ export const app = initializeApp(firebaseConfig);
 let persistence;
 if (Platform.OS !== 'web') {
   const reactNativePersistence = (firebaseAuth as any).getReactNativePersistence;
-  persistence = reactNativePersistence(AsyncStorage)
+  persistance = reactNativePersistence(AsyncStorage)
 } else {
   persistence = firebaseAuth.browserSessionPersistence
 }
