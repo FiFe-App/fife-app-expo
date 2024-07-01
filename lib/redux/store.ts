@@ -1,9 +1,11 @@
-import userReducer from './userReducer'
+import userReducer from './reducers/userReducer'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { persistStore, persistReducer } from 'redux-persist'
 import { AnyAction, combineReducers, configureStore } from '@reduxjs/toolkit'
+import commentsReducer from './reducers/commentsReducer';
 
 export const rootReducer = combineReducers({
+  comments2: commentsReducer,
   user: userReducer,
 });
 

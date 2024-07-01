@@ -1,41 +1,99 @@
+import elapsedTime from '@/lib/functions/elapsedTime';
+import { addComment, clearComments, editComment, deleteComment as deleteCommentSlice } from '@/lib/redux/reducers/commentsReducer';
 import { RootState } from '@/lib/redux/store';
-import { UserState } from '@/lib/redux/store.type';
+import { CommentsState, UserState } from '@/lib/redux/store.type';
+import * as ExpoImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { getDatabase, limitToLast, off, onChildAdded, push, query, ref, set } from 'firebase/database';
+import { ref as dbRef, getDatabase, limitToLast, off, onChildAdded, onChildChanged, push, query, remove, set } from 'firebase/database';
+import { deleteObject, getDownloadURL, getStorage, ref as storageRef, uploadBytes } from 'firebase/storage';
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { ActivityIndicator, Button, TextInput } from 'react-native-paper';
-import { useSelector } from 'react-redux';
+import { GestureResponderEvent, ImageBackground, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Button, IconButton, Menu, TextInput } from 'react-native-paper';
+import { useDispatch, useSelector } from 'react-redux';
+import FirebaseImage from '../FirebaseImage';
 import UrlText from './UrlText';
+import { Comment, CommentsProps } from './comments.types';
 
-interface CommentsProps {
-    path: string;
-    placeholder: string;
-    limit: number;
-}
-
-const Comments = ({path,placeholder,limit}:CommentsProps) => {
-    const [list, setList] = useState<Array<any>>([]);
+const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
+    const dispatch = useDispatch();
     const navigation = router;
-    const [width, setWidth] = useState(0);
-    
+
     const { uid, name }: UserState = useSelector(
         (state: RootState) => state.user
     );
+    const { comments }: CommentsState = useSelector(
+        (state: RootState) => state.comments2
+    );
     const [author, setAuthor] = useState(name);
     const [text, setText] = useState('');
+    const [image, setImage] = useState('');
     const [loading, setLoading] = useState(false);
     const [downloading, setDownloading] = useState(true);
+    const [showMenu, setShowMenu] = useState(false);
+    const [menuAnchor, setMenuAnchor] = useState<{x:number;y:number;comment:Comment}|null>(null);
     const db = getDatabase()
 
+    useEffect(() => {
+        dispatch(clearComments());
+
+        const q = limit ? query(dbRef(db,path),limitToLast(limit)) : dbRef(db,path)
+        
+        onChildAdded(q, (data) => {
+            console.log('ADDED');
+            
+            dispatch(addComment({
+                ...data.val(),
+                key: data.key
+            }))
+            setDownloading(false)
+        });
+
+        onChildChanged(q,(data)=>{
+            dispatch(editComment({
+                ...data.val(),
+                key: data.key
+            }))
+        })
+        
+
+        setTimeout(() => {
+            setDownloading(false)    
+        }, 3000);
+        return (()=>{
+            off(q,'child_added')
+        })
+    }, [db, dispatch, limit, path]);
+
+    const openMenu = () => setShowMenu(true);
+    const closeMenu = () => setShowMenu(false);
+
+    const pickImage = async () => {
+        let result = await ExpoImagePicker.launchImageLibraryAsync({
+            mediaTypes: ExpoImagePicker.MediaTypeOptions.All,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1
+        });
+
+        if (!result?.canceled) {
+            setImage(result.assets[0].uri);
+        } else console.log('cancelled');
+    };
     const handleSend = async () => {
-        if (author && text) {
+        if (author && text && uid) {
             setLoading(true)
-            const newPostRef = push(ref(db,path))
+            const newPostRef = push(dbRef(db,path))
             set(newPostRef ,{
-                author,text,uid
+                author,
+                text,
+                date:Date.now(),
+                uid
             })
-            .then(res=>{
+            .then(async (res)=>{
+                if (image && newPostRef.key) {
+                    await uploadImage(path,newPostRef.key)
+                    setImage('');
+                }
                 setLoading(false)
                 setText('')
             }).catch(err=>{
@@ -43,33 +101,124 @@ const Comments = ({path,placeholder,limit}:CommentsProps) => {
             })
         }
     }
-
-    useEffect(() => {
-        setList([])
-
-        const q = limit ? query(ref(db,path),limitToLast(limit)) : ref(db,path)
+    const uploadImage = async (storagePath:string,key:string) => {
         
-        onChildAdded(q, (data) => {
-            setList(old => [data.val(),...old])
-            setDownloading(false)
+        let localUri = image;
+        let fileName = localUri.split('/').pop() || '';
+
+        let match = /\.(\w+)$/.exec(fileName);
+        let type = match ? `image/${match[1]}` : 'image';
+
+        let formData = new FormData();
+        const file = new File([localUri], fileName, {
+            type
         });
-        setTimeout(() => {
-            setDownloading(false)    
-        }, 3000);
-        return (()=>{
-            off(ref(db,path),'child_added')
+        formData.append('image', file);
+
+        const blob:Blob = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.onload = function () {
+              resolve(xhr.response);
+            };
+            xhr.onerror = function (e) {
+              console.log(e);
+            reject(new TypeError('Network request failed'));
+            };
+            xhr.responseType = 'blob';
+            xhr.open('GET', localUri, true);
+            xhr.send(null);
+        });
+
+        const storage = getStorage();
+        const imageStorageRef = storageRef(storage, storagePath+'/'+key+'/'+fileName);
+
+        const upload = await uploadBytes(imageStorageRef, blob)
+        .then(async (snapshot) => {
+
+            return await getDownloadURL(imageStorageRef)
+                .then(async (imageUrl) => {
+                    const imageUpdateRef = dbRef(db,storagePath+'/'+key+'/fileName');
+                    
+                    return await set(imageUpdateRef,fileName).then(res2=>{
+                        console.log('DB update with image success',key);
+                        return fileName;
+                    }).catch(err=>{
+                        console.log('DB update with image error',err);
+                    })
+                })
+                .catch(error => {
+                    console.log('err',image);
+                })
         })
-    }, [db, limit, path]);
+        .catch(error => console.error(error));
+
+        return upload;
+    };
+
+    const showCommentMenu = (event: GestureResponderEvent,comment: Comment) => {
+        const { nativeEvent } = event;
+        
+        const anchor = {
+            x: nativeEvent.pageX,
+            y: nativeEvent.pageY,
+            comment
+        };
+
+        setMenuAnchor(anchor);
+        openMenu();
+    }
+    const deleteComment = (comment:Comment) => {
+        const deleteRef = dbRef(db,path+'/'+comment.key);
+
+        remove(deleteRef).then(res=>{
+            console.log(res);
+            setMenuAnchor(null);
+            dispatch(deleteCommentSlice(comment.key))
+            if (comment.fileName !== '')
+                removeImage(comment);
+            //TODO TOAST
+        }).catch(err=>{
+            console.log(err);
+            setMenuAnchor(null);
+            
+        })
+    }
+    const removeImage = (comment:Comment) => {
+        const storage = getStorage();
+        
+        const imageRef = storageRef(storage, path+'/'+comment.key+'/'+comment.fileName);
+        deleteObject(imageRef).then(() => {
+            console.log('image deleted');
+            
+        }).catch((error) => {
+        // Uh-oh, an error occurred!
+            console.log('image delete error',error);
+            
+        })
+    }
+    const dismissImage = () => {
+        setImage('');
+    }
+
+    console.log(comments);
+    
 
     return (
-        <View style={[{}]} onLayout={(e)=>setWidth(e.nativeEvent.layout.width)}>
+        <View>
                 <View style={{flexDirection:'row'}}>
                     <View style={{flexGrow:1}}>
                         {!name && <TextInput style={{}} value={author} onChangeText={setAuthor} placeholder="Név"/>}
                         <TextInput style={{}} value={text} 
                         onChangeText={setText} 
+                        onSubmitEditing={handleSend}
                         placeholder={(placeholder) ? placeholder : 'Kommented'}/>
                     </View>
+                    {image ? 
+                        <ImageBackground source={{uri:image}}>
+                            <IconButton icon='close' onPress={dismissImage}/>
+                        </ImageBackground>
+                        :<IconButton icon='image' onPress={pickImage}/>
+                    }
                     <Button icon="arrow-left-bottom-bold"
                     onPress={handleSend} disabled={!author || !text} style={{height:'100%',margin:0}}
                         loading={loading}
@@ -77,25 +226,48 @@ const Comments = ({path,placeholder,limit}:CommentsProps) => {
                         <Text>Küldés</Text>
                     </Button>
                 </View>
-                <Text style={{marginLeft:10,marginTop:10}}>Kommentek:</Text>
-                {!!list?.length &&<ScrollView style={{padding:5}} contentContainerStyle={{flexWrap:'wrap',flexDirection:'row'}}>
-                    {list.map((comment,ind)=>{
+                <View style={{flexDirection:'row',padding:10}}>
+                    <Text style={{flex:1}}>Kommentek:</Text>
+                    <Text>Újabbak elöl</Text>
 
+                </View>
+                {!!comments?.length &&<ScrollView style={{padding:5}} contentContainerStyle={{flexWrap:'wrap',flexDirection:'row'}}>
+                    {comments.map((comment,ind)=>{
                         return (
-                            <View key={'comment'+ind} style={[{backgroundColor:'white',padding:5,margin:5,maxWidth:'100%'}]}>
+                            <Pressable key={'comment'+ind} style={[{backgroundColor:'white',padding:5,margin:5,maxWidth:'100%'}]} 
+                            onLongPress={(e)=>showCommentMenu(e,comment)} >
                                 <Pressable onPress={()=>{
                                     if (comment?.uid)
                                         navigation.push({pathname:'profil',params:{uid:comment.uid}})
                                     }}>
-                                    <Text>{comment.author}</Text>
+                                    <Text>
+                                        <Text style={{fontWeight:'bold'}}>{comment.author}</Text>
+                                        <Text> {elapsedTime(comment.date)}</Text>
+                                    </Text>
                                 </Pressable>
                                 <UrlText text={comment.text} />
-                            </View>
+                                {comment.fileName && <FirebaseImage path={path+'/'+comment.key+'/'+comment.fileName} style={{width:'100%',height:100}} />}
+                            </Pressable>
                         )
                     })}
                 </ScrollView>}
+
+
+
+                {menuAnchor && <Menu
+                    visible={showMenu}
+                    onDismiss={closeMenu}
+                    anchor={menuAnchor}
+                >
+                    {menuAnchor.comment?.uid === uid ? <>
+                        <Menu.Item onPress={()=>deleteComment(menuAnchor.comment)} title="Törlés" leadingIcon="delete" /></>
+                    : <>
+                    <Menu.Item onPress={() => {}} title="Feljelentem" leadingIcon="alert" disabled />
+                    <Menu.Item onPress={() => {}} title={menuAnchor.comment?.author + " profilja"} leadingIcon="account" disabled />
+                    </>}
+                </Menu>}
                 {downloading ? <ActivityIndicator /> :
-                !list?.length && <Text style={{padding:20}}>Még nem érkezett komment</Text>}
+                !comments?.length && <Text style={{padding:20}}>Még nem érkezett komment</Text>}
         </View>)
 }
 

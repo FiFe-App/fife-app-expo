@@ -1,5 +1,5 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit'
-import { UserState } from './store.type';
+import { UserState } from '../store.type';
 
 const initialState: UserState = {
   uid: undefined,
@@ -11,7 +11,7 @@ const userReducer = createSlice({
   initialState,
   name: 'user',
   reducers: {
-    init: (state, { payload }: PayloadAction<string>) => {
+    init: (state:UserState, {payload}:PayloadAction<string>) => {
       if (!state.uid) {
         const uid = payload
         if (uid) state.uid = uid

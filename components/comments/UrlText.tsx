@@ -2,11 +2,11 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { Linking, Pressable, Text } from "react-native";
 
-const UrlText = ({text="asd asd www.fifeapp.hu adsas d"}) => {
+const UrlText = ({text=""}:{text:string}) => {
     const regex = /(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?/g
     const arr = text.match(regex);
     
-    const [result, setResult ] = useState<Array<any>|null>(null);
+    const [result, setResult ] = useState<any[]|null>(null);
     const makeText = () => {
         let list:any[] = [];
         let pre = 0;

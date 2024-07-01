@@ -15,7 +15,7 @@ import { FirebaseApp, FirebaseError, getApp } from 'firebase/app';
 import { Database, get, getDatabase, ref } from 'firebase/database';
 import { useDispatch } from 'react-redux';
 
-import { setName, setUserData, login as sliceLogin, logout as sliceLogout } from '../redux/userReducer';
+import { setName, setUserData, login as sliceLogin, logout as sliceLogout } from '../redux/reducers/userReducer';
 import { app } from './firebaseConfig';
 
 interface SuccessOrError {
