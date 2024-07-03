@@ -15,7 +15,7 @@ import { FirebaseApp, FirebaseError, getApp } from 'firebase/app';
 import { Database, get, getDatabase, ref } from 'firebase/database';
 import { useDispatch } from 'react-redux';
 
-import { setName, setUserData, login as sliceLogin, logout as sliceLogout } from '../redux/reducers/userReducer';
+import { setUserData, login as sliceLogin, logout as sliceLogout } from '../redux/reducers/userReducer';
 import { app } from './firebaseConfig';
 
 interface SuccessOrError {
@@ -101,7 +101,7 @@ const Context = ({ children }:{children:ReactElement}) => {
             const nameRef = ref(getDatabase(getApp()),'users/' + user.uid + '/data/name');
             get(nameRef).then((snapshot) => {
             if (snapshot.exists()) {
-                dispatch(setName(snapshot.val()))
+                //dispatch(setName(snapshot.val()))
                 console.log(snapshot.val());
             }
             

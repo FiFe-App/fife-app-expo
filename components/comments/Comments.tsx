@@ -1,3 +1,7 @@
+import React, { useEffect, useState } from 'react';
+import { GestureResponderEvent, ImageBackground, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Button, IconButton, Menu, TextInput } from 'react-native-paper';
+import { useDispatch, useSelector } from 'react-redux';
 import elapsedTime from '@/lib/functions/elapsedTime';
 import { addComment, clearComments, editComment, deleteComment as deleteCommentSlice } from '@/lib/redux/reducers/commentsReducer';
 import { RootState } from '@/lib/redux/store';
@@ -6,10 +10,6 @@ import * as ExpoImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { ref as dbRef, getDatabase, limitToLast, off, onChildAdded, onChildChanged, push, query, remove, set } from 'firebase/database';
 import { deleteObject, getDownloadURL, getStorage, ref as storageRef, uploadBytes } from 'firebase/storage';
-import React, { useEffect, useState } from 'react';
-import { GestureResponderEvent, ImageBackground, Pressable, ScrollView, Text, View } from 'react-native';
-import { ActivityIndicator, Button, IconButton, Menu, TextInput } from 'react-native-paper';
-import { useDispatch, useSelector } from 'react-redux';
 import FirebaseImage from '../FirebaseImage';
 import UrlText from './UrlText';
 import { Comment, CommentsProps } from './comments.types';
@@ -24,7 +24,7 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
     const { comments }: CommentsState = useSelector(
         (state: RootState) => state.comments2
     );
-    const [author, setAuthor] = useState(name);
+    const author = name;
     const [text, setText] = useState('');
     const [image, setImage] = useState('');
     const [loading, setLoading] = useState(false);
@@ -69,9 +69,8 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
 
     const pickImage = async () => {
         let result = await ExpoImagePicker.launchImageLibraryAsync({
-            mediaTypes: ExpoImagePicker.MediaTypeOptions.All,
+            mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
-            aspect: [4, 3],
             quality: 1
         });
 
@@ -91,12 +90,21 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
             })
             .then(async (res)=>{
                 if (image && newPostRef.key) {
-                    await uploadImage(path,newPostRef.key)
+                    const upload = await uploadImage(uid+'/'+path,newPostRef.key)
+                    console.log('image upload',upload);
+                    
                     setImage('');
                 }
                 setLoading(false)
                 setText('')
             }).catch(err=>{
+                console.log({
+                    author,
+                    text,
+                    date:Date.now(),
+                    uid
+                },'upload to',path);
+                
                 console.log(err);
             })
         }
@@ -137,20 +145,22 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
 
             return await getDownloadURL(imageStorageRef)
                 .then(async (imageUrl) => {
-                    const imageUpdateRef = dbRef(db,storagePath+'/'+key+'/fileName');
+                    const imageUpdateRef = dbRef(db,path+'/'+key+'/fileName');
                     
                     return await set(imageUpdateRef,fileName).then(res2=>{
                         console.log('DB update with image success',key);
                         return fileName;
-                    }).catch(err=>{
-                        console.log('DB update with image error',err);
+                    }).catch(error=>{
+                        console.log('DB update with image error, on '+storagePath+'/'+key+'/fileName',error);
+                        return error
                     })
                 })
                 .catch(error => {
                     console.log('err',image);
+                    return error
                 })
         })
-        .catch(error => console.error(error));
+        .catch(error => {return error});
 
         return upload;
     };
@@ -186,7 +196,7 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
     const removeImage = (comment:Comment) => {
         const storage = getStorage();
         
-        const imageRef = storageRef(storage, path+'/'+comment.key+'/'+comment.fileName);
+        const imageRef = storageRef(storage, comment.uid+''+path+'/'+comment.key+'/'+comment.fileName);
         deleteObject(imageRef).then(() => {
             console.log('image deleted');
             
@@ -200,27 +210,25 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
         setImage('');
     }
 
-    console.log(comments);
-    
-
     return (
         <View>
                 <View style={{flexDirection:'row'}}>
                     <View style={{flexGrow:1}}>
-                        {!name && <TextInput style={{}} value={author} onChangeText={setAuthor} placeholder="Név"/>}
                         <TextInput style={{}} value={text} 
                         onChangeText={setText} 
                         onSubmitEditing={handleSend}
-                        placeholder={(placeholder) ? placeholder : 'Kommented'}/>
+                        disabled={!uid}
+                        placeholder={uid?((placeholder) ? placeholder : 'Kommented'):'Jelentkezz be a hozzászóláshoz.'}/>
                     </View>
                     {image ? 
                         <ImageBackground source={{uri:image}}>
                             <IconButton icon='close' onPress={dismissImage}/>
                         </ImageBackground>
-                        :<IconButton icon='image' onPress={pickImage}/>
+                        :<IconButton icon='image' onPress={pickImage} 
+                        disabled={!uid}/>
                     }
                     <Button icon="arrow-left-bottom-bold"
-                    onPress={handleSend} disabled={!author || !text} style={{height:'100%',margin:0}}
+                    onPress={handleSend} disabled={!uid || !text} style={{height:'100%',margin:0}}
                         loading={loading}
                     >
                         <Text>Küldés</Text>
@@ -235,7 +243,7 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
                     {comments.map((comment,ind)=>{
                         return (
                             <Pressable key={'comment'+ind} style={[{backgroundColor:'white',padding:5,margin:5,maxWidth:'100%'}]} 
-                            onLongPress={(e)=>showCommentMenu(e,comment)} >
+                            onLongPress={(e)=>showCommentMenu(e,comment)} delayLongPress={100}>
                                 <Pressable onPress={()=>{
                                     if (comment?.uid)
                                         navigation.push({pathname:'profil',params:{uid:comment.uid}})
@@ -246,7 +254,7 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
                                     </Text>
                                 </Pressable>
                                 <UrlText text={comment.text} />
-                                {comment.fileName && <FirebaseImage path={path+'/'+comment.key+'/'+comment.fileName} style={{width:'100%',height:100}} />}
+                                {comment.fileName && <FirebaseImage path={comment.uid+'/'+path+'/'+comment.key+'/'+comment.fileName} style={{width:'100%',height:100}} />}
                             </Pressable>
                         )
                     })}
@@ -254,7 +262,7 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
 
 
 
-                {menuAnchor && <Menu
+                {uid && menuAnchor && <Menu
                     visible={showMenu}
                     onDismiss={closeMenu}
                     anchor={menuAnchor}

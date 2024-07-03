@@ -1,4 +1,4 @@
-import Comments from "@/components/comments/Comments";
+import Comments from "@/components/Comments/Comments";
 import { View } from "react-native";
 
 export default function Index() {

@@ -22,6 +22,12 @@ export default function Index() {
 
     })
   }
+  const autoLogin = () => {
+    login('test@fife.hu','fifewok42').then(res=>{
+      setError(res?.error)
+
+    })
+  }
   const startFacebookLogin = () => {
     facebookLogin()
   }
@@ -33,6 +39,9 @@ export default function Index() {
   if (!uid)
   return (
     <View style={{maxWidth:400,width:'100%',gap:8,margin:'auto'}}>
+      <Button onPress={autoLogin} mode="contained">
+        AUTO LOGIN
+      </Button>
       <Button mode='contained' icon="facebook" onPress={startFacebookLogin}>Facebook bejelentkezés</Button>
       <TextInput onChangeText={setEmail} value={email} placeholder="Email" />
       <TextInput onChangeText={setPassword} value={password} placeholder="Jelszó" secureTextEntry />

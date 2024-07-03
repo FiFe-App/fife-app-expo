@@ -1,4 +1,4 @@
-import { Comment } from "@/components/comments/comments.types";
+import { Comment } from "@/components/Comments/comments.types";
 
 export interface UserState {
     uid?: string,
