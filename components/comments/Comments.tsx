@@ -171,7 +171,6 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
 
         return upload;
     };
-
     const showCommentMenu = (event: GestureResponderEvent,comment: Comment) => {
         const { nativeEvent } = event;
         
@@ -219,70 +218,69 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
 
     return (
         <View>
-                <View style={{flexDirection:'row'}}>
-                    <View style={{flexGrow:1}}>
-                        <TextInput style={{}} value={text} 
-                        onChangeText={setText} 
-                        onSubmitEditing={handleSend}
-                        disabled={!uid}
-                        placeholder={uid?((placeholder) ? placeholder : 'Kommented'):'Jelentkezz be a hozzászóláshoz.'}/>
-                    </View>
-                    {image ? 
-                        <ImageBackground source={{uri:image}}>
-                            <IconButton icon='close' onPress={dismissImage}/>
-                        </ImageBackground>
-                        :<IconButton icon='image' onPress={pickImage} 
-                        disabled={!uid}/>
-                    }
-                    <Button icon="arrow-left-bottom-bold"
-                    onPress={handleSend} disabled={!uid || !text} style={{height:'100%',margin:0}}
-                        loading={loading}
-                    >
-                        <Text>Küldés</Text>
-                    </Button>
+            <View style={{flexDirection:'row'}}>
+                <View style={{flexGrow:1}}>
+                    <TextInput style={{}} value={text} 
+                    onChangeText={setText} 
+                    onSubmitEditing={handleSend}
+                    disabled={!uid}
+                    placeholder={uid?((placeholder) ? placeholder : 'Kommented'):'Jelentkezz be a hozzászóláshoz.'}/>
                 </View>
-                <View style={{flexDirection:'row',padding:10}}>
-                    <Text style={{flex:1}}>Kommentek:</Text>
-                    <Text>Újabbak elöl</Text>
-
-                </View>
-                {!!comments?.length &&<ScrollView style={{padding:5}} contentContainerStyle={{flexWrap:'wrap',flexDirection:'row'}}>
-                    {comments.map((comment,ind)=>{
-                        return (
-                            <Pressable key={'comment'+ind} style={[{backgroundColor:'white',padding:5,margin:5,maxWidth:'100%'}]} 
-                            onLongPress={(e)=>showCommentMenu(e,comment)} delayLongPress={100}>
-                                <Pressable onPress={()=>{
-                                    if (comment?.uid)
-                                        navigation.push({pathname:'profil',params:{uid:comment.uid}})
-                                    }}>
-                                    <Text>
-                                        <Text style={{fontWeight:'bold'}}>{comment.author}</Text>
-                                        <Text> {elapsedTime(comment.date)}</Text>
-                                    </Text>
-                                </Pressable>
-                                <UrlText text={comment.text} />
-                                {comment.fileName && <FirebaseImage path={comment.uid+'/'+path+'/'+comment.key+'/'+comment.fileName} style={{width:'100%',height:100}} />}
-                            </Pressable>
-                        )
-                    })}
-                </ScrollView>}
-
-
-
-                {uid && menuAnchor && <Menu
-                    visible={showMenu}
-                    onDismiss={closeMenu}
-                    anchor={menuAnchor}
+                {image ? 
+                    <ImageBackground source={{uri:image}}>
+                        <IconButton icon='close' onPress={dismissImage}/>
+                    </ImageBackground>
+                    :<IconButton icon='image' onPress={pickImage} 
+                    disabled={!uid}/>
+                }
+                <Button icon="arrow-left-bottom-bold"
+                onPress={handleSend} disabled={!uid || !text} style={{height:'100%',margin:0}}
+                    loading={loading}
                 >
-                    {menuAnchor.comment?.uid === uid ? <>
-                        <Menu.Item onPress={()=>deleteComment(menuAnchor.comment)} title="Törlés" leadingIcon="delete" /></>
-                    : <>
-                    <Menu.Item onPress={() => {}} title="Feljelentem" leadingIcon="alert" disabled />
-                    <Menu.Item onPress={() => {}} title={menuAnchor.comment?.author + " profilja"} leadingIcon="account" disabled />
-                    </>}
-                </Menu>}
-                {downloading ? <ActivityIndicator /> :
-                !comments?.length && <Text style={{padding:20}}>Még nem érkezett komment</Text>}
+                    <Text>Küldés</Text>
+                </Button>
+            </View>
+            <View style={{flexDirection:'row',padding:10}}>
+                <Text style={{flex:1}}>Kommentek:</Text>
+                <Text>Újabbak elöl</Text>
+            </View>
+            {!!comments?.length &&<ScrollView style={{padding:5}} contentContainerStyle={{flexWrap:'wrap',flexDirection:'row'}}>
+                {comments.map((comment,ind)=>{
+                    return (
+                        <View key={'comment'+ind} style={[{backgroundColor:'white',margin:5,maxWidth:'100%'}]} >
+                            <View style={{flexDirection:'row',alignItems:'center'}}>
+                                <View style={{flexDirection:'row',flex:1,paddingHorizontal:8}}>
+                                    <Pressable onPress={()=>{
+                                        if (comment?.uid)
+                                            navigation.push({pathname:'profil',params:{uid:comment.uid}})
+                                        }}>
+                                        <Text style={{fontWeight:'bold'}}>{comment.author}</Text>
+                                    </Pressable>
+                                    <Text> {elapsedTime(comment.date)}</Text>
+                                </View>
+                                <IconButton icon='dots-vertical' onPress={(e)=>showCommentMenu(e,comment)} size={18} style={{margin:0}} />
+                            </View>
+                            <UrlText text={comment.text} />
+                            {comment.fileName && <FirebaseImage path={comment.uid+'/'+path+'/'+comment.key+'/'+comment.fileName} style={{width:'100%',height:100}} />}
+                        </View>
+                    )
+                })}
+            </ScrollView>}
+
+            {uid && menuAnchor && <Menu
+                visible={showMenu}
+                onDismiss={closeMenu}
+                anchor={menuAnchor}
+            >
+                {menuAnchor.comment?.uid === uid ? <>
+                    <Menu.Item onPress={()=>deleteComment(menuAnchor.comment)} title="Törlés" leadingIcon="delete" /></>
+                : <>
+                <Menu.Item onPress={() => {}} title="Feljelentem" leadingIcon="alert" disabled />
+                <Menu.Item onPress={() => {}} title={menuAnchor.comment?.author + " profilja"} leadingIcon="account" disabled />
+                </>}
+            </Menu>}
+            {downloading ? <ActivityIndicator /> :
+            !comments?.length && <Text style={{padding:20}}>Még nem érkezett komment</Text>}
         </View>)
 }
 
