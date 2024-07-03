@@ -72,9 +72,14 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
             mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             quality: 1
+        }).catch(error=>{
+            console.log(error);
+            
         });
 
-        if (!result?.canceled) {
+        
+
+        if (result && !result?.canceled) {
             setImage(result.assets[0].uri);
         } else console.log('cancelled');
     };
@@ -94,9 +99,11 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
                     console.log('image upload',upload);
                     
                     setImage('');
+                    setLoading(false)
+                } else {
+                    setLoading(false)
+                    setText('')
                 }
-                setLoading(false)
-                setText('')
             }).catch(err=>{
                 console.log({
                     author,
@@ -196,7 +203,7 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
     const removeImage = (comment:Comment) => {
         const storage = getStorage();
         
-        const imageRef = storageRef(storage, comment.uid+''+path+'/'+comment.key+'/'+comment.fileName);
+        const imageRef = storageRef(storage, comment.uid+'/'+path+'/'+comment.key+'/'+comment.fileName);
         deleteObject(imageRef).then(() => {
             console.log('image deleted');
             
