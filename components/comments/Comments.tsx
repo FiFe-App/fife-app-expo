@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { GestureResponderEvent, ImageBackground, Pressable, ScrollView, Text, View } from 'react-native';
-import { ActivityIndicator, Button, IconButton, Menu, TextInput } from 'react-native-paper';
+import { ActivityIndicator, Button, IconButton, Menu, Modal, Portal, TextInput } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import elapsedTime from '@/lib/functions/elapsedTime';
 import { addComment, clearComments, editComment, deleteComment as deleteCommentSlice } from '@/lib/redux/reducers/commentsReducer';
@@ -31,6 +31,7 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
     const [downloading, setDownloading] = useState(true);
     const [showMenu, setShowMenu] = useState(false);
     const [menuAnchor, setMenuAnchor] = useState<{x:number;y:number;comment:Comment}|null>(null);
+    const [selectedComment, setSelectedComment] = useState<Comment|null>(null);
     const db = getDatabase()
 
     useEffect(() => {
@@ -43,6 +44,7 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
             
             dispatch(addComment({
                 ...data.val(),
+                date: elapsedTime(data.val().date),
                 key: data.key
             }))
             setDownloading(false)
@@ -51,6 +53,7 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
         onChildChanged(q,(data)=>{
             dispatch(editComment({
                 ...data.val(),
+                date: elapsedTime(data.val().date),
                 key: data.key
             }))
         })
@@ -84,7 +87,7 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
         } else console.log('cancelled');
     };
     const handleSend = async () => {
-        if (author && text && uid) {
+        if (author && text && uid && !loading) {
             setLoading(true)
             const newPostRef = push(dbRef(db,path))
             set(newPostRef ,{
@@ -100,6 +103,7 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
                     
                     setImage('');
                     setLoading(false)
+                    setText('')
                 } else {
                     setLoading(false)
                     setText('')
@@ -223,7 +227,7 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
                     <TextInput style={{}} value={text} 
                     onChangeText={setText} 
                     onSubmitEditing={handleSend}
-                    disabled={!uid}
+                    disabled={!uid || loading}
                     placeholder={uid?((placeholder) ? placeholder : 'Kommented'):'Jelentkezz be a hozzászóláshoz.'}/>
                 </View>
                 {image ? 
@@ -256,12 +260,14 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
                                         }}>
                                         <Text style={{fontWeight:'bold'}}>{comment.author}</Text>
                                     </Pressable>
-                                    <Text> {elapsedTime(comment.date)}</Text>
+                                    <Text> {comment.date}</Text>
                                 </View>
                                 <IconButton icon='dots-vertical' onPress={(e)=>showCommentMenu(e,comment)} size={18} style={{margin:0}} />
                             </View>
                             <UrlText text={comment.text} />
-                            {comment.fileName && <FirebaseImage path={comment.uid+'/'+path+'/'+comment.key+'/'+comment.fileName} style={{width:'100%',height:100}} />}
+                            {comment.fileName && <Pressable onPress={()=>setSelectedComment(comment)}>
+                                <FirebaseImage path={comment.uid+'/'+path+'/'+comment.key+'/'+comment.fileName} style={{width:'100%',height:100}} />
+                            </Pressable>}
                         </View>
                     )
                 })}
@@ -281,6 +287,14 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
             </Menu>}
             {downloading ? <ActivityIndicator /> :
             !comments?.length && <Text style={{padding:20}}>Még nem érkezett komment</Text>}
+            {selectedComment && <Portal>
+              <Modal visible={!!selectedComment} onDismiss={()=>setSelectedComment(null)} contentContainerStyle={{shadowOpacity:0}}>
+                <Pressable onPress={()=>setSelectedComment(null)}>
+                    <FirebaseImage path={selectedComment.uid+'/'+path+'/'+selectedComment.key+'/'+selectedComment.fileName} style={{width:'100%',height:600}} resizeMode="contain"/>
+                </Pressable>
+              </Modal>
+            </Portal>     } 
+            
         </View>)
 }
 
