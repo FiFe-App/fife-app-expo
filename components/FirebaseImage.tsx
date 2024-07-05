@@ -1,12 +1,13 @@
+import { Image, ImageContentFit } from 'expo-image';
 import { getDownloadURL, getStorage, ref } from "firebase/storage";
 import { useEffect, useState } from "react";
-import { Image, ImageResizeMode, ImageStyle, StyleProp, StyleSheet, View } from "react-native"
+import { ImageStyle, StyleProp, StyleSheet, View } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 
 interface FirebaseImageProps {
     path: string;
     style?: StyleProp<ImageStyle>;
-    resizeMode?: ImageResizeMode | undefined;
+    resizeMode?: ImageContentFit | undefined;
 }
 
 
@@ -19,8 +20,6 @@ const FirebaseImage = ({path,style,resizeMode}:FirebaseImageProps) => {
         const imageRef = ref(storage,path);
         getDownloadURL(imageRef).then(res=>{
             setSource(res);
-            console.log(res);
-            
         }).catch(err=>{
             console.log(err);
             
@@ -28,8 +27,8 @@ const FirebaseImage = ({path,style,resizeMode}:FirebaseImageProps) => {
     }, [path]);
 
     return (<View style={{minHeight:100}}>
-            <Image source={{uri:source}} style={style} 
-                resizeMode={resizeMode}
+            <Image source={{uri:source}} style={style}
+                contentFit={resizeMode}
                 onLoadEnd={()=>setLoading(false)} 
             />
             <ActivityIndicator style={styles.activityIndicator} animating={loading}/>

@@ -7,7 +7,8 @@ import {
     sendPasswordResetEmail,
     signInWithEmailAndPassword,
     signInWithPopup,
-    signOut
+    signOut,
+    updateProfile
 } from 'firebase/auth';
 import { createContext, ReactElement } from 'react';
 
@@ -102,8 +103,18 @@ const Context = ({ children }:{children:ReactElement}) => {
             const nameRef = ref(getDatabase(getApp()),'users/' + user.uid + '/data/name');
             get(nameRef).then((snapshot) => {
             if (snapshot.exists()) {
-                //dispatch(setName(snapshot.val()))
-                console.log(snapshot.val());
+                const newName = snapshot.val();
+                const curUser = getAuth().currentUser
+                if (curUser)
+                updateProfile(curUser, {
+                    displayName: newName
+                  }).then(() => {
+                    console.log('update');
+                    dispatch(setName(newName))
+                    
+                  }).catch((error) => {
+                    console.log(error);
+                  });
             }
             
             })

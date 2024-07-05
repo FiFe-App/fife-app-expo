@@ -221,7 +221,7 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
     }
 
     return (
-        <View>
+        <View style={{flex:1}}>
             <View style={{flexDirection:'row'}}>
                 <View style={{flexGrow:1}}>
                     <TextInput style={{}} value={text} 
@@ -248,41 +248,43 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
                 <Text style={{flex:1}}>Kommentek:</Text>
                 <Text>Újabbak elöl</Text>
             </View>
-            {!!comments?.length &&<ScrollView style={{padding:5}} contentContainerStyle={{flexWrap:'wrap',flexDirection:'row'}}>
+            {!!comments?.length &&<ScrollView style={{minHeight:200}} contentContainerStyle={{flexDirection:'column',paddingBottom:10}}>
                 {comments.map((comment,ind)=>{
                     return (
-                        <View key={'comment'+ind} style={[{backgroundColor:'white',margin:5,maxWidth:'100%'}]} >
-                            <View style={{flexDirection:'row',alignItems:'center'}}>
-                                <View style={{flexDirection:'row',flex:1,paddingHorizontal:8}}>
-                                    <Pressable onPress={()=>{
-                                        if (comment?.uid)
-                                            navigation.push({pathname:'profil',params:{uid:comment.uid}})
-                                        }}>
-                                        <Text style={{fontWeight:'bold'}}>{comment.author}</Text>
-                                    </Pressable>
-                                    <Text> {comment.date}</Text>
+                        <View key={'comment'+ind} style={[{flexDirection:'row',maxWidth:'100%',margin:5}]} >
+                            <View style={{backgroundColor:'white',flex:1,padding:8}}>
+                                <View style={{flexDirection:'row',alignItems:'center'}}>
+                                    <View style={{flexDirection:'row',flex:1}}>
+                                        <Pressable onPress={()=>{
+                                            if (comment?.uid)
+                                                navigation.push({pathname:'profil',params:{uid:comment.uid}})
+                                            }}>
+                                            <Text style={{fontWeight:'bold'}}>{comment.author}</Text>
+                                        </Pressable>
+                                        <Text> {comment.date}</Text>
+                                    </View>
+                                    <IconButton icon='dots-vertical' onPress={(e)=>showCommentMenu(e,comment)} size={18} style={{margin:0}} />
                                 </View>
-                                <IconButton icon='dots-vertical' onPress={(e)=>showCommentMenu(e,comment)} size={18} style={{margin:0}} />
+                                <UrlText text={comment.text} />
                             </View>
-                            <UrlText text={comment.text} />
                             {comment.fileName && <Pressable onPress={()=>setSelectedComment(comment)}>
-                                <FirebaseImage path={comment.uid+'/'+path+'/'+comment.key+'/'+comment.fileName} style={{width:'100%',height:100}} />
+                                <FirebaseImage path={comment.uid+'/'+path+'/'+comment.key+'/'+comment.fileName} style={{width:100,height:100}} />
                             </Pressable>}
                         </View>
                     )
                 })}
             </ScrollView>}
 
-            {uid && menuAnchor && <Menu
+            {uid && <Menu
                 visible={showMenu}
                 onDismiss={closeMenu}
                 anchor={menuAnchor}
             >
-                {menuAnchor.comment?.uid === uid ? <>
+                {menuAnchor?.comment?.uid === uid ? <>
                     <Menu.Item onPress={()=>deleteComment(menuAnchor.comment)} title="Törlés" leadingIcon="delete" /></>
                 : <>
                 <Menu.Item onPress={() => {}} title="Feljelentem" leadingIcon="alert" disabled />
-                <Menu.Item onPress={() => {}} title={menuAnchor.comment?.author + " profilja"} leadingIcon="account" disabled />
+                <Menu.Item onPress={() => {}} title={menuAnchor?.comment?.author + " profilja"} leadingIcon="account" disabled />
                 </>}
             </Menu>}
             {downloading ? <ActivityIndicator /> :
