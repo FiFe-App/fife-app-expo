@@ -12,19 +12,21 @@ export default function Index() {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        gap:24
+        gap: 24,
       }}
     >
-      <Link href='/mapTest' asChild>
-        <Button mode='contained'>Térkép kereső</Button>
+      <Link href="/mapTest" asChild>
+        <Button mode="contained">Térkép kereső</Button>
       </Link>
-      <Link href='/loginTest' asChild>
-        <Button mode='contained'>Bejelentkezés</Button>
+      <Link href="/loginTest" asChild>
+        <Button mode="contained">Bejelentkezés</Button>
       </Link>
-      <Link href='/notfound' asChild>
+      <Link href="/commentsTest" asChild>
+        <Button mode="contained">Kommentek</Button>
+      </Link>
+      <Link href="/notfound" asChild>
         <Button>Eltévedek</Button>
       </Link>
-
     </View>
   );
 }
