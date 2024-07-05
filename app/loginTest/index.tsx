@@ -7,55 +7,62 @@ import { Button, Text, TextInput } from "react-native-paper";
 import { useSelector } from "react-redux";
 
 export default function Index() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { api: { login, facebookLogin, logout }} = useContext(FirebaseContext);
-  const [error, setError] = useState<string|undefined>();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const {
+    api: { login, facebookLogin, logout },
+  } = useContext(FirebaseContext);
+  const [error, setError] = useState<string | undefined>();
 
   const { uid, name }: UserState = useSelector(
-    (state: RootState) => state.user
-);
+    (state: RootState) => state.user,
+  );
 
   const startLogin = () => {
-    login(email,password).then(res=>{
-      setError(res?.error)
-
-    })
-  }
+    login(email, password).then((res) => {
+      setError(res?.error);
+    });
+  };
   const autoLogin = () => {
-    login('test@fife.hu','fifewok42').then(res=>{
-      setError(res?.error)
-
-    })
-  }
+    login("test@fife.hu", "fifewok42").then((res) => {
+      setError(res?.error);
+    });
+  };
   const startFacebookLogin = () => {
-    facebookLogin()
-  }
+    facebookLogin();
+  };
   const startLogout = () => {
     logout();
-  }
-  
+  };
 
   if (!uid)
-  return (
-    <View style={{maxWidth:400,width:'100%',gap:8,margin:'auto'}}>
-      <Button onPress={autoLogin} mode="contained">
-        AUTO LOGIN
-      </Button>
-      <Button mode='contained' icon="facebook" onPress={startFacebookLogin}>Facebook bejelentkezés</Button>
-      <TextInput onChangeText={setEmail} value={email} placeholder="Email" />
-      <TextInput onChangeText={setPassword} value={password} placeholder="Jelszó" secureTextEntry />
-      <Button onPress={startLogin}>
-        <Text>Bejelentkezés</Text>
-      </Button>
-      <Text style={{color:'red'}}>{error}</Text>
-    </View>
-  );
+    return (
+      <View style={{ maxWidth: 400, width: "100%", gap: 8, margin: "auto" }}>
+        <Button onPress={autoLogin} mode="contained">
+          AUTO LOGIN
+        </Button>
+        <Button mode="contained" icon="facebook" onPress={startFacebookLogin}>
+          Facebook bejelentkezés
+        </Button>
+        <TextInput onChangeText={setEmail} value={email} placeholder="Email" />
+        <TextInput
+          onChangeText={setPassword}
+          value={password}
+          placeholder="Jelszó"
+          secureTextEntry
+        />
+        <Button onPress={startLogin}>
+          <Text>Bejelentkezés</Text>
+        </Button>
+        <Text style={{ color: "red" }}>{error}</Text>
+      </View>
+    );
   return (
     <View>
       <Text>Bejelentkezve, mint {name}</Text>
-      <Button icon='logout' onPress={startLogout}>Kijelentkezés</Button>
+      <Button icon="logout" onPress={startLogout}>
+        Kijelentkezés
+      </Button>
     </View>
-  )
+  );
 }
-

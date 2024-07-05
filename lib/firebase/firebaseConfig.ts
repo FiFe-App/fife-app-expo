@@ -3,8 +3,6 @@ import { initializeApp } from "firebase/app";
 import * as firebaseAuth from "firebase/auth";
 import { Platform } from "react-native";
 
-
-
 export const firebaseConfig = {
   apiKey: "AIzaSyDtxKGHmZsnpg2R7CKdkLl8oNSag9lHykI",
   authDomain: "fife-app.firebaseapp.com",
@@ -18,17 +16,14 @@ export const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 
 let persistence;
-if (Platform.OS !== 'web') {
-  const reactNativePersistence = (firebaseAuth as any).getReactNativePersistence;
-  persistance = reactNativePersistence(AsyncStorage)
+if (Platform.OS !== "web") {
+  const reactNativePersistence = (firebaseAuth as any)
+    .getReactNativePersistence;
+  persistance = reactNativePersistence(AsyncStorage);
 } else {
-  persistence = firebaseAuth.browserSessionPersistence
+  persistence = firebaseAuth.browserSessionPersistence;
 }
 
-export const auth = firebaseAuth.initializeAuth(app,{
-  persistence
-})
-
-
-
-
+export const auth = firebaseAuth.initializeAuth(app, {
+  persistence,
+});

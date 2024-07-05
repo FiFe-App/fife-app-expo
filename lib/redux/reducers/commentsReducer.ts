@@ -1,37 +1,35 @@
-import { PayloadAction, createSlice } from '@reduxjs/toolkit'
-import { CommentsState } from '../store.type'
-import { Comment } from '@/components/comments/comments.types'
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { CommentsState } from "../store.type";
+import { Comment } from "@/components/comments/comments.types";
 
 const initialState: CommentsState = {
-  comments: []
-}
+  comments: [],
+};
 
 const commentsReducer = createSlice({
   initialState,
-  name: 'comments',
+  name: "comments",
   reducers: {
-    addComment: (state, action:PayloadAction<Comment>) =>  {
-      state.comments.unshift(action.payload)
+    addComment: (state, action: PayloadAction<Comment>) => {
+      state.comments.unshift(action.payload);
     },
-    editComment: (state, {payload}:PayloadAction<Comment>) =>  {
-      state.comments = state.comments.map(comment=>
-        comment.key === payload.key ? 
-          {...comment,...payload}
-        :
-          comment
-      )
-    }, 
-    deleteComment: (state, {payload}:PayloadAction<string>) =>  {
-      state.comments = state.comments.filter(comment=>comment.key !== payload)
+    editComment: (state, { payload }: PayloadAction<Comment>) => {
+      state.comments = state.comments.map((comment) =>
+        comment.key === payload.key ? { ...comment, ...payload } : comment,
+      );
     },
-    clearComments: (state:CommentsState) =>  {
-      state.comments = []
-    }, 
-  }
-})
+    deleteComment: (state, { payload }: PayloadAction<string>) => {
+      state.comments = state.comments.filter(
+        (comment) => comment.key !== payload,
+      );
+    },
+    clearComments: (state: CommentsState) => {
+      state.comments = [];
+    },
+  },
+});
 
-export const { 
-  addComment, editComment, deleteComment, clearComments
-} = commentsReducer.actions
+export const { addComment, editComment, deleteComment, clearComments } =
+  commentsReducer.actions;
 
-export default commentsReducer.reducer
+export default commentsReducer.reducer;
