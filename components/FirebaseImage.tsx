@@ -27,12 +27,12 @@ const FirebaseImage = ({path,style,resizeMode}:FirebaseImageProps) => {
         })
     }, [path]);
 
-    return (<View>
-        <Image source={{uri:source}} style={style} 
-            resizeMode={resizeMode}
-            onLoadEnd={()=>setLoading(false)} 
-        />
-        <ActivityIndicator style={styles.activityIndicator} animating={loading}/>
+    return (<View style={{minHeight:100}}>
+            <Image source={{uri:source}} style={style} 
+                resizeMode={resizeMode}
+                onLoadEnd={()=>setLoading(false)} 
+            />
+            <ActivityIndicator style={styles.activityIndicator} animating={loading}/>
         </View>)
 }
 const styles = StyleSheet.create({
@@ -41,8 +41,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
-    bottom: 0,
-    objectFit:'fill'
+    bottom: 0
   }
 })
 

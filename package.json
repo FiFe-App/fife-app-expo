@@ -50,7 +50,7 @@
     "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
     "resize-observer-polyfill": "^1.5.1",
-    "expo-image-picker": "~15.0.6"
+    "expo-image-picker": "~15.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

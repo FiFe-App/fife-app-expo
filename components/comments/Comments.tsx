@@ -290,7 +290,9 @@ const Comments = ({path,placeholder,limit=10}:CommentsProps) => {
             {selectedComment && <Portal>
               <Modal visible={!!selectedComment} onDismiss={()=>setSelectedComment(null)} contentContainerStyle={{shadowOpacity:0}}>
                 <Pressable onPress={()=>setSelectedComment(null)}>
-                    <FirebaseImage path={selectedComment.uid+'/'+path+'/'+selectedComment.key+'/'+selectedComment.fileName} style={{width:'100%',height:600}} resizeMode="contain"/>
+                    <FirebaseImage
+                        path={selectedComment.uid+'/'+path+'/'+selectedComment.key+'/'+selectedComment.fileName} 
+                        style={{height:600}} resizeMode="contain"/>
                 </Pressable>
               </Modal>
             </Portal>     } 
