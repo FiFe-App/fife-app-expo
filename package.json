@@ -4,12 +4,10 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "build": "npx expo export --platform web",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "build": "npx expo export --platform web",
     "test": "jest --watchAll",
     "lint": "expo lint --fix"
   },

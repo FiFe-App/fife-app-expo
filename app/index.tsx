@@ -2,10 +2,15 @@ import { View } from "react-native";
 import axios from "axios";
 import { Link } from "expo-router";
 import { Button } from "react-native-paper";
+import { UserState } from "@/lib/redux/store.type";
+import { useSelector } from "react-redux";
+import { RootState } from "@/lib/redux/store";
 
 export default function Index() {
+  const { userData }: UserState = useSelector((state: RootState) => state.user);
+  axios.defaults.headers.common["Authorization"] = userData?.authorization;
+  axios.defaults.baseURL = "http://localhost:8888/.netlify/functions/index";
 
-  axios.defaults.baseURL = 'http://localhost:8888/.netlfiy/functions/index';
   return (
     <View
       style={{
