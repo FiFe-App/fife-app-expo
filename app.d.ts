@@ -1,6 +1,8 @@
 /// <reference types="react" />
 /// <reference types="google.maps" />
 import type { MapViewProps as RNMapViewProps } from "react-native-maps/lib/MapView";
+
+export * from "./api/node_modules/.prisma/client/index";
 /**
  * Overrides MapView props to include additional web-specific props
  *

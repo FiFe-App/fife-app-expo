@@ -397,14 +397,14 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             <>
               <Menu.Item
                 onPress={() => {}}
-                title="Feljelentem"
-                leadingIcon="alert"
+                title={menuAnchor?.comment?.author + " profilja"}
+                leadingIcon="account"
                 disabled
               />
               <Menu.Item
                 onPress={() => {}}
-                title={menuAnchor?.comment?.author + " profilja"}
-                leadingIcon="account"
+                title="Problémám van ezzel a kommenttel."
+                leadingIcon="alert"
                 disabled
               />
             </>

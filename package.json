@@ -4,7 +4,6 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "build": "npx expo export --platform web",
     "ios": "expo run:ios",
@@ -14,6 +13,11 @@
   },
   "jest": {
     "preset": "jest-expo"
+  },
+  "workspaces": {
+    "packages": [
+      "./functions"
+    ]
   },
   "dependencies": {
     "@expo/metro-runtime": "~3.2.1",
@@ -36,6 +40,7 @@
     "expo-status-bar": "~1.12.1",
     "expo-system-ui": "~3.0.6",
     "expo-web-browser": "~13.0.3",
+    "netlify-cli": "^17.26.1",
     "firebase": "^10.12.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",

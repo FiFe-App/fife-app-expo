@@ -87,7 +87,7 @@ const Context = ({ children }: { children: ReactElement }) => {
           dispatch(setName(user.displayName));
           dispatch(
             setUserData({
-              authtoken: token,
+              authorization: token,
               email: user.email,
               emailVerified: user.emailVerified,
               providerData: user.providerData,

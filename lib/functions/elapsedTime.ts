@@ -1,7 +1,8 @@
-function elapsedTime(date: string) {
+function elapsedTime(date: string | number) {
   if (!date) return null;
 
   let str = "másodperce";
+
   let elapsed = Date.now() - Number(date);
 
   if (isNaN(elapsed)) return null;
@@ -23,7 +24,7 @@ function elapsedTime(date: string) {
             str = "hónapja";
             if (elapsed >= 12) {
               elapsed /= 12;
-              str = "éve kb.";
+              str = "éve";
             }
           }
         }
