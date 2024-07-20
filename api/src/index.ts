@@ -6,19 +6,21 @@ import express, {
   Request,
   Response,
 } from "express";
-import users from "./routes/users";
 import adb from "../db/conn";
+import { checkAuthNoVer } from "../lib/auth";
+import users from "./routes/users";
 
 dotenv.config();
 
 const app = express();
 const router = express.Router();
+adb.connect();
 
 app.use(cors());
 app.use(express.json());
 
 // Load the /posts routes
-router.use("/users", users);
+router.use("/users", checkAuthNoVer, users);
 
 // Global error handling
 router.use(

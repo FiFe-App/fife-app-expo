@@ -1,7 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import express, { Request, Response } from "express";
-import { checkAuth } from "../../lib/auth";
-import adb from "../../db/conn";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -20,7 +18,7 @@ router.get("/:uid", async (req: Request, res: Response) => {
       },
     },
   });
-  const friendship = await prisma.friendship.findMany({
+  const friendships = await prisma.friendship.findMany({
     where: {
       uid2: req.params.uid,
     },
@@ -32,8 +30,7 @@ router.get("/:uid", async (req: Request, res: Response) => {
     res.send("Not found").status(404);
     return;
   }
-  res.send({ ...result, friendship });
-  return "hello";
+  res.send({ ...result, friendships });
 });
 
 export default router;

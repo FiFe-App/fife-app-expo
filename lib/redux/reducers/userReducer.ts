@@ -21,7 +21,7 @@ const userReducer = createSlice({
       state.uid = payload;
       console.log("logged in as", payload.toString());
     },
-    logout: (state) => {
+    logout: (state): UserState => {
       console.log("logged out", state);
       return userReducer.getInitialState();
     },

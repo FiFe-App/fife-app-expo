@@ -3,7 +3,14 @@ import { Comment } from "@/components/comments/comments.types";
 export interface UserState {
   uid?: string;
   name?: string;
-  userData?: any;
+  userData?: {
+    authorization: string;
+    email: string;
+    emailVerified: boolean;
+    providerData: any;
+    createdAt: Date;
+    lastLoginAt: Date;
+  } | null;
 }
 export interface CommentsState {
   comments: Comment[];
