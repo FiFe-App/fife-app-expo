@@ -10,6 +10,8 @@ npm-debug.*
 *.orig.*
 web-build/
 
+account-service.json
+
 android
 ios
 .env
