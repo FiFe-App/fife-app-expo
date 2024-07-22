@@ -19,6 +19,11 @@
       "./functions"
     ]
   },
+  "release": {
+    "branches": [
+      "master"
+    ]
+  },
   "dependencies": {
     "@expo/metro-runtime": "~3.2.1",
     "@expo/vector-icons": "^14.0.0",
