@@ -7,7 +7,7 @@ export default function Page() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
 
   if (uid) {
-    return <Redirect href={"/users/" + uid} />;
+    return <Redirect href={"/user/" + uid} />;
   }
 
   return <Redirect href={"/" + uid} />;

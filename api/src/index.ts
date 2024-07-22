@@ -22,6 +22,10 @@ app.use(express.json());
 // Load the /posts routes
 router.use("/users", checkAuthNoVer, users);
 
+router.use("/", (req, res) => {
+  res.send("FiFe Server Running...");
+});
+
 // Global error handling
 router.use(
   (

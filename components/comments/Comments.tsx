@@ -341,8 +341,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                         onPress={() => {
                           if (comment?.uid)
                             navigation.push({
-                              pathname: "profil",
-                              params: { uid: comment.uid },
+                              pathname: "user/" + comment.uid,
                             });
                         }}
                       >
@@ -352,12 +351,6 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                       </Pressable>
                       <Text> {comment.date}</Text>
                     </View>
-                    <IconButton
-                      icon="dots-vertical"
-                      onPress={(e) => showCommentMenu(e, comment)}
-                      size={18}
-                      style={{ margin: 0 }}
-                    />
                   </View>
                   <UrlText text={comment.text} />
                 </View>
@@ -376,6 +369,16 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                       style={{ width: 100, height: 100 }}
                     />
                   </Pressable>
+                )}
+
+                {uid && (
+                  <IconButton
+                    icon="dots-vertical"
+                    onPress={(e) => showCommentMenu(e, comment)}
+                    size={18}
+                    iconColor={comment.fileName ? "white" : "black"}
+                    style={{ margin: 0, position: "absolute", right: 0 }}
+                  />
                 )}
               </View>
             );
@@ -396,10 +399,12 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
           ) : (
             <>
               <Menu.Item
-                onPress={() => {}}
+                onPress={() => {
+                  navigation.push("user/" + menuAnchor?.comment.uid);
+                  setShowMenu(false);
+                }}
                 title={menuAnchor?.comment?.author + " profilja"}
                 leadingIcon="account"
-                disabled
               />
               <Menu.Item
                 onPress={() => {}}

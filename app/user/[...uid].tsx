@@ -10,7 +10,7 @@ import { View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { useSelector } from "react-redux";
 
-type UserInfo = user & { friendships: friendship[] };
+type UserInfo = user & { friendships: friendship[] | null };
 
 export default function Index() {
   const { uid: paramUid } = useGlobalSearchParams();
@@ -58,7 +58,7 @@ export default function Index() {
             </View>
             <View style={{ flexDirection: "row", flex: 1 }}>
               <View style={{ flex: 1, alignItems: "center" }}>
-                <Text>{data?.friendships.length}</Text>
+                <Text>{data?.friendships?.length || 0}</Text>
                 <Text>Pajtások</Text>
               </View>
               {data?.created_at && (

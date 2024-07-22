@@ -1,6 +1,6 @@
 [build]
-  functions="functions"
+  functions="api/src"
 [dev]
-  functions="functions"
+  functions="api/src"
 [base]
   
