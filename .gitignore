@@ -11,6 +11,9 @@ npm-debug.*
 web-build/
 
 account-service.json
+admin-cred.json
+fife-app-cred.json
+credentials.json
 
 android
 ios
