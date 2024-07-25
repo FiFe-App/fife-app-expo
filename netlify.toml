@@ -1,6 +1,14 @@
-[build]
-  functions="functions"
+
+[functions]
+  external_node_modules = ["express"]
+  node_bundler = "esbuild"
+
+[context.production]
+  command = "EXPO_PUBLIC_API_URL=$DEPLOY_URL && npm run build"
+
 [dev]
-  functions="functions"
-[base]
-  
+  functions="api/src"
+
+[build]
+  functions="api/src"
+  command = "EXPO_PUBLIC_API_URL=$DEPLOY_URL && npm run build"

@@ -5,7 +5,6 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 router.get("/:uid", async (req: Request, res: Response) => {
-  console.log("uid");
   const result = await prisma.user.findFirst({
     where: {
       uid: req.params.uid,
