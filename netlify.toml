@@ -1,6 +1,6 @@
 
 [functions]
-  external_node_modules = ["express"]
+  external_node_modules = ["express","@prisma/client","cors","cross-env","dotenv","firebase-admin","mongodb","serverless-http"]
   node_bundler = "esbuild"
 
 [context.production]
