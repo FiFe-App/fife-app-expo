@@ -253,14 +253,14 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     remove(deleteRef)
       .then((res) => {
         console.log(res);
-        setMenuAnchor(null);
+        setShowMenu(false);
         dispatch(deleteCommentSlice(comment.key));
         if (comment.fileName !== "") removeImage(comment);
         //TODO TOAST
       })
       .catch((err) => {
         console.log(err);
-        setMenuAnchor(null);
+        setShowMenu(false);
       });
   };
   const removeImage = (comment: Comment) => {

@@ -9,22 +9,20 @@ import express, {
 import adb from "../db/conn";
 import { checkAuthNoVer } from "../lib/auth";
 import users from "./routes/users";
+import serverless from "serverless-http";
 
 dotenv.config();
 
 const app = express();
 const router = express.Router();
+
 adb.connect();
 
 app.use(cors());
 app.use(express.json());
 
-// Load the /posts routes
 router.use("/users", checkAuthNoVer, users);
-
-router.use("/", (req, res) => {
-  res.send("FiFe Server Running...");
-});
+app.use("/.netlify/functions/index", router);
 
 // Global error handling
 router.use(
@@ -39,6 +37,4 @@ router.use(
   },
 );
 
-// registering the router containing all the endpoints
-app.use(router);
-app.listen(8888);
+export const handler = serverless(app);
