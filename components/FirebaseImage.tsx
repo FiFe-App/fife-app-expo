@@ -22,17 +22,18 @@ const FirebaseImage = ({ path, style, resizeMode }: FirebaseImageProps) => {
         setSource(res);
       })
       .catch((err) => {
-        console.log(err);
+        setLoading(false);
       });
   }, [path]);
 
   return (
-    <View style={{ minHeight: 100 }}>
+    <View style={{}}>
       <Image
         source={{ uri: source }}
         style={style}
         contentFit={resizeMode}
         onLoadEnd={() => setLoading(false)}
+        onError={() => setLoading(false)}
       />
       <ActivityIndicator style={styles.activityIndicator} animating={loading} />
     </View>

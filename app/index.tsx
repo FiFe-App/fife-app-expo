@@ -33,6 +33,9 @@ export default function Index() {
           <Button mode="contained" onPress={() => logout()}>
             Kijelentkezés
           </Button>
+          <Link href="/biznisz" asChild>
+            <Button mode="contained">Buziness</Button>
+          </Link>
         </>
       ) : (
         <Link href="/loginTest" asChild>

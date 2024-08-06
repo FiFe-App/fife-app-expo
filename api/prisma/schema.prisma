@@ -95,14 +95,23 @@ model page {
 }
 
 model buziness {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  page        page     @relation(fields: [pageId], references: [id])
-  pageId      String   @db.ObjectId
-  uid         String
-  name        String
-  description String
-  location    Float[]
-  images      String[]
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  page               page     @relation(fields: [pageId], references: [id])
+  pageId             String   @db.ObjectId
+  uid                String
+  name               String
+  description        String
+  location           Float[]
+  images             String[]
+  buzinessInterestList   buzinessInterest[]
+}
+model buzinessInterest {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  author     String
+  message    String
+  buziness   buziness     @relation(fields: [buzinessId], references: [id])
+  buzinessId String   @db.ObjectId
+  created_at DateTime @default(now()) @db.Timestamp
 }
 
 model trade {
