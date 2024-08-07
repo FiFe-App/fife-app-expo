@@ -30,6 +30,10 @@ export default function RootLayout() {
                 name="commentsTest/index"
                 options={{ title: "Kommentek" }}
               />
+              <Stack.Screen
+                name="biznisz/index"
+                options={{ title: "Biznisz" }}
+              />
             </Stack>
           </PaperProvider>
         </FirebaseProvider>

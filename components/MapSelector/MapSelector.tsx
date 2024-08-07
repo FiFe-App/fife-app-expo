@@ -1,6 +1,5 @@
-import * as Location from "expo-location";
-import { LocationObject } from "expo-location";
-import React, { useEffect, useRef, useState } from "react";
+import { useMyLocation } from "@/hooks/useMyLocation";
+import React, { useRef, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import { Button, FAB, IconButton } from "react-native-paper";
 import MyLocationIcon from "../../assets/images/myLocationIcon";
@@ -25,24 +24,9 @@ const MapSelector = ({
     },
   );
   const [circleRadiusText, setCircleRadiusText] = useState("0 km");
-  const [myLocation, setMyLocation] = useState<LocationObject | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>();
   const mapRef = useRef<any>(null);
 
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync({});
-      console.log(location);
-
-      setMyLocation(location);
-    })();
-  }, []);
+  const { myLocation, error } = useMyLocation();
 
   const onRegionChange:
     | ((region: Region, details: Details) => void)
@@ -177,7 +161,7 @@ const MapSelector = ({
             mode="contained-tonal"
           />
         </View>
-        {errorMsg}
+        {error}
         <View style={{ width: "100%", alignItems: "center" }}>
           <Button mode="contained" style={styles.submit} onPress={onSubmit}>
             <Text>Helyzet mentése</Text>

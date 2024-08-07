@@ -5,7 +5,7 @@ import { Link } from "expo-router";
 import { useContext } from "react";
 import { View } from "react-native";
 import { Button } from "react-native-paper";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 export default function Index() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
@@ -33,6 +33,9 @@ export default function Index() {
           <Button mode="contained" onPress={() => logout()}>
             Kijelentkezés
           </Button>
+          <Link href="/biznisz" asChild>
+            <Button mode="contained">Buziness</Button>
+          </Link>
         </>
       ) : (
         <Link href="/loginTest" asChild>
