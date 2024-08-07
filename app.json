@@ -37,7 +37,15 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": ["expo-router", "expo-location"],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow FiFe app to use your location."
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },
