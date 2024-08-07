@@ -5,7 +5,7 @@ import { Link } from "expo-router";
 import { useContext } from "react";
 import { View } from "react-native";
 import { Button } from "react-native-paper";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 export default function Index() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);

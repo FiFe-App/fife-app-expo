@@ -1,11 +1,10 @@
-import { buziness } from "@/app";
 import BuzinessItem from "@/components/buziness/BuzinessItem";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import axios, { AxiosResponse } from "axios";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { ScrollView, View } from "react-native";
 import {
   ActivityIndicator,
@@ -69,10 +68,6 @@ export default function Index() {
     setSkip(skip + 5);
     load({ skip: skip + 5 });
   };
-  const onSearch = () => {
-    setList([]);
-  };
-
   if (uid)
     return (
       <ScrollView>

@@ -1,13 +1,11 @@
-import * as Location from "expo-location";
-import { LocationObject } from "expo-location";
-import React, { useEffect, useRef, useState } from "react";
+import { useMyLocation } from "@/hooks/useMyLocation";
+import React, { useRef, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import { Button, FAB, IconButton } from "react-native-paper";
 import MyLocationIcon from "../../assets/images/myLocationIcon";
 import { Camera, Details, MapView, Marker, Region } from "../mapView/mapView";
 import styles from "../mapView/style";
 import { MapCircleType, MapSelectorProps } from "./MapSelector.types";
-import { useMyLocation } from "@/hooks/useMyLocation";
 
 const MapSelector = ({
   style,
