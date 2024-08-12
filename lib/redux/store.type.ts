@@ -1,4 +1,5 @@
 import { Comment } from "@/components/comments/comments.types";
+import { Tables } from "@/database.types";
 
 export interface UserState {
   uid?: string;
