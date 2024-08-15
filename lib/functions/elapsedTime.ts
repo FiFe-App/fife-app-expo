@@ -3,7 +3,7 @@ function elapsedTime(date: string | number) {
 
   let str = "másodperce";
 
-  let elapsed = Date.now() - Number(date);
+  let elapsed = Date.now() - new Date(date).getTime();
 
   if (isNaN(elapsed)) return null;
   elapsed /= 1000;

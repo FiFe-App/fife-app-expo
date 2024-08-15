@@ -83,13 +83,6 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "comments_image_fkey"
-            columns: ["image"]
-            isOneToOne: false
-            referencedRelation: "objects"
-            referencedColumns: ["id"]
-          },
         ]
       }
       messages: {
@@ -134,6 +127,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          created_at: string | null
           full_name: string | null
           id: string
           updated_at: string | null
@@ -142,6 +136,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          created_at?: string | null
           full_name?: string | null
           id: string
           updated_at?: string | null
@@ -150,6 +145,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          created_at?: string | null
           full_name?: string | null
           id?: string
           updated_at?: string | null
@@ -171,7 +167,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      nearby_buziness: {
+        Args: {
+          lat: number
+          lng: number
+        }
+        Returns: Record<string, unknown>
+      }
     }
     Enums: {
       [_ in never]: never

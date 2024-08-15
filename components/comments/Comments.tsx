@@ -353,7 +353,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                   navigation.push("user/" + menuAnchor?.comment.author);
                   setShowMenu(false);
                 }}
-                title={menuAnchor?.comment?.author + " profilja"}
+                title={menuAnchor?.comment?.author_name + " profilja"}
                 leadingIcon="account"
               />
               <Menu.Item

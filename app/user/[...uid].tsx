@@ -1,8 +1,10 @@
 import { friendship, user } from "@/app";
 import ProfileImage from "@/components/user/ProfileImage";
+import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
+import { supabase } from "@/lib/supabase/supabase";
 import axios, { AxiosResponse } from "axios";
 import { useFocusEffect, useGlobalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
@@ -10,7 +12,7 @@ import { View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { useSelector } from "react-redux";
 
-type UserInfo = user & { friendships: friendship[] | null };
+type UserInfo = Tables<"profiles">;
 
 export default function Index() {
   const { uid: paramUid } = useGlobalSearchParams();
@@ -26,14 +28,19 @@ export default function Index() {
       const load = () => {
         console.log(axios.defaults);
 
-        axios
-          .get("users/" + uid)
-          .then((res: AxiosResponse<UserInfo>) => {
-            setData(res.data);
-            console.log(res.data);
-          })
-          .catch((err) => {
-            console.log(err);
+        supabase
+          .from("profiles")
+          .select()
+          .eq("id", uid)
+          .then(({ data, error }) => {
+            if (error) {
+              console.log(error);
+              return;
+            }
+            if (data) {
+              setData(data[0]);
+              console.log(data);
+            }
           });
       };
       load();
@@ -54,11 +61,11 @@ export default function Index() {
                 justifyContent: "center",
               }}
             >
-              <Text>{data?.name}</Text>
+              <Text>{data?.full_name}</Text>
             </View>
             <View style={{ flexDirection: "row", flex: 1 }}>
               <View style={{ flex: 1, alignItems: "center" }}>
-                <Text>{data?.friendships?.length || 0}</Text>
+                <Text>{0}</Text>
                 <Text>Pajtások</Text>
               </View>
               {data?.created_at && (

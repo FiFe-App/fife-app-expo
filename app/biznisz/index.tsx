@@ -2,6 +2,7 @@ import BuzinessItem from "@/components/buziness/BuzinessItem";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
+import { supabase } from "@/lib/supabase/supabase";
 import axios, { AxiosResponse } from "axios";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
@@ -36,6 +37,17 @@ export default function Index() {
 
   const load = ({ skip }: { skip?: number }) => {
     setLoading(true);
+
+    supabase
+      .rpc("nearby_buziness", {
+        lat: 40.807313,
+        lng: -73.946713,
+      })
+      .then(({ data, error }) => {
+        console.log(data, error);
+      });
+    return;
+    supabase.from("buziness").select().order("location");
     axios
       .get("buziness", {
         params: {
