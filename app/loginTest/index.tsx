@@ -1,16 +1,32 @@
 import { FirebaseContext } from "@/lib/firebase/firebase";
+import {
+  setUserData,
+  login as sliceLogin,
+  setName,
+} from "@/lib/redux/reducers/userReducer";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
+import { supabase } from "@/lib/supabase/supabase";
 import { useContext, useState } from "react";
-import { View } from "react-native";
+import { AppState, View } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+
+AppState.addEventListener("change", (state) => {
+  if (state === "active") {
+    supabase.auth.startAutoRefresh();
+  } else {
+    supabase.auth.stopAutoRefresh();
+  }
+});
 
 export default function Index() {
+  const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const {
-    api: { login, facebookLogin, logout },
+    api: { facebookLogin, logout },
   } = useContext(FirebaseContext);
   const [error, setError] = useState<string | undefined>();
 
@@ -18,16 +34,40 @@ export default function Index() {
     (state: RootState) => state.user,
   );
 
-  const startLogin = () => {
-    login(email, password).then((res) => {
-      setError(res?.error);
+  async function signInWithEmail() {
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
-  };
-  const autoLogin = () => {
-    login("test@fife.hu", "fifewok42").then((res) => {
-      setError(res?.error);
+
+    if (error) {
+      setError(error.message);
+    } else {
+      dispatch(sliceLogin(data.user.id));
+      dispatch(setName(data.user.email));
+      dispatch(setUserData(data.user));
+    }
+    setLoading(false);
+  }
+
+  async function autoLogin() {
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: "test@fife.hu",
+      password: "fifewok42",
     });
-  };
+
+    if (error) {
+      setError(error.message);
+    } else {
+      dispatch(sliceLogin(data.user.id));
+      dispatch(setName(data.user.email));
+      dispatch(setUserData(data.user));
+    }
+    setLoading(false);
+  }
+
   const startFacebookLogin = () => {
     facebookLogin();
   };
@@ -51,7 +91,7 @@ export default function Index() {
           placeholder="Jelszó"
           secureTextEntry
         />
-        <Button onPress={startLogin}>
+        <Button onPress={signInWithEmail} loading={loading}>
           <Text>Bejelentkezés</Text>
         </Button>
         <Text style={{ color: "red" }}>{error}</Text>

@@ -1,10 +1,11 @@
+import { Tables } from "./../../../database.types";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { CommentsState } from "../store.type";
-import { Comment } from "@/components/comments/comments.types";
 
 const initialState: CommentsState = {
   comments: [],
 };
+type Comment = Tables<"comments">;
 
 const commentsReducer = createSlice({
   initialState,
@@ -13,14 +14,17 @@ const commentsReducer = createSlice({
     addComment: (state, action: PayloadAction<Comment>) => {
       state.comments.unshift(action.payload);
     },
+    addComments: (state, action: PayloadAction<Comment[]>) => {
+      state.comments.unshift(...action.payload);
+    },
     editComment: (state, { payload }: PayloadAction<Comment>) => {
       state.comments = state.comments.map((comment) =>
-        comment.key === payload.key ? { ...comment, ...payload } : comment,
+        comment.id === payload.id ? { ...comment, ...payload } : comment,
       );
     },
-    deleteComment: (state, { payload }: PayloadAction<string>) => {
+    deleteComment: (state, { payload }: PayloadAction<number>) => {
       state.comments = state.comments.filter(
-        (comment) => comment.key !== payload,
+        (comment) => comment.id !== payload,
       );
     },
     clearComments: (state: CommentsState) => {
@@ -29,7 +33,12 @@ const commentsReducer = createSlice({
   },
 });
 
-export const { addComment, editComment, deleteComment, clearComments } =
-  commentsReducer.actions;
+export const {
+  addComment,
+  addComments,
+  editComment,
+  deleteComment,
+  clearComments,
+} = commentsReducer.actions;
 
 export default commentsReducer.reducer;

@@ -1,3 +1,16 @@
+import elapsedTime from "@/lib/functions/elapsedTime";
+import {
+  addComment,
+  addComments,
+  clearComments,
+  deleteComment as deleteCommentSlice,
+  editComment,
+} from "@/lib/redux/reducers/commentsReducer";
+import { RootState } from "@/lib/redux/store";
+import { CommentsState, UserState } from "@/lib/redux/store.type";
+import { supabase } from "@/lib/supabase/supabase";
+import * as ExpoImagePicker from "expo-image-picker";
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   GestureResponderEvent,
@@ -17,37 +30,7 @@ import {
   TextInput,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import elapsedTime from "@/lib/functions/elapsedTime";
-import {
-  addComment,
-  clearComments,
-  editComment,
-  deleteComment as deleteCommentSlice,
-} from "@/lib/redux/reducers/commentsReducer";
-import { RootState } from "@/lib/redux/store";
-import { CommentsState, UserState } from "@/lib/redux/store.type";
-import * as ExpoImagePicker from "expo-image-picker";
-import { router } from "expo-router";
-import {
-  ref as dbRef,
-  getDatabase,
-  limitToLast,
-  off,
-  onChildAdded,
-  onChildChanged,
-  push,
-  query,
-  remove,
-  set,
-} from "firebase/database";
-import {
-  deleteObject,
-  getDownloadURL,
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-} from "firebase/storage";
-import FirebaseImage from "../FirebaseImage";
+import SupabaseImage from "../SupabaseImage";
 import UrlText from "./UrlText";
 import { Comment, CommentsProps } from "./comments.types";
 
@@ -61,9 +44,12 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   const { comments }: CommentsState = useSelector(
     (state: RootState) => state.comments2,
   );
+  const commentsChannel = supabase.channel("room");
   const author = name;
   const [text, setText] = useState("");
-  const [image, setImage] = useState("");
+  const [image, setImage] = useState<ExpoImagePicker.ImagePickerAsset | null>(
+    null,
+  );
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
@@ -73,45 +59,51 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     comment: Comment;
   } | null>(null);
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
-  const db = getDatabase();
 
   useEffect(() => {
     dispatch(clearComments());
 
-    const q = limit
-      ? query(dbRef(db, path), limitToLast(limit))
-      : dbRef(db, path);
+    const getMessages = async () => {
+      const { data, error } = await supabase
+        .from("comments")
+        .select()
+        .order("created_at", { ascending: false });
+      if (data) dispatch(addComments(data));
+      console.log(error);
+    };
 
-    onChildAdded(q, (data) => {
-      console.log("ADDED");
+    getMessages();
 
-      dispatch(
-        addComment({
-          ...data.val(),
-          date: elapsedTime(data.val().date),
-          key: data.key,
-        }),
-      );
-      setDownloading(false);
-    });
-
-    onChildChanged(q, (data) => {
-      dispatch(
-        editComment({
-          ...data.val(),
-          date: elapsedTime(data.val().date),
-          key: data.key,
-        }),
-      );
-    });
+    commentsChannel
+      .on<Comment>(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "comments" },
+        (data) => {
+          if (data.eventType === "INSERT") {
+            dispatch(addComment(data.new));
+          }
+          if (data.eventType === "UPDATE") {
+            dispatch(editComment(data.new));
+          }
+          if (data.eventType === "DELETE") {
+            if (data.old.id) dispatch(deleteCommentSlice(data.old.id));
+          }
+        },
+      )
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          console.log("subscribed to", commentsChannel);
+        }
+      });
 
     setTimeout(() => {
       setDownloading(false);
     }, 3000);
     return () => {
-      off(q, "child_added");
+      supabase.removeChannel(commentsChannel);
     };
-  }, [db, dispatch, limit, path]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, limit, path]);
 
   const openMenu = () => setShowMenu(true);
   const closeMenu = () => setShowMenu(false);
@@ -121,112 +113,80 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
       mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
+      base64: true,
     }).catch((error) => {
       console.log(error);
     });
 
     if (result && !result?.canceled) {
-      setImage(result.assets[0].uri);
+      console.log(result);
+
+      setImage(result.assets[0]);
     } else console.log("cancelled");
   };
   const handleSend = async () => {
     if (author && text && uid && !loading) {
       setLoading(true);
-      const newPostRef = push(dbRef(db, path));
-      set(newPostRef, {
-        author,
-        text,
-        date: Date.now(),
-        uid,
-      })
-        .then(async (res) => {
-          if (image && newPostRef.key) {
-            const upload = await uploadImage(uid + "/" + path, newPostRef.key);
+      await supabase
+        .from("comments")
+        .insert({
+          author: uid,
+          author_name: author,
+          text,
+          key: path,
+        })
+        .select()
+        .then(async ({ data, error }) => {
+          setLoading(false);
+
+          if (image && !error) {
+            const upload = await uploadImage(uid + "/" + path, data?.[0].id);
             console.log("image upload", upload);
 
-            setImage("");
+            setImage(null);
             setLoading(false);
             setText("");
           } else {
             setLoading(false);
             setText("");
           }
-        })
-        .catch((err) => {
-          console.log(
-            {
-              author,
-              text,
-              date: Date.now(),
-              uid,
-            },
-            "upload to",
-            path,
-          );
-
-          console.log(err);
         });
     }
   };
-  const uploadImage = async (storagePath: string, key: string) => {
-    let localUri = image;
-    let fileName = localUri.split("/").pop() || "";
+  const uploadImage = async (storagePath: string, key: number) => {
+    if (!image || !image.fileName) return;
 
-    let match = /\.(\w+)$/.exec(fileName);
-    let type = match ? `image/${match[1]}` : "image";
+    console.log("path: " + storagePath + "/" + key + "/" + image.fileName);
 
-    let formData = new FormData();
-    const file = new File([localUri], fileName, {
-      type,
-    });
-    formData.append("image", file);
-
-    const blob: Blob = await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = function () {
-        resolve(xhr.response);
-      };
-      xhr.onerror = function (e) {
-        console.log(e);
-        reject(new TypeError("Network request failed"));
-      };
-      xhr.responseType = "blob";
-      xhr.open("GET", localUri, true);
-      xhr.send(null);
-    });
-
-    const storage = getStorage();
-    const imageStorageRef = storageRef(
-      storage,
-      storagePath + "/" + key + "/" + fileName,
-    );
-
-    const upload = await uploadBytes(imageStorageRef, blob)
-      .then(async (snapshot) => {
-        return await getDownloadURL(imageStorageRef)
-          .then(async (imageUrl) => {
-            const imageUpdateRef = dbRef(db, path + "/" + key + "/fileName");
-
-            return await set(imageUpdateRef, fileName)
-              .then((res2) => {
-                console.log("DB update with image success", key);
-                return fileName;
-              })
-              .catch((error) => {
-                console.log(
-                  "DB update with image error, on " +
-                    storagePath +
-                    "/" +
-                    key +
-                    "/fileName",
-                  error,
-                );
-                return error;
-              });
-          })
-          .catch((error) => {
-            console.log("err", image);
-            return error;
+    const response = await fetch(image.uri);
+    const blob = await response.blob();
+    const arrayBuffer = await new Response(blob).arrayBuffer();
+    const upload = await supabase.storage
+      .from("comments")
+      .upload(storagePath + "/" + key + "/" + image.fileName, arrayBuffer, {
+        contentType: image.mimeType,
+        upsert: false,
+      })
+      .then(async ({ data, error }) => {
+        const path = data?.path;
+        supabase
+          .from("comments")
+          .update({ image: path })
+          .eq("id", key)
+          .then(({ data, error }) => {
+            if (error) {
+              console.log(
+                "DB update with image error, on " +
+                  storagePath +
+                  "/" +
+                  key +
+                  "/image",
+                error,
+              );
+              return error;
+            }
+            console.log("DB update with image success", key);
+            return image;
           });
       })
       .catch((error) => {
@@ -247,40 +207,39 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     setMenuAnchor(anchor);
     openMenu();
   };
-  const deleteComment = (comment: Comment) => {
-    const deleteRef = dbRef(db, path + "/" + comment.key);
+  const deleteComment = async (comment: Comment) => {
+    const { error } = await supabase
+      .from("comments")
+      .delete()
+      .eq("id", comment.id);
+    if (!error) {
+      setShowMenu(false);
+      dispatch(deleteCommentSlice(comment.id));
+      console.log(comment.id);
 
-    remove(deleteRef)
-      .then((res) => {
-        console.log(res);
-        setShowMenu(false);
-        dispatch(deleteCommentSlice(comment.key));
-        if (comment.fileName !== "") removeImage(comment);
-        //TODO TOAST
-      })
-      .catch((err) => {
-        console.log(err);
-        setShowMenu(false);
-      });
+      if (comment.image !== "") removeImage(comment);
+      //TODO TOAST
+    } else {
+      console.log(error);
+      setShowMenu(false);
+    }
   };
   const removeImage = (comment: Comment) => {
-    const storage = getStorage();
-
-    const imageRef = storageRef(
-      storage,
-      comment.uid + "/" + path + "/" + comment.key + "/" + comment.fileName,
-    );
-    deleteObject(imageRef)
-      .then(() => {
-        console.log("image deleted");
-      })
-      .catch((error) => {
-        // Uh-oh, an error occurred!
-        console.log("image delete error", error);
-      });
+    if (comment.image) {
+      supabase.storage
+        .from("comments")
+        .remove([comment.image])
+        .then(() => {
+          console.log("image deleted");
+        })
+        .catch((error) => {
+          // Uh-oh, an error occurred!
+          console.log("image delete error", error);
+        });
+    }
   };
   const dismissImage = () => {
-    setImage("");
+    setImage(null);
   };
 
   return (
@@ -303,7 +262,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
           />
         </View>
         {image ? (
-          <ImageBackground source={{ uri: image }}>
+          <ImageBackground source={{ uri: image.uri }}>
             <IconButton icon="close" onPress={dismissImage} />
           </ImageBackground>
         ) : (
@@ -339,33 +298,25 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                     <View style={{ flexDirection: "row", flex: 1 }}>
                       <Pressable
                         onPress={() => {
-                          if (comment?.uid)
+                          if (comment?.author)
                             navigation.push({
-                              pathname: "user/" + comment.uid,
+                              pathname: "user/" + comment.author,
                             });
                         }}
                       >
                         <Text style={{ fontWeight: "bold" }}>
-                          {comment.author}
+                          {comment.author_name}
                         </Text>
                       </Pressable>
-                      <Text> {comment.date}</Text>
+                      <Text> {elapsedTime(comment.created_at)}</Text>
                     </View>
                   </View>
                   <UrlText text={comment.text} />
                 </View>
-                {comment.fileName && (
+                {comment.image && (
                   <Pressable onPress={() => setSelectedComment(comment)}>
-                    <FirebaseImage
-                      path={
-                        comment.uid +
-                        "/" +
-                        path +
-                        "/" +
-                        comment.key +
-                        "/" +
-                        comment.fileName
-                      }
+                    <SupabaseImage
+                      path={comment.image}
                       style={{ width: 100, height: 100 }}
                     />
                   </Pressable>
@@ -376,7 +327,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                     icon="dots-vertical"
                     onPress={(e) => showCommentMenu(e, comment)}
                     size={18}
-                    iconColor={comment.fileName ? "white" : "black"}
+                    iconColor={comment.image ? "white" : "black"}
                     style={{ margin: 0, position: "absolute", right: 0 }}
                   />
                 )}
@@ -388,7 +339,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
 
       {uid && (
         <Menu visible={showMenu} onDismiss={closeMenu} anchor={menuAnchor}>
-          {menuAnchor?.comment?.uid === uid ? (
+          {menuAnchor?.comment?.author === uid ? (
             <>
               <Menu.Item
                 onPress={() => deleteComment(menuAnchor.comment)}
@@ -400,10 +351,10 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             <>
               <Menu.Item
                 onPress={() => {
-                  navigation.push("user/" + menuAnchor?.comment.uid);
+                  navigation.push("user/" + menuAnchor?.comment.author);
                   setShowMenu(false);
                 }}
-                title={menuAnchor?.comment?.author + " profilja"}
+                title={menuAnchor?.comment?.author_name + " profilja"}
                 leadingIcon="account"
               />
               <Menu.Item
@@ -423,7 +374,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
           <Text style={{ padding: 20 }}>Még nem érkezett komment</Text>
         )
       )}
-      {selectedComment && (
+      {selectedComment?.image && (
         <Portal>
           <Modal
             visible={!!selectedComment}
@@ -431,16 +382,8 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             contentContainerStyle={{ shadowOpacity: 0 }}
           >
             <Pressable onPress={() => setSelectedComment(null)}>
-              <FirebaseImage
-                path={
-                  selectedComment.uid +
-                  "/" +
-                  path +
-                  "/" +
-                  selectedComment.key +
-                  "/" +
-                  selectedComment.fileName
-                }
+              <SupabaseImage
+                path={selectedComment.image}
                 style={{ height: 600 }}
                 resizeMode="contain"
               />

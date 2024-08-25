@@ -1,5 +1,5 @@
 import { ImageProps, StyleProp } from "react-native";
-import FirebaseImage from "../FirebaseImage";
+import SupabaseImage from "../SupabaseImage";
 
 interface ProfileImageProps {
   uid: string;
@@ -8,7 +8,7 @@ interface ProfileImageProps {
 
 const ProfileImage = ({ uid, style }: ProfileImageProps) => {
   return (
-    <FirebaseImage path={"profiles/" + uid + "/profile.jpg"} style={style} />
+    <SupabaseImage path={"profiles/" + uid + "/profile.jpg"} style={style} />
   );
 };
 

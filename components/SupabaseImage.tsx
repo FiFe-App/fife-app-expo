@@ -1,25 +1,28 @@
+import { supabase } from "@/lib/supabase/supabase";
 import { Image, ImageContentFit } from "expo-image";
-import { getDownloadURL, getStorage, ref } from "firebase/storage";
 import { useEffect, useState } from "react";
 import { ImageStyle, StyleProp, StyleSheet, View } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 
-interface FirebaseImageProps {
+interface SupabaseImageProps {
   path: string;
   style?: StyleProp<ImageStyle>;
   resizeMode?: ImageContentFit | undefined;
 }
 
-const FirebaseImage = ({ path, style, resizeMode }: FirebaseImageProps) => {
+const SupabaseImage = ({ path, style, resizeMode }: SupabaseImageProps) => {
   const [source, setSource] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storage = getStorage();
-    const imageRef = ref(storage, path);
-    getDownloadURL(imageRef)
-      .then((res) => {
-        setSource(res);
+    const getImage = async () => {
+      const res = await supabase.storage.from("comments").getPublicUrl(path);
+      return res;
+    };
+
+    getImage()
+      .then(({ data }) => {
+        setSource(data.publicUrl);
       })
       .catch((err) => {
         setLoading(false);
@@ -29,7 +32,7 @@ const FirebaseImage = ({ path, style, resizeMode }: FirebaseImageProps) => {
   return (
     <View style={{}}>
       <Image
-        source={{ uri: source }}
+        source={source}
         style={style}
         contentFit={resizeMode}
         onLoadEnd={() => setLoading(false)}
@@ -49,4 +52,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FirebaseImage;
+export default SupabaseImage;
