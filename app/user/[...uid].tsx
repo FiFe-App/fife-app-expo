@@ -1,11 +1,10 @@
-import { friendship, user } from "@/app";
 import ProfileImage from "@/components/user/ProfileImage";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 import { useFocusEffect, useGlobalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { View } from "react-native";

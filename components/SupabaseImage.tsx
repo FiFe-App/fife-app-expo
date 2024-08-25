@@ -1,6 +1,5 @@
 import { supabase } from "@/lib/supabase/supabase";
 import { Image, ImageContentFit } from "expo-image";
-import { getDownloadURL, getStorage, ref } from "firebase/storage";
 import { useEffect, useState } from "react";
 import { ImageStyle, StyleProp, StyleSheet, View } from "react-native";
 import { ActivityIndicator } from "react-native-paper";

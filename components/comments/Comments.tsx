@@ -102,6 +102,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     return () => {
       supabase.removeChannel(commentsChannel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, limit, path]);
 
   const openMenu = () => setShowMenu(true);

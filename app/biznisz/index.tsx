@@ -16,6 +16,8 @@ import {
   Text,
   TextInput,
   Modal,
+  Card,
+  IconButton,
 } from "react-native-paper";
 import { useSelector } from "react-redux";
 
@@ -39,6 +41,7 @@ export default function Index() {
   const [visible, setVisible] = useState(false);
   const [circle, setCircle] = useState<MapCircleType | undefined>(undefined);
 
+  const [tutorialVisible, setTutorialVisible] = useState(true);
   const showModal = () => setVisible(true);
   const hideModal = () => setVisible(false);
   const containerStyle = {
@@ -87,6 +90,7 @@ export default function Index() {
         load({});
         console.log("MyLocationLoaded");
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [myLocation, locationError]),
   );
 
@@ -96,14 +100,68 @@ export default function Index() {
   };
   if (uid)
     return (
-      <ScrollView>
-        <TextInput
-          value={search}
-          onChangeText={setSearch}
-          onSubmitEditing={() => load({})}
-          placeholder="Keress a bizniszek közt..."
-          right={<TextInput.Icon icon="magnify" onPress={load} />}
-        />
+      <View>
+        <Card
+          mode="elevated"
+          style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+        >
+          {tutorialVisible && (
+            <Card.Title
+              title={"Bizniszelésre fel!"}
+              right={() => (
+                <IconButton
+                  icon="close"
+                  onPress={() => setTutorialVisible(false)}
+                />
+              )}
+            />
+          )}
+          <Card.Content>
+            {tutorialVisible && (
+              <Text style={{ textAlign: "justify" }}>
+                A te bizniszeid azon hobbijaid, képességeid vagy szakmáid
+                listája, amelyeket meg szeretnél osztani másokkal is. {"\n"}Ha
+                te mondjuk úgy gyártod a sütiket, mint egy gép, és ezt felveszed
+                a bizniszeid közé, ezen az oldalon megtalálható leszel a süti
+                kulcsszóval.
+              </Text>
+            )}
+            <TextInput
+              value={search}
+              mode="outlined"
+              onChangeText={setSearch}
+              onSubmitEditing={() => load({})}
+              placeholder="Keress a bizniszek közt..."
+              right={<TextInput.Icon icon="magnify" onPress={load} />}
+            />
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <View style={{ flex: 1 }}>
+                {!!locationError && (
+                  <Text>
+                    <Icon size={16} source="map-marker-question" />
+                    {locationError}
+                  </Text>
+                )}
+                {!!circle ? (
+                  <Text>
+                    <Icon size={16} source="map-marker-account" />
+                    Keresés meghatározott terület alapján.
+                  </Text>
+                ) : (
+                  !!myLocation && (
+                    <Text>
+                      <Icon size={16} source="map-marker" />
+                      Keresés jelenlegi helyzeted alapján.
+                    </Text>
+                  )
+                )}
+              </View>
+              <Button onPress={showModal}>
+                {!!circle ? "Környék kiválasztva" : "Válassz környéket"}
+              </Button>
+            </View>
+          </Card.Content>
+        </Card>
 
         <Portal>
           <Modal
@@ -114,24 +172,7 @@ export default function Index() {
             <MapSelector data={circle} setData={setCircle} searchEnabled />
           </Modal>
         </Portal>
-        <View style={{ flexDirection: "row" }}>
-          <View>
-            {!!locationError && (
-              <Text>
-                <Icon size={16} source="map-marker-question" />
-                {locationError}
-              </Text>
-            )}
-            {!!myLocation && (
-              <Text>
-                <Icon size={16} source="map-marker" />
-                Keresés jelenlegi helyzeted alapján.
-              </Text>
-            )}
-          </View>
-          <Button onPress={showModal}>Válassz környéket</Button>
-        </View>
-        <ScrollView contentContainerStyle={{ gap: 8 }}>
+        <ScrollView contentContainerStyle={{ gap: 8, marginTop: 8 }}>
           {loading && <ActivityIndicator />}
           {list.map((buzinessItem) => (
             <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
@@ -140,6 +181,6 @@ export default function Index() {
             <Button onPress={loadNext}>További bizniszek</Button>
           )}
         </ScrollView>
-      </ScrollView>
+      </View>
     );
 }
