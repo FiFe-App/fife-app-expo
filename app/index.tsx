@@ -22,20 +22,24 @@ export default function Index() {
         gap: 24,
       }}
     >
-      <Link href="/mapTest" asChild>
-        <Button mode="contained">Térkép kereső</Button>
-      </Link>
       {uid ? (
         <>
-          <Link href="/user" asChild>
-            <Button mode="contained">Profilom</Button>
-          </Link>
-          <Button mode="contained" onPress={() => logout()}>
-            Kijelentkezés
-          </Button>
-          <Link href="/biznisz" asChild>
-            <Button mode="contained">Buziness</Button>
-          </Link>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <Link href="/user" asChild>
+              <Button mode="contained">Profilom</Button>
+            </Link>
+            <Button mode="contained" onPress={() => logout()}>
+              Kijelentkezés
+            </Button>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <Link href="/biznisz" asChild>
+              <Button mode="contained">Biznisz</Button>
+            </Link>
+            <Link href="/biznisz/new" asChild>
+              <Button mode="contained">Új Biznisz</Button>
+            </Link>
+          </View>
         </>
       ) : (
         <Link href="/loginTest" asChild>
@@ -44,6 +48,9 @@ export default function Index() {
       )}
       <Link href="/commentsTest" asChild>
         <Button mode="contained">Kommentek</Button>
+      </Link>
+      <Link href="/mapTest" asChild>
+        <Button mode="contained">Térkép kereső</Button>
       </Link>
       <Link href="/notfound" asChild>
         <Button>Eltévedek</Button>

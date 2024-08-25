@@ -34,6 +34,10 @@ export default function RootLayout() {
                 name="biznisz/index"
                 options={{ title: "Biznisz" }}
               />
+              <Stack.Screen
+                name="biznisz/new"
+                options={{ title: "Új Biznisz" }}
+              />
             </Stack>
           </PaperProvider>
         </FirebaseProvider>

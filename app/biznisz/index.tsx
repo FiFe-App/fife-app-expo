@@ -73,15 +73,18 @@ export default function Index() {
           }
         : null;
     if (searchLocation)
-      supabase.rpc("nearby_buziness", searchLocation).then((res) => {
-        setLoading(false);
-        if (res.data) {
-          setList(res.data);
-        }
-        if (res.error) {
-          console.log(res.error);
-        }
-      });
+      supabase
+        .rpc("nearby_buziness", searchLocation)
+        .range(0, 10)
+        .then((res) => {
+          setLoading(false);
+          if (res.data) {
+            setList(res.data);
+          }
+          if (res.error) {
+            console.log(res.error);
+          }
+        });
   };
 
   useFocusEffect(
