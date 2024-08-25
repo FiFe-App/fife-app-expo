@@ -161,7 +161,7 @@ const MapSelector = ({
             mode="contained-tonal"
           />
         </View>
-        {error}
+        <Text>{error}</Text>
         <View style={{ width: "100%", alignItems: "center" }}>
           <Button mode="contained" style={styles.submit} onPress={onSubmit}>
             <Text>Helyzet mentése</Text>

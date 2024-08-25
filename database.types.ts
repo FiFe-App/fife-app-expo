@@ -170,9 +170,18 @@ export type Database = {
       nearby_buziness: {
         Args: {
           lat: number
-          lng: number
+          long: number
+          search: string
         }
-        Returns: Record<string, unknown>
+        Returns: {
+          id: number
+          title: string
+          description: string
+          author: string
+          lat: number
+          long: number
+          dist_meters: number
+        }[]
       }
     }
     Enums: {

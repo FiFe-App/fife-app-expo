@@ -4,18 +4,19 @@ import { Icon, Text } from "react-native-paper";
 import ProfileImage from "../user/ProfileImage";
 import { BuzinessItemInterface } from "@/app/biznisz";
 import toDistanceText from "@/lib/functions/distanceText";
+import { Tables } from "@/database.types";
 
 interface BuzinessItemProps {
   data: BuzinessItemInterface;
 }
 
 const BuzinessItem = ({ data }: BuzinessItemProps) => {
-  const { uid, name, description, id } = data;
+  const { author, title, description, id } = data;
 
-  const distance = Math.round(data?.page?.[0]?.distance * 10) / 10;
+  const distance = Math.round(data?.distance * 10) / 10;
   const distanceText = toDistanceText(distance / 1000);
 
-  const categories = name?.split(" ") || name;
+  const categories = title?.split(" ") || name;
   const small = true;
   return (
     <Pressable
@@ -57,7 +58,7 @@ const BuzinessItem = ({ data }: BuzinessItemProps) => {
           </View>
         </View>
         <View style={{ flex: 1 }}>
-          <ProfileImage uid={uid} style={{}} />
+          <ProfileImage uid={author} style={{}} />
         </View>
       </View>
     </Pressable>
