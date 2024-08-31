@@ -1,3 +1,4 @@
+import BuzinessItem from "@/components/buziness/BuzinessItem";
 import ProfileImage from "@/components/user/ProfileImage";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
@@ -5,9 +6,9 @@ import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import axios from "axios";
-import { useFocusEffect, useGlobalSearchParams } from "expo-router";
+import { router, useFocusEffect, useGlobalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { useSelector } from "react-redux";
 
@@ -15,12 +16,15 @@ type UserInfo = Tables<"profiles">;
 
 export default function Index() {
   const { uid: paramUid } = useGlobalSearchParams();
-  const uid: string = paramUid as string;
+  const uid: string = paramUid?.[0] || "";
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
+  console.log(myUid, uid);
+
   const myProfile = myUid === uid;
   const [data, setData] = useState<UserInfo | null>(null);
+  const [buzinesses, setBuzinesses] = useState<Tables<"buziness">[]>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -29,7 +33,7 @@ export default function Index() {
 
         supabase
           .from("profiles")
-          .select()
+          .select("*")
           .eq("id", uid)
           .then(({ data, error }) => {
             if (error) {
@@ -38,6 +42,15 @@ export default function Index() {
             }
             if (data) {
               setData(data[0]);
+              supabase
+                .from("buziness")
+                .select()
+                .eq("author", uid)
+                .then((res) => {
+                  if (res.data) {
+                    setBuzinesses(res.data);
+                  }
+                });
               console.log(data);
             }
           });
@@ -49,7 +62,7 @@ export default function Index() {
 
   if (uid)
     return (
-      <View>
+      <View style={{ flex: 1 }}>
         <View style={{ flexDirection: "row" }}>
           <ProfileImage uid={uid} style={{ width: 100, height: 100 }} />
           <View style={{ flex: 1 }}>
@@ -85,6 +98,21 @@ export default function Index() {
           <Button style={{ flex: 1 }} mode="contained-tonal" disabled>
             Üzenek neki
           </Button>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text>Bizniszeim</Text>
+          <ScrollView style={{ gap: 4 }}>
+            {buzinesses.map((buzinessItem) => (
+              <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
+            ))}
+            {myProfile && (
+              <View>
+                <Button onPress={() => router.push("biznisz/new")}>
+                  <Text>Új Biznisz felvétele</Text>
+                </Button>
+              </View>
+            )}
+          </ScrollView>
         </View>
       </View>
     );

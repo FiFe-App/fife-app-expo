@@ -1,6 +1,7 @@
 import BuzinessItem from "@/components/buziness/BuzinessItem";
 import MapSelector from "@/components/MapSelector/MapSelector";
 import { MapCircleType } from "@/components/MapSelector/MapSelector.types";
+import { containerStyle } from "@/components/styles";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
@@ -11,24 +12,22 @@ import { ScrollView, View } from "react-native";
 import {
   ActivityIndicator,
   Button,
+  Card,
+  Drawer,
   Icon,
+  IconButton,
+  Modal,
   Portal,
   Text,
   TextInput,
-  Modal,
-  Card,
-  IconButton,
 } from "react-native-paper";
 import { useSelector } from "react-redux";
+import { Tables } from "@/database.types";
 
-export interface BuzinessItemInterface {
-  id: number;
-  title: string;
-  description: string;
-  author: string;
-  lat: number;
-  long: number;
-  dist_meters: number;
+export interface BuzinessItemInterface extends Tables<"buziness"> {
+  lat?: number;
+  long?: number;
+  distance?: number;
 }
 
 export default function Index() {
@@ -38,21 +37,14 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [skip, setSkip] = useState(0);
   const { myLocation, error: locationError } = useMyLocation();
-  const [visible, setVisible] = useState(false);
+  const [mapModalVisible, setMapModalVisible] = useState(false);
+  const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [circle, setCircle] = useState<MapCircleType | undefined>(undefined);
 
   const [tutorialVisible, setTutorialVisible] = useState(true);
-  const showModal = () => setVisible(true);
-  const hideModal = () => setVisible(false);
-  const containerStyle = {
-    backgroundColor: "white",
-    padding: 20,
-    margin: 30,
-    height: 500,
-  };
   useEffect(() => {
     if (circle) {
-      setVisible(false);
+      setMapModalVisible(false);
     }
   }, [circle]);
 
@@ -103,7 +95,7 @@ export default function Index() {
   };
   if (uid)
     return (
-      <View>
+      <View style={{ flex: 1 }}>
         <Card
           mode="elevated"
           style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
@@ -159,7 +151,7 @@ export default function Index() {
                   )
                 )}
               </View>
-              <Button onPress={showModal}>
+              <Button onPress={() => setMapModalVisible(true)}>
                 {!!circle ? "Környék kiválasztva" : "Válassz környéket"}
               </Button>
             </View>
@@ -168,14 +160,49 @@ export default function Index() {
 
         <Portal>
           <Modal
-            visible={visible}
-            onDismiss={hideModal}
+            visible={mapModalVisible}
+            onDismiss={() => {
+              setMapModalVisible(false);
+            }}
             contentContainerStyle={containerStyle}
           >
             <MapSelector data={circle} setData={setCircle} searchEnabled />
           </Modal>
+          <Modal
+            visible={locationMenuVisible}
+            onDismiss={() => {
+              setLocationMenuVisible(false);
+            }}
+            contentContainerStyle={[
+              {
+                backgroundColor: "white",
+                margin: 40,
+                padding: 10,
+                height: "auto",
+                borderRadius: 16,
+              },
+            ]}
+          >
+            <Drawer.Item
+              label="Hozzám közel"
+              onPress={() => {}}
+              right={() => <Icon source="navigation-variant" size={20} />}
+            />
+            <Drawer.Item
+              label="Válassz a térképen"
+              onPress={() => {}}
+              right={() => <Icon source="map" size={20} />}
+            />
+            <Drawer.Item
+              label="Mindegy hol"
+              onPress={() => {}}
+              right={() => (
+                <Icon source="map-marker-question-outline" size={20} />
+              )}
+            />
+          </Modal>
         </Portal>
-        <ScrollView contentContainerStyle={{ gap: 8, marginTop: 8 }}>
+        <ScrollView contentContainerStyle={{ gap: 8, marginTop: 8, flex: 1 }}>
           {loading && <ActivityIndicator />}
           {list.map((buzinessItem) => (
             <BuzinessItem data={buzinessItem} key={buzinessItem.id} />

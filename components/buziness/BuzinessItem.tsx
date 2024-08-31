@@ -12,8 +12,8 @@ interface BuzinessItemProps {
 const BuzinessItem = ({ data }: BuzinessItemProps) => {
   const { author, title, description, id } = data;
 
-  const distance = Math.round(data?.dist_meters * 10) / 10;
-  const distanceText = toDistanceText(distance / 1000);
+  const distance = data?.distance ? Math.round(data?.distance * 10) / 10 : null;
+  const distanceText = distance ? toDistanceText(distance / 1000) : "";
 
   const categories = title?.split(" ");
   return (

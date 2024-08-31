@@ -3,7 +3,9 @@ import * as Location from "expo-location";
 import { useEffect, useState } from "react";
 
 export function useMyLocation() {
-  const [myLocation, setLocation] = useState<Location.LocationObject | null>();
+  const [myLocation, setLocation] = useState<Location.LocationObject | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>();
 
   useEffect(() => {

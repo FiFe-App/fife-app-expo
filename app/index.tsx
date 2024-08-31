@@ -49,9 +49,6 @@ export default function Index() {
       <Link href="/commentsTest" asChild>
         <Button mode="contained">Kommentek</Button>
       </Link>
-      <Link href="/mapTest" asChild>
-        <Button mode="contained">Térkép kereső</Button>
-      </Link>
       <Link href="/notfound" asChild>
         <Button>Eltévedek</Button>
       </Link>

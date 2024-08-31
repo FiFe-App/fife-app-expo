@@ -12,6 +12,7 @@ import { TextInput, Text, Card } from "react-native-paper";
 
 interface TagInputType {
   onChange: React.SetStateAction<any>;
+  value?: string;
   defaultValue?: string;
   style?: StyleProp<ViewStyle>;
   placeholder?: string;
@@ -57,7 +58,7 @@ const TagInput = ({
           return (
             <Card
               key={"tags" + i}
-              style={{ padding: 4, margin: 4 }}
+              style={{ margin: 4 }}
               contentStyle={{
                 flexDirection: "row",
               }}
