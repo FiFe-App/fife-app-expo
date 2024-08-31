@@ -23,6 +23,7 @@ import {
 } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { Tables } from "@/database.types";
+import { ThemedView } from "@/components/ThemedView";
 
 export interface BuzinessItemInterface extends Tables<"buziness"> {
   lat?: number;
@@ -95,7 +96,7 @@ export default function Index() {
   };
   if (uid)
     return (
-      <View style={{ flex: 1 }}>
+      <ThemedView style={{ flex: 1 }}>
         <Card
           mode="elevated"
           style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
@@ -164,9 +165,10 @@ export default function Index() {
             onDismiss={() => {
               setMapModalVisible(false);
             }}
-            contentContainerStyle={containerStyle}
           >
-            <MapSelector data={circle} setData={setCircle} searchEnabled />
+            <ThemedView style={containerStyle}>
+              <MapSelector data={circle} setData={setCircle} searchEnabled />
+            </ThemedView>
           </Modal>
           <Modal
             visible={locationMenuVisible}
@@ -211,6 +213,6 @@ export default function Index() {
             <Button onPress={loadNext}>További bizniszek</Button>
           )}
         </ScrollView>
-      </View>
+      </ThemedView>
     );
 }

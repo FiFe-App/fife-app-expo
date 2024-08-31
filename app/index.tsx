@@ -1,3 +1,4 @@
+import { ThemedView } from "@/components/ThemedView";
 import { FirebaseContext } from "@/lib/firebase/firebase";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
@@ -14,7 +15,7 @@ export default function Index() {
   } = useContext(FirebaseContext);
 
   return (
-    <View
+    <ThemedView
       style={{
         flex: 1,
         justifyContent: "center",
@@ -52,6 +53,6 @@ export default function Index() {
       <Link href="/notfound" asChild>
         <Button>Eltévedek</Button>
       </Link>
-    </View>
+    </ThemedView>
   );
 }

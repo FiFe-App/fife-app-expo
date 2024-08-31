@@ -2,7 +2,7 @@ import { ImageProps, StyleProp } from "react-native";
 import SupabaseImage from "../SupabaseImage";
 
 interface ProfileImageProps {
-  uid: string;
+  uid?: string;
   style?: StyleProp<ImageProps>;
 }
 

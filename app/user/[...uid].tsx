@@ -1,4 +1,5 @@
 import BuzinessItem from "@/components/buziness/BuzinessItem";
+import { ThemedView } from "@/components/ThemedView";
 import ProfileImage from "@/components/user/ProfileImage";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
@@ -62,7 +63,7 @@ export default function Index() {
 
   if (uid)
     return (
-      <View style={{ flex: 1 }}>
+      <ThemedView style={{ flex: 1 }}>
         <View style={{ flexDirection: "row" }}>
           <ProfileImage uid={uid} style={{ width: 100, height: 100 }} />
           <View style={{ flex: 1 }}>
@@ -101,7 +102,7 @@ export default function Index() {
         </View>
         <View style={{ flex: 1 }}>
           <Text>Bizniszeim</Text>
-          <ScrollView style={{ gap: 4 }}>
+          <ScrollView contentContainerStyle={{ gap: 4 }}>
             {buzinesses.map((buzinessItem) => (
               <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
             ))}
@@ -114,6 +115,6 @@ export default function Index() {
             )}
           </ScrollView>
         </View>
-      </View>
+      </ThemedView>
     );
 }
