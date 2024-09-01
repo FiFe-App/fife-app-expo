@@ -12,7 +12,7 @@ export function useMyLocation() {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setError("Nem tudjuk hol vagy! O.o");
+        setError("Nem tudjuk hol vagy");
         return;
       }
 

@@ -82,12 +82,12 @@ export default function Index() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!list.length && (myLocation || locationError)) {
+      if (myLocation || circle) {
         load({});
         console.log("MyLocationLoaded");
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [myLocation, locationError]),
+    }, [myLocation, circle]),
   );
 
   const loadNext = () => {
@@ -125,12 +125,26 @@ export default function Index() {
             <TextInput
               value={search}
               mode="outlined"
+              outlineStyle={{ borderRadius: 1000 }}
+              style={{ marginTop: 4 }}
               onChangeText={setSearch}
               onSubmitEditing={() => load({})}
               placeholder="Keress a bizniszek közt..."
-              right={<TextInput.Icon icon="magnify" onPress={load} />}
+              right={
+                <TextInput.Icon
+                  icon="magnify"
+                  onPress={load}
+                  mode="contained"
+                />
+              }
             />
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 4,
+              }}
+            >
               <View style={{ flex: 1 }}>
                 {!!locationError && (
                   <Text>
@@ -138,21 +152,17 @@ export default function Index() {
                     {locationError}
                   </Text>
                 )}
-                {!!circle ? (
+                {!!myLocation && (
                   <Text>
-                    <Icon size={16} source="map-marker-account" />
-                    Keresés meghatározott terület alapján.
+                    <Icon size={16} source="map-marker" />
+                    Keresés jelenlegi helyzeted alapján.
                   </Text>
-                ) : (
-                  !!myLocation && (
-                    <Text>
-                      <Icon size={16} source="map-marker" />
-                      Keresés jelenlegi helyzeted alapján.
-                    </Text>
-                  )
                 )}
               </View>
-              <Button onPress={() => setMapModalVisible(true)}>
+              <Button
+                onPress={() => setMapModalVisible(true)}
+                mode={!circle ? "contained" : "contained-tonal"}
+              >
                 {!!circle ? "Környék kiválasztva" : "Válassz környéket"}
               </Button>
             </View>
@@ -204,7 +214,15 @@ export default function Index() {
             />
           </Modal>
         </Portal>
-        <ScrollView contentContainerStyle={{ gap: 8, marginTop: 8, flex: 1 }}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            gap: 8,
+            marginTop: 8,
+
+            flex: 1,
+          }}
+        >
           {loading && <ActivityIndicator />}
           {list.map((buzinessItem) => (
             <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
