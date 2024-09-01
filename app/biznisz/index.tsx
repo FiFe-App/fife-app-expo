@@ -2,8 +2,8 @@ import BuzinessItem from "@/components/buziness/BuzinessItem";
 import MapSelector from "@/components/MapSelector/MapSelector";
 import { MapCircleType } from "@/components/MapSelector/MapSelector.types";
 import { useMyLocation } from "@/hooks/useMyLocation";
+import { storeBuzinesses } from "@/lib/redux/reducers/buzinessReducer";
 import { RootState } from "@/lib/redux/store";
-import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -11,29 +11,21 @@ import { ScrollView, View } from "react-native";
 import {
   ActivityIndicator,
   Button,
+  Card,
   Icon,
+  IconButton,
+  Modal,
   Portal,
   Text,
   TextInput,
-  Modal,
-  Card,
-  IconButton,
 } from "react-native-paper";
-import { useSelector } from "react-redux";
-
-export interface BuzinessItemInterface {
-  id: number;
-  title: string;
-  description: string;
-  author: string;
-  lat: number;
-  long: number;
-  dist_meters: number;
-}
+import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
-  const { uid }: UserState = useSelector((state: RootState) => state.user);
-  const [list, setList] = useState<BuzinessItemInterface[]>([]);
+  const { uid } = useSelector((state: RootState) => state.user);
+  const { buzinesses } = useSelector((state: RootState) => state.buziness);
+  const dispatch = useDispatch();
+
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [skip, setSkip] = useState(0);
@@ -76,7 +68,7 @@ export default function Index() {
       supabase.rpc("nearby_buziness", searchLocation).then((res) => {
         setLoading(false);
         if (res.data) {
-          setList(res.data);
+          dispatch(storeBuzinesses(res.data));
         }
         if (res.error) {
           console.log(res.error);
@@ -86,7 +78,7 @@ export default function Index() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!list.length && (myLocation || locationError)) {
+      if (!buzinesses.length && (myLocation || locationError)) {
         load({});
         console.log("MyLocationLoaded");
       }
@@ -174,10 +166,10 @@ export default function Index() {
         </Portal>
         <ScrollView contentContainerStyle={{ gap: 8, marginTop: 8 }}>
           {loading && <ActivityIndicator />}
-          {list.map((buzinessItem) => (
+          {buzinesses.map((buzinessItem) => (
             <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
           ))}
-          {!!list.length && (
+          {!!buzinesses.length && (
             <Button onPress={loadNext}>További bizniszek</Button>
           )}
         </ScrollView>

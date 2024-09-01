@@ -1,4 +1,5 @@
 import { Comment } from "@/components/comments/comments.types";
+import { Tables } from "@/database.types";
 
 export interface UserState {
   uid?: string;
@@ -14,4 +15,28 @@ export interface UserState {
 }
 export interface CommentsState {
   comments: Comment[];
+}
+
+export type Buziness = Tables<"buziness">;
+
+export interface BuzinessItemInterface {
+  id: number;
+  title: string;
+  description: string;
+  author: string;
+  lat: number;
+  long: number;
+  dist_meters: number;
+}
+export interface BuzinessSearchParams {
+  text?: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
+  skip: number;
+}
+export interface BuzinessState {
+  buzinesses: BuzinessItemInterface[];
+  buzinessSearchParams?: BuzinessSearchParams;
 }
