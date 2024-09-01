@@ -1,14 +1,14 @@
-import ProfileImage from "@/components/user/ProfileImage";
+import { ThemedView } from "@/components/ThemedView";
+import Comments from "@/components/comments/Comments";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { useFocusEffect, useGlobalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { View } from "react-native";
-import { Button, Chip, Text } from "react-native-paper";
+import { Chip, Text } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { BuzinessItemInterface } from ".";
-import { ThemedView } from "@/components/ThemedView";
 
 export default function Index() {
   const { id: paramId } = useGlobalSearchParams();
@@ -75,6 +75,7 @@ export default function Index() {
         <View style={{ flex: 1 }}>
           <Text>{data?.description}</Text>
         </View>
+        <Comments path={"buziness/" + id} placeholder="Mondd el a véleményed" />
       </ThemedView>
     );
 }

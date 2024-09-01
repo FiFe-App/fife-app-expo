@@ -44,9 +44,9 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     (state: RootState) => state.user,
   );
   const { comments }: CommentsState = useSelector(
-    (state: RootState) => state.comments2,
+    (state: RootState) => state.comments,
   );
-  const commentsChannel = supabase.channel("room");
+  const commentsChannel = supabase.channel(path);
   const author = name;
   const [text, setText] = useState("");
   const [image, setImage] = useState<ExpoImagePicker.ImagePickerAsset | null>(
@@ -69,6 +69,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
       const { data, error } = await supabase
         .from("comments")
         .select()
+        .eq("key", path)
         .order("created_at", { ascending: false });
       if (data) dispatch(addComments(data));
       console.log(error);
@@ -79,7 +80,12 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     commentsChannel
       .on<Comment>(
         "postgres_changes",
-        { event: "*", schema: "public", table: "comments" },
+        {
+          event: "*",
+          schema: "public",
+          table: "comments",
+          filter: "key=eq." + path,
+        },
         (data) => {
           if (data.eventType === "INSERT") {
             dispatch(addComment(data.new));

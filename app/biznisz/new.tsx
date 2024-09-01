@@ -11,7 +11,9 @@ import { useEffect, useState } from "react";
 import { View } from "react-native";
 import {
   Button,
+  Card,
   Icon,
+  IconButton,
   Modal,
   Portal,
   Text,
@@ -37,6 +39,7 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
 
   const [mapModalVisible, setMapModalVisible] = useState(false);
+  const [tutorialVisible, setTutorialVisible] = useState(true);
 
   const title = newBuziness.title.trim() + " " + categories.trim();
   const canSubmit =
@@ -50,6 +53,7 @@ export default function Index() {
       setMapModalVisible(false);
     }
   }, [circle]);
+  useEffect(() => {}, []);
 
   const save = () => {
     setLoading(true);
@@ -81,6 +85,34 @@ export default function Index() {
   };
   return (
     <View style={{ flex: 1 }}>
+      {tutorialVisible && (
+        <Card
+          mode="elevated"
+          style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+        >
+          <Card.Title
+            title={"Mihez értesz?"}
+            right={() => (
+              <IconButton
+                icon="close"
+                onPress={() => setTutorialVisible(false)}
+              />
+            )}
+          />
+          <Card.Content>
+            {tutorialVisible && (
+              <Text style={{ textAlign: "justify" }}>
+                Ezen az oldalon fel tudsz venni egy új bizniszt a profilodba.
+                {"\n"}A te bizniszeid azon hobbijaid, képességeid vagy szakmáid
+                listája, amelyeket meg szeretnél osztani másokkal is. {"\n"}Ha
+                te mondjuk úgy gyártod a sütiket, mint egy gép, és ezt felveszed
+                a bizniszeid közé, a Biznisz oldalon megtalálható leszel a süti
+                kulcsszóval.
+              </Text>
+            )}
+          </Card.Content>
+        </Card>
+      )}
       <View style={{ flex: 1 }}>
         <TextInput
           placeholder="Bizniszem neve"
@@ -111,13 +143,13 @@ export default function Index() {
             {!!circle ? (
               <Text>
                 <Icon size={16} source="map-marker-account" />
-                Keresés meghatározott terület alapján.
+                Hely kiválasztva
               </Text>
             ) : (
               !!myLocation && (
                 <Text>
                   <Icon size={16} source="map-marker" />
-                  Keresés jelenlegi helyzeted alapján.
+                  Jelenlegi helyzeted használata.
                 </Text>
               )
             )}
@@ -135,7 +167,7 @@ export default function Index() {
         mode="elevated"
         disabled={!canSubmit}
       >
-        <Text>Feltöltöm</Text>
+        <Text>Biznisz mentése</Text>
       </Button>
       <Portal>
         <Modal

@@ -60,6 +60,7 @@ const MyAppbar = (props: NativeStackHeaderProps) => {
         )
       )}
       <Appbar.Content title={props.options.title} />
+      <Appbar.Action icon="dots-vertical" />
     </Appbar.Header>
   );
 };

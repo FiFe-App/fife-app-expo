@@ -1,3 +1,4 @@
+import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { FirebaseContext } from "@/lib/firebase/firebase";
 import { RootState } from "@/lib/redux/store";
@@ -23,6 +24,10 @@ export default function Index() {
         gap: 24,
       }}
     >
+      <ThemedText type="title">Kapcsolódj a közeledben élőkkel</ThemedText>
+      <ThemedText type="subtitle">
+        Lokáció és megbízhatóság alapú közösség.
+      </ThemedText>
       {uid ? (
         <>
           <View style={{ flexDirection: "row", gap: 8 }}>
@@ -47,9 +52,6 @@ export default function Index() {
           <Button mode="contained">Bejelentkezés</Button>
         </Link>
       )}
-      <Link href="/commentsTest" asChild>
-        <Button mode="contained">Kommentek</Button>
-      </Link>
       <Link href="/notfound" asChild>
         <Button>Eltévedek</Button>
       </Link>
