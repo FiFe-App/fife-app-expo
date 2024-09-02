@@ -1,10 +1,11 @@
 import BuzinessItem from "@/components/buziness/BuzinessItem";
 import MapSelector from "@/components/MapSelector/MapSelector";
 import { MapCircleType } from "@/components/MapSelector/MapSelector.types";
+import { containerStyle } from "@/components/styles";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import {
+  loadBuzinesses,
   storeBuzinessearchParams,
-  storeBuzinesses,
 } from "@/lib/redux/reducers/buzinessReducer";
 import { RootState } from "@/lib/redux/store";
 import { supabase } from "@/lib/supabase/supabase";
@@ -15,6 +16,7 @@ import {
   ActivityIndicator,
   Button,
   Card,
+  Drawer,
   Icon,
   IconButton,
   Modal,
@@ -23,6 +25,8 @@ import {
   TextInput,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { Tables } from "@/database.types";
+import { ThemedView } from "@/components/ThemedView";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
@@ -35,21 +39,14 @@ export default function Index() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const { myLocation, error: locationError } = useMyLocation();
-  const [visible, setVisible] = useState(false);
+  const [mapModalVisible, setMapModalVisible] = useState(false);
+  const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [circle, setCircle] = useState<MapCircleType | undefined>(undefined);
 
   const [tutorialVisible, setTutorialVisible] = useState(true);
-  const showModal = () => setVisible(true);
-  const hideModal = () => setVisible(false);
-  const containerStyle = {
-    backgroundColor: "white",
-    padding: 20,
-    margin: 30,
-    height: 500,
-  };
   useEffect(() => {
     if (circle) {
-      setVisible(false);
+      setMapModalVisible(false);
     }
   }, [circle]);
 
@@ -76,7 +73,7 @@ export default function Index() {
         .then((res) => {
           setLoading(false);
           if (res.data) {
-            dispatch(storeBuzinesses(res.data));
+            dispatch(loadBuzinesses(res.data));
           }
           if (res.error) {
             console.log(res.error);
@@ -86,21 +83,21 @@ export default function Index() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!buzinesses.length && (myLocation || locationError)) {
-        load({});
+      if (myLocation || circle) {
+        load();
         console.log("MyLocationLoaded");
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [myLocation, locationError]),
+    }, [myLocation, circle]),
   );
 
   const loadNext = () => {
     dispatch(storeBuzinessearchParams({ skip: skip + 10 }));
-    load({ skip: skip + 5 });
+    load();
   };
   if (uid)
     return (
-      <View>
+      <ThemedView style={{ flex: 1 }}>
         <Card
           mode="elevated"
           style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
@@ -129,12 +126,26 @@ export default function Index() {
             <TextInput
               value={search}
               mode="outlined"
+              outlineStyle={{ borderRadius: 1000 }}
+              style={{ marginTop: 4 }}
               onChangeText={setSearch}
-              onSubmitEditing={() => load({})}
+              onSubmitEditing={() => load()}
               placeholder="Keress a bizniszek közt..."
-              right={<TextInput.Icon icon="magnify" onPress={load} />}
+              right={
+                <TextInput.Icon
+                  icon="magnify"
+                  onPress={load}
+                  mode="contained"
+                />
+              }
             />
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 4,
+              }}
+            >
               <View style={{ flex: 1 }}>
                 {!!locationError && (
                   <Text>
@@ -142,21 +153,17 @@ export default function Index() {
                     {locationError}
                   </Text>
                 )}
-                {!!circle ? (
+                {!!myLocation && (
                   <Text>
-                    <Icon size={16} source="map-marker-account" />
-                    Keresés meghatározott terület alapján.
+                    <Icon size={16} source="map-marker" />
+                    Keresés jelenlegi helyzeted alapján.
                   </Text>
-                ) : (
-                  !!myLocation && (
-                    <Text>
-                      <Icon size={16} source="map-marker" />
-                      Keresés jelenlegi helyzeted alapján.
-                    </Text>
-                  )
                 )}
               </View>
-              <Button onPress={showModal}>
+              <Button
+                onPress={() => setMapModalVisible(true)}
+                mode={!circle ? "contained" : "contained-tonal"}
+              >
                 {!!circle ? "Környék kiválasztva" : "Válassz környéket"}
               </Button>
             </View>
@@ -165,14 +172,58 @@ export default function Index() {
 
         <Portal>
           <Modal
-            visible={visible}
-            onDismiss={hideModal}
-            contentContainerStyle={containerStyle}
+            visible={mapModalVisible}
+            onDismiss={() => {
+              setMapModalVisible(false);
+            }}
           >
-            <MapSelector data={circle} setData={setCircle} searchEnabled />
+            <ThemedView style={containerStyle}>
+              <MapSelector data={circle} setData={setCircle} searchEnabled />
+            </ThemedView>
+          </Modal>
+          <Modal
+            visible={locationMenuVisible}
+            onDismiss={() => {
+              setLocationMenuVisible(false);
+            }}
+            contentContainerStyle={[
+              {
+                backgroundColor: "white",
+                margin: 40,
+                padding: 10,
+                height: "auto",
+                borderRadius: 16,
+              },
+            ]}
+          >
+            <Drawer.Item
+              label="Hozzám közel"
+              onPress={() => {}}
+              right={() => <Icon source="navigation-variant" size={20} />}
+            />
+            <Drawer.Item
+              label="Válassz a térképen"
+              onPress={() => {}}
+              right={() => <Icon source="map" size={20} />}
+            />
+            <Drawer.Item
+              label="Mindegy hol"
+              onPress={() => {}}
+              right={() => (
+                <Icon source="map-marker-question-outline" size={20} />
+              )}
+            />
           </Modal>
         </Portal>
-        <ScrollView contentContainerStyle={{ gap: 8, marginTop: 8 }}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            gap: 8,
+            marginTop: 8,
+
+            flex: 1,
+          }}
+        >
           {loading && <ActivityIndicator />}
           {buzinesses.map((buzinessItem) => (
             <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
@@ -181,6 +232,6 @@ export default function Index() {
             <Button onPress={loadNext}>További bizniszek</Button>
           )}
         </ScrollView>
-      </View>
+      </ThemedView>
     );
 }

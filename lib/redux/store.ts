@@ -7,7 +7,7 @@ import commentsReducer from "./reducers/commentsReducer";
 import buzinessReducer from "./reducers/buzinessReducer";
 
 export const rootReducer = combineReducers({
-  comments2: commentsReducer,
+  comments: commentsReducer,
   user: userReducer,
   buziness: buzinessReducer,
 });
