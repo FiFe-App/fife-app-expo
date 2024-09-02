@@ -1,3 +1,4 @@
+import { ThemedView } from "@/components/ThemedView";
 import { FirebaseContext } from "@/lib/firebase/firebase";
 import {
   setUserData,
@@ -77,32 +78,40 @@ export default function Index() {
 
   if (!uid)
     return (
-      <View style={{ maxWidth: 400, width: "100%", gap: 8, margin: "auto" }}>
-        <Button onPress={autoLogin} mode="contained">
-          AUTO LOGIN
-        </Button>
-        <Button mode="contained" icon="facebook" onPress={startFacebookLogin}>
-          Facebook bejelentkezés
-        </Button>
-        <TextInput onChangeText={setEmail} value={email} placeholder="Email" />
-        <TextInput
-          onChangeText={setPassword}
-          value={password}
-          placeholder="Jelszó"
-          secureTextEntry
-        />
-        <Button onPress={signInWithEmail} loading={loading}>
-          <Text>Bejelentkezés</Text>
-        </Button>
-        <Text style={{ color: "red" }}>{error}</Text>
-      </View>
+      <ThemedView style={{ flex: 1 }}>
+        <View style={{ maxWidth: 400, width: "100%", gap: 8, margin: "auto" }}>
+          <Button onPress={autoLogin} mode="contained">
+            AUTO LOGIN
+          </Button>
+          <Button mode="contained" icon="facebook" onPress={startFacebookLogin}>
+            Facebook bejelentkezés
+          </Button>
+          <TextInput
+            onChangeText={setEmail}
+            value={email}
+            placeholder="Email"
+          />
+          <TextInput
+            onChangeText={setPassword}
+            value={password}
+            placeholder="Jelszó"
+            secureTextEntry
+          />
+          <Button onPress={signInWithEmail} loading={loading}>
+            <Text>Bejelentkezés</Text>
+          </Button>
+          <Text style={{ color: "red" }}>{error}</Text>
+        </View>
+      </ThemedView>
     );
   return (
-    <View>
+    <ThemedView
+      style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+    >
       <Text>Bejelentkezve, mint {name}</Text>
       <Button icon="logout" onPress={startLogout}>
         Kijelentkezés
       </Button>
-    </View>
+    </ThemedView>
   );
 }

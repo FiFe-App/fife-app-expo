@@ -5,7 +5,7 @@ import { AnyAction, combineReducers, configureStore } from "@reduxjs/toolkit";
 import commentsReducer from "./reducers/commentsReducer";
 
 export const rootReducer = combineReducers({
-  comments2: commentsReducer,
+  comments: commentsReducer,
   user: userReducer,
 });
 

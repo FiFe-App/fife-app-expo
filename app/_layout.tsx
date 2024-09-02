@@ -34,6 +34,10 @@ export default function RootLayout() {
                 name="biznisz/index"
                 options={{ title: "Biznisz" }}
               />
+              <Stack.Screen
+                name="biznisz/new"
+                options={{ title: "Új Biznisz" }}
+              />
             </Stack>
           </PaperProvider>
         </FirebaseProvider>
@@ -55,7 +59,8 @@ const MyAppbar = (props: NativeStackHeaderProps) => {
           <Appbar.BackAction onPress={() => router.replace("/")} />
         )
       )}
-      <Appbar.Content title={props.options.title} />
+      <Appbar.Content title={"FiFe " + props.options.title} />
+      <Appbar.Action icon="dots-vertical" />
     </Appbar.Header>
   );
 };

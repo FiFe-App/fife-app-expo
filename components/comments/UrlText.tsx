@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { useState } from "react";
 import { Linking, Pressable, Text } from "react-native";
+import { ThemedText } from "../ThemedText";
 
 const UrlText = ({ text = "" }: { text: string }) => {
   const regex =
@@ -38,7 +39,7 @@ const UrlText = ({ text = "" }: { text: string }) => {
     makeText();
   }, [makeText, text]);
 
-  return <Text>{result}</Text>;
+  return <ThemedText>{result}</ThemedText>;
 };
 
 export default UrlText;

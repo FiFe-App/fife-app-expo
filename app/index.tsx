@@ -1,3 +1,5 @@
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
 import { FirebaseContext } from "@/lib/firebase/firebase";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
@@ -14,7 +16,7 @@ export default function Index() {
   } = useContext(FirebaseContext);
 
   return (
-    <View
+    <ThemedView
       style={{
         flex: 1,
         justifyContent: "center",
@@ -22,32 +24,37 @@ export default function Index() {
         gap: 24,
       }}
     >
-      <Link href="/mapTest" asChild>
-        <Button mode="contained">Térkép kereső</Button>
-      </Link>
+      <ThemedText type="title">Kapcsolódj a közeledben élőkkel</ThemedText>
+      <ThemedText type="subtitle">
+        Lokáció és megbízhatóság alapú közösség.
+      </ThemedText>
       {uid ? (
         <>
-          <Link href="/user" asChild>
-            <Button mode="contained">Profilom</Button>
-          </Link>
-          <Button mode="contained" onPress={() => logout()}>
-            Kijelentkezés
-          </Button>
-          <Link href="/biznisz" asChild>
-            <Button mode="contained">Buziness</Button>
-          </Link>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <Link href="/user" asChild>
+              <Button mode="contained">Profilom</Button>
+            </Link>
+            <Button mode="contained" onPress={() => logout()}>
+              Kijelentkezés
+            </Button>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <Link href="/biznisz" asChild>
+              <Button mode="contained">Biznisz</Button>
+            </Link>
+            <Link href="/biznisz/new" asChild>
+              <Button mode="contained">Új Biznisz</Button>
+            </Link>
+          </View>
         </>
       ) : (
         <Link href="/loginTest" asChild>
           <Button mode="contained">Bejelentkezés</Button>
         </Link>
       )}
-      <Link href="/commentsTest" asChild>
-        <Button mode="contained">Kommentek</Button>
-      </Link>
       <Link href="/notfound" asChild>
         <Button>Eltévedek</Button>
       </Link>
-    </View>
+    </ThemedView>
   );
 }
