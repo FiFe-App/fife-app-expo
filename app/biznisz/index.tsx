@@ -2,7 +2,10 @@ import BuzinessItem from "@/components/buziness/BuzinessItem";
 import MapSelector from "@/components/MapSelector/MapSelector";
 import { MapCircleType } from "@/components/MapSelector/MapSelector.types";
 import { useMyLocation } from "@/hooks/useMyLocation";
-import { storeBuzinesses } from "@/lib/redux/reducers/buzinessReducer";
+import {
+  storeBuzinessearchParams,
+  storeBuzinesses,
+} from "@/lib/redux/reducers/buzinessReducer";
 import { RootState } from "@/lib/redux/store";
 import { supabase } from "@/lib/supabase/supabase";
 import { useFocusEffect } from "expo-router";
@@ -23,12 +26,14 @@ import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
-  const { buzinesses } = useSelector((state: RootState) => state.buziness);
+  const { buzinesses, buzinessSearchParams } = useSelector(
+    (state: RootState) => state.buziness,
+  );
+  const skip = buzinessSearchParams?.skip || 0;
   const dispatch = useDispatch();
 
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
-  const [skip, setSkip] = useState(0);
   const { myLocation, error: locationError } = useMyLocation();
   const [visible, setVisible] = useState(false);
   const [circle, setCircle] = useState<MapCircleType | undefined>(undefined);
@@ -48,7 +53,7 @@ export default function Index() {
     }
   }, [circle]);
 
-  const load = ({ skip }: { skip?: number }) => {
+  const load = () => {
     setLoading(true);
 
     const searchLocation = circle
@@ -65,15 +70,18 @@ export default function Index() {
           }
         : null;
     if (searchLocation)
-      supabase.rpc("nearby_buziness", searchLocation).then((res) => {
-        setLoading(false);
-        if (res.data) {
-          dispatch(storeBuzinesses(res.data));
-        }
-        if (res.error) {
-          console.log(res.error);
-        }
-      });
+      supabase
+        .rpc("nearby_buziness", searchLocation)
+        .range(skip, skip + 10)
+        .then((res) => {
+          setLoading(false);
+          if (res.data) {
+            dispatch(storeBuzinesses(res.data));
+          }
+          if (res.error) {
+            console.log(res.error);
+          }
+        });
   };
 
   useFocusEffect(
@@ -87,7 +95,7 @@ export default function Index() {
   );
 
   const loadNext = () => {
-    setSkip(skip + 5);
+    dispatch(storeBuzinessearchParams({ skip: skip + 10 }));
     load({ skip: skip + 5 });
   };
   if (uid)
