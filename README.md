@@ -3,7 +3,7 @@ Nonprofit, open-source Expo (React Native) app, Supabase backendel.
 
 # De mi is az a FiFe app?
 
-Ez egy lokáció és megbízhatóság alapú közösségi felület, amelynek célja hogy biztonságos és a mindennapi életben hasznos fenkciólkat adjon.
+Ez egy lokáció és megbízhatóság alapú közösségi felület, amelynek célja hogy biztonságos legyen és a mindennapi életben hasznos funkciókat adjon.
 
 # Hogyan valósul meg?
 
