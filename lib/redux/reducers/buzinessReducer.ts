@@ -7,7 +7,10 @@ import {
 
 const initialState: BuzinessState = {
   buzinesses: [],
-  buzinessSearchParams: undefined,
+  buzinessSearchParams: {
+    skip: 0,
+    text: "",
+  },
 };
 
 const buzinessReducer = createSlice({
@@ -20,11 +23,14 @@ const buzinessReducer = createSlice({
     ) => {
       state.buzinesses = action.payload;
     },
-    storeBuzinessearchParams: (
+    loadBuzinesses: (state, action: PayloadAction<BuzinessItemInterface[]>) => {
+      state.buzinesses = [...state.buzinesses, ...action.payload];
+    },
+    storeBuzinessSearchParams: (
       state,
       action: PayloadAction<BuzinessSearchParams>,
     ) => {
-      state.buzinessSearchParams = { ...action.payload };
+      state.buzinessSearchParams = { ...state.buzinessSearchParams, ...action.payload };
     },
     editBuziness: (
       state,
@@ -45,7 +51,11 @@ const buzinessReducer = createSlice({
   },
 });
 
-export const { storeBuzinesses, storeBuzinessearchParams, clearBuziness } =
-  buzinessReducer.actions;
+export const {
+  storeBuzinesses,
+  loadBuzinesses,
+  storeBuzinessSearchParams,
+  clearBuziness,
+} = buzinessReducer.actions;
 
 export default buzinessReducer.reducer;

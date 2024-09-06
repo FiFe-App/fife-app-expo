@@ -1,11 +1,10 @@
-import { BuzinessItemInterface } from "@/app/biznisz";
 import toDistanceText from "@/lib/functions/distanceText";
 import { RootState } from "@/lib/redux/store";
+import { BuzinessItemInterface } from "@/lib/redux/store.type";
 import { Link } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { Card, Chip, Icon, IconButton, Text } from "react-native-paper";
 import { useSelector } from "react-redux";
-import ProfileImage from "../user/ProfileImage";
 
 interface BuzinessItemProps {
   data: BuzinessItemInterface;

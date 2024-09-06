@@ -2,10 +2,13 @@ import BuzinessItem from "@/components/buziness/BuzinessItem";
 import MapSelector from "@/components/MapSelector/MapSelector";
 import { MapCircleType } from "@/components/MapSelector/MapSelector.types";
 import { containerStyle } from "@/components/styles";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import {
   loadBuzinesses,
-  storeBuzinessearchParams,
+  storeBuzinessSearchParams,
+  storeBuzinesses,
 } from "@/lib/redux/reducers/buzinessReducer";
 import { RootState } from "@/lib/redux/store";
 import { supabase } from "@/lib/supabase/supabase";
@@ -25,8 +28,6 @@ import {
   TextInput,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { Tables } from "@/database.types";
-import { ThemedView } from "@/components/ThemedView";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
@@ -34,10 +35,12 @@ export default function Index() {
     (state: RootState) => state.buziness,
   );
   const skip = buzinessSearchParams?.skip || 0;
+  const take = 5;
+  const searchText = buzinessSearchParams?.text || "";
   const dispatch = useDispatch();
 
-  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [canLoadMore, setCanLoadMore] = useState(true);
   const { myLocation, error: locationError } = useMyLocation();
   const [mapModalVisible, setMapModalVisible] = useState(false);
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
@@ -50,37 +53,45 @@ export default function Index() {
     }
   }, [circle]);
 
+  const search = () => {
+    console.log("search");
+
+    dispatch(storeBuzinessSearchParams({ skip: 0 }));
+    dispatch(storeBuzinesses([]));
+  };
+
   const load = () => {
     setLoading(true);
+    console.log("load from ", skip, " to ", skip + take);
 
     const searchLocation = circle
       ? {
           lat: circle?.position.latitude,
           long: circle?.position.longitude,
-          search,
+          search: searchText,
         }
       : myLocation
         ? {
             lat: myLocation?.coords.latitude,
             long: myLocation?.coords.longitude,
-            search,
+            search: searchText,
           }
         : null;
     if (searchLocation)
       supabase
         .rpc("nearby_buziness", searchLocation)
-        .range(skip, skip + 10)
+        .range(skip, skip + take - 1)
         .then((res) => {
           setLoading(false);
           if (res.data) {
             dispatch(loadBuzinesses(res.data));
+            setCanLoadMore(!(res.data.length < take));
           }
           if (res.error) {
             console.log(res.error);
           }
         });
   };
-
   useFocusEffect(
     useCallback(() => {
       if (myLocation || circle) {
@@ -92,9 +103,14 @@ export default function Index() {
   );
 
   const loadNext = () => {
-    dispatch(storeBuzinessearchParams({ skip: skip + 10 }));
-    load();
+    dispatch(storeBuzinessSearchParams({ skip: skip + take }));
   };
+  useEffect(() => {
+    console.log("skip changed", skip);
+    load();
+  }, [skip]);
+  console.log(skip);
+
   if (uid)
     return (
       <ThemedView style={{ flex: 1 }}>
@@ -124,17 +140,19 @@ export default function Index() {
               </Text>
             )}
             <TextInput
-              value={search}
+              value={searchText}
               mode="outlined"
               outlineStyle={{ borderRadius: 1000 }}
               style={{ marginTop: 4 }}
-              onChangeText={setSearch}
-              onSubmitEditing={() => load()}
+              onChangeText={(text) =>
+                dispatch(storeBuzinessSearchParams({ text }))
+              }
+              onSubmitEditing={search}
               placeholder="Keress a bizniszek közt..."
               right={
                 <TextInput.Icon
                   icon="magnify"
-                  onPress={load}
+                  onPress={search}
                   mode="contained"
                 />
               }
@@ -224,12 +242,19 @@ export default function Index() {
             flex: 1,
           }}
         >
-          {loading && <ActivityIndicator />}
           {buzinesses.map((buzinessItem) => (
             <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
           ))}
-          {!!buzinesses.length && (
-            <Button onPress={loadNext}>További bizniszek</Button>
+          {loading ? (
+            <ActivityIndicator />
+          ) : !!buzinesses.length && canLoadMore ? (
+            <Button onPress={loadNext} style={{ alignSelf: "center" }}>
+              További bizniszek
+            </Button>
+          ) : (
+            <ThemedText style={{ alignSelf: "center" }}>
+              Nem található több biznisz
+            </ThemedText>
           )}
         </ScrollView>
       </ThemedView>

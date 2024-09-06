@@ -26,7 +26,7 @@ export interface BuzinessItemInterface {
   author: string;
   lat: number;
   long: number;
-  dist_meters: number;
+  distance: number;
 }
 export interface BuzinessSearchParams {
   text?: string;
@@ -34,7 +34,7 @@ export interface BuzinessSearchParams {
     latitude: number;
     longitude: number;
   };
-  skip: number;
+  skip?: number;
 }
 export interface BuzinessState {
   buzinesses: BuzinessItemInterface[];
