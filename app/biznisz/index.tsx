@@ -58,6 +58,7 @@ export default function Index() {
 
     dispatch(storeBuzinessSearchParams({ skip: 0 }));
     dispatch(storeBuzinesses([]));
+    load();
   };
 
   const load = () => {
@@ -86,6 +87,7 @@ export default function Index() {
           if (res.data) {
             dispatch(loadBuzinesses(res.data));
             setCanLoadMore(!(res.data.length < take));
+            console.log(res.data);
           }
           if (res.error) {
             console.log(res.error);
@@ -95,6 +97,7 @@ export default function Index() {
   useFocusEffect(
     useCallback(() => {
       if (myLocation || circle) {
+        dispatch(storeBuzinesses([]));
         load();
         console.log("MyLocationLoaded");
       }
@@ -105,6 +108,7 @@ export default function Index() {
   const loadNext = () => {
     dispatch(storeBuzinessSearchParams({ skip: skip + take }));
   };
+
   useEffect(() => {
     console.log("skip changed", skip);
     load();
@@ -171,10 +175,16 @@ export default function Index() {
                     {locationError}
                   </Text>
                 )}
-                {!!myLocation && (
+                {!!myLocation && !circle && (
                   <Text>
                     <Icon size={16} source="map-marker" />
                     Keresés jelenlegi helyzeted alapján.
+                  </Text>
+                )}
+                {!!circle && (
+                  <Text>
+                    <Icon size={16} source="map-marker" />
+                    Keresés térképen választott hely alapján.
                   </Text>
                 )}
               </View>

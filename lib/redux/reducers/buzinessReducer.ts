@@ -1,6 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import {
-  BuzinessItemInterface,
+  BuzinessSearchItemInterface,
   BuzinessSearchParams,
   BuzinessState,
 } from "../store.type";
@@ -19,22 +19,28 @@ const buzinessReducer = createSlice({
   reducers: {
     storeBuzinesses: (
       state,
-      action: PayloadAction<BuzinessItemInterface[]>,
+      action: PayloadAction<BuzinessSearchItemInterface[]>,
     ) => {
       state.buzinesses = action.payload;
     },
-    loadBuzinesses: (state, action: PayloadAction<BuzinessItemInterface[]>) => {
+    loadBuzinesses: (
+      state,
+      action: PayloadAction<BuzinessSearchItemInterface[]>,
+    ) => {
       state.buzinesses = [...state.buzinesses, ...action.payload];
     },
     storeBuzinessSearchParams: (
       state,
       action: PayloadAction<BuzinessSearchParams>,
     ) => {
-      state.buzinessSearchParams = { ...state.buzinessSearchParams, ...action.payload };
+      state.buzinessSearchParams = {
+        ...state.buzinessSearchParams,
+        ...action.payload,
+      };
     },
     editBuziness: (
       state,
-      { payload }: PayloadAction<BuzinessItemInterface>,
+      { payload }: PayloadAction<BuzinessSearchItemInterface>,
     ) => {
       state.buzinesses = state.buzinesses.map((buziness) =>
         buziness.id === payload.id ? { ...buziness, ...payload } : buziness,

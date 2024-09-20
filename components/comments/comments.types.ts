@@ -5,4 +5,8 @@ export interface CommentsProps {
   limit?: number;
 }
 
-export type Comment = Tables<"comments">;
+export interface Comment extends Tables<"comments"> {
+  profiles: {
+    full_name: string;
+  };
+}

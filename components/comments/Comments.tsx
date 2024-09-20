@@ -68,7 +68,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     const getMessages = async () => {
       const { data, error } = await supabase
         .from("comments")
-        .select()
+        .select("*, profiles ( full_name )")
         .eq("key", path)
         .order("created_at", { ascending: false });
       if (data) dispatch(addComments(data));
@@ -84,9 +84,11 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
           event: "*",
           schema: "public",
           table: "comments",
+          // eslint-disable-next-line prettier/prettier
           filter: "key=eq." + path,
         },
         (data) => {
+          //supabase.from("profiles").select("full_name").eq("id", data.new?.id);
           if (data.eventType === "INSERT") {
             dispatch(addComment(data.new));
           }
@@ -253,7 +255,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   return (
     <View style={{ flex: 1 }}>
       <View style={{ flexDirection: "row" }}>
-        <View style={{ flexGrow: 1 }}>
+        <View style={{ flex: 1 }}>
           <TextInput
             style={{}}
             value={text}
@@ -292,7 +294,6 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
       </View>
       {!!comments?.length && (
         <ScrollView
-          style={{ minHeight: 200 }}
           contentContainerStyle={{
             flexDirection: "column",
             paddingBottom: 10,
@@ -321,7 +322,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                           }}
                         >
                           <ThemedText style={{ fontWeight: "bold" }}>
-                            {comment.author_name}
+                            {comment.profiles.full_name}
                           </ThemedText>
                         </Pressable>
                         <ThemedText>
@@ -378,7 +379,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                   navigation.push("user/" + menuAnchor?.comment.author);
                   setShowMenu(false);
                 }}
-                title={menuAnchor?.comment?.author_name + " profilja"}
+                title={menuAnchor?.comment?.profiles.full_name + " profilja"}
                 leadingIcon="account"
               />
               <Menu.Item

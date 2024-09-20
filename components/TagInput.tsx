@@ -1,3 +1,5 @@
+import Icon from "@expo/vector-icons/Ionicons";
+import React from "react";
 import {
   NativeSyntheticEvent,
   Pressable,
@@ -6,9 +8,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import React, { useEffect, useState } from "react";
-import Icon from "@expo/vector-icons/Ionicons";
-import { TextInput, Text, Card } from "react-native-paper";
+import { Card, Text, TextInput } from "react-native-paper";
 
 interface TagInputType {
   onChange: React.SetStateAction<any>;
@@ -23,32 +23,39 @@ const TagInput = ({
   defaultValue,
   style,
   placeholder,
+  value,
 }: TagInputType) => {
-  const [text, setText] = useState("");
-  const l = text?.includes(" ") ? text.split(" ") : [];
-  const [list, setList] = useState(defaultValue?.split(" ") || []);
+  const list = (value || "")
+    .split(" ")
+    .slice(0, -1)
+    .filter((e) => e.length);
+  const text = (value || "").split(" ").slice(-1)[0].trim();
 
-  useEffect(() => {
-    if (text && text !== " ") {
-      setList([...list, text]);
-      setText("");
-    }
-  }, [l.length]);
-
-  useEffect(() => {
-    console.log("list.defVal", list);
-    if (defaultValue && (!list.length || list[0] === ""))
-      setList(defaultValue?.split(" "));
-  }, [defaultValue]);
-
-  useEffect(() => {
-    onChange(list.reduce((partialSum, a) => partialSum + a, ""));
-  }, [list]);
+  console.log("value", value);
+  console.log(
+    "list",
+    list.filter((e) => e.length),
+  );
+  console.log("text", text);
 
   const edit = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
     if (e.nativeEvent.key === "Backspace" && text === "") {
-      setList(list.slice(0, -1));
+      console.log("pressed", list, toString(list));
+      onChange(toString([...list, text]));
     }
+  };
+  const onBlur = () => {
+    if (!list.length && text.length) {
+      onChange(toString(list));
+    }
+  };
+  const onChangeText = (e: string) => {
+    console.log("change", e);
+    onChange(toString(list) + " " + e);
+  };
+
+  const toString = (arr: string[]): string => {
+    return arr.reduce((partialSum, a) => partialSum + " " + a, "");
   };
 
   const TagList = () => (
@@ -66,7 +73,7 @@ const TagInput = ({
               <Text>{e}</Text>
               <Pressable
                 onPress={() => {
-                  setList(list.filter((el, ind) => ind !== i));
+                  onChange(toString(list.filter((el, ind) => ind !== i)));
                 }}
               >
                 <View style={{ paddingHorizontal: 8 }}>
@@ -96,11 +103,11 @@ const TagInput = ({
         style={{
           flexGrow: 1,
           fontSize: 17,
-          borderRadius: 8,
           padding: 4,
         }}
-        onChangeText={setText}
+        onChangeText={onChangeText}
         onKeyPress={edit}
+        onBlur={onBlur}
         value={text}
       />
     </Card>

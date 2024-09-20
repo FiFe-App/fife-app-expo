@@ -19,14 +19,23 @@ export interface CommentsState {
 
 export type Buziness = Tables<"buziness">;
 
-export interface BuzinessItemInterface {
+export interface BuzinessSearchItemInterface {
   id: number;
   title: string;
   description: string;
   author: string;
   lat: number;
   long: number;
+  recommendations: number;
+  authorName: string;
   distance: number;
+}
+export interface BuzinessItemInterface {
+  id: number;
+  title: string;
+  description: string;
+  author: string;
+  location: string;
 }
 export interface BuzinessSearchParams {
   text?: string;
@@ -37,6 +46,18 @@ export interface BuzinessSearchParams {
   skip?: number;
 }
 export interface BuzinessState {
-  buzinesses: BuzinessItemInterface[];
+  buzinesses: BuzinessSearchItemInterface[];
   buzinessSearchParams?: BuzinessSearchParams;
+}
+
+export interface DialogProps {
+  title: string;
+  text: string;
+  onSubmit: () => void;
+  onCancel?: () => void;
+  submitText?: string;
+}
+
+export interface InfoState {
+  dialogs: DialogProps[];
 }

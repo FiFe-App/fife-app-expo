@@ -27,35 +27,35 @@ export default function Index() {
   const [data, setData] = useState<UserInfo | null>(null);
   const [buzinesses, setBuzinesses] = useState<Tables<"buziness">[]>([]);
 
+  const load = () => {
+    console.log(axios.defaults);
+
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", uid)
+      .then(({ data, error }) => {
+        if (error) {
+          console.log(error);
+          return;
+        }
+        if (data) {
+          setData(data[0]);
+          supabase
+            .from("buziness")
+            .select()
+            .eq("author", uid)
+            .then((res) => {
+              if (res.data) {
+                setBuzinesses(res.data);
+              }
+            });
+          console.log(data);
+        }
+      });
+  };
   useFocusEffect(
     useCallback(() => {
-      const load = () => {
-        console.log(axios.defaults);
-
-        supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", uid)
-          .then(({ data, error }) => {
-            if (error) {
-              console.log(error);
-              return;
-            }
-            if (data) {
-              setData(data[0]);
-              supabase
-                .from("buziness")
-                .select()
-                .eq("author", uid)
-                .then((res) => {
-                  if (res.data) {
-                    setBuzinesses(res.data);
-                  }
-                });
-              console.log(data);
-            }
-          });
-      };
       load();
       return () => {};
     }, [uid]),
@@ -104,7 +104,11 @@ export default function Index() {
           <Text>Bizniszeim</Text>
           <ScrollView contentContainerStyle={{ gap: 4 }}>
             {buzinesses.map((buzinessItem) => (
-              <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
+              <BuzinessItem
+                data={buzinessItem}
+                key={buzinessItem.id}
+                showOptions
+              />
             ))}
             {myProfile && (
               <View>
