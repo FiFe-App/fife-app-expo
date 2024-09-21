@@ -317,7 +317,8 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                           onPress={() => {
                             if (comment?.author)
                               navigation.push({
-                                pathname: "user/" + comment.author,
+                                pathname: "/user/[uid]",
+                                params: { uid: comment.author },
                               });
                           }}
                         >
@@ -362,7 +363,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
         </ScrollView>
       )}
 
-      {uid && (
+      {uid && menuAnchor && (
         <Menu visible={showMenu} onDismiss={closeMenu} anchor={menuAnchor}>
           {menuAnchor?.comment?.author === uid ? (
             <>
@@ -376,7 +377,10 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             <>
               <Menu.Item
                 onPress={() => {
-                  navigation.push("user/" + menuAnchor?.comment.author);
+                  navigation.push({
+                    pathname: "/user/[uid]",
+                    params: { uid: menuAnchor.comment.author },
+                  });
                   setShowMenu(false);
                 }}
                 title={menuAnchor?.comment?.profiles.full_name + " profilja"}
@@ -396,7 +400,9 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
         <ActivityIndicator />
       ) : (
         !comments?.length && (
-          <Text style={{ padding: 20 }}>Még nem érkezett komment</Text>
+          <ThemedText style={{ padding: 20 }}>
+            Még nem érkezett komment
+          </ThemedText>
         )
       )}
       {selectedComment?.image && (

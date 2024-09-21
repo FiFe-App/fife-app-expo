@@ -43,7 +43,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
                 .delete()
                 .eq("id", id)
                 .then((res) => {
-                  router.push("user/" + uid);
+                  router.push({ pathname: "/user", params: { uid } });
                 }),
             ),
             "dialog",
@@ -55,7 +55,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
   };
 
   return (
-    <Link href={"biznisz/" + id} asChild>
+    <Link href={{ pathname: "/biznisz/[id]", params: { id: id } }} asChild>
       <Card style={styles.container}>
         <View style={{ flexDirection: "row" }}>
           <View style={{ flex: 1 }}>
@@ -86,7 +86,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
             <View style={{ flexDirection: "row" }}>
               <Text>
                 <Icon size={16} source="account-group" />{" "}
-                <Text>x ember ajánlja</Text>
+                <Text>{data.recommendations} ember ajánlja</Text>
               </Text>
             </View>
           </View>
@@ -95,7 +95,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
 
         {showOptions && myBuziness && (
           <View style={{ flexDirection: "row" }}>
-            <Link href={"biznisz/edit/" + id} asChild>
+            <Link href={"/biznisz/edit"} asChild>
               <IconButton icon="pencil-circle" />
             </Link>
             <IconButton icon="delete-circle" onPress={showDelete} />

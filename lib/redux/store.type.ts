@@ -24,18 +24,20 @@ export interface BuzinessSearchItemInterface {
   title: string;
   description: string;
   author: string;
-  lat: number;
-  long: number;
   recommendations: number;
-  authorName: string;
-  distance: number;
+  authorName?: string;
+  distance?: number;
 }
 export interface BuzinessItemInterface {
   id: number;
   title: string;
+  lat: number;
+  long: number;
+  distance?: number;
   description: string;
   author: string;
-  location: string;
+  authorName?: string;
+  recommendations: number;
 }
 export interface BuzinessSearchParams {
   text?: string;

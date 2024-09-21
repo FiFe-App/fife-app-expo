@@ -134,7 +134,7 @@ export default function BuzinessEditScreen({
         });
         setCircle(undefined);
         console.log(res);
-        router.navigate("user");
+        router.navigate("/user");
       });
   };
   return (

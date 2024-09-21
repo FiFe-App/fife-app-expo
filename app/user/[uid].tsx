@@ -4,7 +4,7 @@ import ProfileImage from "@/components/user/ProfileImage";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
 import { RootState } from "@/lib/redux/store";
-import { UserState } from "@/lib/redux/store.type";
+import { BuzinessSearchItemInterface, UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import axios from "axios";
 import { router, useFocusEffect, useGlobalSearchParams } from "expo-router";
@@ -25,7 +25,9 @@ export default function Index() {
 
   const myProfile = myUid === uid;
   const [data, setData] = useState<UserInfo | null>(null);
-  const [buzinesses, setBuzinesses] = useState<Tables<"buziness">[]>([]);
+  const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>(
+    [],
+  );
 
   const load = () => {
     console.log(axios.defaults);
@@ -43,11 +45,21 @@ export default function Index() {
           setData(data[0]);
           supabase
             .from("buziness")
-            .select()
+            .select(
+              "*, profiles ( full_name ), buzinessRecommendations ( count )",
+            )
             .eq("author", uid)
             .then((res) => {
               if (res.data) {
-                setBuzinesses(res.data);
+                setBuzinesses(
+                  res.data.map((b) => {
+                    return {
+                      ...b,
+                      authorName: b.profiles?.full_name || "???",
+                      recommendations: b.buzinessRecommendations.length,
+                    };
+                  }),
+                );
               }
             });
           console.log(data);
@@ -112,7 +124,7 @@ export default function Index() {
             ))}
             {myProfile && (
               <View>
-                <Button onPress={() => router.push("biznisz/new")}>
+                <Button onPress={() => router.push("/biznisz/new")}>
                   <Text>Új Biznisz felvétele</Text>
                 </Button>
               </View>

@@ -5,7 +5,11 @@ import Comments from "@/components/comments/Comments";
 import { LatLng, MapView, Marker } from "@/components/mapView/mapView";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import { RootState } from "@/lib/redux/store";
-import { BuzinessSearchItemInterface, UserState } from "@/lib/redux/store.type";
+import {
+  BuzinessItemInterface,
+  BuzinessSearchItemInterface,
+  UserState,
+} from "@/lib/redux/store.type";
 import { RecommendBuzinessButton } from "@/lib/supabase/recommandations";
 import { supabase } from "@/lib/supabase/supabase";
 import { router, useFocusEffect, useGlobalSearchParams } from "expo-router";
@@ -22,7 +26,7 @@ export default function Index() {
   );
 
   const id: number = Number(paramId);
-  const [data, setData] = useState<BuzinessSearchItemInterface | undefined>();
+  const [data, setData] = useState<BuzinessItemInterface | undefined>();
   const [recommended, setRecommended] = useState(false);
   const location: LatLng | null = data
     ? { latitude: data.lat, longitude: data.long }
@@ -83,7 +87,10 @@ export default function Index() {
 
   const onPimary = () => {
     if (myBuziness) {
-      router.push("biznisz/edit/" + id);
+      router.push({
+        pathname: "/biznisz/edit/[editId]",
+        params: { editId: id },
+      });
     } else {
     }
   };

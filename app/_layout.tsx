@@ -29,15 +29,15 @@ export default function RootLayout() {
                 options={{ title: "Bejelentkezés" }}
               />
               <Stack.Screen
-                name="commentsTest/index"
-                options={{ title: "Kommentek" }}
-              />
-              <Stack.Screen
                 name="biznisz/index"
                 options={{ title: "Biznisz" }}
               />
               <Stack.Screen
                 name="biznisz/new"
+                options={{ title: "Új Biznisz" }}
+              />
+              <Stack.Screen
+                name="biznisz/[id]"
                 options={{ title: "Új Biznisz" }}
               />
             </Stack>
