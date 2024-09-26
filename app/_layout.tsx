@@ -21,10 +21,6 @@ export default function RootLayout() {
             >
               <Stack.Screen name="index" options={{ title: "FiFe app" }} />
               <Stack.Screen
-                name="mapTest/index"
-                options={{ title: "Helyzet választó" }}
-              />
-              <Stack.Screen
                 name="loginTest/index"
                 options={{ title: "Bejelentkezés" }}
               />

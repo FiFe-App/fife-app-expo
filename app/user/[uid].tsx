@@ -30,15 +30,15 @@ export default function Index() {
   );
 
   const load = () => {
-    console.log(axios.defaults);
+    console.log("uid", uid);
 
     supabase
       .from("profiles")
       .select("*")
-      .eq("id", uid)
+      .eq("id", paramUid)
       .then(({ data, error }) => {
         if (error) {
-          console.log(error);
+          console.log("err", error.message);
           return;
         }
         if (data) {
@@ -48,7 +48,7 @@ export default function Index() {
             .select(
               "*, profiles ( full_name ), buzinessRecommendations ( count )",
             )
-            .eq("author", uid)
+            .eq("author", paramUid)
             .then((res) => {
               if (res.data) {
                 setBuzinesses(

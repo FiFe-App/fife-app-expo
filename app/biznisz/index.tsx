@@ -248,8 +248,6 @@ export default function Index() {
           contentContainerStyle={{
             gap: 8,
             marginTop: 8,
-
-            flex: 1,
           }}
         >
           {buzinesses.map((buzinessItem) => (

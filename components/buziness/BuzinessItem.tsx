@@ -33,8 +33,8 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
     e.preventDefault();
     dispatch(
       addDialog({
-        title: "Biztos vagy benne?",
-        text: "Ki akarod törölni a " + categories?.[0] + " bizniszed",
+        title: "Törlöd a(z) " + categories?.[0] + "-t?",
+        text: "Nem fogod tudni visszavonni!",
         onSubmit: () => {
           trackPromise(
             wrapper<null, any>(
@@ -95,7 +95,13 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
 
         {showOptions && myBuziness && (
           <View style={{ flexDirection: "row" }}>
-            <Link href={"/biznisz/edit"} asChild>
+            <Link
+              href={{
+                pathname: "/biznisz/edit/[editId]",
+                params: { editId: id },
+              }}
+              asChild
+            >
               <IconButton icon="pencil-circle" />
             </Link>
             <IconButton icon="delete-circle" onPress={showDelete} />
