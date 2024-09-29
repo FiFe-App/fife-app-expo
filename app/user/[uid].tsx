@@ -56,7 +56,7 @@ export default function Index() {
                     return {
                       ...b,
                       authorName: b.profiles?.full_name || "???",
-                      recommendations: b.buzinessRecommendations.length,
+                      recommendations: b.buzinessRecommendations[0].count,
                     };
                   }),
                 );

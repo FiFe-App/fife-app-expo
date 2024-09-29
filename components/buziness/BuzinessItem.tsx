@@ -2,7 +2,7 @@ import toDistanceText from "@/lib/functions/distanceText";
 import wrapper from "@/lib/functions/wrapper";
 import { addDialog } from "@/lib/redux/reducers/infoReducer";
 import { RootState } from "@/lib/redux/store";
-import { BuzinessSearchItemInterface } from "@/lib/redux/store.type";
+import { BuzinessItemInterface } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { Link, router } from "expo-router";
 import { GestureResponderEvent, StyleSheet, View } from "react-native";
@@ -11,7 +11,7 @@ import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 
 interface BuzinessItemProps {
-  data: BuzinessSearchItemInterface;
+  data: BuzinessItemInterface;
   showOptions?: boolean;
 }
 
@@ -21,11 +21,13 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
   const myBuziness = author === uid;
   const dispatch = useDispatch();
 
-  const distance = Math.round(data?.distance * 10) / 10;
+  const distance = data.distance ? Math.round(data?.distance * 10) / 10 : null;
   const distanceText =
-    distance !== 0
-      ? toDistanceText(distance / 1000) + " távolságra"
-      : "közel hozzád";
+    distance !== null
+      ? distance !== 0
+        ? toDistanceText(distance / 1000) + " távolságra"
+        : "közel hozzád"
+      : "";
   const categories = title?.split(" ");
 
   const showDelete = (e: GestureResponderEvent) => {
@@ -95,15 +97,15 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
 
         {showOptions && myBuziness && (
           <View style={{ flexDirection: "row" }}>
-            <Link
-              href={{
-                pathname: "/biznisz/edit/[editId]",
-                params: { editId: id },
-              }}
-              asChild
-            >
-              <IconButton icon="pencil-circle" />
-            </Link>
+            <IconButton
+              icon="pencil-circle"
+              onPress={() =>
+                router.push({
+                  pathname: "/biznisz/edit/[editId]",
+                  params: { editId: id },
+                })
+              }
+            />
             <IconButton icon="delete-circle" onPress={showDelete} />
           </View>
         )}
