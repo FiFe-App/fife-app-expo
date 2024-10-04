@@ -52,7 +52,8 @@ export default function Index() {
               return;
             }
             if (data) {
-              var Buffer = require("buffer").Buffer;
+              var Buffer = require("@craftzdog/react-native-buffer").Buffer;
+              console.log("Buffer", Buffer);
               var wkx = require("wkx");
 
               var wkbBuffer = new Buffer(data[0].location, "hex");

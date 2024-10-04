@@ -35,7 +35,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
     e.preventDefault();
     dispatch(
       addDialog({
-        title: "Törlöd a(z) " + categories?.[0] + "-t?",
+        title: categories?.[0] + " Törlése?",
         text: "Nem fogod tudni visszavonni!",
         onSubmit: () => {
           trackPromise(
@@ -99,12 +99,14 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
           <View style={{ flexDirection: "row" }}>
             <IconButton
               icon="pencil-circle"
-              onPress={() =>
+              onPress={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
                 router.push({
                   pathname: "/biznisz/edit/[editId]",
                   params: { editId: id },
-                })
-              }
+                });
+              }}
             />
             <IconButton icon="delete-circle" onPress={showDelete} />
           </View>
