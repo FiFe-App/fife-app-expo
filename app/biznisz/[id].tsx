@@ -4,12 +4,9 @@ import { ContactList } from "@/components/buziness/ContactList";
 import Comments from "@/components/comments/Comments";
 import { LatLng, MapView, Marker } from "@/components/mapView/mapView";
 import { useMyLocation } from "@/hooks/useMyLocation";
+import { storeBuzinessSearchParams } from "@/lib/redux/reducers/buzinessReducer";
 import { RootState } from "@/lib/redux/store";
-import {
-  BuzinessItemInterface,
-  BuzinessSearchItemInterface,
-  UserState,
-} from "@/lib/redux/store.type";
+import { BuzinessItemInterface, UserState } from "@/lib/redux/store.type";
 import { RecommendBuzinessButton } from "@/lib/supabase/recommandations";
 import { supabase } from "@/lib/supabase/supabase";
 import { router, useFocusEffect, useGlobalSearchParams } from "expo-router";
@@ -17,10 +14,11 @@ import { useCallback, useState } from "react";
 import { View } from "react-native";
 import openMap from "react-native-open-maps";
 import { Button, Chip, IconButton, Text } from "react-native-paper";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
   const { id: paramId } = useGlobalSearchParams();
+  const dispatch = useDispatch();
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
@@ -125,7 +123,16 @@ export default function Index() {
           {categories?.slice(1).map((e, i) => {
             if (e.trim())
               return (
-                <Chip key={"category" + i} textStyle={{ margin: 4 }}>
+                <Chip
+                  key={"category" + i}
+                  textStyle={{ margin: 4 }}
+                  onPress={() => {
+                    dispatch(storeBuzinessSearchParams({ text: e }));
+                    router.navigate({
+                      pathname: "/biznisz",
+                    });
+                  }}
+                >
                   <Text>{e}</Text>
                 </Chip>
               );
