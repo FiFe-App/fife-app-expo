@@ -45,9 +45,14 @@ export default function Index() {
     if (error) {
       setError(error.message);
     } else {
+      const { data: profile, error: pError } = await supabase
+        .from("profiles")
+        .select()
+        .eq("id", data.user.id)
+        .single();
       dispatch(sliceLogin(data.user.id));
-      dispatch(setName(data.user.email));
-      dispatch(setUserData(data.user));
+      dispatch(setName(profile?.full_name));
+      dispatch(setUserData({ ...data, ...profile }));
     }
     setLoading(false);
   }

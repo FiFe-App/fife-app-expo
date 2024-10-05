@@ -68,7 +68,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     const getMessages = async () => {
       const { data, error } = await supabase
         .from("comments")
-        .select()
+        .select("*, profiles ( full_name )")
         .eq("key", path)
         .order("created_at", { ascending: false });
       if (data) dispatch(addComments(data));
@@ -84,9 +84,11 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
           event: "*",
           schema: "public",
           table: "comments",
+          // eslint-disable-next-line prettier/prettier
           filter: "key=eq." + path,
         },
         (data) => {
+          //supabase.from("profiles").select("full_name").eq("id", data.new?.id);
           if (data.eventType === "INSERT") {
             dispatch(addComment(data.new));
           }
@@ -253,7 +255,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   return (
     <View style={{ flex: 1 }}>
       <View style={{ flexDirection: "row" }}>
-        <View style={{ flexGrow: 1 }}>
+        <View style={{ flex: 1 }}>
           <TextInput
             style={{}}
             value={text}
@@ -292,76 +294,77 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
       </View>
       {!!comments?.length && (
         <ScrollView
-          style={{ minHeight: 200 }}
           contentContainerStyle={{
             flexDirection: "column",
             paddingBottom: 10,
             gap: 4,
           }}
         >
-          {comments.map((comment, ind) => {
-            return (
-              <Card key={"comment" + ind} contentStyle={{}}>
-                <Card.Content
-                  style={[
-                    { flexDirection: "row", maxWidth: "100%", padding: 0 },
-                  ]}
-                >
-                  <View style={{ flex: 1, padding: 8 }}>
-                    <View
-                      style={{ flexDirection: "row", alignItems: "center" }}
-                    >
-                      <View style={{ flexDirection: "row", flex: 1 }}>
-                        <Pressable
-                          onPress={() => {
-                            if (comment?.author)
-                              navigation.push({
-                                pathname: "user/" + comment.author,
-                              });
-                          }}
-                        >
-                          <ThemedText style={{ fontWeight: "bold" }}>
-                            {comment.author_name}
+          {comments.length &&
+            comments.map((comment, ind) => {
+              return (
+                <Card key={"comment" + ind} contentStyle={{}}>
+                  <Card.Content
+                    style={[
+                      { flexDirection: "row", maxWidth: "100%", padding: 0 },
+                    ]}
+                  >
+                    <View style={{ flex: 1, padding: 8 }}>
+                      <View
+                        style={{ flexDirection: "row", alignItems: "center" }}
+                      >
+                        <View style={{ flexDirection: "row", flex: 1 }}>
+                          <Pressable
+                            onPress={() => {
+                              if (comment?.author)
+                                navigation.push({
+                                  pathname: "/user/[uid]",
+                                  params: { uid: comment.author },
+                                });
+                            }}
+                          >
+                            <ThemedText style={{ fontWeight: "bold" }}>
+                              {comment.profiles.full_name}
+                            </ThemedText>
+                          </Pressable>
+                          <ThemedText>
+                            {" "}
+                            {elapsedTime(comment.created_at)}
                           </ThemedText>
-                        </Pressable>
-                        <ThemedText>
-                          {" "}
-                          {elapsedTime(comment.created_at)}
-                        </ThemedText>
+                        </View>
                       </View>
+                      <UrlText text={comment.text} />
                     </View>
-                    <UrlText text={comment.text} />
-                  </View>
-                  {comment.image && (
-                    <Pressable onPress={() => setSelectedComment(comment)}>
-                      <SupabaseImage
-                        path={comment.image}
-                        style={{
-                          width: 100,
-                          height: 100,
-                          borderTopRightRadius: 12,
-                          borderBottomRightRadius: 12,
-                        }}
+                    {comment.image && (
+                      <Pressable onPress={() => setSelectedComment(comment)}>
+                        <SupabaseImage
+                          path={comment.image}
+                          style={{
+                            width: 100,
+                            height: 100,
+                            borderTopRightRadius: 12,
+                            borderBottomRightRadius: 12,
+                          }}
+                        />
+                      </Pressable>
+                    )}
+                    {uid && (
+                      <IconButton
+                        icon="dots-vertical"
+                        onPress={(e) => showCommentMenu(e, comment)}
+                        size={18}
+                        iconColor={comment.image ? "white" : "black"}
+                        style={{ margin: 0, position: "absolute", right: 0 }}
                       />
-                    </Pressable>
-                  )}
-                  {uid && (
-                    <IconButton
-                      icon="dots-vertical"
-                      onPress={(e) => showCommentMenu(e, comment)}
-                      size={18}
-                      iconColor={comment.image ? "white" : "black"}
-                      style={{ margin: 0, position: "absolute", right: 0 }}
-                    />
-                  )}
-                </Card.Content>
-              </Card>
-            );
-          })}
+                    )}
+                  </Card.Content>
+                </Card>
+              );
+            })}
         </ScrollView>
       )}
 
-      {uid && (
+      {uid && menuAnchor && (
         <Menu visible={showMenu} onDismiss={closeMenu} anchor={menuAnchor}>
           {menuAnchor?.comment?.author === uid ? (
             <>
@@ -375,10 +378,13 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             <>
               <Menu.Item
                 onPress={() => {
-                  navigation.push("user/" + menuAnchor?.comment.author);
+                  navigation.push({
+                    pathname: "/user/[uid]",
+                    params: { uid: menuAnchor.comment.author },
+                  });
                   setShowMenu(false);
                 }}
-                title={menuAnchor?.comment?.author_name + " profilja"}
+                title={menuAnchor?.comment?.profiles.full_name + " profilja"}
                 leadingIcon="account"
               />
               <Menu.Item
@@ -395,7 +401,9 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
         <ActivityIndicator />
       ) : (
         !comments?.length && (
-          <Text style={{ padding: 20 }}>Még nem érkezett komment</Text>
+          <ThemedText style={{ padding: 20 }}>
+            Még nem érkezett komment
+          </ThemedText>
         )
       )}
       {selectedComment?.image && (

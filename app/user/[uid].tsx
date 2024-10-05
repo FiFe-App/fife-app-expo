@@ -4,7 +4,7 @@ import ProfileImage from "@/components/user/ProfileImage";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
 import { RootState } from "@/lib/redux/store";
-import { UserState } from "@/lib/redux/store.type";
+import { BuzinessSearchItemInterface, UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import axios from "axios";
 import { router, useFocusEffect, useGlobalSearchParams } from "expo-router";
@@ -25,37 +25,49 @@ export default function Index() {
 
   const myProfile = myUid === uid;
   const [data, setData] = useState<UserInfo | null>(null);
-  const [buzinesses, setBuzinesses] = useState<Tables<"buziness">[]>([]);
+  const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>(
+    [],
+  );
 
+  const load = () => {
+    console.log("uid", uid);
+
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", paramUid)
+      .then(({ data, error }) => {
+        if (error) {
+          console.log("err", error.message);
+          return;
+        }
+        if (data) {
+          setData(data[0]);
+          supabase
+            .from("buziness")
+            .select(
+              "*, profiles ( full_name ), buzinessRecommendations ( count )",
+            )
+            .eq("author", paramUid)
+            .then((res) => {
+              if (res.data) {
+                setBuzinesses(
+                  res.data.map((b) => {
+                    return {
+                      ...b,
+                      authorName: b.profiles?.full_name || "???",
+                      recommendations: b.buzinessRecommendations[0].count,
+                    };
+                  }),
+                );
+              }
+            });
+          console.log(data);
+        }
+      });
+  };
   useFocusEffect(
     useCallback(() => {
-      const load = () => {
-        console.log(axios.defaults);
-
-        supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", uid)
-          .then(({ data, error }) => {
-            if (error) {
-              console.log(error);
-              return;
-            }
-            if (data) {
-              setData(data[0]);
-              supabase
-                .from("buziness")
-                .select()
-                .eq("author", uid)
-                .then((res) => {
-                  if (res.data) {
-                    setBuzinesses(res.data);
-                  }
-                });
-              console.log(data);
-            }
-          });
-      };
       load();
       return () => {};
     }, [uid]),
@@ -104,11 +116,15 @@ export default function Index() {
           <Text>Bizniszeim</Text>
           <ScrollView contentContainerStyle={{ gap: 4 }}>
             {buzinesses.map((buzinessItem) => (
-              <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
+              <BuzinessItem
+                data={buzinessItem}
+                key={buzinessItem.id}
+                showOptions
+              />
             ))}
             {myProfile && (
               <View>
-                <Button onPress={() => router.push("biznisz/new")}>
+                <Button onPress={() => router.push("/biznisz/new")}>
                   <Text>Új Biznisz felvétele</Text>
                 </Button>
               </View>

@@ -2,7 +2,7 @@
   "expo": {
     "name": "fife-app-blodqy3cwbfgnkjv24has",
     "slug": "fife-app-blodqy3cwbfgnkjv24has",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -17,6 +17,7 @@
       "bundleIdentifier": "com.fife.app"
     },
     "android": {
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"

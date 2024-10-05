@@ -45,12 +45,61 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "buziness_author_fkey1"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buzinessRecommendations: {
+        Row: {
+          author: string
+          buziness_id: number
+          created_at: string
+          id: number
+        }
+        Insert: {
+          author: string
+          buziness_id: number
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          author?: string
+          buziness_id?: number
+          created_at?: string
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buzinessRecommendations_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buzinessRecommendations_author_fkey1"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buzinessRecommendations_buziness_id_fkey"
+            columns: ["buziness_id"]
+            isOneToOne: false
+            referencedRelation: "buziness"
+            referencedColumns: ["id"]
+          },
         ]
       }
       comments: {
         Row: {
           author: string
-          author_name: string
           created_at: string
           id: number
           image: string | null
@@ -59,7 +108,6 @@ export type Database = {
         }
         Insert: {
           author: string
-          author_name: string
           created_at?: string
           id?: number
           image?: string | null
@@ -68,7 +116,6 @@ export type Database = {
         }
         Update: {
           author?: string
-          author_name?: string
           created_at?: string
           id?: number
           image?: string | null
@@ -81,6 +128,13 @@ export type Database = {
             columns: ["author"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_author_fkey1"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -120,6 +174,41 @@ export type Database = {
             columns: ["to"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          author: string
+          categories: string
+          created_at: string
+          id: number
+          location: unknown | null
+          text: string
+        }
+        Insert: {
+          author: string
+          categories: string
+          created_at?: string
+          id?: number
+          location?: unknown | null
+          text: string
+        }
+        Update: {
+          author?: string
+          categories?: string
+          created_at?: string
+          id?: number
+          location?: unknown | null
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -179,7 +268,26 @@ export type Database = {
           description: string
           author: string
           created_at: string
-          images: string[]
+          location: unknown
+          recommendations: number
+          lat: number
+          long: number
+          distance: number
+        }[]
+      }
+      nearby_posts: {
+        Args: {
+          lat: number
+          long: number
+          search: string
+          skip: number
+        }
+        Returns: {
+          id: number
+          categories: string
+          text: string
+          author: string
+          created_at: string
           location: unknown
           lat: number
           long: number

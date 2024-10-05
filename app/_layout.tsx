@@ -1,4 +1,5 @@
 import AxiosDefaultHeaders from "@/components/axios/AxiosDefaultHeaders";
+import InfoLayer from "@/components/InfoLayer";
 import FirebaseProvider from "@/lib/firebase/firebase";
 import { persistor, store } from "@/lib/redux/store";
 import { NativeStackHeaderProps } from "@react-navigation/native-stack/lib/typescript/src/types";
@@ -14,21 +15,14 @@ export default function RootLayout() {
         <AxiosDefaultHeaders />
         <FirebaseProvider>
           <PaperProvider>
+            <InfoLayer />
             <Stack
               screenOptions={{ header: (props) => <MyAppbar {...props} /> }}
             >
               <Stack.Screen name="index" options={{ title: "FiFe app" }} />
               <Stack.Screen
-                name="mapTest/index"
-                options={{ title: "Helyzet választó" }}
-              />
-              <Stack.Screen
                 name="loginTest/index"
                 options={{ title: "Bejelentkezés" }}
-              />
-              <Stack.Screen
-                name="commentsTest/index"
-                options={{ title: "Kommentek" }}
               />
               <Stack.Screen
                 name="biznisz/index"
@@ -37,6 +31,10 @@ export default function RootLayout() {
               <Stack.Screen
                 name="biznisz/new"
                 options={{ title: "Új Biznisz" }}
+              />
+              <Stack.Screen
+                name="biznisz/[id]"
+                options={{ title: "FiFe Biznisz" }}
               />
             </Stack>
           </PaperProvider>
@@ -59,7 +57,7 @@ const MyAppbar = (props: NativeStackHeaderProps) => {
           <Appbar.BackAction onPress={() => router.replace("/")} />
         )
       )}
-      <Appbar.Content title={"FiFe " + props.options.title} />
+      <Appbar.Content title={props.options.title} />
       <Appbar.Action icon="dots-vertical" />
     </Appbar.Header>
   );
