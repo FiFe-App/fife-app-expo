@@ -65,7 +65,7 @@ export default function Index() {
                 lat: cords[1],
                 long: cords[0],
                 distance: 0,
-                authorName: data[0].profiles?.full_name || "???",
+                authorName: data[0]?.profiles?.full_name || "???",
                 recommendations: data[0].buzinessRecommendations[0].count,
               });
             }

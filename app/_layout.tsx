@@ -34,7 +34,7 @@ export default function RootLayout() {
               />
               <Stack.Screen
                 name="biznisz/[id]"
-                options={{ title: "Új Biznisz" }}
+                options={{ title: "FiFe Biznisz" }}
               />
             </Stack>
           </PaperProvider>

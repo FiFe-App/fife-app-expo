@@ -253,8 +253,13 @@ export default function Index() {
           {buzinesses.map((buzinessItem) => (
             <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
           ))}
+          {!circle && !myLocation && loading && (
+            <ThemedText style={{ alignSelf: "center" }}>
+              Válassz környéket
+            </ThemedText>
+          )}
           {loading ? (
-            <ActivityIndicator />
+            (circle || myLocation) && <ActivityIndicator />
           ) : !!buzinesses.length && canLoadMore ? (
             <Button onPress={loadNext} style={{ alignSelf: "center" }}>
               További bizniszek
