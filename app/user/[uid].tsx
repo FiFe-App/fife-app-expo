@@ -84,7 +84,6 @@ export default function Index() {
       supabase
         .from("profileRecommendations")
         .select("count")
-        .eq("author", myUid)
         .eq("profile_id", uid)
         .then((res) => {
           setRecommended(!!res.data?.[0].count);
