@@ -5,40 +5,56 @@ import { ImageStyle, StyleProp, StyleSheet, View } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 
 interface SupabaseImageProps {
-  path: string;
+  bucket: string;
+  path?: string;
   style?: StyleProp<ImageStyle>;
   resizeMode?: ImageContentFit | undefined;
+  propLoading?: boolean;
 }
 
-const SupabaseImage = ({ path, style, resizeMode }: SupabaseImageProps) => {
+const SupabaseImage = ({
+  bucket,
+  path,
+  style,
+  resizeMode,
+  propLoading = false,
+}: SupabaseImageProps) => {
   const [source, setSource] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("image loaded", path);
+
     const getImage = async () => {
-      const res = await supabase.storage.from("comments").getPublicUrl(path);
-      return res;
+      if (!path) return { error: "No path" };
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+      if (!data) return { error: "No image" };
+      return { data, error: null };
     };
 
     getImage()
-      .then(({ data }) => {
-        setSource(data.publicUrl);
+      .then(({ data, error }) => {
+        if (!error && data) setSource(data.publicUrl);
       })
-      .catch((err) => {
+      .finally(() => {
         setLoading(false);
       });
-  }, [path]);
+  }, [bucket, path]);
 
   return (
     <View style={{}}>
       <Image
         source={source}
         style={style}
+        cachePolicy="memory-disk"
         contentFit={resizeMode}
         onLoadEnd={() => setLoading(false)}
         onError={() => setLoading(false)}
       />
-      <ActivityIndicator style={styles.activityIndicator} animating={loading} />
+      <ActivityIndicator
+        style={styles.activityIndicator}
+        animating={loading || propLoading}
+      />
     </View>
   );
 };

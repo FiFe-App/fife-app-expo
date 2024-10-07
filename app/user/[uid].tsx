@@ -1,13 +1,18 @@
 import BuzinessItem from "@/components/buziness/BuzinessItem";
+import SupabaseImage from "@/components/SupabaseImage";
 import { ThemedView } from "@/components/ThemedView";
-import ProfileImage from "@/components/user/ProfileImage";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
 import { RootState } from "@/lib/redux/store";
 import { BuzinessSearchItemInterface, UserState } from "@/lib/redux/store.type";
+import { RecommendProfileButton } from "@/lib/supabase/RecommendProfileButton";
 import { supabase } from "@/lib/supabase/supabase";
-import axios from "axios";
-import { router, useFocusEffect, useGlobalSearchParams } from "expo-router";
+import {
+  Link,
+  router,
+  useFocusEffect,
+  useGlobalSearchParams,
+} from "expo-router";
 import { useCallback, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { Button, Text } from "react-native-paper";
@@ -15,16 +20,21 @@ import { useSelector } from "react-redux";
 
 type UserInfo = Tables<"profiles">;
 
+interface ExUser extends UserInfo {
+  recommendations?: number;
+}
+
 export default function Index() {
   const { uid: paramUid } = useGlobalSearchParams();
-  const uid: string = paramUid?.[0] || "";
+  const uid: string = String(paramUid);
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
   console.log(myUid, uid);
 
   const myProfile = myUid === uid;
-  const [data, setData] = useState<UserInfo | null>(null);
+  const [data, setData] = useState<ExUser | null>(null);
+  const [recommended, setRecommended] = useState(false);
   const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>(
     [],
   );
@@ -34,7 +44,9 @@ export default function Index() {
 
     supabase
       .from("profiles")
-      .select("*")
+      .select(
+        "*, profileRecommendations!profileRecommendations_profile_id_fkey ( count )",
+      )
       .eq("id", paramUid)
       .then(({ data, error }) => {
         if (error) {
@@ -42,7 +54,10 @@ export default function Index() {
           return;
         }
         if (data) {
-          setData(data[0]);
+          setData({
+            ...data[0],
+            recommendations: data[0].profileRecommendations[0].count,
+          });
           supabase
             .from("buziness")
             .select(
@@ -65,6 +80,16 @@ export default function Index() {
           console.log(data);
         }
       });
+    if (myUid) {
+      supabase
+        .from("profileRecommendations")
+        .select("count")
+        .eq("author", myUid)
+        .eq("profile_id", uid)
+        .then((res) => {
+          setRecommended(!!res.data?.[0].count);
+        });
+    }
   };
   useFocusEffect(
     useCallback(() => {
@@ -77,7 +102,11 @@ export default function Index() {
     return (
       <ThemedView style={{ flex: 1 }}>
         <View style={{ flexDirection: "row" }}>
-          <ProfileImage uid={uid} style={{ width: 100, height: 100 }} />
+          <SupabaseImage
+            bucket="avatars"
+            path={uid + "/" + data?.avatar_url}
+            style={{ width: 100, height: 100 }}
+          />
           <View style={{ flex: 1 }}>
             <View
               style={{
@@ -90,7 +119,7 @@ export default function Index() {
             </View>
             <View style={{ flexDirection: "row", flex: 1 }}>
               <View style={{ flex: 1, alignItems: "center" }}>
-                <Text>{0}</Text>
+                <Text>{data?.recommendations}</Text>
                 <Text>Pajtások</Text>
               </View>
               {data?.created_at && (
@@ -105,12 +134,22 @@ export default function Index() {
           </View>
         </View>
         <View style={{ flexDirection: "row", gap: 4, margin: 4 }}>
-          <Button style={{ flex: 1 }} mode="contained" disabled>
-            Legyen a pajtásom
-          </Button>
-          <Button style={{ flex: 1 }} mode="contained-tonal" disabled>
-            Üzenek neki
-          </Button>
+          {myProfile ? (
+            <Link asChild style={{ flex: 1 }} href={{ pathname: "/user/edit" }}>
+              <Button mode="contained">Profil szerkesztése</Button>
+            </Link>
+          ) : (
+            <>
+              <RecommendProfileButton
+                profileId={uid}
+                recommended={recommended}
+                setRecommended={setRecommended}
+              />
+              <Button style={{ flex: 1 }} mode="contained-tonal" disabled>
+                Üzenek neki
+              </Button>
+            </>
+          )}
         </View>
         <View style={{ flex: 1 }}>
           <Text>Bizniszeim</Text>

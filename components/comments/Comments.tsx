@@ -338,6 +338,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                     {comment.image && (
                       <Pressable onPress={() => setSelectedComment(comment)}>
                         <SupabaseImage
+                          bucket="comments"
                           path={comment.image}
                           style={{
                             width: 100,
@@ -415,6 +416,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
           >
             <Pressable onPress={() => setSelectedComment(null)}>
               <SupabaseImage
+                bucket="comments"
                 path={selectedComment.image}
                 style={{ height: 600 }}
                 resizeMode="contain"

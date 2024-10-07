@@ -10,7 +10,8 @@
     "web": "expo start --web",
     "test": "jest --watchAll",
     "lint": "npx expo lint",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "updateTypes": "npx supabase gen types --lang=typescript --project-id pdzuvfkkrhtrrrcckwzj --schema public > database.types.ts"
   },
   "jest": {
     "preset": "jest-expo"

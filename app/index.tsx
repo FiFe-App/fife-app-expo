@@ -48,7 +48,7 @@ export default function Index() {
           </View>
         </>
       ) : (
-        <Link href="/loginTest" asChild>
+        <Link href="/login" asChild>
           <Button mode="contained">Bejelentkezés</Button>
         </Link>
       )}

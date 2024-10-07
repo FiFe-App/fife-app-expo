@@ -7,7 +7,7 @@ import { useMyLocation } from "@/hooks/useMyLocation";
 import { storeBuzinessSearchParams } from "@/lib/redux/reducers/buzinessReducer";
 import { RootState } from "@/lib/redux/store";
 import { BuzinessItemInterface, UserState } from "@/lib/redux/store.type";
-import { RecommendBuzinessButton } from "@/lib/supabase/recommandations";
+import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
 import { supabase } from "@/lib/supabase/supabase";
 import { router, useFocusEffect, useGlobalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
@@ -94,120 +94,126 @@ export default function Index() {
     }
   };
 
-  if (id && data)
-    return (
-      <ThemedView style={{ flex: 1 }}>
-        <View style={{ flexDirection: "row" }}>
-          <Text style={{ flex: 1, textAlign: "center" }}>
-            {data.authorName} biznisze
-          </Text>
-          <Text style={{ flex: 1, textAlign: "center" }}>
-            {data.recommendations} ajánlás
-          </Text>
-        </View>
-        <View style={{ flexDirection: "row" }}>
-          <View style={{ flex: 1 }}>
-            <View
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text>{title}</Text>
+  return (
+    <ThemedView style={{ flex: 1 }}>
+      {id && data && (
+        <>
+          <View style={{ flexDirection: "row" }}>
+            <Text style={{ flex: 1, textAlign: "center" }}>
+              {data.authorName} biznisze
+            </Text>
+            <Text style={{ flex: 1, textAlign: "center" }}>
+              {data.recommendations} ajánlás
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row" }}>
+            <View style={{ flex: 1 }}>
+              <View
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text>{title}</Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4 }}>
-          {categories?.slice(1).map((e, i) => {
-            if (e.trim())
-              return (
-                <Chip
-                  key={"category" + i}
-                  textStyle={{ margin: 4 }}
-                  onPress={() => {
-                    dispatch(storeBuzinessSearchParams({ text: e }));
-                    router.navigate({
-                      pathname: "/biznisz",
-                    });
-                  }}
-                >
-                  <Text>{e}</Text>
-                </Chip>
-              );
-          })}
-        </View>
-        <View style={{}}>
-          <Text>{data?.description}</Text>
-        </View>
-        <View style={{ flexDirection: "row", gap: 4, padding: 4 }}>
-          <Button style={{ flex: 1 }} mode="contained" onPress={onPimary}>
-            {myBuziness ? "Szerkesztés" : "Írok neki!"}
-          </Button>
-          {!myBuziness && (
-            <RecommendBuzinessButton
-              buzinessId={id}
-              recommended={recommended}
-              setRecommended={setRecommended}
+          <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4 }}>
+            {categories?.slice(1).map((e, i) => {
+              if (e.trim())
+                return (
+                  <Chip
+                    key={"category" + i}
+                    textStyle={{ margin: 4 }}
+                    onPress={() => {
+                      dispatch(storeBuzinessSearchParams({ text: e }));
+                      router.navigate({
+                        pathname: "/biznisz",
+                      });
+                    }}
+                  >
+                    <Text>{e}</Text>
+                  </Chip>
+                );
+            })}
+          </View>
+          <View style={{}}>
+            <Text>{data?.description}</Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 4, padding: 4 }}>
+            <Button style={{ flex: 1 }} mode="contained" onPress={onPimary}>
+              {myBuziness ? "Szerkesztés" : "Írok neki!"}
+            </Button>
+            {!myBuziness && (
+              <RecommendBuzinessButton
+                buzinessId={id}
+                recommended={recommended}
+                setRecommended={setRecommended}
+              />
+            )}
+          </View>
+          <ContactList />
+          <Text>Hol található?</Text>
+          <MapView
+            options={{
+              mapTypeControl: false,
+              fullscreenControl: false,
+              streetViewControl: false,
+              zoomControl: false,
+            }}
+            style={{ width: "100%", height: "100%" }}
+            initialCamera={{
+              altitude: 10,
+              center: location || {
+                latitude: 47.4979,
+                longitude: 19.0402,
+              },
+              heading: 0,
+              pitch: 0,
+              zoom: 12,
+            }}
+            provider="google"
+            googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
+            pitchEnabled={false}
+            rotateEnabled={false}
+            toolbarEnabled={false}
+          >
+            {location && <Marker coordinate={location} />}
+            {myLocation && (
+              <Marker
+                centerOffset={{ x: 10, y: 10 }}
+                coordinate={myLocation?.coords}
+                style={{ justifyContent: "center", alignItems: "center" }}
+              >
+                <MyLocationIcon style={{ width: 20, height: 20 }} />
+              </Marker>
+            )}
+          </MapView>
+          {location && (
+            <IconButton
+              icon="directions"
+              mode="contained"
+              onPress={() =>
+                openMap({
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                  navigate: true,
+                  start: "My Location",
+                  travelType: "public_transport",
+                  end: location.latitude + "," + location.longitude,
+                })
+              }
+              style={{ right: 5, bottom: 5, position: "absolute" }}
             />
           )}
-        </View>
-        <ContactList />
-        <Text>Hol található?</Text>
-        <MapView
-          options={{
-            mapTypeControl: false,
-            fullscreenControl: false,
-            streetViewControl: false,
-            zoomControl: false,
-          }}
-          style={{ width: "100%", height: "100%" }}
-          initialCamera={{
-            altitude: 10,
-            center: location || {
-              latitude: 47.4979,
-              longitude: 19.0402,
-            },
-            heading: 0,
-            pitch: 0,
-            zoom: 12,
-          }}
-          provider="google"
-          googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
-          pitchEnabled={false}
-          rotateEnabled={false}
-          toolbarEnabled={false}
-        >
-          {location && <Marker coordinate={location} />}
-          {myLocation && (
-            <Marker
-              centerOffset={{ x: 10, y: 10 }}
-              coordinate={myLocation?.coords}
-              style={{ justifyContent: "center", alignItems: "center" }}
-            >
-              <MyLocationIcon style={{ width: 20, height: 20 }} />
-            </Marker>
-          )}
-        </MapView>
-        {location && (
-          <IconButton
-            icon="directions"
-            mode="contained"
-            onPress={() =>
-              openMap({
-                latitude: location.latitude,
-                longitude: location.longitude,
-                navigate: true,
-                start: "My Location",
-                travelType: "public_transport",
-                end: location.latitude + "," + location.longitude,
-              })
-            }
-            style={{ right: 5, bottom: 5, position: "absolute" }}
+          <Comments
+            path={"buziness/" + id}
+            placeholder="Mondd el a véleményed"
           />
-        )}
-        <Comments path={"buziness/" + id} placeholder="Mondd el a véleményed" />
-      </ThemedView>
-    );
+        </>
+      )}
+    </ThemedView>
+  );
 }
