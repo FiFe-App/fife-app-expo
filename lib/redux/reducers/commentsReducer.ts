@@ -1,11 +1,11 @@
 import { Tables } from "./../../../database.types";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { CommentsState } from "../store.type";
+import { Comment } from "@/components/comments/comments.types";
 
 const initialState: CommentsState = {
   comments: [],
 };
-type Comment = Tables<"comments">;
 
 const commentsReducer = createSlice({
   initialState,

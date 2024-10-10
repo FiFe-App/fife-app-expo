@@ -61,7 +61,6 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     comment: Comment;
   } | null>(null);
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
-
   useEffect(() => {
     dispatch(clearComments());
 
@@ -90,7 +89,19 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
         (data) => {
           //supabase.from("profiles").select("full_name").eq("id", data.new?.id);
           if (data.eventType === "INSERT") {
-            dispatch(addComment(data.new));
+            supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", data.new?.author)
+              .then((res) => {
+                if (res.data && res.data[0].full_name)
+                  dispatch(
+                    addComment({
+                      ...data.new,
+                      profiles: { full_name: res.data[0].full_name },
+                    }),
+                  );
+              });
           }
           if (data.eventType === "UPDATE") {
             dispatch(editComment(data.new));
@@ -141,7 +152,6 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
         .from("comments")
         .insert({
           author: uid,
-          author_name: author,
           text,
           key: path,
         })
@@ -302,6 +312,8 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
         >
           {comments.length &&
             comments.map((comment, ind) => {
+              console.log(comment);
+
               return (
                 <Card key={"comment" + ind} contentStyle={{}}>
                   <Card.Content
@@ -324,7 +336,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                             }}
                           >
                             <ThemedText style={{ fontWeight: "bold" }}>
-                              {comment.profiles.full_name}
+                              {comment?.profiles?.full_name}
                             </ThemedText>
                           </Pressable>
                           <ThemedText>
@@ -385,7 +397,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                   });
                   setShowMenu(false);
                 }}
-                title={menuAnchor?.comment?.profiles.full_name + " profilja"}
+                title={menuAnchor?.comment?.profiles?.full_name + " profilja"}
                 leadingIcon="account"
               />
               <Menu.Item

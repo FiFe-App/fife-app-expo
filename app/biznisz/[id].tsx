@@ -190,24 +190,24 @@ export default function Index() {
                 <MyLocationIcon style={{ width: 20, height: 20 }} />
               </Marker>
             )}
+            {location && (
+              <IconButton
+                icon="directions"
+                mode="contained"
+                onPress={() =>
+                  openMap({
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    navigate: true,
+                    start: "My Location",
+                    travelType: "public_transport",
+                    end: location.latitude + "," + location.longitude,
+                  })
+                }
+                style={{ right: 5, bottom: 5, position: "absolute" }}
+              />
+            )}
           </MapView>
-          {location && (
-            <IconButton
-              icon="directions"
-              mode="contained"
-              onPress={() =>
-                openMap({
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                  navigate: true,
-                  start: "My Location",
-                  travelType: "public_transport",
-                  end: location.latitude + "," + location.longitude,
-                })
-              }
-              style={{ right: 5, bottom: 5, position: "absolute" }}
-            />
-          )}
           <Comments
             path={"buziness/" + id}
             placeholder="Mondd el a véleményed"
