@@ -1,4 +1,3 @@
-import AxiosDefaultHeaders from "@/components/axios/AxiosDefaultHeaders";
 import InfoLayer from "@/components/InfoLayer";
 import FirebaseProvider from "@/lib/firebase/firebase";
 import { persistor, store } from "@/lib/redux/store";
@@ -12,7 +11,6 @@ export default function RootLayout() {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <AxiosDefaultHeaders />
         <FirebaseProvider>
           <PaperProvider>
             <InfoLayer />
@@ -21,7 +19,7 @@ export default function RootLayout() {
             >
               <Stack.Screen name="index" options={{ title: "FiFe app" }} />
               <Stack.Screen
-                name="loginTest/index"
+                name="login/index"
                 options={{ title: "Bejelentkezés" }}
               />
               <Stack.Screen
@@ -35,6 +33,14 @@ export default function RootLayout() {
               <Stack.Screen
                 name="biznisz/[id]"
                 options={{ title: "FiFe Biznisz" }}
+              />
+              <Stack.Screen
+                name="user/[uid]"
+                options={{ title: "FiFe Profil" }}
+              />
+              <Stack.Screen
+                name="user/edit"
+                options={{ title: "Profil Szerkesztése" }}
               />
             </Stack>
           </PaperProvider>

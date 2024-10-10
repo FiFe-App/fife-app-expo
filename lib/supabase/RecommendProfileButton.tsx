@@ -8,19 +8,19 @@ import { addDialog } from "../redux/reducers/infoReducer";
 import { trackPromise } from "react-promise-tracker";
 import wrapper from "../functions/wrapper";
 
-interface RecommendBuzinessButtonProps {
-  buzinessId: number;
+interface RecommendProfileButtonProps {
+  profileId: string;
   recommended?: boolean;
   setRecommended: React.Dispatch<React.SetStateAction<boolean>>;
   style?: any;
 }
 
-export const RecommendBuzinessButton = ({
-  buzinessId,
+export const RecommendProfileButton = ({
+  profileId,
   recommended,
   setRecommended,
   style,
-}: RecommendBuzinessButtonProps) => {
+}: RecommendProfileButtonProps) => {
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
@@ -28,7 +28,6 @@ export const RecommendBuzinessButton = ({
   const [loading, setLoading] = useState(false);
 
   const toggleRecommendation = async () => {
-    setLoading(true);
     if (!myUid) return;
     if (recommended) {
       dispatch(
@@ -36,12 +35,13 @@ export const RecommendBuzinessButton = ({
           title: "Mégsem ajánlod?",
           text: "Törölheted az ajánlásod, ha meggondoltad magad.",
           onSubmit: () => {
+            setLoading(true);
             trackPromise(
               wrapper<null, any>(
                 supabase
-                  .from("buzinessRecommendations")
+                  .from("profileRecommendations")
                   .delete()
-                  .eq("buziness_id", buzinessId)
+                  .eq("profile_id", profileId)
                   .eq("author", myUid)
                   .then((res) => {
                     setRecommended(false);
@@ -55,9 +55,9 @@ export const RecommendBuzinessButton = ({
         }),
       );
     } else {
-      const res = await supabase.from("buzinessRecommendations").insert({
+      const res = await supabase.from("profileRecommendations").insert({
         author: myUid,
-        buziness_id: buzinessId,
+        profile_id: profileId,
       });
 
       if (!res.error) setRecommended(true);
@@ -72,7 +72,7 @@ export const RecommendBuzinessButton = ({
       mode={!recommended ? "contained" : "contained-tonal"}
       loading={loading}
     >
-      {recommended ? "Már ajánlottam" : "Ajánlom"}
+      {recommended ? "Már a pajtásom:)" : "Pajtásnak jelölöm!"}
     </Button>
   );
 };

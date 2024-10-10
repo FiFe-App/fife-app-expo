@@ -7,6 +7,6 @@ export interface CommentsProps {
 
 export interface Comment extends Tables<"comments"> {
   profiles: {
-    full_name: string;
-  };
+    full_name: string | null;
+  } | null;
 }
