@@ -7,11 +7,10 @@ import { addDialog, setOptions } from "@/lib/redux/reducers/infoReducer";
 import { RootState } from "@/lib/redux/store";
 import { supabase } from "@/lib/supabase/supabase";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, ViewStyle } from "react-native";
+import React, { useCallback, useState } from "react";
+import { View } from "react-native";
 import {
   Button,
-  Card,
   Divider,
   Headline,
   Icon,
@@ -36,17 +35,17 @@ const types: {
   { label: "Más", value: "OTHER" },
 ];
 
+type IContact = Partial<Tables<"contacts">>;
+
 const ContactEditScreen = ({ id }: { id?: string }) => {
   const [loading, setLoading] = useState(false);
   const { uid } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
-  const [contact, setContact] = useState<Tables<"contacts">>({
+  const [contact, setContact] = useState<IContact>({
     data: "",
-    description: "",
-    type: undefined,
+    title: "",
     public: true,
-    id: 0,
-    author: uid || "",
+    author: uid,
   });
 
   const loadContacts = () => {
@@ -101,17 +100,20 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
   );
 
   const save = async () => {
-    if (uid && contact?.data) {
+    if (uid && contact.data && contact.type) {
       setLoading(true);
       await supabase.from("contacts").upsert(
         {
           ...contact,
+          data: contact.data,
+          type: contact.type,
           author: uid,
         },
         {
           onConflict: "id",
         },
       );
+      setLoading(false);
       const text = contact.public
         ? "Bárki láthatja a részleteit az oldaladon, vagy egy bizniszed oldalán."
         : "Senki sem láthatja a részleteit.";
@@ -119,7 +121,12 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
         router.navigate({ pathname: "/user/edit" });
       };
       dispatch(
-        addDialog({ title: "Az elérhetőséged elmentetted", text, onSubmit }),
+        addDialog({
+          title: "Az elérhetőséged elmentetted",
+          text,
+          onSubmit,
+          dismissable: false,
+        }),
       );
     }
   };
@@ -194,7 +201,8 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
             CustomMenuHeader={(props) => <></>}
             onSelect={(t) => {
               if (t) {
-                setContact({ ...contact, type: t });
+                const ty = types.find((ty) => ty.value === t);
+                setContact({ ...contact, type: ty?.value });
               }
             }}
           />

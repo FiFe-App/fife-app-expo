@@ -26,13 +26,19 @@ const InfoLayer = () => {
   if (dialog)
     return (
       <Portal>
-        <Dialog visible={!!dialog} onDismiss={cancelDialog}>
+        <Dialog
+          visible={!!dialog}
+          onDismiss={cancelDialog}
+          dismissable={dialog.dismissable}
+        >
           <Dialog.Title>{dialog?.title}</Dialog.Title>
           <Dialog.Content>
             <Text variant="bodyMedium">{dialog?.text}</Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={cancelDialog}>Mégsem</Button>
+            {dialog?.dismissable && (
+              <Button onPress={cancelDialog}>Mégsem</Button>
+            )}
             <Button
               mode="contained"
               onPress={submitDialog}

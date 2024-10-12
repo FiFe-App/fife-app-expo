@@ -58,6 +58,7 @@ export interface DialogProps {
   onSubmit: () => void;
   onCancel?: () => void;
   submitText?: string;
+  dismissable?: boolean;
 }
 export interface OptionProps {
   icon: string;

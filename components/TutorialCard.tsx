@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { Card, IconButton, Text } from "react-native-paper";
+import { Card, IconButton } from "react-native-paper";
 
 interface TutorialCardProps {
   title: string;
@@ -11,7 +11,7 @@ const TutorialCard = ({ title, children }: TutorialCardProps) => {
 
   if (show)
     return (
-      <Card>
+      <Card style={{ margin: 4 }}>
         <Card.Title
           title={title}
           right={() => (

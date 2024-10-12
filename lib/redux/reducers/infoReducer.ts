@@ -10,9 +10,10 @@ const infoReducer = createSlice({
   name: "info",
   reducers: {
     addDialog: (state, action: PayloadAction<DialogProps>) => {
-      console.log(state.dialogs);
-
-      state.dialogs = [...(state.dialogs || []), action.payload];
+      state.dialogs = [
+        ...(state.dialogs || []),
+        { dismissable: true, ...action.payload },
+      ];
     },
     popDialog: (state) => {
       state.dialogs = state.dialogs.slice(1);

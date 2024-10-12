@@ -72,6 +72,8 @@ const MyAppbar = (props: NativeStackHeaderProps) => {
   const segments = useSegments();
 
   useEffect(() => {
+    console.log(segments);
+
     dispatch(clearOptions());
   }, [dispatch, segments]);
 
