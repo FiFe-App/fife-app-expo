@@ -13,7 +13,13 @@ import { router, useFocusEffect, useGlobalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { View } from "react-native";
 import openMap from "react-native-open-maps";
-import { Button, Chip, IconButton, Text } from "react-native-paper";
+import {
+  ActivityIndicator,
+  Button,
+  Chip,
+  IconButton,
+  Text,
+} from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
@@ -96,6 +102,7 @@ export default function Index() {
 
   return (
     <ThemedView style={{ flex: 1 }}>
+      {!data && <ActivityIndicator />}
       {id && data && (
         <>
           <View style={{ flexDirection: "row" }}>
@@ -154,7 +161,7 @@ export default function Index() {
               />
             )}
           </View>
-          <ContactList />
+          <ContactList uid={data.author} />
           <Text>Hol található?</Text>
           <MapView
             options={{

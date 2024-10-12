@@ -1,3 +1,5 @@
+import { ContactList } from "@/components/buziness/ContactList";
+import { ContactListEdit } from "@/components/buziness/ContactEditScreen";
 import SupabaseImage from "@/components/SupabaseImage";
 import { ThemedView } from "@/components/ThemedView";
 import ProfileImage from "@/components/user/ProfileImage";
@@ -11,10 +13,10 @@ import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { View } from "react-native";
 import { Button, IconButton, TextInput } from "react-native-paper";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { setOptions } from "@/lib/redux/reducers/infoReducer";
 
 type UserInfo = Tables<"profiles">;
-type UserDraft = Partial<UserInfo>;
 
 export default function Index() {
   const { uid: myUid }: UserState = useSelector(
@@ -22,8 +24,8 @@ export default function Index() {
   );
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
-  const [profile, setProfile] = useState<UserInfo>({});
-  const imageRef = useRef();
+  const [profile, setProfile] = useState<UserInfo | {}>({});
+  const dispatch = useDispatch();
 
   const load = () => {
     console.log("loaded user", myUid);
@@ -48,9 +50,23 @@ export default function Index() {
   };
   useFocusEffect(
     useCallback(() => {
+      dispatch(
+        setOptions([
+          {
+            title: "Mentés",
+            icon: "check",
+            onPress: save,
+          },
+          {
+            title: "Törlés",
+            icon: "delete",
+            onPress: save,
+          },
+        ]),
+      );
       load();
       return () => {};
-    }, [myUid]),
+    }, [myUid, dispatch]),
   );
   const save = () => {
     setLoading(true);
@@ -134,23 +150,29 @@ export default function Index() {
     return upload;
   };
 
-  console.log("profile", profile.avatar_url);
   if (myUid)
     return (
       <ThemedView style={{ flex: 1 }}>
         <View style={{ alignItems: "center" }}>
-          <SupabaseImage
-            key={profile.avatar_url}
-            bucket="avatars"
-            path={myUid + "/" + profile.avatar_url}
-            propLoading={imageLoading}
-            style={{
-              width: 100,
-              height: 100,
-              borderRadius: 12,
-            }}
-          />
-          <IconButton icon="upload" onPress={pickImage} />
+          <View style={{ width: 100 }}>
+            <SupabaseImage
+              key={profile.avatar_url}
+              bucket="avatars"
+              path={myUid + "/" + profile.avatar_url}
+              propLoading={imageLoading}
+              style={{
+                width: 100,
+                height: 100,
+                borderRadius: 12,
+              }}
+            />
+            <IconButton
+              icon="upload"
+              onPress={pickImage}
+              mode="contained-tonal"
+              style={{ position: "absolute", right: 0, bottom: 0 }}
+            />
+          </View>
         </View>
         <TextInput
           placeholder="Teljes név"
@@ -158,9 +180,7 @@ export default function Index() {
           disabled={loading}
           onChangeText={(t) => setProfile({ ...profile, full_name: t })}
         />
-        <Button onPress={save} loading={loading}>
-          Profilod mentése
-        </Button>
+        <ContactList uid={myUid} edit />
       </ThemedView>
     );
 }

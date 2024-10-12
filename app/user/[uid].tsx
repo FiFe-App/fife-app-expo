@@ -1,21 +1,19 @@
-import BuzinessItem from "@/components/buziness/BuzinessItem";
+import { ContactList } from "@/components/buziness/ContactList";
 import SupabaseImage from "@/components/SupabaseImage";
 import { ThemedView } from "@/components/ThemedView";
+import MyBuzinesses from "@/components/user/MyBuzinesses";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
 import { RootState } from "@/lib/redux/store";
-import { BuzinessSearchItemInterface, UserState } from "@/lib/redux/store.type";
+import { UserState } from "@/lib/redux/store.type";
 import { RecommendProfileButton } from "@/lib/supabase/RecommendProfileButton";
 import { supabase } from "@/lib/supabase/supabase";
-import {
-  Link,
-  router,
-  useFocusEffect,
-  useGlobalSearchParams,
-} from "expo-router";
+import { Link, useFocusEffect, useGlobalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import { Button, Text } from "react-native-paper";
+import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
+
 import { useSelector } from "react-redux";
 
 type UserInfo = Tables<"profiles">;
@@ -35,9 +33,6 @@ export default function Index() {
   const myProfile = myUid === uid;
   const [data, setData] = useState<ExUser | null>(null);
   const [recommended, setRecommended] = useState(false);
-  const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>(
-    [],
-  );
 
   const load = () => {
     console.log("uid", uid);
@@ -58,25 +53,6 @@ export default function Index() {
             ...data[0],
             recommendations: data[0].profileRecommendations[0].count,
           });
-          supabase
-            .from("buziness")
-            .select(
-              "*, profiles ( full_name ), buzinessRecommendations ( count )",
-            )
-            .eq("author", paramUid)
-            .then((res) => {
-              if (res.data) {
-                setBuzinesses(
-                  res.data.map((b) => {
-                    return {
-                      ...b,
-                      authorName: b.profiles?.full_name || "???",
-                      recommendations: b.buzinessRecommendations[0].count,
-                    };
-                  }),
-                );
-              }
-            });
           console.log(data);
         }
       });
@@ -96,6 +72,13 @@ export default function Index() {
       return () => {};
     }, [uid]),
   );
+  const layout = useWindowDimensions();
+
+  const [index, setIndex] = useState(0);
+  const [routes] = useState([
+    { key: "first", title: "First" },
+    { key: "second", title: "Second" },
+  ]);
 
   if (uid)
     return (
@@ -150,25 +133,29 @@ export default function Index() {
             </>
           )}
         </View>
-        <View style={{ flex: 1 }}>
-          <Text>Bizniszeim</Text>
-          <ScrollView contentContainerStyle={{ gap: 4 }}>
-            {buzinesses.map((buzinessItem) => (
-              <BuzinessItem
-                data={buzinessItem}
-                key={buzinessItem.id}
-                showOptions
-              />
-            ))}
-            {myProfile && (
-              <View>
-                <Button onPress={() => router.push("/biznisz/new")}>
-                  <Text>Új Biznisz felvétele</Text>
-                </Button>
-              </View>
-            )}
-          </ScrollView>
-        </View>
+        <TabsProvider
+          defaultIndex={0}
+          // onChangeIndex={handleChangeIndex} optional
+        >
+          <Tabs
+          // uppercase={false} // true/false | default=true (on material v2) | labels are uppercase
+          // showTextLabel={false} // true/false | default=false (KEEP PROVIDING LABEL WE USE IT AS KEY INTERNALLY + SCREEN READERS)
+          // iconPosition // leading, top | default=leading
+          // style={{ backgroundColor:'#fff' }} // works the same as AppBar in react-native-paper
+          // dark={false} // works the same as AppBar in react-native-paper
+          // theme={} // works the same as AppBar in react-native-paper
+          // mode="scrollable" // fixed, scrollable | default=fixed
+          // showLeadingSpace={true} //  (default=true) show leading space in scrollable tabs inside the header
+          // disableSwipe={false} // (default=false) disable swipe to left/right gestures
+          >
+            <TabScreen label="Bizniszek" icon="briefcase">
+              <MyBuzinesses uid={uid} myProfile={myProfile} />
+            </TabScreen>
+            <TabScreen label="Elérhetőségek" icon="email-multiple">
+              <ContactList uid={uid} />
+            </TabScreen>
+          </Tabs>
+        </TabsProvider>
       </ThemedView>
     );
 }
