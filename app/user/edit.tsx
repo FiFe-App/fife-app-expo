@@ -1,22 +1,19 @@
 import { ContactList } from "@/components/buziness/ContactList";
-import { ContactListEdit } from "@/components/buziness/ContactEditScreen";
 import SupabaseImage from "@/components/SupabaseImage";
 import { ThemedView } from "@/components/ThemedView";
-import ProfileImage from "@/components/user/ProfileImage";
 import { Tables } from "@/database.types";
+import { setOptions } from "@/lib/redux/reducers/infoReducer";
 import { RootState } from "@/lib/redux/store";
-import { BuzinessSearchItemInterface, UserState } from "@/lib/redux/store.type";
+import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
-import { Image } from "expo-image";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { View } from "react-native";
-import { Button, IconButton, TextInput } from "react-native-paper";
+import { IconButton, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { setOptions } from "@/lib/redux/reducers/infoReducer";
 
-type UserInfo = Tables<"profiles">;
+type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
   const { uid: myUid }: UserState = useSelector(
@@ -24,7 +21,7 @@ export default function Index() {
   );
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
-  const [profile, setProfile] = useState<UserInfo | {}>({});
+  const [profile, setProfile] = useState<UserInfo>({});
   const dispatch = useDispatch();
 
   const load = () => {
@@ -66,6 +63,7 @@ export default function Index() {
       );
       load();
       return () => {};
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [myUid, dispatch]),
   );
   const save = () => {
@@ -156,7 +154,7 @@ export default function Index() {
         <View style={{ alignItems: "center" }}>
           <View style={{ width: 100 }}>
             <SupabaseImage
-              key={profile.avatar_url}
+              key={profile?.avatar_url}
               bucket="avatars"
               path={myUid + "/" + profile.avatar_url}
               propLoading={imageLoading}
@@ -176,7 +174,7 @@ export default function Index() {
         </View>
         <TextInput
           placeholder="Teljes név"
-          value={profile.full_name}
+          value={profile.full_name || ""}
           disabled={loading}
           onChangeText={(t) => setProfile({ ...profile, full_name: t })}
         />

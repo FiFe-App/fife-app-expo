@@ -9,7 +9,13 @@ import { RootState } from "@/lib/redux/store";
 import { BuzinessItemInterface, UserState } from "@/lib/redux/store.type";
 import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
 import { supabase } from "@/lib/supabase/supabase";
-import { router, useFocusEffect, useGlobalSearchParams } from "expo-router";
+import {
+  Link,
+  router,
+  useFocusEffect,
+  useGlobalSearchParams,
+  useNavigation,
+} from "expo-router";
 import { useCallback, useState } from "react";
 import { View } from "react-native";
 import openMap from "react-native-open-maps";
@@ -19,6 +25,7 @@ import {
   Chip,
   IconButton,
   Text,
+  TouchableRipple,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -39,6 +46,7 @@ export default function Index() {
   const title = categories?.[0];
   const myBuziness = myUid === data?.author;
   const { myLocation, error } = useMyLocation();
+  const nav = useNavigation();
 
   useFocusEffect(
     useCallback(() => {
@@ -47,7 +55,7 @@ export default function Index() {
         supabase
           .from("buziness")
           .select(
-            "*, profiles ( full_name ), buzinessRecommendations ( count )",
+            "*, profiles ( full_name, avatar_url ), buzinessRecommendations ( count )",
           )
           .eq("id", id)
           .then(({ data, error }) => {
@@ -64,6 +72,7 @@ export default function Index() {
               var geometry = wkx.Geometry.parse(wkbBuffer);
 
               const cords = geometry.toGeoJSON().coordinates;
+              nav.setOptions({ title: data[0]?.title.split(" ")[0] });
               setData({
                 ...data[0],
                 lat: cords[1],
@@ -92,7 +101,7 @@ export default function Index() {
 
   const onPimary = () => {
     if (myBuziness) {
-      router.push({
+      router.navigate({
         pathname: "/biznisz/edit/[editId]",
         params: { editId: id },
       });
@@ -106,28 +115,30 @@ export default function Index() {
       {id && data && (
         <>
           <View style={{ flexDirection: "row" }}>
-            <Text style={{ flex: 1, textAlign: "center" }}>
-              {data.authorName} biznisze
-            </Text>
-            <Text style={{ flex: 1, textAlign: "center" }}>
+            <Link
+              asChild
+              style={{ flex: 1, padding: 20 }}
+              href={{ pathname: "/user/[uid]", params: { uid: data.author } }}
+            >
+              <TouchableRipple>
+                <Text style={{ textAlign: "center" }}>
+                  {data.authorName} biznisze
+                </Text>
+              </TouchableRipple>
+            </Link>
+            <Text style={{ flex: 1, textAlign: "center", padding: 20 }}>
               {data.recommendations} ajánlás
             </Text>
           </View>
-          <View style={{ flexDirection: "row" }}>
-            <View style={{ flex: 1 }}>
-              <View
-                style={{
-                  flex: 1,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Text>{title}</Text>
-              </View>
-            </View>
-          </View>
 
-          <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4 }}>
+          <View
+            style={{
+              flexWrap: "wrap",
+              flexDirection: "row",
+              gap: 4,
+              padding: 10,
+            }}
+          >
             {categories?.slice(1).map((e, i) => {
               if (e.trim())
                 return (
@@ -146,7 +157,7 @@ export default function Index() {
                 );
             })}
           </View>
-          <View style={{}}>
+          <View style={{ padding: 10 }}>
             <Text>{data?.description}</Text>
           </View>
           <View style={{ flexDirection: "row", gap: 4, padding: 4 }}>

@@ -47,6 +47,7 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
     public: true,
     author: uid,
   });
+  const [error, setError] = useState<string | null>(null);
 
   const loadContacts = () => {
     if (uid && id)
@@ -55,7 +56,10 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
         .select("*")
         .eq("id", id)
         .then((res) => {
-          if (res.data) setContact(res.data[0]);
+          if (res.data?.length) setContact(res.data[0]);
+          else {
+            setError("Nincs ilyen elérhetőség");
+          }
         });
   };
   useFocusEffect(
@@ -96,6 +100,7 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
         );
       loadContacts();
       return () => {};
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [uid, id, dispatch]),
   );
 
@@ -132,7 +137,7 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
   };
   return (
     <ThemedView style={{ flex: 1 }}>
-      {
+      {!error && (
         <>
           <TutorialCard title="Mi az az elérhetőség?">
             <Text>
@@ -147,7 +152,7 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
             label="Típus"
             placeholder="Típus"
             options={types}
-            value={contact.type}
+            value={contact?.type}
             CustomDropdownInput={({
               placeholder,
               selectedLabel,
@@ -207,13 +212,13 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
             }}
           />
           <TextInput
-            value={contact.title || ""}
+            value={contact?.title || ""}
             disabled={loading}
             placeholder="Név"
             onChangeText={(t) => setContact({ ...contact, title: t })}
           />
           <TextInput
-            value={contact.data}
+            value={contact?.data}
             disabled={loading}
             placeholder="Érték"
             onChangeText={(t) => setContact({ ...contact, data: t })}
@@ -238,12 +243,17 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
             style={{ margin: 16 }}
             mode="contained"
             loading={loading}
-            disabled={!contact.data || !contact.type}
+            disabled={!contact?.data || !contact?.type}
           >
             Mentés
           </Button>
         </>
-      }
+      )}
+      {error && (
+        <ThemedText style={{ textAlign: "center", padding: 16 }}>
+          {error}
+        </ThemedText>
+      )}
     </ThemedView>
   );
 };

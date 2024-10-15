@@ -325,7 +325,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                           <Pressable
                             onPress={() => {
                               if (comment?.author)
-                                navigation.push({
+                                navigation.navigate({
                                   pathname: "/user/[uid]",
                                   params: { uid: comment.author },
                                 });
@@ -387,7 +387,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             <>
               <Menu.Item
                 onPress={() => {
-                  navigation.push({
+                  navigation.navigate({
                     pathname: "/user/[uid]",
                     params: { uid: menuAnchor.comment.author },
                   });

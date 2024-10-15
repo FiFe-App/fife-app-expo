@@ -46,7 +46,7 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
         ))}
         {myProfile && (
           <View>
-            <Button onPress={() => router.push("/biznisz/new")}>
+            <Button onPress={() => router.navigate("/biznisz/new")}>
               <Text>Új Biznisz felvétele</Text>
             </Button>
           </View>
