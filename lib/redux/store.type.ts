@@ -66,7 +66,12 @@ export interface OptionProps {
   onPress: () => void;
 }
 
+export interface SnackProps {
+  title: string;
+  onPress?: () => void;
+}
 export interface InfoState {
   dialogs: DialogProps[];
   options: OptionProps[];
+  snacks: SnackProps[];
 }

@@ -1,8 +1,9 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { DialogProps, InfoState, OptionProps } from "../store.type";
+import { DialogProps, InfoState, OptionProps, SnackProps } from "../store.type";
 const initialState: InfoState = {
   dialogs: [],
   options: [],
+  snacks: [],
 };
 
 const infoReducer = createSlice({
@@ -18,6 +19,12 @@ const infoReducer = createSlice({
     popDialog: (state) => {
       state.dialogs = state.dialogs.slice(1);
     },
+    addSnack: (state, action: PayloadAction<SnackProps>) => {
+      state.snacks = [...(state.snacks || []), action.payload];
+    },
+    popSnack: (state) => {
+      state.snacks = state.snacks.slice(1);
+    },
     setOptions: (state, action: PayloadAction<OptionProps[]>) => {
       state.options = action.payload;
     },
@@ -27,7 +34,13 @@ const infoReducer = createSlice({
   },
 });
 
-export const { addDialog, popDialog, setOptions, clearOptions } =
-  infoReducer.actions;
+export const {
+  addDialog,
+  popDialog,
+  setOptions,
+  clearOptions,
+  addSnack,
+  popSnack,
+} = infoReducer.actions;
 
 export default infoReducer.reducer;

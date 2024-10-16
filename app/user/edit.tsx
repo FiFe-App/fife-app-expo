@@ -54,11 +54,6 @@ export default function Index() {
             icon: "check",
             onPress: save,
           },
-          {
-            title: "Törlés",
-            icon: "delete",
-            onPress: save,
-          },
         ]),
       );
       load();
