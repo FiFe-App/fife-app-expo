@@ -58,8 +58,20 @@ export interface DialogProps {
   onSubmit: () => void;
   onCancel?: () => void;
   submitText?: string;
+  dismissable?: boolean;
+}
+export interface OptionProps {
+  icon: string;
+  title: string;
+  onPress: () => void;
 }
 
+export interface SnackProps {
+  title: string;
+  onPress?: () => void;
+}
 export interface InfoState {
   dialogs: DialogProps[];
+  options: OptionProps[];
+  snacks: SnackProps[];
 }

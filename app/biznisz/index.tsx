@@ -255,7 +255,7 @@ export default function Index() {
           ))}
           {!circle && !myLocation && loading && (
             <ThemedText style={{ alignSelf: "center" }}>
-              Válassz környéket
+              Válassz környéket a kereséshez
             </ThemedText>
           )}
           {loading ? (

@@ -8,6 +8,7 @@ import {
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
+import { Link } from "expo-router";
 import { useContext, useState } from "react";
 import { AppState, View } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
@@ -111,9 +112,17 @@ export default function Index() {
     );
   return (
     <ThemedView
-      style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 32,
+      }}
     >
       <Text>Bejelentkezve, mint {name}</Text>
+      <Link href="/" asChild>
+        <Button mode="contained">Főoldalra</Button>
+      </Link>
       <Button icon="logout" onPress={startLogout}>
         Kijelentkezés
       </Button>

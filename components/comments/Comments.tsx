@@ -140,8 +140,6 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     });
 
     if (result && !result?.canceled) {
-      console.log(result);
-
       setImage(result.assets[0]);
     } else console.log("cancelled");
   };
@@ -160,8 +158,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
           setLoading(false);
 
           if (image && !error) {
-            const upload = await uploadImage(uid + "/" + path, data?.[0].id);
-            console.log("image upload", upload);
+            await uploadImage(uid + "/" + path, data?.[0].id);
 
             setImage(null);
             setLoading(false);
@@ -307,13 +304,12 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
           contentContainerStyle={{
             flexDirection: "column",
             paddingBottom: 10,
-            gap: 4,
+            gap: 8,
+            padding: 4,
           }}
         >
           {comments.length &&
             comments.map((comment, ind) => {
-              console.log(comment);
-
               return (
                 <Card key={"comment" + ind} contentStyle={{}}>
                   <Card.Content
@@ -329,7 +325,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                           <Pressable
                             onPress={() => {
                               if (comment?.author)
-                                navigation.push({
+                                navigation.navigate({
                                   pathname: "/user/[uid]",
                                   params: { uid: comment.author },
                                 });
@@ -391,7 +387,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             <>
               <Menu.Item
                 onPress={() => {
-                  navigation.push({
+                  navigation.navigate({
                     pathname: "/user/[uid]",
                     params: { uid: menuAnchor.comment.author },
                   });

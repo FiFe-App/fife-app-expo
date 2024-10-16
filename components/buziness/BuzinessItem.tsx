@@ -45,7 +45,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
                 .delete()
                 .eq("id", id)
                 .then((res) => {
-                  router.push({ pathname: "/user", params: { uid } });
+                  router.navigate({ pathname: "/user", params: { uid } });
                 }),
             ),
             "dialog",
@@ -102,7 +102,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
               onPress={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                router.push({
+                router.navigate({
                   pathname: "/biznisz/edit/[editId]",
                   params: { editId: id },
                 });

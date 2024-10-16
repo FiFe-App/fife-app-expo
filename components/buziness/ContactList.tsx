@@ -1,29 +1,91 @@
-import React from "react";
-import { ThemedView } from "../ThemedView";
+import { Tables } from "@/database.types";
+import getLinkForContact from "@/lib/functions/getLinkForContact";
+import typeToIcon from "@/lib/functions/typeToIcon";
+import { supabase } from "@/lib/supabase/supabase";
+import { Link, useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { List } from "react-native-paper";
-import { Link } from "expo-router";
+import { ThemedView } from "../ThemedView";
+import * as Clipboard from "expo-clipboard";
+import { useDispatch } from "react-redux";
+import { addSnack } from "@/lib/redux/reducers/infoReducer";
 
 export interface ContactListProps {
-  prop?: string;
+  uid: string;
+  edit?: boolean;
 }
 
-export function ContactList({ prop = "default value" }: ContactListProps) {
+export function ContactList({ uid, edit }: ContactListProps) {
+  const [contacts, setContacts] = useState<Tables<"contacts">[]>([]);
+  const dispatch = useDispatch();
+
+  useFocusEffect(
+    useCallback(() => {
+      const loadContacts = () => {
+        supabase
+          .from("contacts")
+          .select("*")
+          .eq("author", uid)
+          .then((res) => {
+            if (res.data) setContacts(res.data);
+          });
+      };
+      loadContacts();
+      return () => {};
+    }, [uid]),
+  );
   return (
     <ThemedView>
       <List.Section>
-        <List.Accordion title="Elérhetőségeim">
-          <List.Item
-            title="kristofakos1229@gmail.com"
-            left={(props) => <List.Icon {...props} icon="email" />}
-          />
-          <List.Item
-            title="+36 20 372 7690"
-            left={(props) => <List.Icon {...props} icon="phone" />}
-          />
-          <Link asChild href="user/e53e948e-debe-44c1-852b-e94c29ffcb9b">
-            <List.Item title="Írok neki üzenetet" />
+        {contacts.map((contact) => (
+          <Link
+            key={contact.id}
+            asChild
+            href={getLinkForContact(contact, edit)}
+            aria-valuetext="hello"
+            onLongPress={() => {
+              Clipboard.setStringAsync(contact.data).then((res) => {
+                dispatch(
+                  addSnack({
+                    title: "Vágólapra másolva!",
+                  }),
+                );
+              });
+            }}
+          >
+            <List.Item
+              title={contact.title || contact.data}
+              left={(props) => (
+                <List.Icon {...props} icon={typeToIcon(contact.type)} />
+              )}
+              right={
+                edit
+                  ? () => <List.Icon icon="pencil" style={{ height: 24 }} />
+                  : undefined
+              }
+            />
           </Link>
-        </List.Accordion>
+        ))}
+        <Link
+          asChild
+          href={
+            edit
+              ? {
+                  pathname: "/contact-edit",
+                }
+              : {
+                  pathname: "/user/[uid]",
+                  params: { uid },
+                }
+          }
+        >
+          <List.Item
+            left={(props) => (
+              <List.Icon {...props} icon={edit ? "plus" : "message-text"} />
+            )}
+            title={edit ? "Új elérhetőség felvétele" : "Írok neki üzenetet"}
+          />
+        </Link>
       </List.Section>
     </ThemedView>
   );
