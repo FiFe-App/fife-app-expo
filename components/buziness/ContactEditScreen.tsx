@@ -24,6 +24,8 @@ import { Dropdown, DropdownInputProps } from "react-native-paper-dropdown";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import TutorialCard from "../TutorialCard";
+import typeToPlaceholder from "@/lib/functions/typeToPlaceholder";
+import typeToPrefix from "@/lib/functions/typeToPrefix";
 
 const types: {
   label: string;
@@ -32,6 +34,9 @@ const types: {
   { label: "Telefonszám", value: "TEL" },
   { label: "Email-cím", value: "EMAIL" },
   { label: "Webhely", value: "WEB" },
+  { label: "Instagram", value: "INSTAGRAM" },
+  { label: "Facebook", value: "FACEBOOK" },
+  { label: "Cím/Hely", value: "PLACE" },
   { label: "Más", value: "OTHER" },
 ];
 
@@ -156,13 +161,14 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
             CustomDropdownInput={({
               placeholder,
               selectedLabel,
+              label,
               rightIcon,
             }: DropdownInputProps) => (
               <TextInput
                 placeholder={placeholder}
+                label={label}
                 value={selectedLabel}
                 right={rightIcon}
-                left={"a"}
               />
             )}
             menuContentStyle={{ left: 8 }}
@@ -214,13 +220,16 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
           <TextInput
             value={contact?.title || ""}
             disabled={loading}
-            placeholder="Név"
+            label="Kijelzett név"
             onChangeText={(t) => setContact({ ...contact, title: t })}
           />
+
           <TextInput
+            label="Érték"
             value={contact?.data}
             disabled={loading}
-            placeholder="Érték"
+            left={typeToPrefix(contact?.type)}
+            placeholder={typeToPlaceholder(contact?.type)}
             onChangeText={(t) => setContact({ ...contact, data: t })}
           />
           <TouchableRipple
