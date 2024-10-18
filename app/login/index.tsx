@@ -1,15 +1,15 @@
 import { ThemedView } from "@/components/ThemedView";
-import { FirebaseContext } from "@/lib/firebase/firebase";
 import {
+  logout,
+  setName,
   setUserData,
   login as sliceLogin,
-  setName,
 } from "@/lib/redux/reducers/userReducer";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
-import { Link } from "expo-router";
-import { useContext, useState } from "react";
+import { Link, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
@@ -27,11 +27,26 @@ export default function Index() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const {
-    api: { facebookLogin, logout },
-  } = useContext(FirebaseContext);
   const [error, setError] = useState<string | undefined>();
+  const { "#": hash } = useLocalSearchParams<{ "#": string }>();
+  const token_data = Object.fromEntries(
+    hash.split("&").map((e) => e.split("=")),
+  );
 
+  useEffect(() => {
+    if (token_data) {
+      console.log(token_data);
+
+      supabase.auth
+        .signInWithIdToken({
+          provider: "facebook",
+          token: token_data?.access_token,
+        })
+        .then(({ data, error }) => {
+          console.log(data, error);
+        });
+    }
+  }, []);
   const { uid, name }: UserState = useSelector(
     (state: RootState) => state.user,
   );
@@ -75,11 +90,16 @@ export default function Index() {
     setLoading(false);
   }
 
-  const startFacebookLogin = () => {
-    facebookLogin();
+  const startFacebookLogin = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "facebook",
+      options: {
+        redirectTo: `http://localhost:8081/user/edit`,
+      },
+    });
   };
   const startLogout = () => {
-    logout();
+    dispatch(logout());
   };
 
   if (!uid)

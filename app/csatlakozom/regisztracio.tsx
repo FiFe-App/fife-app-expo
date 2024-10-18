@@ -1,15 +1,8 @@
 import { ThemedView } from "@/components/ThemedView";
-import { FirebaseContext } from "@/lib/firebase/firebase";
-import {
-  setUserData,
-  login as sliceLogin,
-  setName,
-} from "@/lib/redux/reducers/userReducer";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
-import { Link } from "expo-router";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { AppState, View } from "react-native";
 import { Button, Divider, Text, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
@@ -45,7 +38,7 @@ export default function Index() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "facebook",
       options: {
-        redirectTo: `http://localhost:8081/user/edit`,
+        redirectTo: `http://localhost:8081/login`,
       },
     });
     console.log(data, error);

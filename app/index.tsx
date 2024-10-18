@@ -1,19 +1,19 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { FirebaseContext } from "@/lib/firebase/firebase";
+import { logout } from "@/lib/redux/reducers/userReducer";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { Link } from "expo-router";
-import { useContext } from "react";
 import { View } from "react-native";
 import { Button } from "react-native-paper";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
-  const {
-    api: { logout },
-  } = useContext(FirebaseContext);
+  const dispatch = useDispatch();
+  const startLogout = () => {
+    dispatch(logout());
+  };
 
   return (
     <ThemedView
@@ -34,7 +34,7 @@ export default function Index() {
             <Link href="/user" asChild>
               <Button mode="contained">Profilom</Button>
             </Link>
-            <Button mode="contained" onPress={() => logout()}>
+            <Button mode="contained" onPress={startLogout}>
               Kijelentkezés
             </Button>
           </View>

@@ -1,74 +1,71 @@
 import InfoLayer from "@/components/InfoLayer";
-import FirebaseProvider from "@/lib/firebase/firebase";
+import { clearOptions } from "@/lib/redux/reducers/infoReducer";
 import { persistor, RootState, store } from "@/lib/redux/store";
 import { NativeStackHeaderProps } from "@react-navigation/native-stack/lib/typescript/src/types";
-import { router, Stack, useNavigation, usePathname } from "expo-router";
+import {
+  router,
+  Stack,
+  useNavigation,
+  usePathname,
+  useSegments,
+} from "expo-router";
+import { useEffect, useState } from "react";
+import { useWindowDimensions } from "react-native";
 import { Appbar, Menu, PaperProvider } from "react-native-paper";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
-import { useSegments } from "expo-router";
-import { useEffect, useState } from "react";
-import { clearOptions } from "@/lib/redux/reducers/infoReducer";
-import { useWindowDimensions } from "react-native";
 
 export default function RootLayout() {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <FirebaseProvider>
-          <PaperProvider>
-            <InfoLayer />
-            <Stack
-              screenOptions={{ header: (props) => <MyAppbar {...props} /> }}
-            >
-              <Stack.Screen name="index" options={{ title: "FiFe app" }} />
-              <Stack.Screen
-                name="login/index"
-                options={{ title: "Bejelentkezés" }}
-              />
-              <Stack.Screen
-                name="csatlakozom/index"
-                options={{ title: "Mi ez?" }}
-              />
-              <Stack.Screen
-                name="csatlakozom/csatlakozom"
-                options={{ title: "Csatlakozom" }}
-              />
-              <Stack.Screen
-                name="csatlakozom/regisztracio"
-                options={{ title: "Regisztráció" }}
-              />
-              <Stack.Screen
-                name="biznisz/index"
-                options={{ title: "Biznisz" }}
-              />
-              <Stack.Screen
-                name="biznisz/new"
-                options={{ title: "Új Biznisz" }}
-              />
-              <Stack.Screen
-                name="biznisz/[id]"
-                options={{ title: "FiFe Biznisz" }}
-              />
-              <Stack.Screen
-                name="user/[uid]"
-                options={{ title: "FiFe Profil" }}
-              />
-              <Stack.Screen
-                name="user/edit"
-                options={{ title: "Profil Szerkesztése" }}
-              />
-              <Stack.Screen
-                name="contact-edit"
-                options={{ title: "Új Elérhetőség" }}
-              />
-              <Stack.Screen
-                name="contact-edit/[editId]"
-                options={{ title: "Elérhetőség Szerkesztése" }}
-              />
-            </Stack>
-          </PaperProvider>
-        </FirebaseProvider>
+        <PaperProvider>
+          <InfoLayer />
+          <Stack screenOptions={{ header: (props) => <MyAppbar {...props} /> }}>
+            <Stack.Screen name="index" options={{ title: "FiFe app" }} />
+            <Stack.Screen
+              name="login/index"
+              options={{ title: "Bejelentkezés" }}
+            />
+            <Stack.Screen
+              name="csatlakozom/index"
+              options={{ title: "Mi ez?" }}
+            />
+            <Stack.Screen
+              name="csatlakozom/csatlakozom"
+              options={{ title: "Csatlakozom" }}
+            />
+            <Stack.Screen
+              name="csatlakozom/regisztracio"
+              options={{ title: "Regisztráció" }}
+            />
+            <Stack.Screen name="biznisz/index" options={{ title: "Biznisz" }} />
+            <Stack.Screen
+              name="biznisz/new"
+              options={{ title: "Új Biznisz" }}
+            />
+            <Stack.Screen
+              name="biznisz/[id]"
+              options={{ title: "FiFe Biznisz" }}
+            />
+            <Stack.Screen
+              name="user/[uid]"
+              options={{ title: "FiFe Profil" }}
+            />
+            <Stack.Screen
+              name="user/edit"
+              options={{ title: "Profil Szerkesztése" }}
+            />
+            <Stack.Screen
+              name="contact-edit"
+              options={{ title: "Új Elérhetőség" }}
+            />
+            <Stack.Screen
+              name="contact-edit/[editId]"
+              options={{ title: "Elérhetőség Szerkesztése" }}
+            />
+          </Stack>
+        </PaperProvider>
       </PersistGate>
     </Provider>
   );
