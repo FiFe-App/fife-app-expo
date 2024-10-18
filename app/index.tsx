@@ -48,9 +48,14 @@ export default function Index() {
           </View>
         </>
       ) : (
-        <Link href="/login" asChild>
-          <Button mode="contained">Bejelentkezés</Button>
-        </Link>
+        <>
+          <Link href="/csatlakozom" asChild>
+            <Button mode="contained">Mi is ez?</Button>
+          </Link>
+          <Link href="/login" asChild>
+            <Button mode="contained-tonal">Bejelentkezés</Button>
+          </Link>
+        </>
       )}
       <Link href="/notfound" asChild>
         <Button>Eltévedek</Button>

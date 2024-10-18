@@ -27,6 +27,18 @@ export default function RootLayout() {
                 options={{ title: "Bejelentkezés" }}
               />
               <Stack.Screen
+                name="csatlakozom/index"
+                options={{ title: "Mi ez?" }}
+              />
+              <Stack.Screen
+                name="csatlakozom/csatlakozom"
+                options={{ title: "Csatlakozom" }}
+              />
+              <Stack.Screen
+                name="csatlakozom/regisztracio"
+                options={{ title: "Regisztráció" }}
+              />
+              <Stack.Screen
                 name="biznisz/index"
                 options={{ title: "Biznisz" }}
               />
