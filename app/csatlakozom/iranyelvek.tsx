@@ -48,7 +48,7 @@ const Register = () => {
       <View style={{ flex: 1, justifyContent: "center" }}>
         <ThemedText>
           Ha szeretnél csatlakozni ehhez a közösséghez, be kell tartanod az
-          irányelveinket.
+          irányelveinket.:)
         </ThemedText>
         <FlatList
           data={[
