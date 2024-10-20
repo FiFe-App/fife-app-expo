@@ -1,12 +1,18 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { Link } from "expo-router";
-import { useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
-import { Button, Text, TextInput } from "react-native-paper";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useRef, useState } from "react";
+import {
+  FlatList,
+  Pressable,
+  StyleSheet,
+  TextInput as TIRN,
+  View,
+} from "react-native";
+import { Icon, Text, TextInput } from "react-native-paper";
 
 const Register = () => {
-  const textInput = useRef();
+  const textInput = useRef<TIRN>(null);
   const [numberOfLines, setNumberOfLines] = useState(0);
   const [text, setText] = useState("");
   const textToType =
@@ -27,59 +33,73 @@ const Register = () => {
   };
   const accepted = text === textToType;
 
+  useFocusEffect(
+    useCallback(() => {
+      if (router)
+        router.setParams({
+          canGoNext: accepted ? "true" : undefined,
+        });
+      return () => {};
+    }, [accepted]),
+  );
+
   return (
     <ThemedView style={{ flex: 1, padding: 8 }}>
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, justifyContent: "center" }}>
         <ThemedText>
           Ha szeretnél csatlakozni ehhez a közösséghez, be kell tartanod az
           irányelveinket.
         </ThemedText>
-        <View style={{ marginVertical: 20 }}>
-          <ThemedText>
-            Ha be fogod tartani ezeket, gépeld be a következő szöveget:
-          </ThemedText>
-          <Pressable
-            style={styles.inputView}
-            onPress={() => {
-              if (textInput.current) textInput?.current?.focus();
+        <FlatList
+          data={[
+            { key: "Nem leszek rosszindulatú senkivel!" },
+            { key: "Mindenkihez egyformán bizalommal fordulok!" },
+            { key: "Kedves leszek mindenkivel és nem használok ki másokat!" },
+            { key: "Saját és mások érdekeit is figyelembe veszem!" },
+            { key: "Ha valaki valaki bántóan viselkedik velem, jelentem!" },
+          ]}
+          style={[styles.text, { flex: undefined }]}
+          renderItem={({ item, index }) => (
+            <Text style={styles.listItem} key={"item" + index}>
+              <Icon source="heart" size={20} />
+              {item.key}
+            </Text>
+          )}
+        />
+      </View>
+      <View style={{ marginVertical: 20 }}>
+        <ThemedText>
+          Ha be fogod tartani ezeket, gépeld be a következő szöveget:
+        </ThemedText>
+        <Pressable
+          style={styles.inputView}
+          onPress={() => {
+            if (textInput?.current) textInput?.current?.focus();
+          }}
+        >
+          <Text
+            style={[styles.textToType]}
+            onLayout={(e) => {
+              console.log(
+                "number of lines",
+                setNumberOfLines((e.nativeEvent.layout.height - 20) / 26),
+              );
             }}
           >
-            <Text
-              style={[styles.textToType]}
-              onLayout={(e) => {
-                console.log(
-                  "number of lines",
-                  setNumberOfLines((e.nativeEvent.layout.height - 20) / 26),
-                );
-              }}
-            >
-              {textToType}
-            </Text>
-            <TextInput
-              ref={textInput}
-              style={styles.input}
-              allowFontScaling
-              contentStyle={styles.inputContent}
-              scrollEnabled={false}
-              value={text}
-              multiline
-              rows={numberOfLines}
-              onChangeText={handleTextInput}
-            />
-            {
-              <Text style={[styles.textToType, { color: "black" }]}>
-                {text}
-              </Text>
-            }
-          </Pressable>
-        </View>
-      </View>
-      <View
-        style={{ alignItems: "flex-end", alignSelf: "flex-end", padding: 16 }}
-      >
-        <Link href="./regisztracio" asChild>
-          <Button mode="contained">Regisztráció</Button>
-        </Link>
+            {textToType}
+          </Text>
+          <TextInput
+            ref={textInput}
+            style={styles.input}
+            allowFontScaling
+            contentStyle={styles.inputContent}
+            scrollEnabled={false}
+            value={text}
+            multiline
+            onChangeText={handleTextInput}
+          />
+          {<Text style={[styles.textToType, { color: "black" }]}>{text}</Text>}
+        </Pressable>
       </View>
     </ThemedView>
   );
@@ -89,7 +109,11 @@ const styles = StyleSheet.create({
   text: {
     textAlign: "left",
     marginBottom: 10,
-    backgroundColor: "#ffffff99",
+  },
+  listItem: {
+    alignItems: "center",
+    fontSize: 17,
+    margin: 5,
   },
   inputView: {},
   input: {
