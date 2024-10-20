@@ -1,5 +1,6 @@
 import { ThemedView } from "@/components/ThemedView";
 import {
+  login,
   logout,
   setName,
   setUserData,
@@ -8,7 +9,8 @@ import {
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
-import { Link, useLocalSearchParams } from "expo-router";
+import { User } from "@supabase/auth-js";
+import { Link, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
@@ -29,21 +31,21 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const { "#": hash } = useLocalSearchParams<{ "#": string }>();
-  const token_data = Object.fromEntries(
-    hash.split("&").map((e) => e.split("=")),
-  );
+  const token_data = hash
+    ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
+    : null;
 
   useEffect(() => {
     if (token_data) {
       console.log(token_data);
 
       supabase.auth
-        .signInWithIdToken({
-          provider: "facebook",
-          token: token_data?.access_token,
+        .setSession({
+          refresh_token: token_data.refresh_token,
+          access_token: token_data?.access_token,
         })
         .then(({ data, error }) => {
-          console.log(data, error);
+          if (data.user) getUserData(data.user);
         });
     }
   }, []);
@@ -61,14 +63,7 @@ export default function Index() {
     if (error) {
       setError(error.message);
     } else {
-      const { data: profile, error: pError } = await supabase
-        .from("profiles")
-        .select()
-        .eq("id", data.user.id)
-        .single();
-      dispatch(sliceLogin(data.user.id));
-      dispatch(setName(profile?.full_name));
-      dispatch(setUserData({ ...data, ...profile }));
+      getUserData(data.user);
     }
     setLoading(false);
   }
@@ -83,23 +78,39 @@ export default function Index() {
     if (error) {
       setError(error.message);
     } else {
-      dispatch(sliceLogin(data.user.id));
-      dispatch(setName(data.user.email));
-      dispatch(setUserData(data.user));
+      getUserData(data.user);
     }
     setLoading(false);
   }
 
   const startFacebookLogin = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    await supabase.auth.signInWithOAuth({
       provider: "facebook",
       options: {
-        redirectTo: `http://localhost:8081/user/edit`,
+        redirectTo: `http://localhost:8081/login`,
       },
     });
   };
   const startLogout = () => {
     dispatch(logout());
+  };
+
+  const getUserData = async (userData: User) => {
+    const { data: profile, error: pError } = await supabase
+      .from("profiles")
+      .select()
+      .eq("id", userData.id)
+      .single();
+    if (error) {
+      console.log(error);
+    }
+    if (profile) {
+      console.log("profile", profile);
+
+      dispatch(sliceLogin(profile?.id));
+      dispatch(setName(profile?.full_name));
+      dispatch(setUserData({ ...userData, ...profile }));
+    }
   };
 
   if (!uid)

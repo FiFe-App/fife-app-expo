@@ -22,24 +22,13 @@ export default function RootLayout() {
         <PaperProvider>
           <InfoLayer />
           <Stack screenOptions={{ header: (props) => <MyAppbar {...props} /> }}>
-            <Stack.Screen name="index" options={{ title: "FiFe app" }} />
+            <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen
               name="login/index"
               options={{ title: "Bejelentkezés" }}
             />
-            <Stack.Screen
-              name="csatlakozom/index"
-              options={{ title: "Mi ez?" }}
-            />
-            <Stack.Screen
-              name="csatlakozom/csatlakozom"
-              options={{ title: "Csatlakozom" }}
-            />
-            <Stack.Screen
-              name="csatlakozom/regisztracio"
-              options={{ title: "Regisztráció" }}
-            />
             <Stack.Screen name="biznisz/index" options={{ title: "Biznisz" }} />
+            <Stack.Screen name="csatlakozom" options={{ headerShown: false }} />
             <Stack.Screen
               name="biznisz/new"
               options={{ title: "Új Biznisz" }}
@@ -81,8 +70,6 @@ const MyAppbar = (props: NativeStackHeaderProps) => {
   const segments = useSegments();
 
   useEffect(() => {
-    console.log(segments);
-
     dispatch(clearOptions());
   }, [dispatch, segments]);
 
