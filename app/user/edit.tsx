@@ -1,4 +1,5 @@
 import { ContactList } from "@/components/buziness/ContactList";
+import ProfileImage from "@/components/ProfileImage";
 import SupabaseImage from "@/components/SupabaseImage";
 import { ThemedView } from "@/components/ThemedView";
 import { Tables } from "@/database.types";
@@ -148,10 +149,10 @@ export default function Index() {
       <ThemedView style={{ flex: 1 }}>
         <View style={{ alignItems: "center" }}>
           <View style={{ width: 100 }}>
-            <SupabaseImage
+            <ProfileImage
               key={profile?.avatar_url}
-              bucket="avatars"
-              path={myUid + "/" + profile.avatar_url}
+              uid={myUid}
+              avatar_url={profile.avatar_url}
               propLoading={imageLoading}
               style={{
                 width: 100,

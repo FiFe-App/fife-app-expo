@@ -62,7 +62,7 @@ const InfoLayer = () => {
             </Dialog.Actions>
           </Dialog>
         )}
-        {snacks.map((snack, ind) => (
+        {snacks?.map((snack, ind) => (
           <Snackbar
             key={"snack" + ind}
             visible={true}

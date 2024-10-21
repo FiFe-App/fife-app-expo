@@ -1,4 +1,5 @@
 import { ContactList } from "@/components/buziness/ContactList";
+import ProfileImage from "@/components/ProfileImage";
 import SupabaseImage from "@/components/SupabaseImage";
 import { ThemedView } from "@/components/ThemedView";
 import MyBuzinesses from "@/components/user/MyBuzinesses";
@@ -9,6 +10,7 @@ import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { RecommendProfileButton } from "@/lib/supabase/RecommendProfileButton";
 import { supabase } from "@/lib/supabase/supabase";
+import { Image } from "expo-image";
 import { Link, useFocusEffect, useGlobalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
@@ -66,17 +68,18 @@ export default function Index() {
     }, [uid]),
   );
 
-  if (uid)
+  if (uid && data)
     return (
       <>
         <ThemedView style={{ flex: 1 }}>
           <View style={{ flexDirection: "row" }}>
-            <SupabaseImage
+            <ProfileImage
               modal
-              bucket="avatars"
-              path={uid + "/" + data?.avatar_url}
+              uid={uid}
+              avatar_url={data.avatar_url}
               style={{ width: 100, height: 100 }}
             />
+
             <View style={{ flex: 1 }}>
               <View
                 style={{

@@ -1,15 +1,17 @@
 import { ThemedView } from "@/components/ThemedView";
-import { FirebaseContext } from "@/lib/firebase/firebase";
 import {
+  login,
+  logout,
+  setName,
   setUserData,
   login as sliceLogin,
-  setName,
 } from "@/lib/redux/reducers/userReducer";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
-import { Link } from "expo-router";
-import { useContext, useState } from "react";
+import { User } from "@supabase/auth-js";
+import { Link, router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
@@ -27,11 +29,26 @@ export default function Index() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const {
-    api: { facebookLogin, logout },
-  } = useContext(FirebaseContext);
   const [error, setError] = useState<string | undefined>();
+  const { "#": hash } = useLocalSearchParams<{ "#": string }>();
+  const token_data = hash
+    ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
+    : null;
 
+  useEffect(() => {
+    if (token_data) {
+      console.log(token_data);
+
+      supabase.auth
+        .setSession({
+          refresh_token: token_data.refresh_token,
+          access_token: token_data?.access_token,
+        })
+        .then(({ data, error }) => {
+          if (data.user) getUserData(data.user);
+        });
+    }
+  }, []);
   const { uid, name }: UserState = useSelector(
     (state: RootState) => state.user,
   );
@@ -46,14 +63,7 @@ export default function Index() {
     if (error) {
       setError(error.message);
     } else {
-      const { data: profile, error: pError } = await supabase
-        .from("profiles")
-        .select()
-        .eq("id", data.user.id)
-        .single();
-      dispatch(sliceLogin(data.user.id));
-      dispatch(setName(profile?.full_name));
-      dispatch(setUserData({ ...data, ...profile }));
+      getUserData(data.user);
     }
     setLoading(false);
   }
@@ -68,18 +78,39 @@ export default function Index() {
     if (error) {
       setError(error.message);
     } else {
-      dispatch(sliceLogin(data.user.id));
-      dispatch(setName(data.user.email));
-      dispatch(setUserData(data.user));
+      getUserData(data.user);
     }
     setLoading(false);
   }
 
-  const startFacebookLogin = () => {
-    facebookLogin();
+  const startFacebookLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "facebook",
+      options: {
+        redirectTo: `http://localhost:8081/login`,
+      },
+    });
   };
   const startLogout = () => {
-    logout();
+    dispatch(logout());
+  };
+
+  const getUserData = async (userData: User) => {
+    const { data: profile, error: pError } = await supabase
+      .from("profiles")
+      .select()
+      .eq("id", userData.id)
+      .single();
+    if (error) {
+      console.log(error);
+    }
+    if (profile) {
+      console.log("profile", profile);
+
+      dispatch(sliceLogin(profile?.id));
+      dispatch(setName(profile?.full_name));
+      dispatch(setUserData({ ...userData, ...profile }));
+    }
   };
 
   if (!uid)
