@@ -9,6 +9,8 @@ import { useState } from "react";
 import { AppState, View } from "react-native";
 import { Button, Divider, Text, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri } from "expo-auth-session";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -36,15 +38,17 @@ export default function Index() {
     });
     console.log(data, error);
   };
-
+  WebBrowser.maybeCompleteAuthSession(); // required for web only
+  const redirectTo = makeRedirectUri();
   async function signInWithFacebook() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "facebook",
       options: {
-        redirectTo: `http://localhost:8081/csatlakozom/elso-lepesek`,
+        redirectTo: `${redirectTo}/csatlakozom/elso-lepesek`,
       },
     });
   }
+  console.log(redirectTo);
 
   if (uid) return <Redirect href="/" />;
   return (
