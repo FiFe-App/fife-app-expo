@@ -2,10 +2,8 @@ import { ThemedView } from "@/components/ThemedView";
 import {
   Href,
   Link,
-  router,
   Stack,
   useGlobalSearchParams,
-  useNavigation,
   usePathname,
 } from "expo-router";
 import { View } from "react-native";
@@ -56,14 +54,17 @@ export default function RootLayout() {
             padding: 16,
           }}
         >
-          <Link href={prev} asChild>
-            <Button disabled={!prev || current === 3} mode="contained">
+          <Link href={current === 0 ? "/" : prev} asChild>
+            <Button
+              disabled={(!prev || current === 3) && current !== 0}
+              mode="contained"
+            >
               Vissza
             </Button>
           </Link>
           <Link href={next} asChild>
             <Button
-              disabled={!next || (current === 1 && !canGoNext) || current == 2}
+              disabled={!next || (current === 1 && !canGoNext) || current === 2}
               mode="contained"
             >
               Tovább

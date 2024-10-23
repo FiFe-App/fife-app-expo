@@ -1,6 +1,5 @@
 import { ContactList } from "@/components/buziness/ContactList";
 import ProfileImage from "@/components/ProfileImage";
-import SupabaseImage from "@/components/SupabaseImage";
 import { ThemedView } from "@/components/ThemedView";
 import { Tables } from "@/database.types";
 import { setOptions } from "@/lib/redux/reducers/infoReducer";
@@ -48,6 +47,35 @@ export default function Index() {
   };
   useFocusEffect(
     useCallback(() => {
+      const save = () => {
+        setLoading(true);
+        if (!myUid) return;
+
+        console.log({
+          ...profile,
+          id: myUid,
+        });
+
+        supabase
+          .from("profiles")
+          .upsert(
+            {
+              ...profile,
+              id: myUid,
+            },
+            { onConflict: "id" },
+          )
+          .then((res) => {
+            setLoading(false);
+            if (res.error) {
+              console.log(res.error);
+              return;
+            }
+            setProfile(profile);
+            console.log(res);
+            router.navigate("/user");
+          });
+      };
       dispatch(
         setOptions([
           {
@@ -57,35 +85,16 @@ export default function Index() {
           },
         ]),
       );
+      return () => {};
+    }, [dispatch, myUid, profile]),
+  );
+  useFocusEffect(
+    useCallback(() => {
       load();
       return () => {};
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [myUid, dispatch]),
+    }, [myUid]),
   );
-  const save = () => {
-    setLoading(true);
-    if (!myUid) return;
-
-    supabase
-      .from("profiles")
-      .upsert(
-        {
-          ...profile,
-          id: myUid,
-        },
-        { onConflict: "id" },
-      )
-      .then((res) => {
-        setLoading(false);
-        if (res.error) {
-          console.log(res.error);
-          return;
-        }
-        setProfile(profile);
-        console.log(res);
-        router.navigate("/user");
-      });
-  };
   const pickImage = async () => {
     let result = await ExpoImagePicker.launchImageLibraryAsync({
       mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
@@ -143,6 +152,8 @@ export default function Index() {
 
     return upload;
   };
+
+  console.log(profile.full_name);
 
   if (myUid)
     return (

@@ -53,8 +53,7 @@ const Register = () => {
         <FlatList
           data={[
             { key: "Nem leszek rosszindulatú senkivel!" },
-            { key: "Mindenkihez egyformán bizalommal fordulok!" },
-            { key: "Kedves leszek mindenkivel és nem használok ki másokat!" },
+            { key: "Ezen a platformon a felhasználó van kontrollban" },
             { key: "Saját és mások érdekeit is figyelembe veszem!" },
             { key: "Ha valaki valaki bántóan viselkedik velem, jelentem!" },
           ]}
@@ -98,7 +97,7 @@ const Register = () => {
             multiline
             onChangeText={handleTextInput}
           />
-          {<Text style={[styles.textToType, { color: "black" }]}>{text}</Text>}
+          {<Text style={[styles.textToType]}>{text}</Text>}
         </Pressable>
       </View>
     </ThemedView>

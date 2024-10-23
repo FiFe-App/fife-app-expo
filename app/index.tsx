@@ -6,7 +6,7 @@ import { UserState } from "@/lib/redux/store.type";
 import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { View } from "react-native";
-import { Button, Text } from "react-native-paper";
+import { Button } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
@@ -44,20 +44,15 @@ export default function Index() {
       <View style={{ margin: 8, gap: 16, marginBottom: 24 }}>
         {uid ? (
           <>
-            <View style={{ flexDirection: "row", gap: 8 }}>
+            <Button mode="contained-tonal" onPress={startLogout}>
+              Kijelentkezés
+            </Button>
+            <View style={{ gap: 8 }}>
               <Link href="/user" asChild>
                 <Button mode="contained">Profilom</Button>
               </Link>
-              <Button mode="contained" onPress={startLogout}>
-                Kijelentkezés
-              </Button>
-            </View>
-            <View style={{ flexDirection: "row", gap: 8 }}>
               <Link href="/biznisz" asChild>
                 <Button mode="contained">Biznisz</Button>
-              </Link>
-              <Link href="/biznisz/new" asChild>
-                <Button mode="contained">Új Biznisz</Button>
               </Link>
             </View>
           </>

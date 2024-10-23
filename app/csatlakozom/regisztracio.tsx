@@ -3,14 +3,13 @@ import { ThemedView } from "@/components/ThemedView";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
-import { createClient } from "@supabase/supabase-js";
+import { makeRedirectUri } from "expo-auth-session";
 import { Redirect } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import { AppState, View } from "react-native";
 import { Button, Divider, Text, TextInput } from "react-native-paper";
-import { useDispatch, useSelector } from "react-redux";
-import * as WebBrowser from "expo-web-browser";
-import { makeRedirectUri } from "expo-auth-session";
+import { useSelector } from "react-redux";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -21,7 +20,6 @@ AppState.addEventListener("change", (state) => {
 });
 
 export default function Index() {
-  const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -40,13 +38,16 @@ export default function Index() {
   };
   WebBrowser.maybeCompleteAuthSession(); // required for web only
   const redirectTo = makeRedirectUri();
+
   async function signInWithFacebook() {
+    console.log(`${redirectTo}/csatlakozom/elso-lepesek`);
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "facebook",
       options: {
         redirectTo: `${redirectTo}/csatlakozom/elso-lepesek`,
       },
     });
+    console.log(data, error);
   }
   console.log(redirectTo);
 
