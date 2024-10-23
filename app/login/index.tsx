@@ -1,6 +1,5 @@
 import { ThemedView } from "@/components/ThemedView";
 import {
-  login,
   logout,
   setName,
   setUserData,
@@ -10,11 +9,14 @@ import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
-import { Link, router, useLocalSearchParams } from "expo-router";
+import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+
+import { makeRedirectUri } from "expo-auth-session";
+import * as WebBrowser from "expo-web-browser";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -82,12 +84,20 @@ export default function Index() {
     }
     setLoading(false);
   }
+  WebBrowser.maybeCompleteAuthSession(); // required for web only
+  const redirectTo = makeRedirectUri();
 
   const startFacebookLogin = async () => {
-    await supabase.auth.signInWithOAuth({
+    console.log("hello");
+
+    console.log({
+      redirectTo: `${redirectTo}/login`,
+    });
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "facebook",
       options: {
-        redirectTo: `http://localhost:8081/login`,
+        redirectTo: `${redirectTo}/login`,
       },
     });
   };
@@ -121,7 +131,7 @@ export default function Index() {
             AUTO LOGIN
           </Button>
           <Button mode="contained" icon="facebook" onPress={startFacebookLogin}>
-            Facebook bejelentkezés
+            Facebook bejelentkezés!!
           </Button>
           <TextInput
             onChangeText={setEmail}
