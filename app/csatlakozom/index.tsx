@@ -6,15 +6,19 @@ const Register = () => {
   return (
     <ThemedView style={{ flex: 1, padding: 8, alignItems: "center" }}>
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ThemedText type="title">
-          Ez egy online eszköz, ami segít a valóságban boldogulni
+        <ThemedText
+          type="subtitle"
+          style={{ textAlign: "center", marginBottom: 16 }}
+        >
+          Ez egy online eszköz, ami a valóságban segít boldogulni.
         </ThemedText>
         <ThemedText style={{ textAlign: "center", marginHorizontal: 16 }}>
-          Ez egy közösségi oldal, ami összegyűjti a kedves embereket, hogy
-          zavartalanul tudjanak kommunikálni, egy független, biztonságos
-          környezetben. Egy alkalmazás, ami az asszertív kommunikációnak,
-          kölcsönös jóindulatnak és bizalomnak nyit kaput. Amely 100%-ig a a
-          emberekért, értünk létezik és fejlődik.
+          Közösségi oldal, amit a felhasználó kontrollál, nem fordítva. Ami
+          összegyűjti a kedves embereket, hogy zavartalanul tudjanak
+          kommunikálni, kapcsolódni egy független, biztonságos környezetben. Egy
+          alkalmazás, ami az asszertív kommunikációnak, kölcsönös jóindulatnak
+          és bizalomnak nyit kaput. Amely a mai városi igényekre igyekszik
+          megoldást adni.
         </ThemedText>
       </View>
     </ThemedView>

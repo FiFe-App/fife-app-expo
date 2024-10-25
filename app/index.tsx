@@ -1,3 +1,4 @@
+import Smiley from "@/components/Smiley";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { logout } from "@/lib/redux/reducers/userReducer";
@@ -6,11 +7,13 @@ import { UserState } from "@/lib/redux/store.type";
 import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { View } from "react-native";
-import { Button } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
-  const { uid }: UserState = useSelector((state: RootState) => state.user);
+  const { uid, name }: UserState = useSelector(
+    (state: RootState) => state.user,
+  );
   const dispatch = useDispatch();
   const startLogout = () => {
     dispatch(logout());
@@ -30,18 +33,20 @@ export default function Index() {
           gap: 24,
         }}
       >
-        <Image
-          source={require("../assets/images/logo.png")}
-          style={{ width: 100, height: 100 }}
-        />
-        <View>
-          <ThemedText style={{ textAlign: "center" }}>
-            Üdövözzlek a FiFe Appban!
-          </ThemedText>
-          <ThemedText>Lokáció és megbízhatóság alapú közösség.</ThemedText>
-        </View>
+        <Smiley style={{ width: 100, height: 100 }} />
+        <Text style={{ zIndex: -1, textAlign: "center" }}>
+          <ThemedText style={{}}>Üdövözzlek a FiFe Appban!</ThemedText>
+          {"\n"}
+          <ThemedText>Egy szerető budapesti közösség.</ThemedText>
+          {"\n"}
+          {uid && (
+            <ThemedText type="defaultSemiBold">
+              Bejelentkezve, mint {name}
+            </ThemedText>
+          )}
+        </Text>
       </View>
-      <View style={{ margin: 8, gap: 16, marginBottom: 24 }}>
+      <View style={{ margin: 8, gap: 16, marginBottom: 24, zIndex: -1 }}>
         {uid ? (
           <>
             <Button mode="contained-tonal" onPress={startLogout}>
