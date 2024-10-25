@@ -28,6 +28,17 @@ const infoReducer = createSlice({
     setOptions: (state, action: PayloadAction<OptionProps[]>) => {
       state.options = action.payload;
     },
+    updateOption: (state, action: PayloadAction<Partial<OptionProps>>) => {
+      console.log("update", action.payload);
+
+      let toUpdate = state.options.findIndex(
+        (opt) => opt.title === action.payload.title,
+      );
+      state.options[toUpdate] = {
+        ...state.options[toUpdate],
+        ...action.payload,
+      };
+    },
     clearOptions: (state) => {
       state.options = [];
     },
@@ -38,6 +49,7 @@ export const {
   addDialog,
   popDialog,
   setOptions,
+  updateOption,
   clearOptions,
   addSnack,
   popSnack,
