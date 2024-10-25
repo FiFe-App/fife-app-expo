@@ -10,7 +10,7 @@ import { UserState } from "@/lib/redux/store.type";
 import { RecommendProfileButton } from "@/lib/supabase/RecommendProfileButton";
 import { supabase } from "@/lib/supabase/supabase";
 import { Link, useFocusEffect, useGlobalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { View } from "react-native";
 import { Button, Portal, Text, TouchableRipple } from "react-native-paper";
 import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
@@ -32,36 +32,37 @@ export default function Index() {
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
   const iRecommended = recommendations.includes(myUid || "");
 
-  const load = () => {
-    console.log("uid", uid);
-
-    setShowRecommendsModal(false);
-
-    supabase
-      .from("profiles")
-      .select(
-        "*, profileRecommendations!profileRecommendations_profile_id_fkey(*)",
-      )
-      .eq("id", uid)
-      .then(({ data, error }) => {
-        if (error) {
-          console.log("err", error.message);
-          return;
-        }
-        if (data) {
-          setData(data[0]);
-          setRecommendations(
-            data[0].profileRecommendations.map((pr) => pr.author),
-          );
-          console.log(data);
-        }
-      });
-  };
-
   useFocusEffect(
     useCallback(() => {
+      const load = () => {
+        if (!uid) return;
+
+        setShowRecommendsModal(false);
+
+        supabase
+          .from("profiles")
+          .select(
+            "*, profileRecommendations!profileRecommendations_profile_id_fkey(*)",
+          )
+          .eq("id", uid)
+          .then(({ data, error }) => {
+            if (error) {
+              console.log("err", error.message);
+              return;
+            }
+            if (data) {
+              setData(data[0]);
+              setRecommendations(
+                data[0].profileRecommendations.map((pr) => pr.author),
+              );
+              console.log(data);
+            }
+          });
+      };
       load();
-      return () => {};
+      return () => {
+        setShowRecommendsModal(false);
+      };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [uid]),
   );
