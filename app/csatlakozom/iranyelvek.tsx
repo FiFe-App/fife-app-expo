@@ -46,21 +46,24 @@ const Register = () => {
   return (
     <ThemedView style={{ flex: 1, padding: 8 }}>
       <View style={{ flex: 1, justifyContent: "center" }}>
-        <ThemedText>
+        <ThemedText type="subtitle" style={{ marginBottom: 16 }}>
           Ha szeretnél csatlakozni ehhez a közösséghez, be kell tartanod az
           irányelveinket.:)
         </ThemedText>
         <FlatList
           data={[
             { key: "Nem leszek rosszindulatú senkivel!" },
-            { key: "Ezen a platformon a felhasználó van kontrollban" },
             { key: "Saját és mások érdekeit is figyelembe veszem!" },
-            { key: "Ha valaki valaki bántóan viselkedik velem, jelentem!" },
+            {
+              key: "Ha valaki valaki bántóan viselkedik velem vagy mással, jelentem!",
+            },
           ]}
           style={[styles.text, { flex: undefined }]}
           renderItem={({ item, index }) => (
             <Text style={styles.listItem} key={"item" + index}>
-              <Icon source="heart" size={20} />
+              <Text style={{ margin: 4 }}>
+                <Icon source="heart" size={20} />
+              </Text>
               {item.key}
             </Text>
           )}

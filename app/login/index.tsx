@@ -9,7 +9,7 @@ import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
-import { Link, useLocalSearchParams } from "expo-router";
+import { Link, Redirect, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
@@ -160,13 +160,7 @@ export default function Index() {
         gap: 32,
       }}
     >
-      <Text>Bejelentkezve, mint {name}</Text>
-      <Link href="/" asChild>
-        <Button mode="contained">Főoldalra</Button>
-      </Link>
-      <Button icon="logout" onPress={startLogout}>
-        Kijelentkezés
-      </Button>
+      <Redirect href="/" />
     </ThemedView>
   );
 }
