@@ -31,6 +31,7 @@ import {
   Text,
   TouchableRipple,
 } from "react-native-paper";
+import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
@@ -109,7 +110,7 @@ export default function Index() {
   return (
     <ThemedView style={{ flex: 1 }}>
       {!data && <ActivityIndicator />}
-      {id && data && (
+      {!!id && !!data && (
         <>
           <View style={{ flexDirection: "row" }}>
             <Link
@@ -188,63 +189,77 @@ export default function Index() {
             )}
           </View>
           <ContactList uid={data.author} />
-          <Text>Hol található?</Text>
-          <MapView
-            options={{
-              mapTypeControl: false,
-              fullscreenControl: false,
-              streetViewControl: false,
-              zoomControl: false,
-            }}
-            style={{ width: "100%", height: "100%" }}
-            initialCamera={{
-              altitude: 10,
-              center: location || {
-                latitude: 47.4979,
-                longitude: 19.0402,
-              },
-              heading: 0,
-              pitch: 0,
-              zoom: 12,
-            }}
-            provider="google"
-            googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
-            pitchEnabled={false}
-            rotateEnabled={false}
-            toolbarEnabled={false}
-          >
-            {location && <Marker coordinate={location} />}
-            {myLocation && (
-              <Marker
-                centerOffset={{ x: 10, y: 10 }}
-                coordinate={myLocation?.coords}
-                style={{ justifyContent: "center", alignItems: "center" }}
-              >
-                <MyLocationIcon style={{ width: 20, height: 20 }} />
-              </Marker>
-            )}
-            {location && (
-              <IconButton
-                icon="directions"
-                mode="contained"
-                onPress={() =>
-                  openMap({
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    navigate: true,
-                    start: "My Location",
-                    travelType: "public_transport",
-                    end: location.latitude + "," + location.longitude,
-                  })
-                }
-                style={{ right: 5, bottom: 5, position: "absolute" }}
-              />
-            )}
-          </MapView>
-          <Comments
-            path={"buziness/" + id}
-            placeholder="Mondd el a véleményed"
-          />
+          <TabsProvider defaultIndex={0}>
+            <Tabs>
+              <TabScreen label="Helyzete" icon="map-marker">
+                <>
+                  <MapView
+                    options={{
+                      mapTypeControl: false,
+                      fullscreenControl: false,
+                      streetViewControl: false,
+                      zoomControl: false,
+                    }}
+                    style={{ width: "100%", height: "100%" }}
+                    initialCamera={{
+                      altitude: 10,
+                      center: location || {
+                        latitude: 47.4979,
+                        longitude: 19.0402,
+                      },
+                      heading: 0,
+                      pitch: 0,
+                      zoom: 12,
+                    }}
+                    provider="google"
+                    googleMapsApiKey={
+                      process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+                    }
+                    pitchEnabled={false}
+                    rotateEnabled={false}
+                    toolbarEnabled={false}
+                  >
+                    {location && <Marker coordinate={location} />}
+                    {myLocation && (
+                      <Marker
+                        centerOffset={{ x: 10, y: 10 }}
+                        coordinate={myLocation?.coords}
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <MyLocationIcon style={{ width: 20, height: 20 }} />
+                      </Marker>
+                    )}
+                  </MapView>
+                  {location && (
+                    <IconButton
+                      icon="directions"
+                      mode="contained"
+                      onPress={() =>
+                        openMap({
+                          latitude: location.latitude,
+                          longitude: location.longitude,
+                          navigate: true,
+                          start: "My Location",
+                          travelType: "public_transport",
+                          end: location.latitude + "," + location.longitude,
+                        })
+                      }
+                      style={{ right: 5, bottom: 5, position: "absolute" }}
+                    />
+                  )}
+                </>
+              </TabScreen>
+              <TabScreen label="Vélemények" icon="comment-text">
+                <Comments
+                  path={"buziness/" + id}
+                  placeholder="Mondd el a véleményed"
+                />
+              </TabScreen>
+            </Tabs>
+          </TabsProvider>
         </>
       )}
       {!!title && (
