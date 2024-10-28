@@ -38,6 +38,9 @@ const buzinessReducer = createSlice({
         ...action.payload,
       };
     },
+    clearBuzinessSearchParams: (state) => {
+      state.buzinessSearchParams = {};
+    },
     editBuziness: (
       state,
       { payload }: PayloadAction<BuzinessSearchItemInterface>,
@@ -60,8 +63,9 @@ const buzinessReducer = createSlice({
 export const {
   storeBuzinesses,
   loadBuzinesses,
-  storeBuzinessSearchParams,
   clearBuziness,
+  storeBuzinessSearchParams,
+  clearBuzinessSearchParams,
 } = buzinessReducer.actions;
 
 export default buzinessReducer.reducer;

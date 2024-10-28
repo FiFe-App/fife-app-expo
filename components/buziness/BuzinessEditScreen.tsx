@@ -55,14 +55,46 @@ export default function BuzinessEditScreen({
   const title = newBuziness.title.trim() + " " + categories?.trim();
   const navigation = useNavigation();
 
-  console.log(title);
-
   const canSubmit = !!(
     (!!myLocation || !!circle) &&
     newBuziness.title &&
     categories &&
     newBuziness.description
   );
+  const save = useCallback(() => {
+    setLoading(true);
+    if (!uid) return;
+
+    console.log(selectedLocation);
+
+    supabase
+      .from("buziness")
+      .upsert(
+        {
+          id: editId,
+          ...newBuziness,
+          title,
+          author: uid,
+          location: `POINT(${selectedLocation?.longitude} ${selectedLocation?.latitude})`,
+        },
+        { onConflict: "id" },
+      )
+      .then((res) => {
+        setLoading(false);
+        if (res.error) {
+          console.log(res.error);
+          return;
+        }
+        setCategories("");
+        setNewBuziness({
+          title: "",
+          description: "",
+        });
+        setCircle(undefined);
+        console.log(res);
+        router.navigate("/user");
+      });
+  }, [editId, newBuziness, selectedLocation, title, uid]);
 
   useEffect(() => {
     if (circle) {
@@ -72,21 +104,20 @@ export default function BuzinessEditScreen({
   useEffect(() => {
     console.log("canSubmit", canSubmit);
 
-    dispatch(updateOption({ title: "Mentés", disabled: !canSubmit }));
-  }, [canSubmit, dispatch]);
+    dispatch(
+      setOptions([
+        {
+          title: "Mentés",
+          icon: "check",
+          disabled: !canSubmit,
+          onPress: save,
+        },
+      ]),
+    );
+  }, [canSubmit, dispatch, save]);
 
   useFocusEffect(
     useCallback(() => {
-      dispatch(
-        setOptions([
-          {
-            title: "Mentés",
-            icon: "check",
-            onPress: save,
-            disabled: !canSubmit,
-          },
-        ]),
-      );
       if (editId) {
         navigation.setOptions({ title: "biznisz szerkesztése" });
         supabase
@@ -118,8 +149,6 @@ export default function BuzinessEditScreen({
               );
 
               const cords = locationToCoords(String(editingBuziness.location));
-              console.log(cords);
-              //return;
 
               setCircle({
                 position: { latitude: cords[1], longitude: cords[0] },
@@ -133,41 +162,11 @@ export default function BuzinessEditScreen({
       return () => {
         console.log("This route is now unfocused.");
       };
-    }, []),
+    }, [dispatch, editId, uid]),
   );
 
-  const save = () => {
-    setLoading(true);
-    if (!uid) return;
+  console.log(newBuziness);
 
-    supabase
-      .from("buziness")
-      .upsert(
-        {
-          id: editId,
-          ...newBuziness,
-          title,
-          author: uid,
-          location: `POINT(${selectedLocation?.longitude} ${selectedLocation?.latitude})`,
-        },
-        { onConflict: "id" },
-      )
-      .then((res) => {
-        setLoading(false);
-        if (res.error) {
-          console.log(res.error);
-          return;
-        }
-        setCategories("");
-        setNewBuziness({
-          title: "",
-          description: "",
-        });
-        setCircle(undefined);
-        console.log(res);
-        router.navigate("/user");
-      });
-  };
   return (
     <ThemedView style={{ flex: 1 }}>
       {tutorialVisible && (

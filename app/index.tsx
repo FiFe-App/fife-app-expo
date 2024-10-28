@@ -6,7 +6,7 @@ import { UserState } from "@/lib/redux/store.type";
 import { Link } from "expo-router";
 import { useContext } from "react";
 import { View } from "react-native";
-import { Button } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
 import { useSelector } from "react-redux";
 
 export default function Index() {
