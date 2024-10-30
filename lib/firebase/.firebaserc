@@ -1,8 +1,0 @@
-{
-  "projects": {
-    "default": "fife-app",
-    "dev": "fife-app"
-  },
-  "targets": {},
-  "etags": {}
-}

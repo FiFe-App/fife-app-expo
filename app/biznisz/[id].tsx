@@ -20,7 +20,7 @@ import {
   useNavigation,
 } from "expo-router";
 import { useCallback, useState } from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import openMap from "react-native-open-maps";
 import {
   ActivityIndicator,
@@ -36,6 +36,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
   const { id: paramId } = useGlobalSearchParams();
+  const { width } = useWindowDimensions();
   const dispatch = useDispatch();
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
@@ -188,9 +189,8 @@ export default function Index() {
               />
             )}
           </View>
-          <ContactList uid={data.author} />
           <TabsProvider defaultIndex={0}>
-            <Tabs>
+            <Tabs showTextLabel={width > 400}>
               <TabScreen label="Helyzete" icon="map-marker">
                 <>
                   <MapView
@@ -251,6 +251,9 @@ export default function Index() {
                     />
                   )}
                 </>
+              </TabScreen>
+              <TabScreen label="Elérhetőségek" icon="contacts">
+                <ContactList uid={data.author} />
               </TabScreen>
               <TabScreen label="Vélemények" icon="comment-text">
                 <Comments

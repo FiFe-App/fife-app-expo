@@ -1,18 +1,22 @@
 import { ThemedView } from "@/components/ThemedView";
-import { FirebaseContext } from "@/lib/firebase/firebase";
 import {
+  logout,
+  setName,
   setUserData,
   login as sliceLogin,
-  setName,
 } from "@/lib/redux/reducers/userReducer";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
-import { Link } from "expo-router";
-import { useContext, useState } from "react";
+import { User } from "@supabase/auth-js";
+import { Link, Redirect, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+
+import { makeRedirectUri } from "expo-auth-session";
+import * as WebBrowser from "expo-web-browser";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -27,11 +31,28 @@ export default function Index() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const {
-    api: { facebookLogin, logout },
-  } = useContext(FirebaseContext);
   const [error, setError] = useState<string | undefined>();
+  const { "#": hash } = useLocalSearchParams<{ "#": string }>();
+  const token_data = hash
+    ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
+    : null;
+  WebBrowser.maybeCompleteAuthSession(); // required for web only
+  const redirectTo = makeRedirectUri();
 
+  useEffect(() => {
+    if (token_data) {
+      console.log(token_data);
+
+      supabase.auth
+        .setSession({
+          refresh_token: token_data.refresh_token,
+          access_token: token_data?.access_token,
+        })
+        .then(({ data, error }) => {
+          if (data.user) getUserData(data.user);
+        });
+    }
+  }, []);
   const { uid, name }: UserState = useSelector(
     (state: RootState) => state.user,
   );
@@ -46,16 +67,18 @@ export default function Index() {
     if (error) {
       setError(error.message);
     } else {
-      const { data: profile, error: pError } = await supabase
-        .from("profiles")
-        .select()
-        .eq("id", data.user.id)
-        .single();
-      dispatch(sliceLogin(data.user.id));
-      dispatch(setName(profile?.full_name));
-      dispatch(setUserData({ ...data, ...profile }));
+      getUserData(data.user);
     }
     setLoading(false);
+  }
+
+  async function signInWithGoogle() {
+    supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${redirectTo}/login`,
+      },
+    });
   }
 
   async function autoLogin() {
@@ -68,18 +91,42 @@ export default function Index() {
     if (error) {
       setError(error.message);
     } else {
-      dispatch(sliceLogin(data.user.id));
-      dispatch(setName(data.user.email));
-      dispatch(setUserData(data.user));
+      getUserData(data.user);
     }
     setLoading(false);
   }
 
-  const startFacebookLogin = () => {
-    facebookLogin();
+  const startFacebookLogin = async () => {
+    console.log("hello");
+
+    console.log({
+      redirectTo: `${redirectTo}/login`,
+    });
+
+    await supabase.auth.signInWithOAuth({
+      provider: "facebook",
+      options: {
+        redirectTo: `${redirectTo}/login`,
+      },
+    });
   };
-  const startLogout = () => {
-    logout();
+
+  const getUserData = async (userData: User) => {
+    const { data: profile, error: pError } = await supabase
+      .from("profiles")
+      .select()
+      .eq("id", userData.id)
+      .single();
+    if (error) {
+      console.log(error);
+    }
+    if (profile) {
+      console.log("profile", profile);
+
+      dispatch(sliceLogin(profile?.id));
+      dispatch(setName(profile?.full_name));
+      dispatch(setUserData({ ...userData, ...profile }));
+    }
   };
 
   if (!uid)
@@ -87,10 +134,23 @@ export default function Index() {
       <ThemedView style={{ flex: 1 }}>
         <View style={{ maxWidth: 400, width: "100%", gap: 8, margin: "auto" }}>
           <Button onPress={autoLogin} mode="contained">
-            AUTO LOGIN
+            Próba felhasználó
           </Button>
-          <Button mode="contained" icon="facebook" onPress={startFacebookLogin}>
+          <Button
+            mode="contained"
+            icon="facebook"
+            disabled
+            onPress={startFacebookLogin}
+          >
             Facebook bejelentkezés
+          </Button>
+          <Button
+            mode="contained"
+            icon="google"
+            disabled
+            onPress={signInWithGoogle}
+          >
+            Google bejelentkezés
           </Button>
           <TextInput
             onChangeText={setEmail}
@@ -119,13 +179,7 @@ export default function Index() {
         gap: 32,
       }}
     >
-      <Text>Bejelentkezve, mint {name}</Text>
-      <Link href="/" asChild>
-        <Button mode="contained">Főoldalra</Button>
-      </Link>
-      <Button icon="logout" onPress={startLogout}>
-        Kijelentkezés
-      </Button>
+      <Redirect href="/" />
     </ThemedView>
   );
 }
