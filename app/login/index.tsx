@@ -36,6 +36,8 @@ export default function Index() {
   const token_data = hash
     ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
     : null;
+  WebBrowser.maybeCompleteAuthSession(); // required for web only
+  const redirectTo = makeRedirectUri();
 
   useEffect(() => {
     if (token_data) {
@@ -70,6 +72,15 @@ export default function Index() {
     setLoading(false);
   }
 
+  async function signInWithGoogle() {
+    supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${redirectTo}/login`,
+      },
+    });
+  }
+
   async function autoLogin() {
     setLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -84,8 +95,6 @@ export default function Index() {
     }
     setLoading(false);
   }
-  WebBrowser.maybeCompleteAuthSession(); // required for web only
-  const redirectTo = makeRedirectUri();
 
   const startFacebookLogin = async () => {
     console.log("hello");
@@ -94,15 +103,12 @@ export default function Index() {
       redirectTo: `${redirectTo}/login`,
     });
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    await supabase.auth.signInWithOAuth({
       provider: "facebook",
       options: {
         redirectTo: `${redirectTo}/login`,
       },
     });
-  };
-  const startLogout = () => {
-    dispatch(logout());
   };
 
   const getUserData = async (userData: User) => {
@@ -128,10 +134,23 @@ export default function Index() {
       <ThemedView style={{ flex: 1 }}>
         <View style={{ maxWidth: 400, width: "100%", gap: 8, margin: "auto" }}>
           <Button onPress={autoLogin} mode="contained">
-            AUTO LOGIN
+            Próba felhasználó
           </Button>
-          <Button mode="contained" icon="facebook" onPress={startFacebookLogin}>
-            Facebook bejelentkezés!!
+          <Button
+            mode="contained"
+            icon="facebook"
+            disabled
+            onPress={startFacebookLogin}
+          >
+            Facebook bejelentkezés
+          </Button>
+          <Button
+            mode="contained"
+            icon="google"
+            disabled
+            onPress={signInWithGoogle}
+          >
+            Google bejelentkezés
           </Button>
           <TextInput
             onChangeText={setEmail}

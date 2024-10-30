@@ -5,17 +5,23 @@ import MyBuzinesses from "@/components/user/MyBuzinesses";
 import RecommendationsModal from "@/components/user/RecommendationsModal";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
+import { setOptions } from "@/lib/redux/reducers/infoReducer";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { RecommendProfileButton } from "@/lib/supabase/RecommendProfileButton";
 import { supabase } from "@/lib/supabase/supabase";
-import { Link, useFocusEffect, useGlobalSearchParams } from "expo-router";
+import {
+  Link,
+  router,
+  useFocusEffect,
+  useGlobalSearchParams,
+} from "expo-router";
 import { useCallback, useState } from "react";
 import { View } from "react-native";
 import { Button, Portal, Text, TouchableRipple } from "react-native-paper";
 import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 type UserInfo = Tables<"profiles">;
 
@@ -26,6 +32,7 @@ export default function Index() {
     (state: RootState) => state.user,
   );
 
+  const dispatch = useDispatch();
   const myProfile = myUid === uid;
   const [data, setData] = useState<UserInfo | null>(null);
   const [recommendations, setRecommendations] = useState<string[]>([]);
@@ -61,6 +68,15 @@ export default function Index() {
   useFocusEffect(
     useCallback(() => {
       load();
+      dispatch(
+        setOptions([
+          {
+            icon: "home",
+            onPress: () => router.push("/"),
+            title: "Főoldal",
+          },
+        ]),
+      );
       return () => {};
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [uid]),

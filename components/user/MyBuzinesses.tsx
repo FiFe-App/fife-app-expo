@@ -1,15 +1,9 @@
 import { BuzinessSearchItemInterface } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
-import {
-  ActivityIndicator,
-  AnimatedFAB,
-  Button,
-  FAB,
-  Text,
-} from "react-native-paper";
+import { ActivityIndicator, FAB } from "react-native-paper";
 import BuzinessItem from "../buziness/BuzinessItem";
 
 interface MyBuzinessesProps {
@@ -21,9 +15,7 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
   const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>(
     [],
   );
-  const [isExtended, setIsExtended] = useState(true);
 
-  const fabStyle = { right: 16 };
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     setLoading(true);
@@ -46,19 +38,9 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
         }
       });
   }, [uid]);
-  const onScroll = ({ nativeEvent }) => {
-    const currentScrollPosition =
-      Math.floor(nativeEvent?.contentOffset?.y) ?? 0;
-
-    setIsExtended(currentScrollPosition <= 0);
-  };
-
   return (
     <SafeAreaView style={{ flex: 1, padding: 4 }}>
-      <ScrollView
-        contentContainerStyle={{ gap: 8, flex: 1 }}
-        onScroll={onScroll}
-      >
+      <ScrollView contentContainerStyle={{ gap: 8, flex: 1 }}>
         {loading ? (
           <View style={{ flex: 1, justifyContent: "center" }}>
             <ActivityIndicator style={{}} />

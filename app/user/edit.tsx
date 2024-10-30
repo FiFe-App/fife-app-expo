@@ -3,6 +3,7 @@ import ProfileImage from "@/components/ProfileImage";
 import { ThemedView } from "@/components/ThemedView";
 import { Tables } from "@/database.types";
 import { setOptions } from "@/lib/redux/reducers/infoReducer";
+import { setName, setUserData } from "@/lib/redux/reducers/userReducer";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
@@ -16,7 +17,7 @@ import { useDispatch, useSelector } from "react-redux";
 type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
-  const { uid: myUid }: UserState = useSelector(
+  const { uid: myUid, name }: UserState = useSelector(
     (state: RootState) => state.user,
   );
   const [loading, setLoading] = useState(false);
@@ -72,6 +73,8 @@ export default function Index() {
               return;
             }
             setProfile(profile);
+            dispatch(setName(profile.full_name));
+            dispatch(setUserData(profile));
             console.log(res);
             router.navigate("/user");
           });
