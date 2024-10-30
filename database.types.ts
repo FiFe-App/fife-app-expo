@@ -39,13 +39,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "buziness_author_fkey"
-            columns: ["author"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "buziness_author_fkey1"
             columns: ["author"]
             isOneToOne: false
@@ -79,13 +72,6 @@ export type Database = {
             columns: ["author"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "buzinessRecommendations_author_fkey1"
-            columns: ["author"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
@@ -124,13 +110,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "comments_author_fkey"
-            columns: ["author"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "comments_author_fkey1"
             columns: ["author"]
             isOneToOne: false
@@ -167,15 +146,7 @@ export type Database = {
           title?: string | null
           type?: Database["public"]["Enums"]["contact_type"]
         }
-        Relationships: [
-          {
-            foreignKeyName: "contacts_author_fkey"
-            columns: ["author"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       messages: {
         Row: {
@@ -199,22 +170,7 @@ export type Database = {
           text?: string
           to?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "messages_author_fkey"
-            columns: ["author"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_to_fkey"
-            columns: ["to"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       posts: {
         Row: {
@@ -279,13 +235,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "profileRecommendations_author_fkey1"
-            columns: ["author"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "profileRecommendations_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
@@ -322,15 +271,7 @@ export type Database = {
           username?: string | null
           website?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -377,7 +318,7 @@ export type Database = {
       }
     }
     Enums: {
-      contact_type: "TEL" | "EMAIL" | "WEB" | "OTHER"
+      contact_type: "TEL" | "EMAIL" | "WEB" | "OTHER" | "INSTAGRAM" | "FACEBOOK"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -465,4 +406,19 @@ export type Enums<
   ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never

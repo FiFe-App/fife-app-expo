@@ -17,12 +17,10 @@ import {
   ImageBackground,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from "react-native";
 import {
   ActivityIndicator,
-  Button,
   Card,
   IconButton,
   Menu,
@@ -35,6 +33,7 @@ import SupabaseImage from "../SupabaseImage";
 import UrlText from "./UrlText";
 import { Comment, CommentsProps } from "./comments.types";
 import { ThemedText } from "../ThemedText";
+import { addSnack } from "@/lib/redux/reducers/infoReducer";
 
 const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   const dispatch = useDispatch();
@@ -54,13 +53,13 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   );
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(true);
-  const [showMenu, setShowMenu] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<{
     x: number;
     y: number;
     comment: Comment;
   } | null>(null);
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
+
   useEffect(() => {
     dispatch(clearComments());
 
@@ -126,8 +125,11 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, limit, path]);
 
-  const openMenu = () => setShowMenu(true);
-  const closeMenu = () => setShowMenu(false);
+  useEffect(() => {
+    if (comments.length) setDownloading(false);
+  }, [comments]);
+
+  const closeMenu = () => setMenuAnchor(null);
 
   const pickImage = async () => {
     let result = await ExpoImagePicker.launchImageLibraryAsync({
@@ -222,7 +224,6 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     };
 
     setMenuAnchor(anchor);
-    openMenu();
   };
   const deleteComment = async (comment: Comment) => {
     const { error } = await supabase
@@ -230,16 +231,16 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
       .delete()
       .eq("id", comment.id);
     if (!error) {
-      setShowMenu(false);
       dispatch(deleteCommentSlice(comment.id));
       console.log(comment.id);
 
       if (comment.image !== "") removeImage(comment);
-      //TODO TOAST
+
+      dispatch(addSnack({ title: "Törölted a kommented!" }));
     } else {
       console.log(error);
-      setShowMenu(false);
     }
+    setMenuAnchor(null);
   };
   const removeImage = (comment: Comment) => {
     if (comment.image) {
@@ -264,7 +265,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
       <View style={{ flexDirection: "row" }}>
         <View style={{ flex: 1 }}>
           <TextInput
-            style={{}}
+            style={{ paddingRight: 95 }}
             value={text}
             onChangeText={setText}
             onSubmitEditing={handleSend}
@@ -278,27 +279,28 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             }
           />
         </View>
-        {image ? (
-          <ImageBackground source={{ uri: image.uri }}>
-            <IconButton icon="close" onPress={dismissImage} />
-          </ImageBackground>
-        ) : (
-          <IconButton icon="image" onPress={pickImage} disabled={!uid} />
-        )}
-        <Button
-          icon="arrow-left-bottom-bold"
-          onPress={handleSend}
-          disabled={!uid || !text}
-          style={{ height: "100%", margin: 0 }}
-          loading={loading}
-        >
-          <Text>Küldés</Text>
-        </Button>
+        <View style={{ position: "absolute", right: 0, flexDirection: "row" }}>
+          {image ? (
+            <ImageBackground source={{ uri: image.uri }}>
+              <IconButton icon="close" onPress={dismissImage} />
+            </ImageBackground>
+          ) : (
+            <IconButton icon="image" onPress={pickImage} disabled={!uid} />
+          )}
+          <IconButton
+            icon="send"
+            onPress={handleSend}
+            disabled={!uid || !text}
+            loading={loading}
+          />
+        </View>
       </View>
-      <View style={{ flexDirection: "row", padding: 10 }}>
-        <ThemedText style={{ flex: 1 }}>Kommentek:</ThemedText>
-        <ThemedText>Újabbak elöl</ThemedText>
-      </View>
+      {false && (
+        <View style={{ flexDirection: "row", padding: 10 }}>
+          <ThemedText style={{ flex: 1 }}>Kommentek:</ThemedText>
+          <ThemedText>Újabbak elöl</ThemedText>
+        </View>
+      )}
       {!!comments?.length && (
         <ScrollView
           contentContainerStyle={{
@@ -373,9 +375,13 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
         </ScrollView>
       )}
 
-      {uid && menuAnchor && (
-        <Menu visible={showMenu} onDismiss={closeMenu} anchor={menuAnchor}>
-          {menuAnchor?.comment?.author === uid ? (
+      <Menu
+        visible={!!uid && !!menuAnchor}
+        onDismiss={closeMenu}
+        anchor={menuAnchor}
+      >
+        {!!menuAnchor &&
+          (menuAnchor?.comment?.author === uid ? (
             <>
               <Menu.Item
                 onPress={() => deleteComment(menuAnchor.comment)}
@@ -391,7 +397,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                     pathname: "/user/[uid]",
                     params: { uid: menuAnchor.comment.author },
                   });
-                  setShowMenu(false);
+                  setMenuAnchor(null);
                 }}
                 title={menuAnchor?.comment?.profiles?.full_name + " profilja"}
                 leadingIcon="account"
@@ -403,10 +409,10 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                 disabled
               />
             </>
-          )}
-        </Menu>
-      )}
-      {downloading ? (
+          ))}
+      </Menu>
+
+      {downloading && !comments.length ? (
         <ActivityIndicator />
       ) : (
         !comments?.length && (
