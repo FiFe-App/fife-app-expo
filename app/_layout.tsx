@@ -103,6 +103,7 @@ const MyAppbar = (props: NativeStackHeaderProps) => {
               <Menu.Item
                 onPress={option.onPress}
                 title={option.title}
+                disabled={option.disabled}
                 leadingIcon={option.icon}
               />
             ))}

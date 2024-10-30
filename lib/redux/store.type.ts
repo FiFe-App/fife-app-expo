@@ -37,7 +37,7 @@ export interface BuzinessItemInterface {
   description: string;
   author: string;
   authorName?: string;
-  recommendations: number;
+  buzinessRecommendations: { author: string }[];
 }
 export interface BuzinessSearchParams {
   text?: string;
@@ -63,6 +63,7 @@ export interface DialogProps {
 export interface OptionProps {
   icon: string;
   title: string;
+  disabled?: boolean;
   onPress: () => void;
 }
 

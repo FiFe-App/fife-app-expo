@@ -5,6 +5,7 @@ import {
   Pressable,
   StyleProp,
   TextInputKeyPressEventData,
+  TextInputSubmitEditingEventData,
   View,
   ViewStyle,
 } from "react-native";
@@ -31,27 +32,27 @@ const TagInput = ({
     .filter((e) => e.length);
   const text = (value || "").split(" ").slice(-1)[0].trim();
 
-  console.log("value", value);
-  console.log(
-    "list",
-    list.filter((e) => e.length),
-  );
-  console.log("text", text);
-
   const edit = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
     if (e.nativeEvent.key === "Backspace" && text === "") {
-      console.log("pressed", list, toString(list));
-      onChange(toString([...list, text]));
+      e.preventDefault();
+      onChange(toString([...list]).trim());
     }
   };
+  const onSubmit = (
+    e: NativeSyntheticEvent<TextInputSubmitEditingEventData>,
+  ) => {
+    onChange(toString([...list, text + " "]));
+    e.preventDefault();
+    e.currentTarget.focus();
+  };
   const onBlur = () => {
-    if (!list.length && text.length) {
-      onChange(toString(list));
+    if (text.length) {
+      onChange(toString([...list, text, " "]));
     }
   };
   const onChangeText = (e: string) => {
     console.log("change", e);
-    onChange(toString(list) + " " + e);
+    onChange((toString(list) + " " + e).trimStart());
   };
 
   const toString = (arr: string[]): string => {
@@ -73,7 +74,7 @@ const TagInput = ({
               <Text>{e}</Text>
               <Pressable
                 onPress={() => {
-                  onChange(toString(list.filter((el, ind) => ind !== i)));
+                  onChange(toString(list.filter((el, ind) => ind !== i)) + " ");
                 }}
               >
                 <View style={{ paddingHorizontal: 8 }}>
@@ -105,6 +106,7 @@ const TagInput = ({
           fontSize: 17,
           padding: 4,
         }}
+        onSubmitEditing={onSubmit}
         onChangeText={onChangeText}
         onKeyPress={edit}
         onBlur={onBlur}

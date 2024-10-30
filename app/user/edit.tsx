@@ -146,7 +146,7 @@ export default function Index() {
   if (myUid)
     return (
       <ThemedView style={{ flex: 1 }}>
-        <View style={{ alignItems: "center" }}>
+        <View style={{ alignItems: "center", marginBottom: 16 }}>
           <View style={{ width: 100 }}>
             <SupabaseImage
               key={profile?.avatar_url}
@@ -168,7 +168,7 @@ export default function Index() {
           </View>
         </View>
         <TextInput
-          placeholder="Teljes név"
+          label="Teljes név"
           value={profile.full_name || ""}
           disabled={loading}
           onChangeText={(t) => setProfile({ ...profile, full_name: t })}

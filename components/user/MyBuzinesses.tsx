@@ -21,6 +21,7 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
       .from("buziness")
       .select("*, profiles ( full_name ), buzinessRecommendations ( count )")
       .eq("author", uid)
+      .order("created_at")
       .then((res) => {
         if (res.data) {
           setBuzinesses(
@@ -41,6 +42,11 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
     <View style={{ flex: 1, padding: 4 }}>
       <ScrollView contentContainerStyle={{ gap: 8 }}>
         {loading && <ActivityIndicator />}
+        {!loading && !buzinesses.length && (
+          <Text style={{ textAlign: "center", margin: 16 }}>
+            Nincs megjeleníthető biznisz
+          </Text>
+        )}
         {buzinesses.map((buzinessItem) => (
           <BuzinessItem data={buzinessItem} key={buzinessItem.id} showOptions />
         ))}

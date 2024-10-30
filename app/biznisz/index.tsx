@@ -6,6 +6,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import {
+  clearBuzinessSearchParams,
   loadBuzinesses,
   storeBuzinessSearchParams,
   storeBuzinesses,
@@ -44,7 +45,16 @@ export default function Index() {
   const { myLocation, error: locationError } = useMyLocation();
   const [mapModalVisible, setMapModalVisible] = useState(false);
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
-  const [circle, setCircle] = useState<MapCircleType | undefined>(undefined);
+  const [circle, setCircle] = useState<MapCircleType | undefined>(
+    buzinessSearchParams?.location
+      ? {
+          position: buzinessSearchParams.location,
+          radius: 100,
+          radiusDisplay: null,
+        }
+      : undefined,
+  );
+  const canSearch = (!!circle || !!myLocation) && searchText;
 
   const [tutorialVisible, setTutorialVisible] = useState(true);
   useEffect(() => {
@@ -54,16 +64,17 @@ export default function Index() {
   }, [circle]);
 
   const search = () => {
-    console.log("search");
+    if (!canSearch) return;
 
     dispatch(storeBuzinessSearchParams({ skip: 0 }));
     dispatch(storeBuzinesses([]));
     load();
   };
 
-  const load = () => {
+  const load = (paramSkip?: number) => {
     setLoading(true);
-    console.log("load from ", skip, " to ", skip + take);
+    const mySkip = paramSkip || skip;
+    console.log("load from ", mySkip, " to ", mySkip + take);
 
     const searchLocation = circle
       ? {
@@ -81,7 +92,7 @@ export default function Index() {
     if (searchLocation)
       supabase
         .rpc("nearby_buziness", searchLocation)
-        .range(skip, skip + take - 1)
+        .range(mySkip, mySkip + take - 1)
         .then((res) => {
           setLoading(false);
           if (res.data) {
@@ -96,24 +107,25 @@ export default function Index() {
   };
   useFocusEffect(
     useCallback(() => {
-      if (myLocation || circle) {
-        dispatch(storeBuzinesses([]));
-        load();
-        console.log("MyLocationLoaded");
-      }
+      console.log("skip changed", skip);
+      if (!buzinesses.length) load();
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [myLocation, circle]),
+    }, [skip]),
   );
 
   const loadNext = () => {
     dispatch(storeBuzinessSearchParams({ skip: skip + take }));
+    load(skip + take);
   };
 
   useEffect(() => {
-    console.log("skip changed", skip);
-    load();
-  }, [skip]);
-  console.log(skip);
+    dispatch(storeBuzinessSearchParams({ location: circle?.position }));
+  }, [circle, dispatch, skip]);
+
+  const clearSearch = () => {
+    dispatch(clearBuzinessSearchParams());
+    setCircle(undefined);
+  };
 
   if (uid)
     return (
@@ -157,7 +169,8 @@ export default function Index() {
                 <TextInput.Icon
                   icon="magnify"
                   onPress={search}
-                  mode="contained"
+                  disabled={!canSearch}
+                  mode="contained-tonal"
                 />
               }
             />
@@ -169,7 +182,7 @@ export default function Index() {
               }}
             >
               <View style={{ flex: 1 }}>
-                {!!locationError && (
+                {!!locationError && !circle && (
                   <Text>
                     <Icon size={16} source="map-marker-question" />
                     {locationError}
@@ -194,10 +207,38 @@ export default function Index() {
               >
                 {!!circle ? "Környék kiválasztva" : "Válassz környéket"}
               </Button>
+              <IconButton icon="close" onPress={clearSearch} />
             </View>
           </Card.Content>
         </Card>
 
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            gap: 8,
+            marginTop: 8,
+          }}
+        >
+          {buzinesses.map((buzinessItem) => (
+            <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
+          ))}
+          {!circle && !myLocation && !buzinesses.length && (
+            <ThemedText style={{ alignSelf: "center" }}>
+              Válassz környéket a kereséshez
+            </ThemedText>
+          )}
+          {loading ? (
+            (circle || myLocation) && <ActivityIndicator />
+          ) : !!buzinesses.length && canLoadMore ? (
+            <Button onPress={loadNext} style={{ alignSelf: "center" }}>
+              További bizniszek
+            </Button>
+          ) : (
+            <ThemedText style={{ alignSelf: "center" }}>
+              Nem található több biznisz
+            </ThemedText>
+          )}
+        </ScrollView>
         <Portal>
           <Modal
             visible={mapModalVisible}
@@ -206,7 +247,12 @@ export default function Index() {
             }}
           >
             <ThemedView style={containerStyle}>
-              <MapSelector data={circle} setData={setCircle} searchEnabled />
+              <MapSelector
+                data={circle}
+                setData={setCircle}
+                searchEnabled
+                setOpen={setMapModalVisible}
+              />
             </ThemedView>
           </Modal>
           <Modal
@@ -243,33 +289,6 @@ export default function Index() {
             />
           </Modal>
         </Portal>
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{
-            gap: 8,
-            marginTop: 8,
-          }}
-        >
-          {buzinesses.map((buzinessItem) => (
-            <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
-          ))}
-          {!circle && !myLocation && loading && (
-            <ThemedText style={{ alignSelf: "center" }}>
-              Válassz környéket a kereséshez
-            </ThemedText>
-          )}
-          {loading ? (
-            (circle || myLocation) && <ActivityIndicator />
-          ) : !!buzinesses.length && canLoadMore ? (
-            <Button onPress={loadNext} style={{ alignSelf: "center" }}>
-              További bizniszek
-            </Button>
-          ) : (
-            <ThemedText style={{ alignSelf: "center" }}>
-              Nem található több biznisz
-            </ThemedText>
-          )}
-        </ScrollView>
       </ThemedView>
     );
 }

@@ -12,6 +12,7 @@ const MapSelector = ({
   searchEnabled,
   data,
   setData,
+  setOpen,
 }: MapSelectorProps) => {
   const [search, setSearch] = useState<string>("");
   const [mapHeight, setMapHeight] = useState<number>(0);
@@ -70,7 +71,11 @@ const MapSelector = ({
   };
 
   const onSubmit = () => {
-    if (setData) setData(circle);
+    if (setData && circle) {
+      console.log("map submit");
+      setData(circle);
+      if (setOpen) setOpen(false);
+    }
   };
 
   return (
@@ -163,7 +168,12 @@ const MapSelector = ({
         </View>
         <Text>{error}</Text>
         <View style={{ width: "100%", alignItems: "center" }}>
-          <Button mode="contained" style={styles.submit} onPress={onSubmit}>
+          <Button
+            mode="contained"
+            style={styles.submit}
+            onPress={onSubmit}
+            disabled={!circle}
+          >
             <Text>Helyzet mentése</Text>
           </Button>
         </View>
