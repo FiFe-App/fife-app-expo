@@ -14,6 +14,7 @@ import {
 import SupabaseImage from "../SupabaseImage";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
+import ProfileImage from "../ProfileImage";
 
 interface RMP {
   show: boolean;
@@ -80,9 +81,9 @@ const RecommendationsModal = ({ show, setShow, uid, name }: RMP) => {
                     alignItems: "center",
                   }}
                 >
-                  <SupabaseImage
-                    bucket="avatars"
-                    path={rec.author + "/" + rec.profiles?.avatar_url}
+                  <ProfileImage
+                    uid={rec.author}
+                    avatar_url={rec.profiles?.avatar_url}
                     style={{ width: 40, height: 40, marginRight: 16 }}
                   />
                   <View style={{ flex: 1, justifyContent: "center" }}>

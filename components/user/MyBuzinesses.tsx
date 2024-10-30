@@ -1,10 +1,10 @@
 import { BuzinessSearchItemInterface } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
-import { useState, useEffect } from "react";
-import { ScrollView, View } from "react-native";
-import { ActivityIndicator, Button, Text } from "react-native-paper";
-import BuzinessItem from "../buziness/BuzinessItem";
 import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, FAB } from "react-native-paper";
+import BuzinessItem from "../buziness/BuzinessItem";
 
 interface MyBuzinessesProps {
   uid: string;
@@ -15,8 +15,10 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
   const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>(
     [],
   );
+
   const [loading, setLoading] = useState(true);
   useEffect(() => {
+    setLoading(true);
     supabase
       .from("buziness")
       .select("*, profiles ( full_name ), buzinessRecommendations ( count )")
@@ -36,30 +38,41 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
           setLoading(false);
         }
       });
-  }, []);
-
+  }, [uid]);
   return (
-    <View style={{ flex: 1, padding: 4 }}>
-      <ScrollView contentContainerStyle={{ gap: 8 }}>
-        {loading && <ActivityIndicator />}
-        {!loading && !buzinesses.length && (
-          <Text style={{ textAlign: "center", margin: 16 }}>
-            Nincs megjeleníthető biznisz
-          </Text>
-        )}
-        {buzinesses.map((buzinessItem) => (
-          <BuzinessItem data={buzinessItem} key={buzinessItem.id} showOptions />
-        ))}
-        {myProfile && (
-          <View>
-            <Button onPress={() => router.navigate("/biznisz/new")}>
-              <Text>Új Biznisz felvétele</Text>
-            </Button>
+    <SafeAreaView style={{ flex: 1, padding: 4 }}>
+      <ScrollView contentContainerStyle={{ gap: 8, flex: 1 }}>
+        {loading ? (
+          <View style={{ flex: 1, justifyContent: "center" }}>
+            <ActivityIndicator style={{}} />
           </View>
+        ) : (
+          buzinesses.map((buzinessItem) => (
+            <BuzinessItem
+              data={buzinessItem}
+              key={buzinessItem.id}
+              showOptions
+            />
+          ))
         )}
       </ScrollView>
-    </View>
+      <FAB
+        icon={"plus"}
+        label={"Új biznisz"}
+        style={[styles.fabStyle]}
+        visible={myProfile}
+        onPress={() => router.push("/biznisz/new")}
+      />
+    </SafeAreaView>
   );
 };
 
 export default MyBuzinesses;
+
+const styles = StyleSheet.create({
+  fabStyle: {
+    bottom: 16,
+    right: 16,
+    position: "absolute",
+  },
+});

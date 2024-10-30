@@ -1,8 +1,9 @@
 import { ContactList } from "@/components/buziness/ContactList";
-import SupabaseImage from "@/components/SupabaseImage";
+import ProfileImage from "@/components/ProfileImage";
 import { ThemedView } from "@/components/ThemedView";
 import { Tables } from "@/database.types";
 import { setOptions } from "@/lib/redux/reducers/infoReducer";
+import { setName, setUserData } from "@/lib/redux/reducers/userReducer";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
@@ -16,7 +17,7 @@ import { useDispatch, useSelector } from "react-redux";
 type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
-  const { uid: myUid }: UserState = useSelector(
+  const { uid: myUid, name }: UserState = useSelector(
     (state: RootState) => state.user,
   );
   const [loading, setLoading] = useState(false);
@@ -47,6 +48,37 @@ export default function Index() {
   };
   useFocusEffect(
     useCallback(() => {
+      const save = () => {
+        setLoading(true);
+        if (!myUid) return;
+
+        console.log({
+          ...profile,
+          id: myUid,
+        });
+
+        supabase
+          .from("profiles")
+          .upsert(
+            {
+              ...profile,
+              id: myUid,
+            },
+            { onConflict: "id" },
+          )
+          .then((res) => {
+            setLoading(false);
+            if (res.error) {
+              console.log(res.error);
+              return;
+            }
+            setProfile(profile);
+            dispatch(setName(profile.full_name));
+            dispatch(setUserData(profile));
+            console.log(res);
+            router.navigate("/user");
+          });
+      };
       dispatch(
         setOptions([
           {
@@ -56,35 +88,16 @@ export default function Index() {
           },
         ]),
       );
+      return () => {};
+    }, [dispatch, myUid, profile]),
+  );
+  useFocusEffect(
+    useCallback(() => {
       load();
       return () => {};
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [myUid, dispatch]),
+    }, [myUid]),
   );
-  const save = () => {
-    setLoading(true);
-    if (!myUid) return;
-
-    supabase
-      .from("profiles")
-      .upsert(
-        {
-          ...profile,
-          id: myUid,
-        },
-        { onConflict: "id" },
-      )
-      .then((res) => {
-        setLoading(false);
-        if (res.error) {
-          console.log(res.error);
-          return;
-        }
-        setProfile(profile);
-        console.log(res);
-        router.navigate("/user");
-      });
-  };
   const pickImage = async () => {
     let result = await ExpoImagePicker.launchImageLibraryAsync({
       mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
@@ -143,15 +156,17 @@ export default function Index() {
     return upload;
   };
 
+  console.log(profile.full_name);
+
   if (myUid)
     return (
       <ThemedView style={{ flex: 1 }}>
         <View style={{ alignItems: "center", marginBottom: 16 }}>
           <View style={{ width: 100 }}>
-            <SupabaseImage
+            <ProfileImage
               key={profile?.avatar_url}
-              bucket="avatars"
-              path={myUid + "/" + profile.avatar_url}
+              uid={myUid}
+              avatar_url={profile.avatar_url}
               propLoading={imageLoading}
               style={{
                 width: 100,
