@@ -23,6 +23,7 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
       .from("buziness")
       .select("*, profiles ( full_name ), buzinessRecommendations ( count )")
       .eq("author", uid)
+      .order("created_at")
       .then((res) => {
         if (res.data) {
           setBuzinesses(

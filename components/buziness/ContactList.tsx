@@ -9,6 +9,7 @@ import { ThemedView } from "../ThemedView";
 import * as Clipboard from "expo-clipboard";
 import { useDispatch } from "react-redux";
 import { addSnack } from "@/lib/redux/reducers/infoReducer";
+import { ThemedText } from "../ThemedText";
 
 export interface ContactListProps {
   uid: string;
@@ -36,6 +37,9 @@ export function ContactList({ uid, edit }: ContactListProps) {
   );
   return (
     <ThemedView>
+      <ThemedText style={{ marginLeft: 8, marginTop: 8 }} type="subtitle">
+        Elérhetőségek
+      </ThemedText>
       <List.Section>
         {contacts.map((contact) => (
           <Link

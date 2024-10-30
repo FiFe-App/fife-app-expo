@@ -39,34 +39,33 @@ export default function Index() {
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
   const iRecommended = recommendations.includes(myUid || "");
 
-  const load = () => {
-    console.log("uid", uid);
-
-    setShowRecommendsModal(false);
-
-    supabase
-      .from("profiles")
-      .select(
-        "*, profileRecommendations!profileRecommendations_profile_id_fkey(*)",
-      )
-      .eq("id", uid)
-      .then(({ data, error }) => {
-        if (error) {
-          console.log("err", error.message);
-          return;
-        }
-        if (data) {
-          setData(data[0]);
-          setRecommendations(
-            data[0].profileRecommendations.map((pr) => pr.author),
-          );
-          console.log(data);
-        }
-      });
-  };
-
   useFocusEffect(
     useCallback(() => {
+      const load = () => {
+        if (!uid) return;
+
+        setShowRecommendsModal(false);
+
+        supabase
+          .from("profiles")
+          .select(
+            "*, profileRecommendations!profileRecommendations_profile_id_fkey(*)",
+          )
+          .eq("id", uid)
+          .then(({ data, error }) => {
+            if (error) {
+              console.log("err", error.message);
+              return;
+            }
+            if (data) {
+              setData(data[0]);
+              setRecommendations(
+                data[0].profileRecommendations.map((pr) => pr.author),
+              );
+              console.log(data);
+            }
+          });
+      };
       load();
       dispatch(
         setOptions([
@@ -77,7 +76,9 @@ export default function Index() {
           },
         ]),
       );
-      return () => {};
+      return () => {
+        setShowRecommendsModal(false);
+      };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [uid]),
   );

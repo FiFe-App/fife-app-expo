@@ -3,7 +3,10 @@ import { ThemedView } from "@/components/ThemedView";
 import { ContactList } from "@/components/buziness/ContactList";
 import Comments from "@/components/comments/Comments";
 import { LatLng, MapView, Marker } from "@/components/mapView/mapView";
+import BuzinessRecommendationsModal from "@/components/user/BuzinessRecommendationsModal";
+import RecommendationsModal from "@/components/user/RecommendationsModal";
 import { useMyLocation } from "@/hooks/useMyLocation";
+import locationToCoords from "@/lib/functions/locationToCoords";
 import { storeBuzinessSearchParams } from "@/lib/redux/reducers/buzinessReducer";
 import { RootState } from "@/lib/redux/store";
 import { BuzinessItemInterface, UserState } from "@/lib/redux/store.type";
@@ -24,9 +27,11 @@ import {
   Button,
   Chip,
   IconButton,
+  Portal,
   Text,
   TouchableRipple,
 } from "react-native-paper";
+import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
@@ -38,7 +43,9 @@ export default function Index() {
 
   const id: number = Number(paramId);
   const [data, setData] = useState<BuzinessItemInterface | undefined>();
-  const [recommended, setRecommended] = useState(false);
+  const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [showRecommendsModal, setShowRecommendsModal] = useState(false);
+  const iRecommended = recommendations.includes(myUid || "");
   const location: LatLng | null = data
     ? { latitude: data.lat, longitude: data.long }
     : null;
@@ -51,11 +58,13 @@ export default function Index() {
   useFocusEffect(
     useCallback(() => {
       const load = () => {
+        setShowRecommendsModal(false);
+
         if (!id) return;
         supabase
           .from("buziness")
           .select(
-            "*, profiles ( full_name, avatar_url ), buzinessRecommendations ( count )",
+            "*, profiles ( full_name, avatar_url ), buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(author)",
           )
           .eq("id", id)
           .then(({ data, error }) => {
@@ -63,15 +72,10 @@ export default function Index() {
               console.log(error);
               return;
             }
+            console.log(data);
+
             if (data) {
-              var Buffer = require("@craftzdog/react-native-buffer").Buffer;
-              console.log("Buffer", Buffer);
-              var wkx = require("wkx");
-
-              var wkbBuffer = new Buffer(data[0].location, "hex");
-              var geometry = wkx.Geometry.parse(wkbBuffer);
-
-              const cords = geometry.toGeoJSON().coordinates;
+              const cords = locationToCoords(String(data[0].location));
               nav.setOptions({ title: data[0]?.title.split(" ")[0] });
               setData({
                 ...data[0],
@@ -79,23 +83,17 @@ export default function Index() {
                 long: cords[0],
                 distance: 0,
                 authorName: data[0]?.profiles?.full_name || "???",
-                recommendations: data[0].buzinessRecommendations[0].count,
               });
+              setRecommendations(
+                data[0].buzinessRecommendations.map((pr) => pr.author),
+              );
             }
           });
-        if (myUid) {
-          supabase
-            .from("buzinessRecommendations")
-            .select("count")
-            .eq("author", myUid)
-            .eq("buziness_id", id)
-            .then((res) => {
-              setRecommended(!!res.data?.[0].count);
-            });
-        }
       };
       load();
-      return () => {};
+      return () => {
+        setShowRecommendsModal(false);
+      };
     }, [id]),
   );
 
@@ -112,7 +110,7 @@ export default function Index() {
   return (
     <ThemedView style={{ flex: 1 }}>
       {!data && <ActivityIndicator />}
-      {id && data && (
+      {!!id && !!data && (
         <>
           <View style={{ flexDirection: "row" }}>
             <Link
@@ -126,9 +124,18 @@ export default function Index() {
                 </Text>
               </TouchableRipple>
             </Link>
-            <Text style={{ flex: 1, textAlign: "center", padding: 20 }}>
-              {data.recommendations} ajánlás
-            </Text>
+            <TouchableRipple
+              style={{ flex: 1 }}
+              onPress={
+                recommendations.length
+                  ? () => setShowRecommendsModal(true)
+                  : undefined
+              }
+            >
+              <Text style={{ flex: 1, textAlign: "center", padding: 20 }}>
+                {recommendations.length} ajánlás
+              </Text>
+            </TouchableRipple>
           </View>
 
           <View
@@ -167,70 +174,103 @@ export default function Index() {
             {!myBuziness && (
               <RecommendBuzinessButton
                 buzinessId={id}
-                recommended={recommended}
-                setRecommended={setRecommended}
+                recommended={iRecommended}
+                setRecommended={(recommendedByMe) => {
+                  if (myUid) {
+                    if (recommendedByMe)
+                      setRecommendations([...recommendations, myUid]);
+                    else
+                      setRecommendations(
+                        recommendations.filter((uid) => uid !== myUid),
+                      );
+                  }
+                }}
               />
             )}
           </View>
           <ContactList uid={data.author} />
-          <Text>Hol található?</Text>
-          <MapView
-            options={{
-              mapTypeControl: false,
-              fullscreenControl: false,
-              streetViewControl: false,
-              zoomControl: false,
-            }}
-            style={{ width: "100%", height: "100%" }}
-            initialCamera={{
-              altitude: 10,
-              center: location || {
-                latitude: 47.4979,
-                longitude: 19.0402,
-              },
-              heading: 0,
-              pitch: 0,
-              zoom: 12,
-            }}
-            provider="google"
-            googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
-            pitchEnabled={false}
-            rotateEnabled={false}
-            toolbarEnabled={false}
-          >
-            {location && <Marker coordinate={location} />}
-            {myLocation && (
-              <Marker
-                centerOffset={{ x: 10, y: 10 }}
-                coordinate={myLocation?.coords}
-                style={{ justifyContent: "center", alignItems: "center" }}
-              >
-                <MyLocationIcon style={{ width: 20, height: 20 }} />
-              </Marker>
-            )}
-            {location && (
-              <IconButton
-                icon="directions"
-                mode="contained"
-                onPress={() =>
-                  openMap({
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    navigate: true,
-                    start: "My Location",
-                    travelType: "public_transport",
-                    end: location.latitude + "," + location.longitude,
-                  })
-                }
-                style={{ right: 5, bottom: 5, position: "absolute" }}
-              />
-            )}
-          </MapView>
-          <Comments
-            path={"buziness/" + id}
-            placeholder="Mondd el a véleményed"
-          />
+          <TabsProvider defaultIndex={0}>
+            <Tabs>
+              <TabScreen label="Helyzete" icon="map-marker">
+                <>
+                  <MapView
+                    options={{
+                      mapTypeControl: false,
+                      fullscreenControl: false,
+                      streetViewControl: false,
+                      zoomControl: false,
+                    }}
+                    style={{ width: "100%", height: "100%" }}
+                    initialCamera={{
+                      altitude: 10,
+                      center: location || {
+                        latitude: 47.4979,
+                        longitude: 19.0402,
+                      },
+                      heading: 0,
+                      pitch: 0,
+                      zoom: 12,
+                    }}
+                    provider="google"
+                    googleMapsApiKey={
+                      process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+                    }
+                    pitchEnabled={false}
+                    rotateEnabled={false}
+                    toolbarEnabled={false}
+                  >
+                    {location && <Marker coordinate={location} />}
+                    {myLocation && (
+                      <Marker
+                        centerOffset={{ x: 10, y: 10 }}
+                        coordinate={myLocation?.coords}
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <MyLocationIcon style={{ width: 20, height: 20 }} />
+                      </Marker>
+                    )}
+                  </MapView>
+                  {location && (
+                    <IconButton
+                      icon="directions"
+                      mode="contained"
+                      onPress={() =>
+                        openMap({
+                          latitude: location.latitude,
+                          longitude: location.longitude,
+                          navigate: true,
+                          start: "My Location",
+                          travelType: "public_transport",
+                          end: location.latitude + "," + location.longitude,
+                        })
+                      }
+                      style={{ right: 5, bottom: 5, position: "absolute" }}
+                    />
+                  )}
+                </>
+              </TabScreen>
+              <TabScreen label="Vélemények" icon="comment-text">
+                <Comments
+                  path={"buziness/" + id}
+                  placeholder="Mondd el a véleményed"
+                />
+              </TabScreen>
+            </Tabs>
+          </TabsProvider>
         </>
+      )}
+      {!!title && (
+        <Portal>
+          <BuzinessRecommendationsModal
+            show={showRecommendsModal}
+            setShow={setShowRecommendsModal}
+            id={id}
+            name={title}
+          />
+        </Portal>
       )}
     </ThemedView>
   );

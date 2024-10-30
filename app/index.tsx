@@ -4,7 +4,6 @@ import { ThemedView } from "@/components/ThemedView";
 import { logout } from "@/lib/redux/reducers/userReducer";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
-import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { View } from "react-native";
 import { Button, Text } from "react-native-paper";
