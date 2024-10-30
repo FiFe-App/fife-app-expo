@@ -3,6 +3,8 @@ import { MapCircleType } from "@/components/MapSelector/MapSelector.types";
 import { containerStyle } from "@/components/styles";
 import TagInput from "@/components/TagInput";
 import { useMyLocation } from "@/hooks/useMyLocation";
+import locationToCoords from "@/lib/functions/locationToCoords";
+import { setOptions, updateOption } from "@/lib/redux/reducers/infoReducer";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
@@ -19,9 +21,9 @@ import {
   Text,
   TextInput,
 } from "react-native-paper";
-import { useSelector } from "react-redux";
-import { ThemedView } from "../ThemedView";
+import { useDispatch, useSelector } from "react-redux";
 import { MapView, Marker } from "../mapView/mapView";
+import { ThemedView } from "../ThemedView";
 
 interface NewBuzinessInterface {
   title: string;
@@ -35,6 +37,7 @@ export default function BuzinessEditScreen({
   editId,
 }: BuzinessEditScreenProps) {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
   const [categories, setCategories] = useState("");
   const [newBuziness, setNewBuziness] = useState<NewBuzinessInterface>({
     title: "",
@@ -50,20 +53,69 @@ export default function BuzinessEditScreen({
   const [locationTutorialVisible, setLocationTutorialVisible] = useState(false);
 
   const title = newBuziness.title.trim() + " " + categories?.trim();
-  console.log("categories", categories);
   const navigation = useNavigation();
 
-  const canSubmit =
+  const canSubmit = !!(
     (!!myLocation || !!circle) &&
     newBuziness.title &&
     categories &&
-    newBuziness.description;
+    newBuziness.description
+  );
+  const save = useCallback(() => {
+    setLoading(true);
+    if (!uid) return;
+
+    console.log(selectedLocation);
+
+    supabase
+      .from("buziness")
+      .upsert(
+        {
+          id: editId,
+          ...newBuziness,
+          title,
+          author: uid,
+          location: `POINT(${selectedLocation?.longitude} ${selectedLocation?.latitude})`,
+        },
+        { onConflict: "id" },
+      )
+      .then((res) => {
+        setLoading(false);
+        if (res.error) {
+          console.log(res.error);
+          return;
+        }
+        setCategories("");
+        setNewBuziness({
+          title: "",
+          description: "",
+        });
+        setCircle(undefined);
+        console.log(res);
+        router.navigate("/user");
+      });
+  }, [editId, newBuziness, selectedLocation, title, uid]);
 
   useEffect(() => {
     if (circle) {
       setMapModalVisible(false);
     }
   }, [circle]);
+  useEffect(() => {
+    console.log("canSubmit", canSubmit);
+
+    dispatch(
+      setOptions([
+        {
+          title: "Mentés",
+          icon: "check",
+          disabled: !canSubmit,
+          onPress: save,
+        },
+      ]),
+    );
+  }, [canSubmit, dispatch, save]);
+
   useFocusEffect(
     useCallback(() => {
       if (editId) {
@@ -95,6 +147,14 @@ export default function BuzinessEditScreen({
                   .slice(1)
                   .reduce((partialSum, a) => partialSum + " " + a, "") + " ",
               );
+
+              const cords = locationToCoords(String(editingBuziness.location));
+
+              setCircle({
+                position: { latitude: cords[1], longitude: cords[0] },
+                radius: 200,
+                radiusDisplay: null,
+              });
             }
           });
       }
@@ -102,41 +162,11 @@ export default function BuzinessEditScreen({
       return () => {
         console.log("This route is now unfocused.");
       };
-    }, []),
+    }, [dispatch, editId, uid]),
   );
 
-  const save = () => {
-    setLoading(true);
-    if (!uid) return;
+  console.log(newBuziness);
 
-    supabase
-      .from("buziness")
-      .upsert(
-        {
-          id: editId,
-          ...newBuziness,
-          title,
-          author: uid,
-          location: `POINT(${selectedLocation?.longitude} ${selectedLocation?.latitude})`,
-        },
-        { onConflict: "id" },
-      )
-      .then((res) => {
-        setLoading(false);
-        if (res.error) {
-          console.log(res.error);
-          return;
-        }
-        setCategories("");
-        setNewBuziness({
-          title: "",
-          description: "",
-        });
-        setCircle(undefined);
-        console.log(res);
-        router.navigate("/user");
-      });
-  };
   return (
     <ThemedView style={{ flex: 1 }}>
       {tutorialVisible && (
@@ -171,7 +201,9 @@ export default function BuzinessEditScreen({
         <TextInput
           placeholder="Bizniszem neve"
           value={newBuziness.title}
-          onChangeText={(t) => setNewBuziness({ ...newBuziness, title: t })}
+          onChangeText={(t) =>
+            setNewBuziness({ ...newBuziness, title: t.trim() })
+          }
         />
         <TagInput
           placeholder="Kategóriái"
@@ -183,7 +215,7 @@ export default function BuzinessEditScreen({
           value={newBuziness.description}
           multiline
           onChangeText={(t) =>
-            setNewBuziness({ ...newBuziness, description: t })
+            setNewBuziness({ ...newBuziness, description: t.trim() })
           }
         />
         <Card>
@@ -205,7 +237,7 @@ export default function BuzinessEditScreen({
             )}
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <View style={{ flex: 1 }}>
-                {!!locationError && (
+                {!!locationError && !circle && (
                   <Text>
                     <Icon size={16} source="map-marker-question" />
                     {locationError}
@@ -255,27 +287,20 @@ export default function BuzinessEditScreen({
           rotateEnabled={false}
           toolbarEnabled={false}
         >
-          <Marker
-            coordinate={
-              selectedLocation ||
-              myLocation?.coords || {
-                latitude: 47.4979,
-                longitude: 19.0402,
+          {(!!selectedLocation || !!myLocation) && (
+            <Marker
+              coordinate={
+                selectedLocation ||
+                myLocation?.coords || {
+                  latitude: 47.4979,
+                  longitude: 19.0402,
+                }
               }
-            }
-          />
+            />
+          )}
         </MapView>
       </View>
 
-      <Button
-        onPress={save}
-        loading={loading}
-        style={{ margin: 4 }}
-        mode="elevated"
-        disabled={!canSubmit}
-      >
-        <Text>Biznisz mentése</Text>
-      </Button>
       <Portal>
         <Modal
           visible={mapModalVisible}
