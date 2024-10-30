@@ -26,12 +26,13 @@ AppState.addEventListener("change", (state) => {
 
 export default function Index() {
   const dispatch = useDispatch();
+  const { uid }: UserState = useSelector((state: RootState) => state.user);
   const { "#": hash } = useLocalSearchParams<{ "#": string }>();
   const token_data = hash
     ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
     : null;
   const [error, setError] = useState<string | null>(
-    token_data ? null : "Ejj hát ide nem kellett volna tévedned!",
+    uid || token_data ? null : "Ejj hát ide nem kellett volna tévedned!",
   );
 
   useEffect(() => {
@@ -49,8 +50,7 @@ export default function Index() {
           if (data.user) getUserData(data.user);
         });
     }
-  }, []);
-  const { uid }: UserState = useSelector((state: RootState) => state.user);
+  }, [dispatch, token_data]);
 
   const getUserData = async (userData: User) => {
     const { data: profile, error } = await supabase

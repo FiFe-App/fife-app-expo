@@ -37,7 +37,7 @@ export default function Index() {
         <Text style={{ zIndex: -1, textAlign: "center" }}>
           <ThemedText style={{}}>Üdövözzlek a FiFe Appban!</ThemedText>
           {"\n"}
-          <ThemedText>Egy szerető budapesti közösség.</ThemedText>
+          <ThemedText>Ez egy szerető budapesti közösség.</ThemedText>
           {"\n"}
           {uid && (
             <ThemedText type="defaultSemiBold">

@@ -15,8 +15,7 @@ const Register = () => {
   const textInput = useRef<TIRN>(null);
   const [numberOfLines, setNumberOfLines] = useState(0);
   const [text, setText] = useState("");
-  const textToType =
-    "Nem leszek rosszindulatú. Tiszteletben tartom mások véleményét.";
+  const textToType = "Nem leszek rosszindulatú.";
   const handleTextInput = (input: string) => {
     if (
       textToType.slice(0, input.length).toLowerCase().replaceAll(" ", "") ===
@@ -79,15 +78,7 @@ const Register = () => {
             if (textInput?.current) textInput?.current?.focus();
           }}
         >
-          <Text
-            style={[styles.textToType]}
-            onLayout={(e) => {
-              console.log(
-                "number of lines",
-                setNumberOfLines((e.nativeEvent.layout.height - 20) / 26),
-              );
-            }}
-          >
+          <Text style={[styles.textToType, { opacity: 0.5 }]}>
             {textToType}
           </Text>
           <TextInput
@@ -100,7 +91,7 @@ const Register = () => {
             multiline
             onChangeText={handleTextInput}
           />
-          {<Text style={[styles.textToType]}>{text}</Text>}
+          <Text style={[styles.textToType, {}]}>{text}</Text>
         </Pressable>
       </View>
     </ThemedView>
@@ -119,18 +110,17 @@ const styles = StyleSheet.create({
   },
   inputView: {},
   input: {
-    color: "black",
     padding: 0,
     paddingHorizontal: 10,
     fontSize: 15,
+    zIndex: 10,
     overflow: "hidden",
   },
   inputContent: {
     paddingTop: 10,
     paddingHorizontal: 10,
     letterSpacing: 0,
-    color: "black",
-    zIndex: 10,
+    zIndex: 20,
     overflow: "hidden",
   },
   textToType: {
@@ -138,11 +128,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     position: "absolute",
     userSelect: "none",
-    backgroundColor: "transparent",
-    color: "gray",
     cursor: "text",
     fontSize: 15,
-    zIndex: 10,
+    fontWeight: "400",
+    zIndex: 150,
   },
 });
 export default Register;
