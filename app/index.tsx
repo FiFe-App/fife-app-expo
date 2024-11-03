@@ -4,7 +4,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { logout } from "@/lib/redux/reducers/userReducer";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
-import { Link } from "expo-router";
+import { Link, Redirect } from "expo-router";
 import { View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,6 +17,13 @@ export default function Index() {
   const startLogout = () => {
     dispatch(logout());
   };
+
+  if (uid)
+    return (
+      <ThemedView style={{ flex: 1 }}>
+        <Redirect href="/biznisz" />
+      </ThemedView>
+    );
 
   return (
     <ThemedView

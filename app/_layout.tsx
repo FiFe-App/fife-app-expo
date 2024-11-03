@@ -1,4 +1,5 @@
 import InfoLayer from "@/components/InfoLayer";
+import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { clearOptions } from "@/lib/redux/reducers/infoReducer";
 import { persistor, RootState, store } from "@/lib/redux/store";
 import { NativeStackHeaderProps } from "@react-navigation/native-stack/lib/typescript/src/types";
@@ -16,6 +17,7 @@ import { Provider, useDispatch, useSelector } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 
 export default function RootLayout() {
+  const pathname = usePathname();
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
@@ -54,6 +56,9 @@ export default function RootLayout() {
               options={{ title: "Elérhetőség Szerkesztése" }}
             />
           </Stack>
+          {pathname !== "/" &&
+            !pathname.includes("login") &&
+            !pathname.includes("csatlakozom") && <BottomNavigation />}
         </PaperProvider>
       </PersistGate>
     </Provider>
@@ -62,7 +67,6 @@ export default function RootLayout() {
 
 const MyAppbar = (props: NativeStackHeaderProps) => {
   const navigation = useNavigation();
-  const pathname = usePathname();
   const { options } = useSelector((state: RootState) => state.info);
   const [showMenu, setShowMenu] = useState(false);
   const { width } = useWindowDimensions();
@@ -75,12 +79,8 @@ const MyAppbar = (props: NativeStackHeaderProps) => {
 
   return (
     <Appbar.Header mode="center-aligned">
-      {navigation.canGoBack() ? (
+      {navigation.canGoBack() && (
         <Appbar.BackAction onPress={navigation.goBack} />
-      ) : (
-        pathname !== "/" && (
-          <Appbar.BackAction onPress={() => router.replace("/")} />
-        )
       )}
       <Appbar.Content title={props.options.title} />
       {options?.length === 1 && <Appbar.Action {...options[0]} />}
