@@ -262,46 +262,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={{ flexDirection: "row" }}>
-        <View style={{ flex: 1 }}>
-          <TextInput
-            style={{ paddingRight: 95 }}
-            value={text}
-            onChangeText={setText}
-            onSubmitEditing={handleSend}
-            disabled={!uid || loading}
-            placeholder={
-              uid
-                ? placeholder
-                  ? placeholder
-                  : "Kommented"
-                : "Jelentkezz be a hozzászóláshoz."
-            }
-          />
-        </View>
-        <View style={{ position: "absolute", right: 0, flexDirection: "row" }}>
-          {image ? (
-            <ImageBackground source={{ uri: image.uri }}>
-              <IconButton icon="close" onPress={dismissImage} />
-            </ImageBackground>
-          ) : (
-            <IconButton icon="image" onPress={pickImage} disabled={!uid} />
-          )}
-          <IconButton
-            icon="send"
-            onPress={handleSend}
-            disabled={!uid || !text}
-            loading={loading}
-          />
-        </View>
-      </View>
-      {false && (
-        <View style={{ flexDirection: "row", padding: 10 }}>
-          <ThemedText style={{ flex: 1 }}>Kommentek:</ThemedText>
-          <ThemedText>Újabbak elöl</ThemedText>
-        </View>
-      )}
-      {!!comments?.length && (
+      {
         <ScrollView
           contentContainerStyle={{
             flexDirection: "column",
@@ -373,7 +334,49 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
               );
             })}
         </ScrollView>
+      }
+      {downloading && !comments.length ? (
+        <ActivityIndicator />
+      ) : (
+        !comments?.length && (
+          <ThemedText style={{ padding: 20 }}>
+            Még nem érkezett komment
+          </ThemedText>
+        )
       )}
+      <View style={{ flexDirection: "row" }}>
+        <View style={{ flex: 1 }}>
+          <TextInput
+            style={{ paddingRight: 95 }}
+            value={text}
+            onChangeText={setText}
+            onSubmitEditing={handleSend}
+            disabled={!uid || loading}
+            placeholder={
+              uid
+                ? placeholder
+                  ? placeholder
+                  : "Kommented"
+                : "Jelentkezz be a hozzászóláshoz."
+            }
+          />
+        </View>
+        <View style={{ position: "absolute", right: 0, flexDirection: "row" }}>
+          {image ? (
+            <ImageBackground source={{ uri: image.uri }}>
+              <IconButton icon="close" onPress={dismissImage} />
+            </ImageBackground>
+          ) : (
+            <IconButton icon="image" onPress={pickImage} disabled={!uid} />
+          )}
+          <IconButton
+            icon="send"
+            onPress={handleSend}
+            disabled={!uid || !text}
+            loading={loading}
+          />
+        </View>
+      </View>
 
       <Menu
         visible={!!uid && !!menuAnchor}
@@ -412,15 +415,6 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
           ))}
       </Menu>
 
-      {downloading && !comments.length ? (
-        <ActivityIndicator />
-      ) : (
-        !comments?.length && (
-          <ThemedText style={{ padding: 20 }}>
-            Még nem érkezett komment
-          </ThemedText>
-        )
-      )}
       {selectedComment?.image && (
         <Portal>
           <Modal

@@ -6,6 +6,7 @@ import RecommendationsModal from "@/components/user/RecommendationsModal";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
 import { setOptions } from "@/lib/redux/reducers/infoReducer";
+import { logout } from "@/lib/redux/reducers/userReducer";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { RecommendProfileButton } from "@/lib/supabase/RecommendProfileButton";
@@ -67,15 +68,19 @@ export default function Index() {
           });
       };
       load();
-      dispatch(
-        setOptions([
-          {
-            icon: "home",
-            onPress: () => router.push("/"),
-            title: "Főoldal",
-          },
-        ]),
-      );
+      if (myProfile)
+        dispatch(
+          setOptions([
+            {
+              icon: "exit-run",
+              onPress: () => {
+                dispatch(logout());
+                router.navigate("/");
+              },
+              title: "Kijelentkezés",
+            },
+          ]),
+        );
       return () => {
         setShowRecommendsModal(false);
       };
@@ -179,21 +184,8 @@ export default function Index() {
                 </>
               )}
             </View>
-            <TabsProvider
-              defaultIndex={0}
-              // onChangeIndex={handleChangeIndex} optional
-            >
-              <Tabs
-              // uppercase={false} // true/false | default=true (on material v2) | labels are uppercase
-              // showTextLabel={false} // true/false | default=false (KEEP PROVIDING LABEL WE USE IT AS KEY INTERNALLY + SCREEN READERS)
-              // iconPosition // leading, top | default=leading
-              // style={{ backgroundColor:'#fff' }} // works the same as AppBar in react-native-paper
-              // dark={false} // works the same as AppBar in react-native-paper
-              // theme={} // works the same as AppBar in react-native-paper
-              // mode="scrollable" // fixed, scrollable | default=fixed
-              // showLeadingSpace={true} //  (default=true) show leading space in scrollable tabs inside the header
-              // disableSwipe={false} // (default=false) disable swipe to left/right gestures
-              >
+            <TabsProvider defaultIndex={0}>
+              <Tabs>
                 <TabScreen label="Bizniszek" icon="briefcase">
                   <MyBuzinesses uid={uid} myProfile={myProfile} />
                 </TabScreen>

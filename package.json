@@ -33,8 +33,10 @@
     "axios": "^1.7.2",
     "buffer": "^6.0.3",
     "expo": "~51.0.34",
+    "expo-auth-session": "~5.5.2",
     "expo-clipboard": "~6.0.3",
     "expo-constants": "~16.0.2",
+    "expo-crypto": "~13.0.2",
     "expo-dev-client": "~4.0.27",
     "expo-font": "~12.0.7",
     "expo-image": "~1.13.0",
@@ -56,7 +58,7 @@
     "react-native-image-modal": "^3.0.11",
     "react-native-maps": "1.14.0",
     "react-native-open-maps": "^0.4.3",
-    "react-native-pager-view": "^6.3.0",
+    "react-native-pager-view": "^6.4.1",
     "react-native-paper": "^5.12.3",
     "react-native-paper-dropdown": "^2.3.1",
     "react-native-paper-tabs": "^0.10.4",
@@ -70,9 +72,7 @@
     "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
     "resize-observer-polyfill": "^1.5.1",
-    "wkx": "^0.5.0",
-    "expo-auth-session": "~5.5.2",
-    "expo-crypto": "~13.0.2"
+    "wkx": "^0.5.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

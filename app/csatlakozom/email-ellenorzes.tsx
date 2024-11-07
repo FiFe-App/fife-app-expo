@@ -28,8 +28,6 @@ export default function Index() {
   const dispatch = useDispatch();
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   const { "#": hash } = useLocalSearchParams<{ "#": string }>();
-  console.log(hash);
-
   const token_data = hash
     ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
     : null;

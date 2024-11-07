@@ -3,7 +3,7 @@ import { Image, ImageContentFit } from "expo-image";
 import { useEffect, useState } from "react";
 import { ImageStyle, StyleProp, StyleSheet, View } from "react-native";
 import ImageModal from "react-native-image-modal";
-import { ActivityIndicator } from "react-native-paper";
+import { ActivityIndicator, Icon, Text } from "react-native-paper";
 
 interface ProfileImageProps {
   uid: string;
@@ -23,6 +23,7 @@ const ProfileImage = ({
   modal = false,
 }: ProfileImageProps) => {
   const [source, setSource] = useState("");
+  const [error, setError] = useState<null | string>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,6 +40,7 @@ const ProfileImage = ({
     getImage()
       .then(({ data, error }) => {
         if (!error && data) setSource(data);
+        if (error) setError(error);
       })
       .finally(() => {
         setLoading(false);
@@ -47,29 +49,37 @@ const ProfileImage = ({
 
   return (
     <View>
-      {!modal ? (
-        <Image
-          source={source}
-          style={style}
-          cachePolicy="memory-disk"
-          contentFit={resizeMode}
-          onLoadEnd={() => setLoading(false)}
-          onError={() => setLoading(false)}
-        />
-      ) : (
-        <ImageModal
-          resizeMode="cover"
-          modalImageResizeMode="contain"
-          overlayBackgroundColor="#00000088"
-          style={style}
-          source={{ uri: source }}
-        />
-      )}
+      {source &&
+        (!modal ? (
+          <Image
+            source={source}
+            style={style}
+            cachePolicy="memory-disk"
+            contentFit={resizeMode}
+            onLoadEnd={() => setLoading(false)}
+            onError={() => setLoading(false)}
+          />
+        ) : (
+          <ImageModal
+            resizeMode="cover"
+            modalImageResizeMode="contain"
+            overlayBackgroundColor="#00000088"
+            style={style}
+            source={{ uri: source }}
+          />
+        ))}
       {(loading || propLoading) && (
         <ActivityIndicator
           style={[styles.activityIndicator, { width: "100%", height: "100%" }]}
           animating={loading || propLoading}
         />
+      )}
+      {error && !source && (
+        <View
+          style={[style, { alignItems: "center", justifyContent: "center" }]}
+        >
+          <Icon source="emoticon-cool" size={50} />
+        </View>
       )}
     </View>
   );
