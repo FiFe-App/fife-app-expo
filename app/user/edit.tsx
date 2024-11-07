@@ -85,6 +85,7 @@ export default function Index() {
             title: "Mentés",
             icon: "check",
             onPress: save,
+            disabled: !profile.full_name,
           },
         ]),
       );

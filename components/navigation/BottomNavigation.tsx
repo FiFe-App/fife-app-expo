@@ -17,7 +17,9 @@ const BottomNavigation = () => {
               source={bizniszActive ? "briefcase" : "briefcase-outline"}
               size={24}
             />
-            <ThemedText>Biznisz</ThemedText>
+            <ThemedText type={bizniszActive ? "defaultSemiBold" : "default"}>
+              Biznisz
+            </ThemedText>
           </View>
         </TouchableRipple>
       </Link>
@@ -28,7 +30,9 @@ const BottomNavigation = () => {
               source={profilActive ? "account" : "account-outline"}
               size={24}
             />
-            <ThemedText>Profil</ThemedText>
+            <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
+              Profil
+            </ThemedText>
           </View>
         </TouchableRipple>
       </Link>
