@@ -6,7 +6,14 @@ import { BuzinessItemInterface } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { Link, router } from "expo-router";
 import { GestureResponderEvent, StyleSheet, View } from "react-native";
-import { Card, Chip, Icon, IconButton, Text } from "react-native-paper";
+import {
+  Card,
+  Chip,
+  Icon,
+  IconButton,
+  Surface,
+  Text,
+} from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -58,7 +65,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
 
   return (
     <Link href={{ pathname: "/biznisz/[id]", params: { id: id } }} asChild>
-      <Card style={styles.container}>
+      <Surface style={styles.container} elevation={1}>
         <View style={{ flexDirection: "row" }}>
           <View style={{ flex: 1 }}>
             <Text style={{}}>{categories?.[0]}</Text>
@@ -111,7 +118,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
             <IconButton icon="delete-circle" onPress={showDelete} />
           </View>
         )}
-      </Card>
+      </Surface>
     </Link>
   );
 };

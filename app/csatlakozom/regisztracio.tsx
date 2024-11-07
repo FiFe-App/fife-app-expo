@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import {
   setName,
   setUserData,
@@ -8,13 +9,22 @@ import {
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
+import { DarkTheme } from "@react-navigation/native";
 import { User } from "@supabase/supabase-js";
 import { makeRedirectUri } from "expo-auth-session";
 import { Redirect, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
-import { Button, Divider, Text, TextInput } from "react-native-paper";
+import {
+  Button,
+  DefaultTheme,
+  Divider,
+  MD3LightTheme,
+  Text,
+  TextInput,
+} from "react-native-paper";
+import { lightBlueA100 } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
 import { useDispatch, useSelector } from "react-redux";
 
 AppState.addEventListener("change", (state) => {
@@ -27,10 +37,15 @@ AppState.addEventListener("change", (state) => {
 
 export default function Index() {
   const dispatch = useDispatch();
+  const color = useThemeColor(
+    { light: DarkTheme.colors.text, dark: "black" },
+    "text",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const disabledSubmit = password.length < 6;
 
   const { uid, name }: UserState = useSelector(
     (state: RootState) => state.user,
@@ -66,12 +81,9 @@ export default function Index() {
       dispatch(sliceLogin(profile?.id));
       dispatch(setName(profile?.full_name));
       dispatch(setUserData({ ...userData, ...profile }));
+      router.navigate("/csatlakozom/elso-lepesek");
     }
   };
-
-  useEffect(() => {
-    if (uid) router.navigate("/csatlakozom/elso-lepesek");
-  }, [uid]);
 
   WebBrowser.maybeCompleteAuthSession(); // required for web only
   const redirectTo = makeRedirectUri();
@@ -125,8 +137,16 @@ export default function Index() {
           placeholder="Jelszó"
           secureTextEntry
         />
-        <Button mode="contained-tonal" loading={loading} onPress={createUser}>
-          <Text>Regisztrálok</Text>
+        <Button
+          mode="contained"
+          loading={loading}
+          onPress={createUser}
+          disabled={disabledSubmit}
+          textColor={color}
+        >
+          <ThemedText lightColor={"white"} darkColor="black">
+            Regisztrálok
+          </ThemedText>
         </Button>
         <Text style={{ color: "red" }}>{error}</Text>
       </View>

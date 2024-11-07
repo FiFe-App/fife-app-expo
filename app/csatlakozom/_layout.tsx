@@ -1,7 +1,10 @@
 import { ThemedView } from "@/components/ThemedView";
+import { RootState } from "@/lib/redux/store";
+import { UserState } from "@/lib/redux/store.type";
 import {
   Href,
   Link,
+  Redirect,
   Stack,
   useGlobalSearchParams,
   usePathname,
@@ -9,8 +12,10 @@ import {
 import { View } from "react-native";
 import Dots from "react-native-dots-pagination";
 import { Button, MD3DarkTheme } from "react-native-paper";
+import { useSelector } from "react-redux";
 
 export default function RootLayout() {
+  const { uid }: UserState = useSelector((state: RootState) => state.user);
   const pages: Href<string>[] = [
     "/csatlakozom/",
     "/csatlakozom/iranyelvek",
@@ -30,6 +35,8 @@ export default function RootLayout() {
 
   const prev: Href<string> = pages[current - 1 || 0] || "";
   const next: Href<string> = pages[current + 1 || 0] || "";
+
+  if (uid && path === "/csatlakozom") return <Redirect href="/user" />;
 
   return (
     <>
