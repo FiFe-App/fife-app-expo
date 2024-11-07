@@ -36,7 +36,7 @@ export default function RootLayout() {
   const prev: Href<string> = pages[current - 1 || 0] || "";
   const next: Href<string> = pages[current + 1 || 0] || "";
 
-  if (uid) return <Redirect href="/user" />;
+  if (uid && path === "/csatlakozom") return <Redirect href="/user" />;
 
   return (
     <>

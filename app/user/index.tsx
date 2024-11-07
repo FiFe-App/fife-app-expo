@@ -5,11 +5,16 @@ import { Redirect } from "expo-router";
 import { useSelector } from "react-redux";
 
 export default function Page() {
-  const { uid }: UserState = useSelector((state: RootState) => state.user);
+  const { uid, name }: UserState = useSelector(
+    (state: RootState) => state.user,
+  );
 
   return (
     <ThemedView style={{ flex: 1 }}>
-      {uid && <Redirect href={{ pathname: "/user/[uid]", params: { uid } }} />}
+      {!name && <Redirect href={{ pathname: "/user/edit" }} />}
+      {uid && !!name && (
+        <Redirect href={{ pathname: "/user/[uid]", params: { uid } }} />
+      )}
     </ThemedView>
   );
 }
