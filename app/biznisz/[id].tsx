@@ -20,7 +20,7 @@ import {
   useNavigation,
 } from "expo-router";
 import { useCallback, useState } from "react";
-import { View } from "react-native";
+import { ScrollView, useWindowDimensions, View } from "react-native";
 import openMap from "react-native-open-maps";
 import {
   ActivityIndicator,
@@ -109,169 +109,172 @@ export default function Index() {
 
   return (
     <ThemedView style={{ flex: 1 }}>
-      {!data && <ActivityIndicator />}
-      {!!id && !!data && (
-        <>
-          <View style={{ flexDirection: "row" }}>
-            <Link
-              asChild
-              style={{ flex: 1, padding: 20 }}
-              href={{ pathname: "/user/[uid]", params: { uid: data.author } }}
-            >
-              <TouchableRipple>
-                <Text style={{ textAlign: "center" }}>
-                  {data.authorName} biznisze
+      <ScrollView contentContainerStyle={{ flex: 1 }}>
+        {!data && <ActivityIndicator />}
+        {!!id && !!data && (
+          <>
+            <View style={{ flexDirection: "row" }}>
+              <Link
+                asChild
+                style={{ flex: 1, padding: 20 }}
+                href={{ pathname: "/user/[uid]", params: { uid: data.author } }}
+              >
+                <TouchableRipple>
+                  <Text style={{ textAlign: "center" }}>
+                    {data.authorName} biznisze
+                  </Text>
+                </TouchableRipple>
+              </Link>
+              <TouchableRipple
+                style={{ flex: 1 }}
+                onPress={
+                  recommendations.length
+                    ? () => setShowRecommendsModal(true)
+                    : undefined
+                }
+              >
+                <Text style={{ flex: 1, textAlign: "center", padding: 20 }}>
+                  {recommendations.length} ajánlás
                 </Text>
               </TouchableRipple>
-            </Link>
-            <TouchableRipple
-              style={{ flex: 1 }}
-              onPress={
-                recommendations.length
-                  ? () => setShowRecommendsModal(true)
-                  : undefined
-              }
+            </View>
+            <View
+              style={{
+                flexWrap: "wrap",
+                flexDirection: "row",
+                gap: 4,
+                padding: 10,
+              }}
             >
-              <Text style={{ flex: 1, textAlign: "center", padding: 20 }}>
-                {recommendations.length} ajánlás
-              </Text>
-            </TouchableRipple>
-          </View>
-
-          <View
-            style={{
-              flexWrap: "wrap",
-              flexDirection: "row",
-              gap: 4,
-              padding: 10,
-            }}
-          >
-            {categories?.slice(1).map((e, i) => {
-              if (e.trim())
-                return (
-                  <Chip
-                    key={"category" + i}
-                    textStyle={{ margin: 4 }}
-                    onPress={() => {
-                      dispatch(storeBuzinessSearchParams({ text: e }));
-                      router.navigate({
-                        pathname: "/biznisz",
-                      });
-                    }}
-                  >
-                    <Text>{e}</Text>
-                  </Chip>
-                );
-            })}
-          </View>
-          <View style={{ padding: 10 }}>
-            <Text>{data?.description}</Text>
-          </View>
-          <View style={{ flexDirection: "row", gap: 4, padding: 4 }}>
-            <Button style={{ flex: 1 }} mode="contained" onPress={onPimary}>
-              {myBuziness ? "Szerkesztés" : "Írok neki!"}
-            </Button>
-            {!myBuziness && (
-              <RecommendBuzinessButton
-                buzinessId={id}
-                recommended={iRecommended}
-                setRecommended={(recommendedByMe) => {
-                  if (myUid) {
-                    if (recommendedByMe)
-                      setRecommendations([...recommendations, myUid]);
-                    else
-                      setRecommendations(
-                        recommendations.filter((uid) => uid !== myUid),
-                      );
-                  }
-                }}
-              />
-            )}
-          </View>
-          <ContactList uid={data.author} />
-          <TabsProvider defaultIndex={0}>
-            <Tabs>
-              <TabScreen label="Helyzete" icon="map-marker">
-                <>
-                  <MapView
-                    options={{
-                      mapTypeControl: false,
-                      fullscreenControl: false,
-                      streetViewControl: false,
-                      zoomControl: false,
-                    }}
-                    style={{ width: "100%", height: "100%" }}
-                    initialCamera={{
-                      altitude: 10,
-                      center: location || {
-                        latitude: 47.4979,
-                        longitude: 19.0402,
-                      },
-                      heading: 0,
-                      pitch: 0,
-                      zoom: 12,
-                    }}
-                    provider="google"
-                    googleMapsApiKey={
-                      process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+              {categories?.slice(1).map((e, i) => {
+                if (e.trim())
+                  return (
+                    <Chip
+                      key={"category" + i}
+                      textStyle={{ margin: 4 }}
+                      onPress={() => {
+                        dispatch(storeBuzinessSearchParams({ text: e }));
+                        router.navigate({
+                          pathname: "/biznisz",
+                        });
+                      }}
+                    >
+                      <Text>{e}</Text>
+                    </Chip>
+                  );
+              })}
+            </View>
+            <View style={{ padding: 10 }}>
+              <Text>{data?.description}</Text>
+            </View>
+            <View style={{ flexDirection: "row", gap: 4, padding: 4 }}>
+              <Button style={{ flex: 1 }} mode="contained" onPress={onPimary}>
+                {myBuziness ? "Szerkesztés" : "Írok neki!"}
+              </Button>
+              {!myBuziness && (
+                <RecommendBuzinessButton
+                  buzinessId={id}
+                  recommended={iRecommended}
+                  setRecommended={(recommendedByMe) => {
+                    if (myUid) {
+                      if (recommendedByMe)
+                        setRecommendations([...recommendations, myUid]);
+                      else
+                        setRecommendations(
+                          recommendations.filter((uid) => uid !== myUid),
+                        );
                     }
-                    pitchEnabled={false}
-                    rotateEnabled={false}
-                    toolbarEnabled={false}
-                  >
-                    {location && <Marker coordinate={location} />}
-                    {myLocation && (
-                      <Marker
-                        centerOffset={{ x: 10, y: 10 }}
-                        coordinate={myLocation?.coords}
-                        style={{
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <MyLocationIcon style={{ width: 20, height: 20 }} />
-                      </Marker>
-                    )}
-                  </MapView>
-                  {location && (
-                    <IconButton
-                      icon="directions"
-                      mode="contained"
-                      onPress={() =>
-                        openMap({
-                          latitude: location.latitude,
-                          longitude: location.longitude,
-                          navigate: true,
-                          start: "My Location",
-                          travelType: "public_transport",
-                          end: location.latitude + "," + location.longitude,
-                        })
-                      }
-                      style={{ right: 5, bottom: 5, position: "absolute" }}
-                    />
-                  )}
-                </>
-              </TabScreen>
-              <TabScreen label="Vélemények" icon="comment-text">
-                <Comments
-                  path={"buziness/" + id}
-                  placeholder="Mondd el a véleményed"
+                  }}
                 />
-              </TabScreen>
-            </Tabs>
-          </TabsProvider>
-        </>
-      )}
-      {!!title && (
-        <Portal>
-          <BuzinessRecommendationsModal
-            show={showRecommendsModal}
-            setShow={setShowRecommendsModal}
-            id={id}
-            name={title}
-          />
-        </Portal>
-      )}
+              )}
+            </View>
+            <TabsProvider defaultIndex={0}>
+              <Tabs showTextLabel={width > 400}>
+                <TabScreen label="Helyzete" icon="map-marker">
+                  <>
+                    <MapView
+                      options={{
+                        mapTypeControl: false,
+                        fullscreenControl: false,
+                        streetViewControl: false,
+                        zoomControl: false,
+                      }}
+                      style={{ width: "100%", height: "100%" }}
+                      initialCamera={{
+                        altitude: 10,
+                        center: location || {
+                          latitude: 47.4979,
+                          longitude: 19.0402,
+                        },
+                        heading: 0,
+                        pitch: 0,
+                        zoom: 12,
+                      }}
+                      provider="google"
+                      googleMapsApiKey={
+                        process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+                      }
+                      pitchEnabled={false}
+                      rotateEnabled={false}
+                      toolbarEnabled={false}
+                    >
+                      {location && <Marker coordinate={location} />}
+                      {myLocation && (
+                        <Marker
+                          centerOffset={{ x: 10, y: 10 }}
+                          coordinate={myLocation?.coords}
+                          style={{
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <MyLocationIcon style={{ width: 20, height: 20 }} />
+                        </Marker>
+                      )}
+                    </MapView>
+                    {location && (
+                      <IconButton
+                        icon="directions"
+                        mode="contained"
+                        onPress={() =>
+                          openMap({
+                            latitude: location.latitude,
+                            longitude: location.longitude,
+                            navigate: true,
+                            start: "My Location",
+                            travelType: "public_transport",
+                            end: location.latitude + "," + location.longitude,
+                          })
+                        }
+                        style={{ right: 5, bottom: 5, position: "absolute" }}
+                      />
+                    )}
+                  </>
+                </TabScreen>
+                <TabScreen label="Elérhetőségek" icon="contacts">
+                  <ContactList uid={data.author} />
+                </TabScreen>
+                <TabScreen label="Vélemények" icon="comment-text">
+                  <Comments
+                    path={"buziness/" + id}
+                    placeholder="Mondd el a véleményed"
+                  />
+                </TabScreen>
+              </Tabs>
+            </TabsProvider>
+          </>
+        )}
+        {!!title && (
+          <Portal>
+            <BuzinessRecommendationsModal
+              show={showRecommendsModal}
+              setShow={setShowRecommendsModal}
+              id={id}
+              name={title}
+            />
+          </Portal>
+        )}
+      </ScrollView>
     </ThemedView>
   );
 }

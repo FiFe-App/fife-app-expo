@@ -27,36 +27,39 @@ const TagInput = ({
   value,
 }: TagInputType) => {
   const list = (value || "")
-    .split(" ")
+    .split(" $ ")
     .slice(0, -1)
     .filter((e) => e.length);
-  const text = (value || "").split(" ").slice(-1)[0].trim();
+  const text = (value || "").split(" $ ").slice(-1)[0];
+
+  console.log(list);
+  console.log(text);
 
   const edit = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
     if (e.nativeEvent.key === "Backspace" && text === "") {
       e.preventDefault();
-      onChange(toString([...list]).trim());
+      onChange(toString([...list]));
     }
   };
   const onSubmit = (
     e: NativeSyntheticEvent<TextInputSubmitEditingEventData>,
   ) => {
-    onChange(toString([...list, text + " "]));
+    onChange(toString([...list, text + " $ "]));
     e.preventDefault();
     e.currentTarget.focus();
   };
   const onBlur = () => {
     if (text.length) {
-      onChange(toString([...list, text, " "]));
+      onChange(toString([...list, text, " $ "]));
     }
   };
   const onChangeText = (e: string) => {
     console.log("change", e);
-    onChange((toString(list) + " " + e).trimStart());
+    onChange(toString(list) + " $ " + e);
   };
 
   const toString = (arr: string[]): string => {
-    return arr.reduce((partialSum, a) => partialSum + " " + a, "");
+    return arr.reduce((partialSum, a) => partialSum + " $ " + a, "");
   };
 
   const TagList = () => (
@@ -74,7 +77,9 @@ const TagInput = ({
               <Text>{e}</Text>
               <Pressable
                 onPress={() => {
-                  onChange(toString(list.filter((el, ind) => ind !== i)) + " ");
+                  onChange(
+                    toString(list.filter((el, ind) => ind !== i)) + " $ ",
+                  );
                 }}
               >
                 <View style={{ paddingHorizontal: 8 }}>
