@@ -36,12 +36,11 @@ import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
   const { id: paramId } = useGlobalSearchParams();
+  const { width } = useWindowDimensions();
   const dispatch = useDispatch();
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
-
-  const { width } = useWindowDimensions();
   const id: number = Number(paramId);
   const [data, setData] = useState<BuzinessItemInterface | undefined>();
   const [recommendations, setRecommendations] = useState<string[]>([]);
