@@ -1,14 +1,20 @@
+import { ThemedView } from "@/components/ThemedView";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { Redirect } from "expo-router";
 import { useSelector } from "react-redux";
 
 export default function Page() {
-  const { uid }: UserState = useSelector((state: RootState) => state.user);
+  const { uid, name }: UserState = useSelector(
+    (state: RootState) => state.user,
+  );
 
-  if (uid) {
-    return <Redirect href={"/user/" + uid} />;
-  }
-
-  return <Redirect href={"/" + uid} />;
+  return (
+    <ThemedView style={{ flex: 1 }}>
+      {!name && <Redirect href={{ pathname: "/user/edit" }} />}
+      {uid && !!name && (
+        <Redirect href={{ pathname: "/user/[uid]", params: { uid } }} />
+      )}
+    </ThemedView>
+  );
 }
