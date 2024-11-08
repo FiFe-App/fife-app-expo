@@ -41,6 +41,7 @@ export default function Index() {
     (state: RootState) => state.user,
   );
 
+  const { width } = useWindowDimensions();
   const id: number = Number(paramId);
   const [data, setData] = useState<BuzinessItemInterface | undefined>();
   const [recommendations, setRecommendations] = useState<string[]>([]);

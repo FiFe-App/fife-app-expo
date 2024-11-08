@@ -4,7 +4,7 @@ import { containerStyle } from "@/components/styles";
 import TagInput from "@/components/TagInput";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
-import { setOptions, updateOption } from "@/lib/redux/reducers/infoReducer";
+import { setOptions } from "@/lib/redux/reducers/infoReducer";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
