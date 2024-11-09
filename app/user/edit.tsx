@@ -189,7 +189,6 @@ export default function Index() {
           disabled={loading}
           onChangeText={(t) => setProfile({ ...profile, full_name: t })}
         />
-        <ContactList uid={myUid} edit />
       </ThemedView>
     );
 }

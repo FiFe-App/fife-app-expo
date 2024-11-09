@@ -5,6 +5,10 @@ import MyBuzinesses from "@/components/user/MyBuzinesses";
 import RecommendationsModal from "@/components/user/RecommendationsModal";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
+import {
+  clearBuziness,
+  clearBuzinessSearchParams,
+} from "@/lib/redux/reducers/buzinessReducer";
 import { setOptions } from "@/lib/redux/reducers/infoReducer";
 import { logout } from "@/lib/redux/reducers/userReducer";
 import { RootState } from "@/lib/redux/store";
@@ -75,6 +79,8 @@ export default function Index() {
               icon: "exit-run",
               onPress: () => {
                 dispatch(logout());
+                dispatch(clearBuziness());
+                dispatch(clearBuzinessSearchParams());
                 router.navigate("/");
               },
               title: "Kijelentkezés",
@@ -128,12 +134,7 @@ export default function Index() {
                       }}
                     >
                       <Text>{recommendations.length}</Text>
-                      <Text>
-                        Pajtás
-                        {!!recommendations &&
-                          recommendations.length > 1 &&
-                          "ok"}
-                      </Text>
+                      <Text>Pajtás</Text>
                     </View>
                   </TouchableRipple>
                   {data?.created_at && (
@@ -190,7 +191,7 @@ export default function Index() {
                   <MyBuzinesses uid={uid} myProfile={myProfile} />
                 </TabScreen>
                 <TabScreen label="Elérhetőségek" icon="email-multiple">
-                  <ContactList uid={uid} />
+                  <ContactList uid={uid} edit={myProfile} />
                 </TabScreen>
               </Tabs>
             </TabsProvider>

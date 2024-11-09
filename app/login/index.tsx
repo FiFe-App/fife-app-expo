@@ -1,6 +1,5 @@
 import { ThemedView } from "@/components/ThemedView";
 import {
-  logout,
   setName,
   setUserData,
   login as sliceLogin,
@@ -12,7 +11,7 @@ import { User } from "@supabase/auth-js";
 import { Link, Redirect, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
-import { Button, Text, TextInput } from "react-native-paper";
+import { Button, Divider, Text, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 import { makeRedirectUri } from "expo-auth-session";
@@ -30,6 +29,7 @@ export default function Index() {
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const { "#": hash } = useLocalSearchParams<{ "#": string }>();
@@ -52,10 +52,9 @@ export default function Index() {
           if (data.user) getUserData(data.user);
         });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const { uid, name }: UserState = useSelector(
-    (state: RootState) => state.user,
-  );
+  const { uid }: UserState = useSelector((state: RootState) => state.user);
 
   async function signInWithEmail() {
     setLoading(true);
@@ -112,11 +111,11 @@ export default function Index() {
   };
 
   const getUserData = async (userData: User) => {
-    const { data: profile, error: pError } = await supabase
+    const { data: profile } = await supabase
       .from("profiles")
       .select()
       .eq("id", userData.id)
-      .single();
+      .maybeSingle();
     if (error) {
       console.log(error);
     }
@@ -132,7 +131,7 @@ export default function Index() {
   if (!uid)
     return (
       <ThemedView style={{ flex: 1 }}>
-        <View style={{ maxWidth: 400, width: "100%", gap: 8, margin: "auto" }}>
+        <View style={{ maxWidth: 300, width: "100%", gap: 8, margin: "auto" }}>
           <Button onPress={autoLogin} mode="contained">
             Próba felhasználó
           </Button>
@@ -152,20 +151,31 @@ export default function Index() {
           >
             Google bejelentkezés
           </Button>
-          <TextInput
-            onChangeText={setEmail}
-            value={email}
-            placeholder="Email"
-          />
+          <Divider style={{ marginVertical: 16 }} />
+          <TextInput onChangeText={setEmail} value={email} label="Email" />
           <TextInput
             onChangeText={setPassword}
             value={password}
-            placeholder="Jelszó"
-            secureTextEntry
+            label="Jelszó"
+            secureTextEntry={!showPassword}
+            right={
+              <TextInput.Icon
+                icon={showPassword ? "eye" : "eye-off"}
+                onPress={() => setShowPassword(!showPassword)}
+              />
+            }
           />
-          <Button onPress={signInWithEmail} loading={loading}>
-            <Text>Bejelentkezés</Text>
+          <Button onPress={signInWithEmail} loading={loading} mode="contained">
+            Bejelentkezés
           </Button>
+          <View style={{ flexDirection: "row" }}>
+            <Link href="/csatlakozom" asChild>
+              <Button>Még nincs fiókom</Button>
+            </Link>
+            <Link href="/elfelejtett-jelszo" asChild>
+              <Button>Elfelejtettem a jelszavam</Button>
+            </Link>
+          </View>
           <Text style={{ color: "red" }}>{error}</Text>
         </View>
       </ThemedView>

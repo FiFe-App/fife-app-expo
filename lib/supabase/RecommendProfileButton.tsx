@@ -32,8 +32,8 @@ export const RecommendProfileButton = ({
     if (recommended) {
       dispatch(
         addDialog({
-          title: "Mégsem ajánlod?",
-          text: "Törölheted az ajánlásod, ha meggondoltad magad.",
+          title: "Mégsem a pajtásod?",
+          text: "Törölheted a pajtásod, ha meggondoltad magad.",
           onSubmit: () => {
             setLoading(true);
             trackPromise(

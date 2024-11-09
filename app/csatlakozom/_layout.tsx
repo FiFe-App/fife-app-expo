@@ -9,7 +9,7 @@ import {
   useGlobalSearchParams,
   usePathname,
 } from "expo-router";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import Dots from "react-native-dots-pagination";
 import { Button, MD3DarkTheme } from "react-native-paper";
 import { useSelector } from "react-redux";
@@ -20,6 +20,7 @@ export default function RootLayout() {
     "/csatlakozom/",
     "/csatlakozom/iranyelvek",
     "/csatlakozom/regisztracio",
+    "/csatlakozom/email-regisztracio",
     "/csatlakozom/elso-lepesek",
   ];
   const canGoNext = !!useGlobalSearchParams().canGoNext;
@@ -40,12 +41,24 @@ export default function RootLayout() {
 
   return (
     <>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="iranyelvek" options={{ headerShown: false }} />
-        <Stack.Screen name="regisztracio" options={{ title: "Regisztráció" }} />
-        <Stack.Screen name="elso-lepesek" options={{ title: "Regisztráció" }} />
-      </Stack>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flex: 1 }}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="iranyelvek" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="regisztracio"
+            options={{ title: "Regisztráció" }}
+          />
+          <Stack.Screen
+            name="email-regisztracio"
+            options={{ title: "Regisztráció" }}
+          />
+          <Stack.Screen
+            name="elso-lepesek"
+            options={{ title: "Regisztráció" }}
+          />
+        </Stack>
+      </ScrollView>
       <ThemedView style={{ alignItems: "center", width: "100%" }}>
         <Dots
           length={pages.length}
@@ -63,20 +76,24 @@ export default function RootLayout() {
         >
           <Link href={current === 0 ? "/" : prev} asChild>
             <Button
-              disabled={(!prev || current === 3) && current !== 0}
+              disabled={
+                (!prev || path === "/csatlakozom/elso-lepesek") && current !== 0
+              }
               mode="contained"
             >
               Vissza
             </Button>
           </Link>
-          <Link href={next} asChild>
-            <Button
-              disabled={!next || (current === 1 && !canGoNext) || current === 2}
-              mode="contained"
-            >
-              Tovább
-            </Button>
-          </Link>
+          {!(
+            !next ||
+            (path === "/csatlakozom/iranyelvek" && !canGoNext) ||
+            path === "/csatlakozom/regisztracio" ||
+            path === "/csatlakozom/email-regisztracio"
+          ) && (
+            <Link href={next} asChild>
+              <Button mode="contained">Tovább</Button>
+            </Link>
+          )}
         </View>
       </ThemedView>
     </>

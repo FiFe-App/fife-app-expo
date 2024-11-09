@@ -10,7 +10,7 @@ import infoReducer from "./reducers/infoReducer";
 export const rootReducer = combineReducers({
   comments: commentsReducer,
   user: userReducer,
-  buziness: buzinessReducer,
+  buziness: buzinessReducer.reducer,
   info: infoReducer,
 });
 

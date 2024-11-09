@@ -271,7 +271,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             padding: 4,
           }}
         >
-          {comments.length &&
+          {!!comments.length &&
             comments.map((comment, ind) => {
               return (
                 <Card key={"comment" + ind} contentStyle={{}}>
