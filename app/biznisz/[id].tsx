@@ -1,10 +1,12 @@
 import MyLocationIcon from "@/assets/images/myLocationIcon";
+import ErrorScreen from "@/components/ErrorScreen";
+import ProfileImage from "@/components/ProfileImage";
+import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { ContactList } from "@/components/buziness/ContactList";
 import Comments from "@/components/comments/Comments";
 import { LatLng, MapView, Marker } from "@/components/mapView/mapView";
 import BuzinessRecommendationsModal from "@/components/user/BuzinessRecommendationsModal";
-import RecommendationsModal from "@/components/user/RecommendationsModal";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import { storeBuzinessSearchParams } from "@/lib/redux/reducers/buzinessReducer";
@@ -12,6 +14,7 @@ import { RootState } from "@/lib/redux/store";
 import { BuzinessItemInterface, UserState } from "@/lib/redux/store.type";
 import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
 import { supabase } from "@/lib/supabase/supabase";
+import { PostgrestError } from "@supabase/supabase-js";
 import {
   Link,
   router,
@@ -20,7 +23,7 @@ import {
   useNavigation,
 } from "expo-router";
 import { useCallback, useState } from "react";
-import { ScrollView, useWindowDimensions, View } from "react-native";
+import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 import openMap from "react-native-open-maps";
 import {
   ActivityIndicator,
@@ -43,20 +46,25 @@ export default function Index() {
   );
   const id: number = Number(paramId);
   const [data, setData] = useState<BuzinessItemInterface | undefined>();
+  const [error, setError] = useState<null | Partial<PostgrestError>>(null);
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
   const iRecommended = recommendations.includes(myUid || "");
   const location: LatLng | null = data
     ? { latitude: data.lat, longitude: data.long }
     : null;
-  const categories = data?.title?.split(" ");
+  const categories = data?.title?.split(" $ ");
   const title = categories?.[0];
+  const [isLondDescription, setIsLondDescription] = useState<
+    undefined | boolean
+  >();
   const myBuziness = myUid === data?.author;
-  const { myLocation, error } = useMyLocation();
+  const { myLocation } = useMyLocation();
   const nav = useNavigation();
 
   useFocusEffect(
     useCallback(() => {
+      setIsLondDescription(undefined);
       const load = () => {
         setShowRecommendsModal(false);
 
@@ -67,33 +75,41 @@ export default function Index() {
             "*, profiles ( full_name, avatar_url ), buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(author)",
           )
           .eq("id", id)
+          .maybeSingle()
           .then(({ data, error }) => {
             if (error) {
               console.log(error);
+              setError(error);
               return;
             }
             console.log(data);
 
             if (data) {
-              const cords = locationToCoords(String(data[0].location));
-              nav.setOptions({ title: data[0]?.title.split(" ")[0] });
+              const cords = locationToCoords(String(data.location));
+              nav.setOptions({ title: data?.title.split(" ")[0] });
               setData({
-                ...data[0],
+                ...data,
                 lat: cords[1],
                 long: cords[0],
                 distance: 0,
-                authorName: data[0]?.profiles?.full_name || "???",
+                authorName: data?.profiles?.full_name || "???",
+                avatarUrl: data?.profiles?.avatar_url,
               });
               setRecommendations(
-                data[0].buzinessRecommendations.map((pr) => pr.author),
+                data.buzinessRecommendations.map((pr) => pr.author),
               );
-            }
+            } else
+              setError({
+                code: "jaj basszus",
+                message: "Ez a biznisz nem található",
+              });
           });
       };
       load();
       return () => {
         setShowRecommendsModal(false);
       };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]),
   );
 
@@ -110,7 +126,7 @@ export default function Index() {
   return (
     <ThemedView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ flex: 1 }}>
-        {!data && <ActivityIndicator />}
+        {!data && !error && <ActivityIndicator />}
         {!!id && !!data && (
           <>
             <View style={{ flexDirection: "row" }}>
@@ -120,20 +136,38 @@ export default function Index() {
                 href={{ pathname: "/user/[uid]", params: { uid: data.author } }}
               >
                 <TouchableRipple>
-                  <Text style={{ textAlign: "center" }}>
-                    {data.authorName} biznisze
-                  </Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 16,
+                    }}
+                  >
+                    <ProfileImage
+                      uid={data.author}
+                      style={{ width: 30, height: 30, borderRadius: 16 }}
+                      avatar_url={data.avatarUrl}
+                    />
+                    <Text style={{ textAlign: "center" }}>
+                      {data.authorName} biznisze
+                    </Text>
+                  </View>
                 </TouchableRipple>
               </Link>
               <TouchableRipple
-                style={{ flex: 1 }}
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
                 onPress={
                   recommendations.length
                     ? () => setShowRecommendsModal(true)
                     : undefined
                 }
               >
-                <Text style={{ flex: 1, textAlign: "center", padding: 20 }}>
+                <Text style={{ textAlign: "center" }}>
                   {recommendations.length} ajánlás
                 </Text>
               </TouchableRipple>
@@ -164,11 +198,13 @@ export default function Index() {
                   );
               })}
             </View>
-            <View style={{ padding: 10 }}>
-              <Text>{data?.description}</Text>
-            </View>
             <View style={{ flexDirection: "row", gap: 4, padding: 4 }}>
-              <Button style={{ flex: 1 }} mode="contained" onPress={onPimary}>
+              <Button
+                style={{ flex: 1 }}
+                mode="contained"
+                onPress={onPimary}
+                disabled={!myBuziness}
+              >
                 {myBuziness ? "Szerkesztés" : "Írok neki!"}
               </Button>
               {!myBuziness && (
@@ -188,17 +224,42 @@ export default function Index() {
                 />
               )}
             </View>
+            <View style={{ padding: 10 }}>
+              <Text
+                numberOfLines={isLondDescription ? 10 : undefined}
+                onLayout={(e) => {
+                  console.log("EVENT", e.nativeEvent);
+                  if (isLondDescription === undefined)
+                    setIsLondDescription(e.nativeEvent.layout.height > 165);
+                }}
+              >
+                {data?.description}
+              </Text>
+              {isLondDescription !== undefined && (
+                <Button
+                  style={{ alignSelf: "flex-start", margin: 8, padding: 8 }}
+                  onPress={() => {
+                    console.log("asd");
+                    setIsLondDescription(!isLondDescription);
+                  }}
+                >
+                  {isLondDescription ? "Több" : "Kevesebb"}
+                </Button>
+              )}
+            </View>
             <TabsProvider defaultIndex={0}>
               <Tabs showTextLabel={width > 400}>
                 <TabScreen label="Helyzete" icon="map-marker">
-                  <>
+                  <View style={{ minHeight: 400 }}>
                     <MapView
+                      // @ts-ignore
                       options={{
                         mapTypeControl: false,
                         fullscreenControl: false,
                         streetViewControl: false,
                         zoomControl: false,
                       }}
+                      asd=""
                       style={{ width: "100%", height: "100%" }}
                       initialCamera={{
                         altitude: 10,
@@ -249,7 +310,7 @@ export default function Index() {
                         style={{ right: 5, bottom: 5, position: "absolute" }}
                       />
                     )}
-                  </>
+                  </View>
                 </TabScreen>
                 <TabScreen label="Elérhetőségek" icon="contacts">
                   <ContactList uid={data.author} />
@@ -273,6 +334,13 @@ export default function Index() {
               name={title}
             />
           </Portal>
+        )}
+        {!!error && (
+          <ErrorScreen
+            icon="briefcase-off"
+            title={error.code}
+            text={error.message}
+          />
         )}
       </ScrollView>
     </ThemedView>

@@ -20,6 +20,7 @@ import {
   ActivityIndicator,
   Button,
   Card,
+  Divider,
   Drawer,
   Icon,
   IconButton,
@@ -54,7 +55,7 @@ export default function Index() {
         }
       : undefined,
   );
-  const canSearch = (!!circle || !!myLocation) && searchText;
+  const canSearch = !!circle || !!myLocation;
 
   const [tutorialVisible, setTutorialVisible] = useState(true);
   useEffect(() => {
@@ -114,6 +115,7 @@ export default function Index() {
   );
 
   const loadNext = () => {
+    dispatch(loadBuzinesses([{ id: -1 }]));
     dispatch(storeBuzinessSearchParams({ skip: skip + take }));
     load(skip + take);
   };
@@ -160,9 +162,10 @@ export default function Index() {
               mode="outlined"
               outlineStyle={{ borderRadius: 1000 }}
               style={{ marginTop: 4 }}
-              onChangeText={(text) =>
-                dispatch(storeBuzinessSearchParams({ text }))
-              }
+              onChangeText={(text) => {
+                if (!text.includes("$"))
+                  dispatch(storeBuzinessSearchParams({ text }));
+              }}
               onSubmitEditing={search}
               placeholder="Keress a bizniszek közt..."
               right={
@@ -219,16 +222,28 @@ export default function Index() {
             marginTop: 8,
           }}
         >
-          {buzinesses.map((buzinessItem) => (
-            <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
-          ))}
+          {buzinesses.map((buzinessItem) =>
+            buzinessItem.id === -1 ? (
+              <Divider
+                key={Math.random() * 100000 + 100000 + "div"}
+                style={{ marginVertical: 16 }}
+              />
+            ) : (
+              <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
+            ),
+          )}
           {!circle && !myLocation && !buzinesses.length && (
             <ThemedText style={{ alignSelf: "center" }}>
               Válassz környéket a kereséshez
             </ThemedText>
           )}
           {loading ? (
-            (circle || myLocation) && <ActivityIndicator />
+            (circle || myLocation) &&
+            searchText && (
+              <View style={{ flex: 1 }}>
+                <ActivityIndicator />
+              </View>
+            )
           ) : !!buzinesses.length && canLoadMore ? (
             <Button onPress={loadNext} style={{ alignSelf: "center" }}>
               További bizniszek

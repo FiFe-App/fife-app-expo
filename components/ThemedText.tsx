@@ -1,11 +1,19 @@
 import { Text, type TextProps, StyleSheet } from "react-native";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { MD3DarkTheme } from "react-native-paper";
 
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
-  type?: "default" | "title" | "defaultSemiBold" | "subtitle" | "link" | "none";
+  type?:
+    | "default"
+    | "title"
+    | "defaultSemiBold"
+    | "subtitle"
+    | "link"
+    | "label"
+    | "none";
 };
 
 export function ThemedText({
@@ -26,6 +34,7 @@ export function ThemedText({
         type === "defaultSemiBold" ? styles.defaultSemiBold : undefined,
         type === "subtitle" ? styles.subtitle : undefined,
         type === "link" ? styles.link : undefined,
+        type === "label" ? styles.label : undefined,
         type === "none" && undefined,
         style,
       ]}
@@ -47,7 +56,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "bold",
-    textAlign: "center",
     lineHeight: 32,
   },
   subtitle: {
@@ -56,6 +64,10 @@ const styles = StyleSheet.create({
   link: {
     lineHeight: 30,
     fontSize: 16,
-    color: "#0a7ea4",
+    color: MD3DarkTheme.colors.primary,
+  },
+  label: {
+    fontSize: 14,
+    color: MD3DarkTheme.colors.onSurfaceDisabled,
   },
 });

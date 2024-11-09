@@ -52,7 +52,7 @@ export default function BuzinessEditScreen({
   const [tutorialVisible, setTutorialVisible] = useState(true);
   const [locationTutorialVisible, setLocationTutorialVisible] = useState(false);
 
-  const title = newBuziness.title.trim() + " " + categories?.trim();
+  const title = newBuziness.title + " $ " + categories;
   const navigation = useNavigation();
 
   const canSubmit = !!(

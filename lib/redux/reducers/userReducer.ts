@@ -1,5 +1,7 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { UserState } from "../store.type";
+import buzinessReducer from "./buzinessReducer";
+import { store } from "../store";
 
 const initialState: UserState = {
   uid: undefined,
@@ -23,7 +25,7 @@ const userReducer = createSlice({
     },
     logout: (state): UserState => {
       console.log("logged out", state);
-      return userReducer.getInitialState();
+      return userReducer;
     },
     setUserData: (state, { payload }) => {
       state.userData = payload;

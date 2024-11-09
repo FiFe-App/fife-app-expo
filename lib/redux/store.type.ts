@@ -37,6 +37,7 @@ export interface BuzinessItemInterface {
   description: string;
   author: string;
   authorName?: string;
+  avatarUrl?: string | null;
   buzinessRecommendations: { author: string }[];
 }
 export interface BuzinessSearchParams {

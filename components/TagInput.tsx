@@ -44,18 +44,18 @@ const TagInput = ({
   const onSubmit = (
     e: NativeSyntheticEvent<TextInputSubmitEditingEventData>,
   ) => {
-    onChange(toString([...list, text + " $ "]));
+    onChange(toString([...list, text.trim() + " $ "]));
     e.preventDefault();
     e.currentTarget.focus();
   };
   const onBlur = () => {
     if (text.length) {
-      onChange(toString([...list, text, " $ "]));
+      onChange(toString([...list, text.trim(), " $ "]));
     }
   };
   const onChangeText = (e: string) => {
     console.log("change", e);
-    onChange(toString(list) + " $ " + e);
+    if (!e.includes("$")) onChange(toString(list) + " $ " + e);
   };
 
   const toString = (arr: string[]): string => {

@@ -1,8 +1,8 @@
-import Smiley from "@/components/Smiley";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { RootState } from "@/lib/redux/store";
 import { UserState } from "@/lib/redux/store.type";
+import { Image } from "expo-image";
 import { Link, Redirect } from "expo-router";
 import { View } from "react-native";
 import { Button, Text } from "react-native-paper";
@@ -27,21 +27,27 @@ export default function Index() {
       <View
         style={{
           flex: 1,
-          justifyContent: "center",
           alignItems: "center",
           gap: 24,
+          marginTop: 36,
         }}
       >
-        <Smiley style={{ width: 100, height: 100 }} />
-        <Text style={{ zIndex: -1, textAlign: "center" }}>
-          <ThemedText style={{}}>Üdvözöllek a FiFe Appban!</ThemedText>
+        <Text style={{ zIndex: -1, textAlign: "left" }}>
+          <ThemedText type="title">Üdvözöllek a FiFe Appban!</ThemedText>
           {"\n"}
-          <ThemedText>Ez egy szerető budapesti közösség.</ThemedText>
         </Text>
+        <Image
+          source={require("../assets/images/img-prof.png")}
+          style={{ width: "95%", aspectRatio: 1, padding: 5 }}
+        />
+        <ThemedText style={{ textAlign: "center" }}>
+          Ez egy szerető budapesti közösség, ahol megoszthatod, hogy mihez
+          értesz.
+        </ThemedText>
       </View>
       <View style={{ margin: 8, gap: 16, marginBottom: 24, zIndex: -1 }}>
         <Link href="/csatlakozom" asChild>
-          <Button mode="contained">Mi is ez?</Button>
+          <Button mode="contained">Csatlakozom</Button>
         </Link>
         <Link href="/login" asChild>
           <Button mode="contained-tonal">Bejelentkezés</Button>
