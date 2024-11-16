@@ -1,15 +1,12 @@
-import Icon from "@expo/vector-icons/Ionicons";
 import React from "react";
 import {
   NativeSyntheticEvent,
-  Pressable,
   StyleProp,
   TextInputKeyPressEventData,
   TextInputSubmitEditingEventData,
-  View,
   ViewStyle,
 } from "react-native";
-import { Card, Text, TextInput } from "react-native-paper";
+import { Card, Chip, TextInput } from "react-native-paper";
 
 interface TagInputType {
   onChange: React.SetStateAction<any>;
@@ -27,36 +24,39 @@ const TagInput = ({
   value,
 }: TagInputType) => {
   const list = (value || "")
-    .split(" ")
+    .split(" $ ")
     .slice(0, -1)
     .filter((e) => e.length);
-  const text = (value || "").split(" ").slice(-1)[0].trim();
+  const text = (value || "").split(" $ ").slice(-1)[0];
+
+  console.log(list);
+  console.log(text);
 
   const edit = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
     if (e.nativeEvent.key === "Backspace" && text === "") {
       e.preventDefault();
-      onChange(toString([...list]).trim());
+      onChange(toString([...list]));
     }
   };
   const onSubmit = (
     e: NativeSyntheticEvent<TextInputSubmitEditingEventData>,
   ) => {
-    onChange(toString([...list, text + " "]));
+    onChange(toString([...list, text.trim() + " $ "]));
     e.preventDefault();
     e.currentTarget.focus();
   };
   const onBlur = () => {
     if (text.length) {
-      onChange(toString([...list, text, " "]));
+      onChange(toString([...list, text.trim(), " $ "]));
     }
   };
   const onChangeText = (e: string) => {
     console.log("change", e);
-    onChange((toString(list) + " " + e).trimStart());
+    if (!e.includes("$")) onChange(toString(list) + " $ " + e);
   };
 
   const toString = (arr: string[]): string => {
-    return arr.reduce((partialSum, a) => partialSum + " " + a, "");
+    return arr.reduce((partialSum, a) => partialSum + " $ " + a, "");
   };
 
   const TagList = () => (
@@ -64,24 +64,16 @@ const TagInput = ({
       {list.map((e, i) => {
         if (e.length)
           return (
-            <Card
+            <Chip
               key={"tags" + i}
               style={{ margin: 4 }}
-              contentStyle={{
-                flexDirection: "row",
+              onClose={() => {
+                onChange(toString(list.filter((el, ind) => ind !== i)) + " $ ");
               }}
+              closeIcon="close"
             >
-              <Text>{e}</Text>
-              <Pressable
-                onPress={() => {
-                  onChange(toString(list.filter((el, ind) => ind !== i)) + " ");
-                }}
-              >
-                <View style={{ paddingHorizontal: 8 }}>
-                  <Icon name="close" size={17} />
-                </View>
-              </Pressable>
-            </Card>
+              {e}
+            </Chip>
           );
       })}
     </>

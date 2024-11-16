@@ -35,7 +35,8 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
         ? toDistanceText(distance / 1000) + " távolságra"
         : "közel hozzád"
       : "";
-  const categories = title?.split(" ");
+
+  const categories = title?.split(" $ ");
 
   const showDelete = (e: GestureResponderEvent) => {
     e.stopPropagation();
@@ -100,7 +101,9 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
             </View>
           </View>
         </View>
-        <Text style={{ flex: 1 }}>{description}</Text>
+        <Text numberOfLines={4} ellipsizeMode="tail" style={{ flex: 1 }}>
+          {description}
+        </Text>
 
         {showOptions && myBuziness && (
           <View style={{ flexDirection: "row" }}>

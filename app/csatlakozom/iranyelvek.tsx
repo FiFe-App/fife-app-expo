@@ -45,9 +45,9 @@ const Register = () => {
   return (
     <ThemedView style={{ flex: 1, padding: 8 }}>
       <View style={{ flex: 1, justifyContent: "center" }}>
-        <ThemedText type="subtitle" style={{ marginBottom: 16 }}>
+        <ThemedText type="title" style={{ marginBottom: 16 }}>
           Ha szeretnél csatlakozni ehhez a közösséghez, be kell tartanod az
-          irányelveinket.:)
+          irányelveinket:
         </ThemedText>
         <FlatList
           data={[

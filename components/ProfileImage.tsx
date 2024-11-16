@@ -28,7 +28,10 @@ const ProfileImage = ({
 
   useEffect(() => {
     const getImage = async () => {
-      if (!uid || !avatar_url) return { error: "No path" };
+      if (!uid || !avatar_url) {
+        setError("No path");
+        return { error: "No path" };
+      }
       if (avatar_url.startsWith("http")) return { data: avatar_url };
       const { data } = supabase.storage
         .from("avatars")
@@ -49,7 +52,7 @@ const ProfileImage = ({
 
   return (
     <View>
-      {source &&
+      {!!source &&
         (!modal ? (
           <Image
             source={source}
