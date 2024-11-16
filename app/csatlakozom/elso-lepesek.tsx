@@ -34,7 +34,7 @@ export default function Index() {
     ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
     : null;
   const [error, setError] = useState<string | null>(
-    uid || token_data ? null : "Ejj hát ide nem kellett volna tévedned!",
+    uid || token_data ? null : "A regisztráció nem sikerült.",
   );
 
   useEffect(() => {
@@ -86,9 +86,9 @@ export default function Index() {
         <>
           <Icon source="emoticon-sad" size={100} />
           <ThemedText type="title">Valami hiba történt!</ThemedText>
-          <ThemedText type="title">{error}</ThemedText>
+          <ThemedText>{error}</ThemedText>
           <Link asChild href="/csatlakozom/regisztracio">
-            <Button mode="contained">Újra próbálom</Button>
+            <Button mode="contained">Megpróbálom újra</Button>
           </Link>
         </>
       )}

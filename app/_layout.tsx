@@ -48,7 +48,7 @@ export default function RootLayout() {
               options={{ title: "Profil Szerkesztése" }}
             />
             <Stack.Screen
-              name="contact-edit"
+              name="contact-edit/index"
               options={{ title: "Új Elérhetőség" }}
             />
             <Stack.Screen

@@ -68,4 +68,4 @@ export const {
   clearBuzinessSearchParams,
 } = buzinessReducer.actions;
 
-export default buzinessReducer.reducer;
+export default buzinessReducer;
