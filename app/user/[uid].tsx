@@ -8,11 +8,11 @@ import elapsedTime from "@/lib/functions/elapsedTime";
 import {
   clearBuziness,
   clearBuzinessSearchParams,
-} from "@/lib/redux/reducers/buzinessReducer";
-import { setOptions } from "@/lib/redux/reducers/infoReducer";
-import { logout } from "@/lib/redux/reducers/userReducer";
-import { RootState } from "@/lib/redux/store";
-import { UserState } from "@/lib/redux/store.type";
+} from "@/redux/reducers/buzinessReducer";
+import { setOptions } from "@/redux/reducers/infoReducer";
+import { logout } from "@/redux/reducers/userReducer";
+import { RootState } from "@/redux/store";
+import { TutorialState, UserState } from "@/redux/store.type";
 import { RecommendProfileButton } from "@/lib/supabase/RecommendProfileButton";
 import { supabase } from "@/lib/supabase/supabase";
 import {
@@ -35,6 +35,9 @@ export default function Index() {
   const uid: string = String(paramUid);
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
+  );
+  const { functions }: TutorialState = useSelector(
+    (state: RootState) => state.tutorial,
   );
 
   const dispatch = useDispatch();
@@ -187,10 +190,22 @@ export default function Index() {
             </View>
             <TabsProvider defaultIndex={0}>
               <Tabs>
-                <TabScreen label="Bizniszek" icon="briefcase">
+                <TabScreen
+                  label="Bizniszek"
+                  badge={
+                    functions.includes("buzinessProfile") ? "ÚJ" : undefined
+                  }
+                  icon="briefcase"
+                >
                   <MyBuzinesses uid={uid} myProfile={myProfile} />
                 </TabScreen>
-                <TabScreen label="Elérhetőségek" icon="email-multiple">
+                <TabScreen
+                  label="Elérhetőségek"
+                  badge={
+                    functions.includes("contactsProfile") ? "ÚJ" : undefined
+                  }
+                  icon="email-multiple"
+                >
                   <ContactList uid={uid} edit={myProfile} />
                 </TabScreen>
               </Tabs>

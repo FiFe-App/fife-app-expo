@@ -3,9 +3,9 @@ import {
   setName,
   setUserData,
   login as sliceLogin,
-} from "@/lib/redux/reducers/userReducer";
-import { RootState } from "@/lib/redux/store";
-import { UserState } from "@/lib/redux/store.type";
+} from "@/redux/reducers/userReducer";
+import { RootState } from "@/redux/store";
+import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
 import { Link, Redirect, useLocalSearchParams } from "expo-router";

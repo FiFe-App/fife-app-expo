@@ -1,6 +1,6 @@
 import { ThemedView } from "@/components/ThemedView";
-import { RootState } from "@/lib/redux/store";
-import { UserState } from "@/lib/redux/store.type";
+import { RootState } from "@/redux/store";
+import { UserState } from "@/redux/store.type";
 import {
   Href,
   Link,

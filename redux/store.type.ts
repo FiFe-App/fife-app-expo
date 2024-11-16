@@ -77,3 +77,7 @@ export interface InfoState {
   options: OptionProps[];
   snacks: SnackProps[];
 }
+
+export interface TutorialState {
+  functions: string[];
+}

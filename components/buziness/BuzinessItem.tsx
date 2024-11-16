@@ -1,8 +1,8 @@
 import toDistanceText from "@/lib/functions/distanceText";
 import wrapper from "@/lib/functions/wrapper";
-import { addDialog } from "@/lib/redux/reducers/infoReducer";
-import { RootState } from "@/lib/redux/store";
-import { BuzinessItemInterface } from "@/lib/redux/store.type";
+import { addDialog } from "@/redux/reducers/infoReducer";
+import { RootState } from "@/redux/store";
+import { BuzinessItemInterface } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { Link, router } from "expo-router";
 import { GestureResponderEvent, StyleSheet, View } from "react-native";

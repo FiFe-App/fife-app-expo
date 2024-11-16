@@ -10,8 +10,8 @@ import {
   loadBuzinesses,
   storeBuzinessSearchParams,
   storeBuzinesses,
-} from "@/lib/redux/reducers/buzinessReducer";
-import { RootState } from "@/lib/redux/store";
+} from "@/redux/reducers/buzinessReducer";
+import { RootState } from "@/redux/store";
 import { supabase } from "@/lib/supabase/supabase";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -149,12 +149,9 @@ export default function Index() {
           )}
           <Card.Content>
             {tutorialVisible && (
-              <Text style={{ textAlign: "justify" }}>
-                A te bizniszeid azon hobbijaid, képességeid vagy szakmáid
-                listája, amelyeket meg szeretnél osztani másokkal is. {"\n"}Ha
-                te mondjuk úgy gyártod a sütiket, mint egy gép, és ezt felveszed
-                a bizniszeid közé, ezen az oldalon megtalálható leszel a süti
-                kulcsszóval.
+              <Text style={{ textAlign: "justify", marginBottom: 16 }}>
+                Itt kereshetsz a hozzád vagy megadott környékhez közeli
+                bizniszek között.
               </Text>
             )}
             <TextInput

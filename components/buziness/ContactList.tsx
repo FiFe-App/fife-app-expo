@@ -8,8 +8,11 @@ import { FAB, List } from "react-native-paper";
 import { ThemedView } from "../ThemedView";
 import * as Clipboard from "expo-clipboard";
 import { useDispatch } from "react-redux";
-import { addSnack } from "@/lib/redux/reducers/infoReducer";
-import { StyleSheet } from "react-native";
+import { addSnack } from "@/redux/reducers/infoReducer";
+import { StyleSheet, View } from "react-native";
+import { Image } from "expo-image";
+import { ThemedText } from "../ThemedText";
+import { viewFunction } from "@/redux/reducers/tutorialReducer";
 
 export interface ContactListProps {
   uid: string;
@@ -32,6 +35,7 @@ export function ContactList({ uid, edit }: ContactListProps) {
           });
       };
       loadContacts();
+      dispatch(viewFunction("contactsProfile"));
       return () => {};
     }, [uid]),
   );
@@ -39,34 +43,48 @@ export function ContactList({ uid, edit }: ContactListProps) {
     <>
       <ThemedView>
         <List.Section>
-          {contacts.map((contact) => (
-            <Link
-              key={contact.id}
-              asChild
-              href={getLinkForContact(contact, edit)}
-              onLongPress={() => {
-                Clipboard.setStringAsync(contact.data).then((res) => {
-                  dispatch(
-                    addSnack({
-                      title: "Vágólapra másolva!",
-                    }),
-                  );
-                });
-              }}
-            >
-              <List.Item
-                title={contact.title || contact.data}
-                left={(props) => (
-                  <List.Icon {...props} icon={typeToIcon(contact.type)} />
-                )}
-                right={
-                  edit
-                    ? () => <List.Icon icon="pencil" style={{ height: 24 }} />
-                    : undefined
-                }
+          {!!contacts.length ? (
+            contacts.map((contact) => (
+              <Link
+                key={contact.id}
+                asChild
+                href={getLinkForContact(contact, edit)}
+                onLongPress={() => {
+                  Clipboard.setStringAsync(contact.data).then((res) => {
+                    dispatch(
+                      addSnack({
+                        title: "Vágólapra másolva!",
+                      }),
+                    );
+                  });
+                }}
+              >
+                <List.Item
+                  title={contact.title || contact.data}
+                  left={(props) => (
+                    <List.Icon {...props} icon={typeToIcon(contact.type)} />
+                  )}
+                  right={
+                    edit
+                      ? () => <List.Icon icon="pencil" style={{ height: 24 }} />
+                      : undefined
+                  }
+                />
+              </Link>
+            ))
+          ) : (
+            <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
+              <Image
+                source={require("../../assets/images/img-map.png")}
+                style={{ height: 200, width: 200 }}
               />
-            </Link>
-          ))}
+              <ThemedText type="subtitle">
+                Itt fognak megjelenni az elérhetőségeid, hogy könnyebben
+                elérjenek.
+              </ThemedText>
+              <ThemedText type="subtitle"></ThemedText>
+            </View>
+          )}
         </List.Section>
       </ThemedView>
 

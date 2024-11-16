@@ -1,8 +1,8 @@
 import {
   popSnack,
   popDialog as slicepopDialog,
-} from "@/lib/redux/reducers/infoReducer";
-import { RootState } from "@/lib/redux/store";
+} from "@/redux/reducers/infoReducer";
+import { RootState } from "@/redux/store";
 import { StyleSheet } from "react-native";
 import {
   Button,
