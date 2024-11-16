@@ -18,6 +18,9 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
 
   const [loading, setLoading] = useState(true);
   useEffect(() => {
+    console.log("UID", uid);
+
+    if (uid === undefined) return;
     setLoading(true);
     supabase
       .from("buziness")

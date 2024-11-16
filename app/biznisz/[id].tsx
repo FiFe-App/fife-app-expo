@@ -55,7 +55,7 @@ export default function Index() {
     : null;
   const categories = data?.title?.split(" $ ");
   const title = categories?.[0];
-  const [isLondDescription, setIsLondDescription] = useState<
+  const [isLongDescription, setIsLongDescription] = useState<
     undefined | boolean
   >();
   const myBuziness = myUid === data?.author;
@@ -64,7 +64,7 @@ export default function Index() {
 
   useFocusEffect(
     useCallback(() => {
-      setIsLondDescription(undefined);
+      setIsLongDescription(undefined);
       const load = () => {
         setShowRecommendsModal(false);
 
@@ -132,7 +132,7 @@ export default function Index() {
             <View style={{ flexDirection: "row" }}>
               <Link
                 asChild
-                style={{ flex: 1, padding: 20 }}
+                style={{ flex: 1, padding: 8 }}
                 href={{ pathname: "/user/[uid]", params: { uid: data.author } }}
               >
                 <TouchableRipple>
@@ -141,12 +141,16 @@ export default function Index() {
                       flexDirection: "row",
                       alignItems: "center",
                       justifyContent: "center",
-                      gap: 16,
                     }}
                   >
                     <ProfileImage
                       uid={data.author}
-                      style={{ width: 30, height: 30, borderRadius: 16 }}
+                      style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: 0,
+                        margin: 4,
+                      }}
                       avatar_url={data.avatarUrl}
                     />
                     <Text style={{ textAlign: "center" }}>
@@ -193,7 +197,7 @@ export default function Index() {
                         });
                       }}
                     >
-                      <Text>{e}</Text>
+                      {e}
                     </Chip>
                   );
               })}
@@ -224,33 +228,32 @@ export default function Index() {
                 />
               )}
             </View>
-            <View style={{ padding: 10 }}>
+            <Pressable
+              style={{ padding: 10 }}
+              onPress={() => {
+                setIsLongDescription(!isLongDescription);
+              }}
+            >
               <Text
-                numberOfLines={isLondDescription ? 10 : undefined}
+                numberOfLines={isLongDescription ? 10 : undefined}
                 onLayout={(e) => {
-                  console.log("EVENT", e.nativeEvent);
-                  if (isLondDescription === undefined)
-                    setIsLondDescription(e.nativeEvent.layout.height > 165);
+                  if (
+                    isLongDescription === undefined &&
+                    e.nativeEvent.layout.height > 165
+                  )
+                    setIsLongDescription(e.nativeEvent.layout.height > 165);
                 }}
               >
                 {data?.description}
               </Text>
-              {isLondDescription !== undefined && (
-                <Button
-                  style={{ alignSelf: "flex-start", margin: 8, padding: 8 }}
-                  onPress={() => {
-                    console.log("asd");
-                    setIsLondDescription(!isLondDescription);
-                  }}
-                >
-                  {isLondDescription ? "Több" : "Kevesebb"}
-                </Button>
+              {isLongDescription !== undefined && (
+                <Text>{isLongDescription ? "Több" : ""}</Text>
               )}
-            </View>
+            </Pressable>
             <TabsProvider defaultIndex={0}>
               <Tabs showTextLabel={width > 400}>
                 <TabScreen label="Helyzete" icon="map-marker">
-                  <View style={{ minHeight: 400 }}>
+                  <View style={{ minHeight: 200, flex: 1 }}>
                     <MapView
                       // @ts-ignore
                       options={{
@@ -259,7 +262,6 @@ export default function Index() {
                         streetViewControl: false,
                         zoomControl: false,
                       }}
-                      asd=""
                       style={{ width: "100%", height: "100%" }}
                       initialCamera={{
                         altitude: 10,

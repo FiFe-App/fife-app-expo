@@ -1,15 +1,12 @@
-import Icon from "@expo/vector-icons/Ionicons";
 import React from "react";
 import {
   NativeSyntheticEvent,
-  Pressable,
   StyleProp,
   TextInputKeyPressEventData,
   TextInputSubmitEditingEventData,
-  View,
   ViewStyle,
 } from "react-native";
-import { Card, Text, TextInput } from "react-native-paper";
+import { Card, Chip, TextInput } from "react-native-paper";
 
 interface TagInputType {
   onChange: React.SetStateAction<any>;
@@ -67,26 +64,16 @@ const TagInput = ({
       {list.map((e, i) => {
         if (e.length)
           return (
-            <Card
+            <Chip
               key={"tags" + i}
               style={{ margin: 4 }}
-              contentStyle={{
-                flexDirection: "row",
+              onClose={() => {
+                onChange(toString(list.filter((el, ind) => ind !== i)) + " $ ");
               }}
+              closeIcon="close"
             >
-              <Text>{e}</Text>
-              <Pressable
-                onPress={() => {
-                  onChange(
-                    toString(list.filter((el, ind) => ind !== i)) + " $ ",
-                  );
-                }}
-              >
-                <View style={{ paddingHorizontal: 8 }}>
-                  <Icon name="close" size={17} />
-                </View>
-              </Pressable>
-            </Card>
+              {e}
+            </Chip>
           );
       })}
     </>
