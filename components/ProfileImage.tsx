@@ -52,7 +52,7 @@ const ProfileImage = ({
 
   return (
     <View>
-      {source &&
+      {!!source &&
         (!modal ? (
           <Image
             source={source}

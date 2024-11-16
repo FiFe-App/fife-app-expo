@@ -18,11 +18,13 @@ import { AppState, View } from "react-native";
 import {
   Button,
   Checkbox,
+  DefaultTheme,
   Divider,
   HelperText,
   Icon,
   MD3DarkTheme,
   TextInput,
+  useTheme,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -36,10 +38,9 @@ AppState.addEventListener("change", (state) => {
 
 export default function Index() {
   const dispatch = useDispatch();
-  const color = useThemeColor(
-    { light: DarkTheme.colors.text, dark: "black" },
-    "text",
-  );
+  const theme = useTheme();
+  console.log(theme);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordAgain, setPasswordAgain] = useState("");
@@ -91,12 +92,7 @@ export default function Index() {
   if (uid) return <Redirect href="/" />;
   return (
     <ThemedView style={{ flex: 1, padding: 16 }}>
-      <View style={{ justifyContent: "center", marginBottom: 16 }}>
-        <ThemedText type="title" style={{ textAlign: "left" }}>
-          Juhé!
-        </ThemedText>
-        <ThemedText>Már csak a fiókodat kell létrehozni:</ThemedText>
-      </View>
+      <View style={{ justifyContent: "center", marginBottom: 16 }}></View>
       <View
         style={{
           maxWidth: 400,
@@ -106,6 +102,10 @@ export default function Index() {
           justifyContent: "center",
         }}
       >
+        <ThemedText type="title" style={{ textAlign: "left" }}>
+          Juhé!
+        </ThemedText>
+        <ThemedText>Már csak a fiókodat kell létrehozni:</ThemedText>
         <TextInput onChangeText={setEmail} value={email} label="Email" />
         <TextInput
           onChangeText={setPassword}
@@ -123,11 +123,7 @@ export default function Index() {
           <View style={{ marginRight: 4, justifyContent: "center" }}>
             <Icon
               source={isPasswordWeak ? "check-circle-outline" : "check-circle"}
-              color={
-                isPasswordWeak
-                  ? MD3DarkTheme.colors.onSurfaceDisabled
-                  : MD3DarkTheme.colors.onSurfaceDisabled
-              }
+              color={theme.colors.onSurface}
               size={18}
             />
           </View>
@@ -172,7 +168,6 @@ export default function Index() {
           disabled={
             isPasswordWeak || password !== passwordAgain || !acceptConditions
           }
-          textColor={color}
         >
           Regisztrálok
         </Button>

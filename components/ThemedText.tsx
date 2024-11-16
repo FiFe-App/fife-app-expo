@@ -1,7 +1,7 @@
 import { Text, type TextProps, StyleSheet } from "react-native";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { MD3DarkTheme } from "react-native-paper";
+import { MD3DarkTheme, useTheme } from "react-native-paper";
 
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
@@ -23,18 +23,20 @@ export function ThemedText({
   type = "default",
   ...rest
 }: ThemedTextProps) {
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, "text");
+  const theme = useTheme();
 
   return (
     <Text
       style={[
-        { color },
+        { color: theme.colors.onBackground },
         type === "default" ? styles.default : undefined,
         type === "title" ? styles.title : undefined,
         type === "defaultSemiBold" ? styles.defaultSemiBold : undefined,
         type === "subtitle" ? styles.subtitle : undefined,
         type === "link" ? styles.link : undefined,
-        type === "label" ? styles.label : undefined,
+        type === "label"
+          ? { ...styles.label, color: theme.colors.onBackground }
+          : undefined,
         type === "none" && undefined,
         style,
       ]}
@@ -68,6 +70,5 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: MD3DarkTheme.colors.onSurfaceDisabled,
   },
 });
