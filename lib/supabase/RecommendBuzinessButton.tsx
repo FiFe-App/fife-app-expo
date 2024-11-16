@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Button } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../redux/store";
-import { UserState } from "../redux/store.type";
+import { RootState } from "@/redux/store";
+import { UserState } from "@/redux/store.type";
 import { supabase } from "./supabase";
-import { addDialog } from "../redux/reducers/infoReducer";
+import { addDialog } from "@/redux/reducers/infoReducer";
 import { trackPromise } from "react-promise-tracker";
 import wrapper from "../functions/wrapper";
 

@@ -1,7 +1,7 @@
 import InfoLayer from "@/components/InfoLayer";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
-import { clearOptions } from "@/lib/redux/reducers/infoReducer";
-import { persistor, RootState, store } from "@/lib/redux/store";
+import { clearOptions } from "@/redux/reducers/infoReducer";
+import { persistor, RootState, store } from "@/redux/store";
 import { NativeStackHeaderProps } from "@react-navigation/native-stack/lib/typescript/src/types";
 import {
   router,

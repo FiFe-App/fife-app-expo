@@ -3,8 +3,8 @@ import { ThemedView } from "@/components/ThemedView";
 import { Enums, Tables } from "@/database.types";
 import typeToIcon from "@/lib/functions/typeToIcon";
 import wrapper from "@/lib/functions/wrapper";
-import { addDialog, setOptions } from "@/lib/redux/reducers/infoReducer";
-import { RootState } from "@/lib/redux/store";
+import { addDialog, setOptions } from "@/redux/reducers/infoReducer";
+import { RootState } from "@/redux/store";
 import { supabase } from "@/lib/supabase/supabase";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
@@ -14,6 +14,7 @@ import {
   Divider,
   Headline,
   Icon,
+  List,
   MD3DarkTheme,
   Switch,
   Text,
@@ -26,6 +27,8 @@ import { useDispatch, useSelector } from "react-redux";
 import TutorialCard from "../TutorialCard";
 import typeToPlaceholder from "@/lib/functions/typeToPlaceholder";
 import typeToPrefix from "@/lib/functions/typeToPrefix";
+import typeToValueLabel from "@/lib/functions/typeToValueLabel";
+import edit from "@/app/user/edit";
 
 const types: {
   label: string;
@@ -55,7 +58,9 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
   const [error, setError] = useState<string | null>(null);
 
   const loadContacts = () => {
-    if (uid && id)
+    console.log(id);
+
+    if (uid && id && id !== "index")
       supabase
         .from("contacts")
         .select("*")
@@ -146,16 +151,12 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
         <>
           <TutorialCard title="Mi az az elérhetőség?">
             <Text>
-              Ezek olyan adatok, amik megjelennek a profilodon illetve a
-              bizniszeid oldalán.
+              Ez egy olyan adat, ami megjelenik a profilodon illetve a
+              bizniszeid oldalán. {"\n"}Ez alapján tudnak majd elérni mások.
             </Text>
-            <Text>Típus: Válassz egy típusú elérhetőséget</Text>
-            <Text>Név: Ez a felirat látszik majd másoknak</Text>
-            <Text>Érték: Maga az elérhetőséged</Text>
           </TutorialCard>
           <Dropdown
             label="Típus"
-            placeholder="Típus"
             options={types}
             value={contact?.type}
             CustomDropdownInput={({
@@ -218,20 +219,20 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
             }}
           />
           <TextInput
-            value={contact?.title || ""}
-            disabled={loading}
-            label="Kijelzett név"
-            onChangeText={(t) => setContact({ ...contact, title: t })}
-          />
-
-          <TextInput
-            label="Érték"
+            label={typeToValueLabel(contact?.type)}
             value={contact?.data}
-            disabled={loading}
+            disabled={loading || !contact.type}
             left={typeToPrefix(contact?.type)}
             placeholder={typeToPlaceholder(contact?.type)}
             onChangeText={(t) => setContact({ ...contact, data: t })}
           />
+          <TextInput
+            value={contact?.title || ""}
+            disabled={loading}
+            label="Név vagy címe (opcionális)"
+            onChangeText={(t) => setContact({ ...contact, title: t })}
+          />
+
           <TouchableRipple
             disabled={loading}
             onPressOut={(e) =>
@@ -239,7 +240,7 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
             }
           >
             <View style={{ flexDirection: "row", padding: 16 }}>
-              <Text style={{ flex: 1 }}>Látható legyen másoknak?</Text>
+              <Text style={{ flex: 1 }}>Publikus legyen?</Text>
               <Switch
                 style={{ marginHorizontal: 16 }}
                 disabled={loading}
@@ -247,6 +248,16 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
               />
             </View>
           </TouchableRipple>
+          <View style={{ padding: 16, gap: 8 }}>
+            <Text>Így fog megjelenni másoknak:</Text>
+            <List.Item
+              title={contact.title || contact.data}
+              onPress={() => {}}
+              left={(props) => (
+                <List.Icon {...props} icon={typeToIcon(contact.type)} />
+              )}
+            />
+          </View>
           <Button
             onPress={save}
             style={{ margin: 16 }}

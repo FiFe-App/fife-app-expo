@@ -5,9 +5,9 @@ import {
   clearComments,
   deleteComment as deleteCommentSlice,
   editComment,
-} from "@/lib/redux/reducers/commentsReducer";
-import { RootState } from "@/lib/redux/store";
-import { CommentsState, UserState } from "@/lib/redux/store.type";
+} from "@/redux/reducers/commentsReducer";
+import { RootState } from "@/redux/store";
+import { CommentsState, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router } from "expo-router";
@@ -33,7 +33,7 @@ import SupabaseImage from "../SupabaseImage";
 import UrlText from "./UrlText";
 import { Comment, CommentsProps } from "./comments.types";
 import { ThemedText } from "../ThemedText";
-import { addSnack } from "@/lib/redux/reducers/infoReducer";
+import { addSnack } from "@/redux/reducers/infoReducer";
 
 const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   const dispatch = useDispatch();
