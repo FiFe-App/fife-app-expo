@@ -23,10 +23,18 @@ import {
 } from "expo-router";
 import { useCallback, useState } from "react";
 import { View } from "react-native";
-import { Button, Portal, Text, TouchableRipple } from "react-native-paper";
+import {
+  Badge,
+  Button,
+  Portal,
+  Text,
+  TouchableRipple,
+} from "react-native-paper";
 import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 
 import { useDispatch, useSelector } from "react-redux";
+import globStyles from "@/constants/Styles";
+import { viewFunction } from "@/redux/reducers/tutorialReducer";
 
 type UserInfo = Tables<"profiles">;
 
@@ -123,11 +131,10 @@ export default function Index() {
                 <View style={{ flexDirection: "row", flex: 1 }}>
                   <TouchableRipple
                     style={{ flex: 1 }}
-                    onPress={
-                      recommendations.length
-                        ? () => setShowRecommendsModal(true)
-                        : undefined
-                    }
+                    onPress={() => {
+                      dispatch(viewFunction("friendsProfile"));
+                      setShowRecommendsModal(true);
+                    }}
                   >
                     <View
                       style={{
@@ -138,6 +145,9 @@ export default function Index() {
                     >
                       <Text>{recommendations.length}</Text>
                       <Text>Pajtás</Text>
+                      {functions.includes("friendsProfile") && (
+                        <Badge style={globStyles.badge}>ÚJ</Badge>
+                      )}
                     </View>
                   </TouchableRipple>
                   {data?.created_at && (
