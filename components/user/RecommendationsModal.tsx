@@ -63,40 +63,53 @@ const RecommendationsModal = ({ show, setShow, uid, name }: RMP) => {
           margin: 30,
         }}
       >
-        <ThemedText>{name} pajtásai:</ThemedText>
-        {list.map((rec, ind) => (
+        {!!list.length ? (
           <>
-            <Link
-              asChild
-              href={{
-                pathname: "/user/[uid]",
-                params: { uid: rec.author },
-              }}
-            >
-              <TouchableRipple>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    padding: 4,
-                    alignItems: "center",
+            <ThemedText>{name} pajtásai:</ThemedText>
+            {list.map((rec, ind) => (
+              <>
+                <Link
+                  asChild
+                  href={{
+                    pathname: "/user/[uid]",
+                    params: { uid: rec.author },
                   }}
                 >
-                  <ProfileImage
-                    uid={rec.author}
-                    avatar_url={rec.profiles?.avatar_url}
-                    style={{ width: 40, height: 40, marginRight: 16 }}
-                  />
-                  <View style={{ flex: 1, justifyContent: "center" }}>
-                    <Text>{rec.profiles?.full_name}</Text>
-                    <Text>{elapsedTime(rec.created_at)} jelölte pajtásnak</Text>
-                  </View>
-                  <IconButton icon="account" />
-                </View>
-              </TouchableRipple>
-            </Link>
-            {list.length > ind + 1 && <Divider />}
+                  <TouchableRipple>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        padding: 4,
+                        alignItems: "center",
+                      }}
+                    >
+                      <ProfileImage
+                        uid={rec.author}
+                        avatar_url={rec.profiles?.avatar_url}
+                        style={{ width: 40, height: 40, marginRight: 16 }}
+                      />
+                      <View style={{ flex: 1, justifyContent: "center" }}>
+                        <Text>{rec.profiles?.full_name}</Text>
+                        <Text>
+                          {elapsedTime(rec.created_at)} jelölte pajtásnak
+                        </Text>
+                      </View>
+                      <IconButton icon="account" />
+                    </View>
+                  </TouchableRipple>
+                </Link>
+                {list.length > ind + 1 && <Divider />}
+              </>
+            ))}
           </>
-        ))}
+        ) : (
+          <>
+            <ThemedText>A pajtások</ThemedText>
+            <Text>
+              Itt azok az emberek fognak megjelenni, akik mebíznak benned.
+            </Text>
+          </>
+        )}
       </ThemedView>
     </Modal>
   );
