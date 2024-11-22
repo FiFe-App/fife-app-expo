@@ -11,10 +11,9 @@ import {
   Text,
   TouchableRipple,
 } from "react-native-paper";
-import SupabaseImage from "../SupabaseImage";
+import ProfileImage from "../ProfileImage";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
-import ProfileImage from "../ProfileImage";
 
 interface RMP {
   show: boolean;
@@ -65,7 +64,7 @@ const RecommendationsModal = ({ show, setShow, uid, name }: RMP) => {
       >
         {!!list.length ? (
           <>
-            <ThemedText>{name} pajtásai:</ThemedText>
+            <ThemedText>{name}ban megbíznak őkô:</ThemedText>
             {list.map((rec, ind) => (
               <>
                 <Link
@@ -91,7 +90,7 @@ const RecommendationsModal = ({ show, setShow, uid, name }: RMP) => {
                       <View style={{ flex: 1, justifyContent: "center" }}>
                         <Text>{rec.profiles?.full_name}</Text>
                         <Text>
-                          {elapsedTime(rec.created_at)} jelölte pajtásnak
+                          {elapsedTime(rec.created_at)} óta támogatója
                         </Text>
                       </View>
                       <IconButton icon="account" />
@@ -104,9 +103,10 @@ const RecommendationsModal = ({ show, setShow, uid, name }: RMP) => {
           </>
         ) : (
           <>
-            <ThemedText>A pajtások</ThemedText>
+            <ThemedText>Támogatók</ThemedText>
             <Text>
-              Itt azok az emberek fognak megjelenni, akik mebíznak benned.
+              Itt azok az emberek fognak megjelenni, akik megbízhatónak jelöltek
+              téged.
             </Text>
           </>
         )}

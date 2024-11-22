@@ -12,6 +12,7 @@ export interface UserState {
     createdAt: Date;
     lastLoginAt: Date;
   } | null;
+  locationError: string | null;
 }
 export interface CommentsState {
   comments: Comment[];

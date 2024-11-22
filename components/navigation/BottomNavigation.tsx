@@ -1,10 +1,14 @@
 import { Link, useSegments } from "expo-router";
 import { StyleSheet, View } from "react-native";
-import { Icon, Surface, TouchableRipple } from "react-native-paper";
+import { Badge, Icon, Surface, TouchableRipple } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import globStyles from "@/constants/Styles";
 
 const BottomNavigation = () => {
   const segment = useSegments();
+  const { functions } = useSelector((state: RootState) => state.tutorial);
   const bizniszActive = segment[0]?.includes("biznisz");
   const profilActive = segment[0]?.includes("user");
 
@@ -14,12 +18,17 @@ const BottomNavigation = () => {
         <TouchableRipple style={styles.button}>
           <View style={{ alignItems: "center" }}>
             <Icon
-              source={bizniszActive ? "briefcase" : "briefcase-outline"}
-              size={24}
+              source={
+                bizniszActive ? "briefcase-search" : "briefcase-search-outline"
+              }
+              size={bizniszActive ? 30 : 24}
             />
             <ThemedText type={bizniszActive ? "defaultSemiBold" : "default"}>
               Biznisz
             </ThemedText>
+            {functions.includes("buzinessPage") && (
+              <Badge style={globStyles.badge}>ÚJ</Badge>
+            )}
           </View>
         </TouchableRipple>
       </Link>
@@ -28,7 +37,7 @@ const BottomNavigation = () => {
           <View style={{ alignItems: "center" }}>
             <Icon
               source={profilActive ? "account" : "account-outline"}
-              size={24}
+              size={profilActive ? 30 : 24}
             />
             <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
               Profil

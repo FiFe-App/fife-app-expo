@@ -3,18 +3,9 @@ import {
   popDialog as slicepopDialog,
 } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { StyleSheet } from "react-native";
-import {
-  Button,
-  Dialog,
-  Icon,
-  Portal,
-  Snackbar,
-  Text,
-} from "react-native-paper";
+import { Button, Dialog, Portal, Snackbar, Text } from "react-native-paper";
 import { usePromiseTracker } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
-import { ThemedText } from "./ThemedText";
 
 const InfoLayer = () => {
   const { dialogs, snacks } = useSelector((state: RootState) => state.info);

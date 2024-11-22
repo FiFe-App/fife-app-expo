@@ -4,7 +4,7 @@ import typeToIcon from "@/lib/functions/typeToIcon";
 import { supabase } from "@/lib/supabase/supabase";
 import { Link, router, useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { FAB, List } from "react-native-paper";
+import { ActivityIndicator, FAB, List } from "react-native-paper";
 import { ThemedView } from "../ThemedView";
 import * as Clipboard from "expo-clipboard";
 import { useDispatch } from "react-redux";
@@ -21,6 +21,7 @@ export interface ContactListProps {
 
 export function ContactList({ uid, edit }: ContactListProps) {
   const [contacts, setContacts] = useState<Tables<"contacts">[]>([]);
+  const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
 
   useFocusEffect(
@@ -32,59 +33,70 @@ export function ContactList({ uid, edit }: ContactListProps) {
           .eq("author", uid)
           .then((res) => {
             if (res.data) setContacts(res.data);
+            setLoading(false);
           });
       };
       loadContacts();
-      dispatch(viewFunction("contactsProfile"));
+      if (uid) dispatch(viewFunction({ key: "contactsProfile", uid }));
       return () => {};
     }, [uid]),
   );
   return (
     <>
-      <ThemedView>
+      <ThemedView style={{ flex: 1 }}>
+        {loading && (
+          <View
+            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          >
+            <ActivityIndicator />
+          </View>
+        )}
         <List.Section>
-          {!!contacts.length ? (
-            contacts.map((contact) => (
-              <Link
-                key={contact.id}
-                asChild
-                href={getLinkForContact(contact, edit)}
-                onLongPress={() => {
-                  Clipboard.setStringAsync(contact.data).then((res) => {
-                    dispatch(
-                      addSnack({
-                        title: "Vágólapra másolva!",
-                      }),
-                    );
-                  });
-                }}
-              >
-                <List.Item
-                  title={contact.title || contact.data}
-                  left={(props) => (
-                    <List.Icon {...props} icon={typeToIcon(contact.type)} />
-                  )}
-                  right={
-                    edit
-                      ? () => <List.Icon icon="pencil" style={{ height: 24 }} />
-                      : undefined
-                  }
+          {!loading &&
+            (!!contacts.length ? (
+              contacts.map((contact) => (
+                <Link
+                  key={contact.id}
+                  asChild
+                  href={getLinkForContact(contact, edit)}
+                  onLongPress={() => {
+                    Clipboard.setStringAsync(contact.data).then((res) => {
+                      dispatch(
+                        addSnack({
+                          title: "Vágólapra másolva!",
+                        }),
+                      );
+                    });
+                  }}
+                >
+                  <List.Item
+                    title={contact.title || contact.data}
+                    left={(props) => (
+                      <List.Icon {...props} icon={typeToIcon(contact.type)} />
+                    )}
+                    right={
+                      edit
+                        ? () => (
+                            <List.Icon icon="pencil" style={{ height: 24 }} />
+                          )
+                        : undefined
+                    }
+                  />
+                </Link>
+              ))
+            ) : (
+              <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
+                <Image
+                  source={require("../../assets/images/img-map.png")}
+                  style={{ height: 200, width: 200 }}
                 />
-              </Link>
-            ))
-          ) : (
-            <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
-              <Image
-                source={require("../../assets/images/img-map.png")}
-                style={{ height: 200, width: 200 }}
-              />
-              <ThemedText type="subtitle">
-                Itt fognak megjelenni az elérhetőségeid, hogy könnyebben
-                elérjenek.
-              </ThemedText>
-              <ThemedText type="subtitle"></ThemedText>
-            </View>
-          )}
+                <ThemedText type="subtitle">
+                  Itt fognak megjelenni az elérhetőségeid, hogy könnyebben
+                  elérjenek.
+                </ThemedText>
+                <ThemedText type="subtitle"></ThemedText>
+              </View>
+            ))}
         </List.Section>
       </ThemedView>
 

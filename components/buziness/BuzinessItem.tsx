@@ -1,19 +1,12 @@
 import toDistanceText from "@/lib/functions/distanceText";
 import wrapper from "@/lib/functions/wrapper";
+import { supabase } from "@/lib/supabase/supabase";
 import { addDialog } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { BuzinessItemInterface } from "@/redux/store.type";
-import { supabase } from "@/lib/supabase/supabase";
 import { Link, router } from "expo-router";
 import { GestureResponderEvent, StyleSheet, View } from "react-native";
-import {
-  Card,
-  Chip,
-  Icon,
-  IconButton,
-  Surface,
-  Text,
-} from "react-native-paper";
+import { Chip, Icon, IconButton, Surface, Text } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 

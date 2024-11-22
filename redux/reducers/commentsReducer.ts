@@ -1,4 +1,3 @@
-import { Tables } from "./../../../database.types";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { CommentsState } from "../store.type";
 import { Comment } from "@/components/comments/comments.types";
