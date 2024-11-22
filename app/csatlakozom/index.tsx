@@ -13,11 +13,6 @@ const Register = () => {
         >
           Ez egy online eszköz, ami a valóságban segít boldogulni.
         </ThemedText>
-        <View
-          style={{ alignItems: "center", justifyContent: "center", margin: 24 }}
-        >
-          <Smiley style={{ width: 100, height: 100 }} />
-        </View>
         <ThemedText style={{ marginHorizontal: 16 }}>
           Közösségi oldal, ahol a felhasználó van kontrollban. Összegyűjtjük a
           kedves embereket, hogy zavartalanul tudjanak kommunikálni, segíteni

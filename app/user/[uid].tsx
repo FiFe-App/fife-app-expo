@@ -34,7 +34,10 @@ import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 
 import { useDispatch, useSelector } from "react-redux";
 import globStyles from "@/constants/Styles";
-import { viewFunction } from "@/redux/reducers/tutorialReducer";
+import {
+  clearTutorialState,
+  viewFunction,
+} from "@/redux/reducers/tutorialReducer";
 
 type UserInfo = Tables<"profiles">;
 
@@ -91,6 +94,7 @@ export default function Index() {
               onPress: () => {
                 dispatch(logout());
                 dispatch(clearBuziness());
+                dispatch(clearTutorialState());
                 dispatch(clearBuzinessSearchParams());
                 router.navigate("/");
               },
@@ -132,7 +136,8 @@ export default function Index() {
                   <TouchableRipple
                     style={{ flex: 1 }}
                     onPress={() => {
-                      dispatch(viewFunction("friendsProfile"));
+                      if (uid)
+                        dispatch(viewFunction({ key: "friendsProfile", uid }));
                       setShowRecommendsModal(true);
                     }}
                   >
@@ -144,7 +149,7 @@ export default function Index() {
                       }}
                     >
                       <Text>{recommendations.length}</Text>
-                      <Text>Pajtás</Text>
+                      <Text>Támogatók</Text>
                       {functions.includes("friendsProfile") && (
                         <Badge style={globStyles.badge}>ÚJ</Badge>
                       )}
@@ -180,6 +185,7 @@ export default function Index() {
                 <>
                   <RecommendProfileButton
                     profileId={uid}
+                    style={{ flex: 1 }}
                     recommended={iRecommended}
                     setRecommended={(recommendedByMe) => {
                       if (myUid) {
@@ -192,9 +198,6 @@ export default function Index() {
                       }
                     }}
                   />
-                  <Button style={{ flex: 1 }} mode="contained-tonal" disabled>
-                    Üzenek neki
-                  </Button>
                 </>
               )}
             </View>

@@ -18,6 +18,7 @@ export default function RootLayout() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   const pages: Href<string>[] = [
     "/csatlakozom/",
+    "/csatlakozom/megbizhatosag",
     "/csatlakozom/iranyelvek",
     "/csatlakozom/regisztracio",
     "/csatlakozom/email-regisztracio",

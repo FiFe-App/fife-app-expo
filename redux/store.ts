@@ -10,10 +10,10 @@ import tutorialReducer from "./reducers/tutorialReducer";
 
 export const rootReducer = combineReducers({
   comments: commentsReducer,
-  user: userReducer,
+  user: userReducer.reducer,
   buziness: buzinessReducer.reducer,
   info: infoReducer,
-  tutorial: tutorialReducer,
+  tutorial: tutorialReducer.reducer,
 });
 
 export type RootReducer = ReturnType<typeof rootReducer>;

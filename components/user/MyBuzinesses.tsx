@@ -1,14 +1,14 @@
-import { BuzinessSearchItemInterface } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
+import { viewFunction } from "@/redux/reducers/tutorialReducer";
+import { BuzinessSearchItemInterface } from "@/redux/store.type";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Button, FAB, Text } from "react-native-paper";
+import { ActivityIndicator, FAB, Text } from "react-native-paper";
+import { useDispatch } from "react-redux";
 import BuzinessItem from "../buziness/BuzinessItem";
 import { ThemedText } from "../ThemedText";
-import { Image } from "expo-image";
-import { useDispatch } from "react-redux";
-import { viewFunction } from "@/redux/reducers/tutorialReducer";
 
 interface MyBuzinessesProps {
   uid: string;
@@ -45,7 +45,7 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
           );
           setLoading(false);
         }
-        dispatch(viewFunction("buzinessProfile"));
+        if (uid) dispatch(viewFunction({ key: "buzinessProfile", uid }));
       });
   }, [dispatch, uid]);
   return (

@@ -58,6 +58,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
     y: number;
     comment: Comment;
   } | null>(null);
+
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
 
   useEffect(() => {
