@@ -1,7 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { RootState } from "@/lib/redux/store";
-import { UserState } from "@/lib/redux/store.type";
+import { RootState } from "@/redux/store";
+import { UserState } from "@/redux/store.type";
 import { Image } from "expo-image";
 import { Link, Redirect } from "expo-router";
 import { View } from "react-native";
@@ -37,9 +37,12 @@ export default function Index() {
           {"\n"}
         </Text>
         <Image
-          source={require("../assets/images/img-prof.png")}
-          style={{ width: "95%", aspectRatio: 1, padding: 5 }}
+          source={require("../assets/images/img-main.png")}
+          style={{ width: "95%", aspectRatio: 1, padding: 5, maxWidth: 300 }}
         />
+        <ThemedText type="title" style={{ textAlign: "center" }}>
+          Együtt boldogulunk!
+        </ThemedText>
         <ThemedText style={{ textAlign: "center" }}>
           Ez egy szerető budapesti közösség, ahol megoszthatod, hogy mihez
           értesz.

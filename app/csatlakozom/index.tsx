@@ -13,15 +13,10 @@ const Register = () => {
         >
           Ez egy online eszköz, ami a valóságban segít boldogulni.
         </ThemedText>
-        <View
-          style={{ alignItems: "center", justifyContent: "center", margin: 24 }}
-        >
-          <Smiley style={{ width: 100, height: 100 }} />
-        </View>
         <ThemedText style={{ marginHorizontal: 16 }}>
-          Közösségi oldal, amit a felhasználó kontrollál, nem fordítva. Ami
-          összegyűjti a kedves embereket, hogy zavartalanul tudjanak
-          kommunikálni, kapcsolódni egy független, biztonságos környezetben. Egy
+          Közösségi oldal, ahol a felhasználó van kontrollban. Összegyűjtjük a
+          kedves embereket, hogy zavartalanul tudjanak kommunikálni, segíteni
+          egymásnak egy független, biztonságos környezetben. {"\n\n"}Egy
           alkalmazás, ami az asszertív kommunikációnak, kölcsönös jóindulatnak
           és bizalomnak nyit kaput. Amely a mai városi igényekre igyekszik
           megoldást adni.

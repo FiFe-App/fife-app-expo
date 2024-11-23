@@ -3,9 +3,9 @@ import {
   setName,
   setUserData,
   login as sliceLogin,
-} from "@/lib/redux/reducers/userReducer";
-import { RootState } from "@/lib/redux/store";
-import { UserState } from "@/lib/redux/store.type";
+} from "@/redux/reducers/userReducer";
+import { RootState } from "@/redux/store";
+import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
 import { Link, Redirect, useLocalSearchParams } from "expo-router";
@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
+import { loadViewedFunctions } from "@/redux/reducers/tutorialReducer";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -125,6 +126,8 @@ export default function Index() {
       dispatch(sliceLogin(profile?.id));
       dispatch(setName(profile?.full_name));
       dispatch(setUserData({ ...userData, ...profile }));
+      if (profile?.viewed_functions)
+        dispatch(loadViewedFunctions(profile?.viewed_functions));
     }
   };
 

@@ -1,15 +1,9 @@
 import InfoLayer from "@/components/InfoLayer";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
-import { clearOptions } from "@/lib/redux/reducers/infoReducer";
-import { persistor, RootState, store } from "@/lib/redux/store";
+import { clearOptions } from "@/redux/reducers/infoReducer";
+import { persistor, RootState, store } from "@/redux/store";
 import { NativeStackHeaderProps } from "@react-navigation/native-stack/lib/typescript/src/types";
-import {
-  router,
-  Stack,
-  useNavigation,
-  usePathname,
-  useSegments,
-} from "expo-router";
+import { Stack, useNavigation, usePathname, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
 import { useWindowDimensions } from "react-native";
 import { Appbar, Menu, PaperProvider } from "react-native-paper";
@@ -30,7 +24,10 @@ export default function RootLayout() {
               options={{ title: "Bejelentkezés" }}
             />
             <Stack.Screen name="biznisz/index" options={{ title: "Biznisz" }} />
-            <Stack.Screen name="csatlakozom" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="csatlakozom"
+              options={{ headerShown: false, animation: "slide_from_right" }}
+            />
             <Stack.Screen
               name="biznisz/new"
               options={{ title: "Új Biznisz" }}
@@ -79,9 +76,7 @@ const MyAppbar = (props: NativeStackHeaderProps) => {
 
   return (
     <Appbar.Header mode="center-aligned">
-      {navigation.canGoBack() && (
-        <Appbar.BackAction onPress={navigation.goBack} />
-      )}
+      {false && <Appbar.BackAction onPress={navigation.goBack} />}
       <Appbar.Content title={props.options.title} />
       {options?.length === 1 && <Appbar.Action {...options[0]} />}
       {options?.length > 1 && (

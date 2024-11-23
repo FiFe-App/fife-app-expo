@@ -8,11 +8,11 @@ import elapsedTime from "@/lib/functions/elapsedTime";
 import {
   clearBuziness,
   clearBuzinessSearchParams,
-} from "@/lib/redux/reducers/buzinessReducer";
-import { setOptions } from "@/lib/redux/reducers/infoReducer";
-import { logout } from "@/lib/redux/reducers/userReducer";
-import { RootState } from "@/lib/redux/store";
-import { UserState } from "@/lib/redux/store.type";
+} from "@/redux/reducers/buzinessReducer";
+import { setOptions } from "@/redux/reducers/infoReducer";
+import { logout } from "@/redux/reducers/userReducer";
+import { RootState } from "@/redux/store";
+import { TutorialState, UserState } from "@/redux/store.type";
 import { RecommendProfileButton } from "@/lib/supabase/RecommendProfileButton";
 import { supabase } from "@/lib/supabase/supabase";
 import {
@@ -23,10 +23,21 @@ import {
 } from "expo-router";
 import { useCallback, useState } from "react";
 import { View } from "react-native";
-import { Button, Portal, Text, TouchableRipple } from "react-native-paper";
+import {
+  Badge,
+  Button,
+  Portal,
+  Text,
+  TouchableRipple,
+} from "react-native-paper";
 import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 
 import { useDispatch, useSelector } from "react-redux";
+import globStyles from "@/constants/Styles";
+import {
+  clearTutorialState,
+  viewFunction,
+} from "@/redux/reducers/tutorialReducer";
 
 type UserInfo = Tables<"profiles">;
 
@@ -35,6 +46,9 @@ export default function Index() {
   const uid: string = String(paramUid);
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
+  );
+  const { functions }: TutorialState = useSelector(
+    (state: RootState) => state.tutorial,
   );
 
   const dispatch = useDispatch();
@@ -80,6 +94,7 @@ export default function Index() {
               onPress: () => {
                 dispatch(logout());
                 dispatch(clearBuziness());
+                dispatch(clearTutorialState());
                 dispatch(clearBuzinessSearchParams());
                 router.navigate("/");
               },
@@ -120,11 +135,11 @@ export default function Index() {
                 <View style={{ flexDirection: "row", flex: 1 }}>
                   <TouchableRipple
                     style={{ flex: 1 }}
-                    onPress={
-                      recommendations.length
-                        ? () => setShowRecommendsModal(true)
-                        : undefined
-                    }
+                    onPress={() => {
+                      if (uid)
+                        dispatch(viewFunction({ key: "friendsProfile", uid }));
+                      setShowRecommendsModal(true);
+                    }}
                   >
                     <View
                       style={{
@@ -134,7 +149,10 @@ export default function Index() {
                       }}
                     >
                       <Text>{recommendations.length}</Text>
-                      <Text>Pajtás</Text>
+                      <Text>Támogatók</Text>
+                      {functions.includes("friendsProfile") && (
+                        <Badge style={globStyles.badge}>ÚJ</Badge>
+                      )}
                     </View>
                   </TouchableRipple>
                   {data?.created_at && (
@@ -167,6 +185,7 @@ export default function Index() {
                 <>
                   <RecommendProfileButton
                     profileId={uid}
+                    style={{ flex: 1 }}
                     recommended={iRecommended}
                     setRecommended={(recommendedByMe) => {
                       if (myUid) {
@@ -179,18 +198,27 @@ export default function Index() {
                       }
                     }}
                   />
-                  <Button style={{ flex: 1 }} mode="contained-tonal" disabled>
-                    Üzenek neki
-                  </Button>
                 </>
               )}
             </View>
             <TabsProvider defaultIndex={0}>
               <Tabs>
-                <TabScreen label="Bizniszek" icon="briefcase">
+                <TabScreen
+                  label="Bizniszek"
+                  badge={
+                    functions.includes("buzinessProfile") ? "ÚJ" : undefined
+                  }
+                  icon="briefcase"
+                >
                   <MyBuzinesses uid={uid} myProfile={myProfile} />
                 </TabScreen>
-                <TabScreen label="Elérhetőségek" icon="email-multiple">
+                <TabScreen
+                  label="Elérhetőségek"
+                  badge={
+                    functions.includes("contactsProfile") ? "ÚJ" : undefined
+                  }
+                  icon="email-multiple"
+                >
                   <ContactList uid={uid} edit={myProfile} />
                 </TabScreen>
               </Tabs>

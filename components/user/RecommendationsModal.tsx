@@ -11,10 +11,9 @@ import {
   Text,
   TouchableRipple,
 } from "react-native-paper";
-import SupabaseImage from "../SupabaseImage";
+import ProfileImage from "../ProfileImage";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
-import ProfileImage from "../ProfileImage";
 
 interface RMP {
   show: boolean;
@@ -63,40 +62,54 @@ const RecommendationsModal = ({ show, setShow, uid, name }: RMP) => {
           margin: 30,
         }}
       >
-        <ThemedText>{name} pajtásai:</ThemedText>
-        {list.map((rec, ind) => (
+        {!!list.length ? (
           <>
-            <Link
-              asChild
-              href={{
-                pathname: "/user/[uid]",
-                params: { uid: rec.author },
-              }}
-            >
-              <TouchableRipple>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    padding: 4,
-                    alignItems: "center",
+            <ThemedText>{name}ban megbíznak őkô:</ThemedText>
+            {list.map((rec, ind) => (
+              <>
+                <Link
+                  asChild
+                  href={{
+                    pathname: "/user/[uid]",
+                    params: { uid: rec.author },
                   }}
                 >
-                  <ProfileImage
-                    uid={rec.author}
-                    avatar_url={rec.profiles?.avatar_url}
-                    style={{ width: 40, height: 40, marginRight: 16 }}
-                  />
-                  <View style={{ flex: 1, justifyContent: "center" }}>
-                    <Text>{rec.profiles?.full_name}</Text>
-                    <Text>{elapsedTime(rec.created_at)} jelölte pajtásnak</Text>
-                  </View>
-                  <IconButton icon="account" />
-                </View>
-              </TouchableRipple>
-            </Link>
-            {list.length > ind + 1 && <Divider />}
+                  <TouchableRipple>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        padding: 4,
+                        alignItems: "center",
+                      }}
+                    >
+                      <ProfileImage
+                        uid={rec.author}
+                        avatar_url={rec.profiles?.avatar_url}
+                        style={{ width: 40, height: 40, marginRight: 16 }}
+                      />
+                      <View style={{ flex: 1, justifyContent: "center" }}>
+                        <Text>{rec.profiles?.full_name}</Text>
+                        <Text>
+                          {elapsedTime(rec.created_at)} óta támogatója
+                        </Text>
+                      </View>
+                      <IconButton icon="account" />
+                    </View>
+                  </TouchableRipple>
+                </Link>
+                {list.length > ind + 1 && <Divider />}
+              </>
+            ))}
           </>
-        ))}
+        ) : (
+          <>
+            <ThemedText>Támogatók</ThemedText>
+            <Text>
+              Itt azok az emberek fognak megjelenni, akik megbízhatónak jelöltek
+              téged.
+            </Text>
+          </>
+        )}
       </ThemedView>
     </Modal>
   );
