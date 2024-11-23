@@ -1,25 +1,39 @@
+import { setLocationError } from "@/redux/reducers/userReducer";
+import { RootState } from "@/redux/store";
 import * as Location from "expo-location";
 
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
+const blockedMessage = "Letiltottad a helyzeted.";
 
 export function useMyLocation() {
+  const dispatch = useDispatch();
   const [myLocation, setLocation] = useState<Location.LocationObject | null>(
     null,
   );
-  const [error, setError] = useState<string | null>();
+
+  const { locationError } = useSelector((state: RootState) => state.user);
+  const { dialogs } = useSelector((state: RootState) => state.info);
 
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setError("Nem tudjuk hol vagy");
-        return;
-      }
+    const getLocation = async () => {
+      (async () => {
+        let location = await Location.getCurrentPositionAsync({});
+        if (location) {
+          dispatch(setLocationError(null));
+          setLocation(location);
+        }
+      })();
+    };
 
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
-    })();
-  }, []);
+    Location.getForegroundPermissionsAsync().then((res) => {
+      const { status } = res;
 
-  return { myLocation, error };
+      if (status === "undetermined") getLocation();
+      if (status === "denied") dispatch(setLocationError(blockedMessage));
+    });
+  }, [dialogs, dispatch, locationError, myLocation]);
+
+  return { myLocation, locationError };
 }

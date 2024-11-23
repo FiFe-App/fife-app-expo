@@ -10,12 +10,12 @@ import {
   loadBuzinesses,
   storeBuzinessSearchParams,
   storeBuzinesses,
-} from "@/lib/redux/reducers/buzinessReducer";
-import { RootState } from "@/lib/redux/store";
+} from "@/redux/reducers/buzinessReducer";
+import { RootState } from "@/redux/store";
 import { supabase } from "@/lib/supabase/supabase";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import {
   ActivityIndicator,
   Button,
@@ -30,6 +30,8 @@ import {
   TextInput,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { viewFunction } from "@/redux/reducers/tutorialReducer";
+import { setLocationError } from "@/redux/reducers/userReducer";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
@@ -43,7 +45,7 @@ export default function Index() {
 
   const [loading, setLoading] = useState(false);
   const [canLoadMore, setCanLoadMore] = useState(true);
-  const { myLocation, error: locationError } = useMyLocation();
+  const { myLocation, locationError } = useMyLocation();
   const [mapModalVisible, setMapModalVisible] = useState(false);
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [circle, setCircle] = useState<MapCircleType | undefined>(
@@ -110,12 +112,23 @@ export default function Index() {
     useCallback(() => {
       console.log("skip changed", skip);
       if (!buzinesses.length) load();
+      if (uid) dispatch(viewFunction({ key: "buzinessPage", uid }));
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [skip]),
   );
 
   const loadNext = () => {
-    dispatch(loadBuzinesses([{ id: -1 }]));
+    dispatch(
+      loadBuzinesses([
+        {
+          id: -1,
+          title: "",
+          description: "",
+          author: "",
+          recommendations: 0,
+        },
+      ]),
+    );
     dispatch(storeBuzinessSearchParams({ skip: skip + take }));
     load(skip + take);
   };
@@ -149,12 +162,9 @@ export default function Index() {
           )}
           <Card.Content>
             {tutorialVisible && (
-              <Text style={{ textAlign: "justify" }}>
-                A te bizniszeid azon hobbijaid, képességeid vagy szakmáid
-                listája, amelyeket meg szeretnél osztani másokkal is. {"\n"}Ha
-                te mondjuk úgy gyártod a sütiket, mint egy gép, és ezt felveszed
-                a bizniszeid közé, ezen az oldalon megtalálható leszel a süti
-                kulcsszóval.
+              <Text style={{ marginBottom: 16 }}>
+                Itt kereshetsz a hozzád vagy megadott környékhez közeli
+                bizniszek között.
               </Text>
             )}
             <TextInput
@@ -184,7 +194,12 @@ export default function Index() {
                 marginTop: 4,
               }}
             >
-              <View style={{ flex: 1 }}>
+              <Pressable
+                style={{ flex: 1 }}
+                onPress={() => {
+                  if (locationError) dispatch(setLocationError(null));
+                }}
+              >
                 {!!locationError && !circle && (
                   <Text>
                     <Icon size={16} source="map-marker-question" />
@@ -203,7 +218,7 @@ export default function Index() {
                     Keresés térképen választott hely alapján.
                   </Text>
                 )}
-              </View>
+              </Pressable>
               <Button
                 onPress={() => setMapModalVisible(true)}
                 mode={!circle ? "contained" : "contained-tonal"}

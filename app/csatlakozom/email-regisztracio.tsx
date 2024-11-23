@@ -1,15 +1,13 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { supabase } from "@/lib/supabase/supabase";
 import {
   setName,
   setUserData,
   login as sliceLogin,
-} from "@/lib/redux/reducers/userReducer";
-import { RootState } from "@/lib/redux/store";
-import { UserState } from "@/lib/redux/store.type";
-import { supabase } from "@/lib/supabase/supabase";
-import { DarkTheme } from "@react-navigation/native";
+} from "@/redux/reducers/userReducer";
+import { RootState } from "@/redux/store";
+import { UserState } from "@/redux/store.type";
 import { User } from "@supabase/supabase-js";
 import { Link, Redirect, router } from "expo-router";
 import { useState } from "react";
@@ -18,11 +16,9 @@ import { AppState, View } from "react-native";
 import {
   Button,
   Checkbox,
-  DefaultTheme,
   Divider,
   HelperText,
   Icon,
-  MD3DarkTheme,
   TextInput,
   useTheme,
 } from "react-native-paper";

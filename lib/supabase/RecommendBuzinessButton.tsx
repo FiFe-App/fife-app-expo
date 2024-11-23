@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Button } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../redux/store";
-import { UserState } from "../redux/store.type";
+import { RootState } from "@/redux/store";
+import { UserState } from "@/redux/store.type";
 import { supabase } from "./supabase";
-import { addDialog } from "../redux/reducers/infoReducer";
+import { addDialog } from "@/redux/reducers/infoReducer";
 import { trackPromise } from "react-promise-tracker";
 import wrapper from "../functions/wrapper";
 
@@ -32,7 +32,7 @@ export const RecommendBuzinessButton = ({
     if (recommended) {
       dispatch(
         addDialog({
-          title: "Mégsem ajánlod?",
+          title: "Mégsem támogatod?",
           text: "Törölheted az ajánlásod, ha meggondoltad magad.",
           onSubmit: () => {
             setLoading(true);
@@ -55,13 +55,31 @@ export const RecommendBuzinessButton = ({
         }),
       );
     } else {
-      const res = await supabase.from("buzinessRecommendations").insert({
-        author: myUid,
-        buziness_id: buzinessId,
-      });
-
-      if (!res.error) setRecommended(true);
-      setLoading(false);
+      dispatch(
+        addDialog({
+          title: "Bizotsan megbízol benne?",
+          text: "Csak akkor jelöld őt megbízhatónak, ha úgy gondolod, hogy nem fog mást átverni.",
+          onSubmit: () => {
+            setLoading(true);
+            trackPromise(
+              wrapper<null, any>(
+                supabase
+                  .from("buzinessRecommendations")
+                  .insert({
+                    author: myUid,
+                    buziness_id: buzinessId,
+                  })
+                  .then((res) => {
+                    if (!res.error) setRecommended(true);
+                    setLoading(false);
+                  }),
+              ),
+              "deleteRecommendation",
+            );
+          },
+          submitText: "Törlés",
+        }),
+      );
     }
   };
 
@@ -72,7 +90,7 @@ export const RecommendBuzinessButton = ({
       mode={!recommended ? "contained" : "contained-tonal"}
       loading={loading}
     >
-      {recommended ? "Már ajánlottam" : "Ajánlom"}
+      {recommended ? "Már megbízom benne." : "Megbízhatónak jelölöm"}
     </Button>
   );
 };

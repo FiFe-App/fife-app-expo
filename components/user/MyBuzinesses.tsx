@@ -1,10 +1,14 @@
-import { BuzinessSearchItemInterface } from "@/lib/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
+import { viewFunction } from "@/redux/reducers/tutorialReducer";
+import { BuzinessSearchItemInterface } from "@/redux/store.type";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
-import { ActivityIndicator, FAB } from "react-native-paper";
+import { ActivityIndicator, FAB, Text } from "react-native-paper";
+import { useDispatch } from "react-redux";
 import BuzinessItem from "../buziness/BuzinessItem";
+import { ThemedText } from "../ThemedText";
 
 interface MyBuzinessesProps {
   uid: string;
@@ -12,6 +16,7 @@ interface MyBuzinessesProps {
 }
 
 const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
+  const dispatch = useDispatch();
   const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>(
     [],
   );
@@ -40,8 +45,9 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
           );
           setLoading(false);
         }
+        if (uid) dispatch(viewFunction({ key: "buzinessProfile", uid }));
       });
-  }, [uid]);
+  }, [dispatch, uid]);
   return (
     <SafeAreaView style={{ flex: 1, padding: 4 }}>
       <ScrollView contentContainerStyle={{ gap: 8, flex: 1 }}>
@@ -49,7 +55,7 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
           <View style={{ flex: 1, justifyContent: "center" }}>
             <ActivityIndicator style={{}} />
           </View>
-        ) : (
+        ) : !!buzinesses.length ? (
           buzinesses.map((buzinessItem) => (
             <BuzinessItem
               data={buzinessItem}
@@ -57,6 +63,22 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
               showOptions
             />
           ))
+        ) : (
+          <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
+            <Image
+              source={require("../../assets/images/img-prof.png")}
+              style={{ height: 200, width: 200 }}
+            />
+            <ThemedText type="subtitle">
+              Itt fognak megjelenni a bizniszeid.
+            </ThemedText>
+            <Text>
+              A te bizniszeid azon hobbijaid, képességeid vagy szakmáid listája,
+              amelyeket meg szeretnél osztani másokkal is. {"\n"}Ha te mondjuk
+              úgy gyártod a sütiket, mint egy gép, és ezt felveszed a bizniszeid
+              közé, mások által megtalálható leszel a süti kulcsszóval.
+            </Text>
+          </View>
         )}
       </ScrollView>
       <FAB

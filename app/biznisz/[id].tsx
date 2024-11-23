@@ -9,9 +9,9 @@ import { LatLng, MapView, Marker } from "@/components/mapView/mapView";
 import BuzinessRecommendationsModal from "@/components/user/BuzinessRecommendationsModal";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
-import { storeBuzinessSearchParams } from "@/lib/redux/reducers/buzinessReducer";
-import { RootState } from "@/lib/redux/store";
-import { BuzinessItemInterface, UserState } from "@/lib/redux/store.type";
+import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { RootState } from "@/redux/store";
+import { BuzinessItemInterface, UserState } from "@/redux/store.type";
 import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
 import { supabase } from "@/lib/supabase/supabase";
 import { PostgrestError } from "@supabase/supabase-js";
@@ -123,6 +123,15 @@ export default function Index() {
     }
   };
 
+  console.log(
+    "isLongDescription",
+    isLongDescription !== undefined
+      ? () => {
+          setIsLongDescription(!isLongDescription);
+        }
+      : undefined,
+  );
+
   return (
     <ThemedView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ flex: 1 }}>
@@ -203,17 +212,20 @@ export default function Index() {
               })}
             </View>
             <View style={{ flexDirection: "row", gap: 4, padding: 4 }}>
-              <Button
-                style={{ flex: 1 }}
-                mode="contained"
-                onPress={onPimary}
-                disabled={!myBuziness}
-              >
-                {myBuziness ? "Szerkesztés" : "Írok neki!"}
-              </Button>
+              {myBuziness && (
+                <Button
+                  style={{ flex: 1 }}
+                  mode="contained"
+                  onPress={onPimary}
+                  disabled={!myBuziness}
+                >
+                  Szerkesztés
+                </Button>
+              )}
               {!myBuziness && (
                 <RecommendBuzinessButton
                   buzinessId={id}
+                  style={{ flex: 1 }}
                   recommended={iRecommended}
                   setRecommended={(recommendedByMe) => {
                     if (myUid) {
@@ -228,11 +240,16 @@ export default function Index() {
                 />
               )}
             </View>
-            <Pressable
+            <TouchableRipple
               style={{ padding: 10 }}
-              onPress={() => {
-                setIsLongDescription(!isLongDescription);
-              }}
+              onPress={
+                isLongDescription !== undefined
+                  ? () => {
+                      setIsLongDescription(!isLongDescription);
+                    }
+                  : undefined
+              }
+              disabled={isLongDescription !== undefined}
             >
               <Text
                 numberOfLines={isLongDescription ? 10 : undefined}
@@ -245,11 +262,11 @@ export default function Index() {
                 }}
               >
                 {data?.description}
+                {isLongDescription !== undefined && (
+                  <Text>{isLongDescription ? "Több" : ""}</Text>
+                )}
               </Text>
-              {isLongDescription !== undefined && (
-                <Text>{isLongDescription ? "Több" : ""}</Text>
-              )}
-            </Pressable>
+            </TouchableRipple>
             <TabsProvider defaultIndex={0}>
               <Tabs showTextLabel={width > 400}>
                 <TabScreen label="Helyzete" icon="map-marker">
@@ -317,7 +334,7 @@ export default function Index() {
                 <TabScreen label="Elérhetőségek" icon="contacts">
                   <ContactList uid={data.author} />
                 </TabScreen>
-                <TabScreen label="Vélemények" icon="comment-text">
+                <TabScreen label="Vélemények" icon="chat">
                   <Comments
                     path={"buziness/" + id}
                     placeholder="Mondd el a véleményed"

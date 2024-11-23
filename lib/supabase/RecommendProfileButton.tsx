@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Button } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../redux/store";
-import { UserState } from "../redux/store.type";
+import { RootState } from "@/redux/store";
+import { UserState } from "@/redux/store.type";
 import { supabase } from "./supabase";
-import { addDialog } from "../redux/reducers/infoReducer";
+import { addDialog } from "@/redux/reducers/infoReducer";
 import { trackPromise } from "react-promise-tracker";
 import wrapper from "../functions/wrapper";
 
@@ -32,8 +32,8 @@ export const RecommendProfileButton = ({
     if (recommended) {
       dispatch(
         addDialog({
-          title: "Mégsem a pajtásod?",
-          text: "Törölheted a pajtásod, ha meggondoltad magad.",
+          title: "Mégsem bízol benne?",
+          text: "Visszavonhatod a támogatásod, ha meggondoltad magad.",
           onSubmit: () => {
             setLoading(true);
             trackPromise(
@@ -51,17 +51,35 @@ export const RecommendProfileButton = ({
               "deleteRecommendation",
             );
           },
-          submitText: "Törlés",
+          submitText: "Nem támogatom",
         }),
       );
     } else {
-      const res = await supabase.from("profileRecommendations").insert({
-        author: myUid,
-        profile_id: profileId,
-      });
-
-      if (!res.error) setRecommended(true);
-      setLoading(false);
+      dispatch(
+        addDialog({
+          title: "Bizotsan megbízol benne?",
+          text: "Csak akkor jelöld őt megbízhatónak, ha úgy gondolod, hogy nem fog mást átverni.",
+          onSubmit: () => {
+            setLoading(true);
+            trackPromise(
+              wrapper<null, any>(
+                supabase
+                  .from("profileRecommendations")
+                  .insert({
+                    author: myUid,
+                    profile_id: profileId,
+                  })
+                  .then((res) => {
+                    if (!res.error) setRecommended(true);
+                    setLoading(false);
+                  }),
+              ),
+              "deleteRecommendation",
+            );
+          },
+          submitText: "Igen!",
+        }),
+      );
     }
   };
 
@@ -72,7 +90,7 @@ export const RecommendProfileButton = ({
       mode={!recommended ? "contained" : "contained-tonal"}
       loading={loading}
     >
-      {recommended ? "Már a pajtásom:)" : "Pajtásnak jelölöm!"}
+      {recommended ? "Megbízom benne." : "Megbízhatónak jelölöm!"}
     </Button>
   );
 };

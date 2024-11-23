@@ -4,13 +4,13 @@ import { containerStyle } from "@/components/styles";
 import TagInput from "@/components/TagInput";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
-import { setOptions } from "@/lib/redux/reducers/infoReducer";
-import { RootState } from "@/lib/redux/store";
-import { UserState } from "@/lib/redux/store.type";
+import { setOptions } from "@/redux/reducers/infoReducer";
+import { RootState } from "@/redux/store";
+import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import {
   Button,
   Card,
@@ -24,6 +24,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { MapView, Marker } from "../mapView/mapView";
 import { ThemedView } from "../ThemedView";
+import { setLocationError } from "@/redux/reducers/userReducer";
 
 interface NewBuzinessInterface {
   title: string;
@@ -180,7 +181,7 @@ export default function BuzinessEditScreen({
             />
             <Card.Content>
               {tutorialVisible && (
-                <Text style={{ textAlign: "justify" }}>
+                <Text>
                   Ezen az oldalon fel tudsz venni egy új bizniszt a profilodba.
                   {"\n"}A te bizniszeid azon hobbijaid, képességeid vagy
                   szakmáid listája, amelyeket meg szeretnél osztani másokkal is.{" "}
@@ -229,27 +230,31 @@ export default function BuzinessEditScreen({
                 </Text>
               )}
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <View style={{ flex: 1 }}>
+                <Pressable
+                  style={{ flex: 1 }}
+                  onPress={() => {
+                    if (locationError) dispatch(setLocationError(false));
+                  }}
+                >
                   {!!locationError && !circle && (
                     <Text>
                       <Icon size={16} source="map-marker-question" />
                       {locationError}
                     </Text>
                   )}
-                  {!!circle ? (
+                  {!!myLocation && !circle && (
                     <Text>
-                      <Icon size={16} source="map-marker-account" />
-                      Hely kiválasztva
+                      <Icon size={16} source="map-marker" />
+                      Keresés jelenlegi helyzeted alapján.
                     </Text>
-                  ) : (
-                    !!myLocation && (
-                      <Text>
-                        <Icon size={16} source="map-marker" />
-                        Jelenlegi helyzeted használata.
-                      </Text>
-                    )
                   )}
-                </View>
+                  {!!circle && (
+                    <Text>
+                      <Icon size={16} source="map-marker" />
+                      Keresés térképen választott hely alapján.
+                    </Text>
+                  )}
+                </Pressable>
                 <Button onPress={() => setMapModalVisible(true)}>
                   {!!circle ? "Környék kiválasztva" : "Válassz környéket"}
                 </Button>

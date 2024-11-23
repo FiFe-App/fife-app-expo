@@ -1,6 +1,6 @@
 import { ThemedView } from "@/components/ThemedView";
-import { RootState } from "@/lib/redux/store";
-import { UserState } from "@/lib/redux/store.type";
+import { RootState } from "@/redux/store";
+import { UserState } from "@/redux/store.type";
 import {
   Href,
   Link,
@@ -18,6 +18,7 @@ export default function RootLayout() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   const pages: Href<string>[] = [
     "/csatlakozom/",
+    "/csatlakozom/megbizhatosag",
     "/csatlakozom/iranyelvek",
     "/csatlakozom/regisztracio",
     "/csatlakozom/email-regisztracio",

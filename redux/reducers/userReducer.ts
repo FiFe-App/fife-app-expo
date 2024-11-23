@@ -1,12 +1,11 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { UserState } from "../store.type";
-import buzinessReducer from "./buzinessReducer";
-import { store } from "../store";
 
 const initialState: UserState = {
   uid: undefined,
   name: undefined,
   userData: null,
+  locationError: null,
 };
 
 const userReducer = createSlice({
@@ -23,9 +22,9 @@ const userReducer = createSlice({
       state.uid = payload;
       console.log("logged in as", payload.toString());
     },
-    logout: (state): UserState => {
-      console.log("logged out", state);
-      return userReducer;
+    logout: (state) => {
+      state = initialState;
+      return initialState;
     },
     setUserData: (state, { payload }) => {
       state.userData = payload;
@@ -33,10 +32,13 @@ const userReducer = createSlice({
     setName: (state, { payload }) => {
       state.name = payload;
     },
+    setLocationError: (state, { payload }: PayloadAction<string | null>) => {
+      state.locationError = payload;
+    },
   },
 });
 
-export const { init, login, logout, setName, setUserData } =
+export const { init, login, logout, setName, setUserData, setLocationError } =
   userReducer.actions;
 
-export default userReducer.reducer;
+export default userReducer;
