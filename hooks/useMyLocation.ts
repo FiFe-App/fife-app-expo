@@ -30,10 +30,10 @@ export function useMyLocation() {
     Location.getForegroundPermissionsAsync().then((res) => {
       const { status } = res;
 
-      if (status === "undetermined") getLocation();
+      if (status !== "denied") getLocation();
       if (status === "denied") dispatch(setLocationError(blockedMessage));
     });
-  }, [dialogs, dispatch, locationError, myLocation]);
+  }, [dialogs, dispatch]);
 
   return { myLocation, locationError };
 }
