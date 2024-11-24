@@ -64,7 +64,7 @@ const RecommendationsModal = ({ show, setShow, uid, name }: RMP) => {
       >
         {!!list.length ? (
           <>
-            <ThemedText>{name}ban megbíznak őkô:</ThemedText>
+            <ThemedText>{name}ban megbíznak ők:</ThemedText>
             {list.map((rec, ind) => (
               <>
                 <Link
