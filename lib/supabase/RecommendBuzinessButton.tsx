@@ -32,8 +32,8 @@ export const RecommendBuzinessButton = ({
     if (recommended) {
       dispatch(
         addDialog({
-          title: "Mégsem támogatod?",
-          text: "Törölheted az ajánlásod, ha meggondoltad magad.",
+          title: "Mégsem ajánlod?",
+          text: "Visszavonhatod az ajánlásod, ha meggondoltad magad.",
           onSubmit: () => {
             setLoading(true);
             trackPromise(
@@ -57,8 +57,8 @@ export const RecommendBuzinessButton = ({
     } else {
       dispatch(
         addDialog({
-          title: "Bizotsan megbízol benne?",
-          text: "Csak akkor jelöld őt megbízhatónak, ha úgy gondolod, hogy nem fog mást átverni.",
+          title: "Bizotsan ajánlod?",
+          text: "Csak akkor jelöld a bizniszt ajánlottnak, ha tudod, hogy valós és hasznos.",
           onSubmit: () => {
             setLoading(true);
             trackPromise(
@@ -77,7 +77,7 @@ export const RecommendBuzinessButton = ({
               "deleteRecommendation",
             );
           },
-          submitText: "Törlés",
+          submitText: "Ajánlom",
         }),
       );
     }
@@ -90,7 +90,7 @@ export const RecommendBuzinessButton = ({
       mode={!recommended ? "contained" : "contained-tonal"}
       loading={loading}
     >
-      {recommended ? "Már megbízom benne." : "Megbízhatónak jelölöm"}
+      {recommended ? "Már ajánlottam." : "Ajánlom"}
     </Button>
   );
 };

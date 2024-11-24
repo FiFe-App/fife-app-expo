@@ -1,7 +1,6 @@
 import MyLocationIcon from "@/assets/images/myLocationIcon";
 import ErrorScreen from "@/components/ErrorScreen";
 import ProfileImage from "@/components/ProfileImage";
-import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { ContactList } from "@/components/buziness/ContactList";
 import Comments from "@/components/comments/Comments";
@@ -9,11 +8,11 @@ import { LatLng, MapView, Marker } from "@/components/mapView/mapView";
 import BuzinessRecommendationsModal from "@/components/user/BuzinessRecommendationsModal";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
+import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
+import { supabase } from "@/lib/supabase/supabase";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { RootState } from "@/redux/store";
 import { BuzinessItemInterface, UserState } from "@/redux/store.type";
-import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
-import { supabase } from "@/lib/supabase/supabase";
 import { PostgrestError } from "@supabase/supabase-js";
 import {
   Link,
@@ -22,8 +21,8 @@ import {
   useGlobalSearchParams,
   useNavigation,
 } from "expo-router";
-import { useCallback, useState } from "react";
-import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { ScrollView, useWindowDimensions, View } from "react-native";
 import openMap from "react-native-open-maps";
 import {
   ActivityIndicator,
@@ -57,10 +56,11 @@ export default function Index() {
   const title = categories?.[0];
   const [isLongDescription, setIsLongDescription] = useState<
     undefined | boolean
-  >();
+  >(undefined);
   const myBuziness = myUid === data?.author;
   const { myLocation } = useMyLocation();
   const nav = useNavigation();
+  const [commentsCount, setCommentsCount] = useState<number>();
 
   useFocusEffect(
     useCallback(() => {
@@ -104,6 +104,16 @@ export default function Index() {
                 message: "Ez a biznisz nem található",
               });
           });
+        supabase
+          .from("comments")
+          .select("count")
+          .eq("key", "buziness/" + id)
+          .single()
+          .then((res) => {
+            console.log(res);
+
+            setCommentsCount(res.data?.count);
+          });
       };
       load();
       return () => {
@@ -112,6 +122,10 @@ export default function Index() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]),
   );
+
+  useEffect(() => {
+    console.log("islongDesc", isLongDescription);
+  }, [isLongDescription]);
 
   const onPimary = () => {
     if (myBuziness) {
@@ -122,16 +136,6 @@ export default function Index() {
     } else {
     }
   };
-
-  console.log(
-    "isLongDescription",
-    isLongDescription !== undefined
-      ? () => {
-          setIsLongDescription(!isLongDescription);
-        }
-      : undefined,
-  );
-
   return (
     <ThemedView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ flex: 1 }}>
@@ -181,7 +185,9 @@ export default function Index() {
                 }
               >
                 <Text style={{ textAlign: "center" }}>
-                  {recommendations.length} ajánlás
+                  {recommendations?.length
+                    ? recommendations?.length + " ajánlás"
+                    : "Még senki sem ajánlja"}
                 </Text>
               </TouchableRipple>
             </View>
@@ -257,8 +263,8 @@ export default function Index() {
                   if (
                     isLongDescription === undefined &&
                     e.nativeEvent.layout.height > 165
-                  )
-                    setIsLongDescription(e.nativeEvent.layout.height > 165);
+                  ) {
+                  }
                 }}
               >
                 {data?.description}
@@ -334,7 +340,7 @@ export default function Index() {
                 <TabScreen label="Elérhetőségek" icon="contacts">
                   <ContactList uid={data.author} />
                 </TabScreen>
-                <TabScreen label="Vélemények" icon="chat">
+                <TabScreen label="Vélemények" icon="chat" badge={commentsCount}>
                   <Comments
                     path={"buziness/" + id}
                     placeholder="Mondd el a véleményed"
