@@ -111,7 +111,7 @@ export default function Index() {
   useFocusEffect(
     useCallback(() => {
       console.log("skip changed", skip);
-      if (!buzinesses.length) load();
+      if (!buzinesses.length && searchText && (circle || myLocation)) load();
       if (uid) dispatch(viewFunction({ key: "buzinessPage", uid }));
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [skip]),
@@ -163,8 +163,8 @@ export default function Index() {
           <Card.Content>
             {tutorialVisible && (
               <Text style={{ marginBottom: 16 }}>
-                Itt kereshetsz a hozzád vagy megadott környékhez közeli
-                bizniszek között.
+                Itt kereshetsz a hozzád vagy megadott helyhez közeli bizniszek
+                között.
               </Text>
             )}
             <TextInput
@@ -252,23 +252,23 @@ export default function Index() {
               Válassz környéket a kereséshez
             </ThemedText>
           )}
-          {loading ? (
-            (circle || myLocation) &&
-            searchText && (
-              <View style={{ flex: 1 }}>
-                <ActivityIndicator />
-              </View>
-            )
-          ) : !!buzinesses.length && canLoadMore ? (
-            <Button onPress={loadNext} style={{ alignSelf: "center" }}>
-              További bizniszek
-            </Button>
-          ) : (
-            <ThemedText style={{ alignSelf: "center" }}>
-              Nem található több biznisz
-            </ThemedText>
-          )}
+          {!loading &&
+            (!!buzinesses.length && canLoadMore ? (
+              <Button onPress={loadNext} style={{ alignSelf: "center" }}>
+                További bizniszek
+              </Button>
+            ) : (
+              <ThemedText style={{ alignSelf: "center" }}>
+                Nem található több biznisz
+              </ThemedText>
+            ))}
         </ScrollView>
+
+        {loading && !buzinesses.length && (
+          <View style={{ flex: 1 }}>
+            <ActivityIndicator />
+          </View>
+        )}
         <Portal>
           <Modal
             visible={mapModalVisible}

@@ -229,7 +229,7 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
           <TextInput
             value={contact?.title || ""}
             disabled={loading}
-            label="Név vagy címe (opcionális)"
+            label="Leírás (opcionális)"
             onChangeText={(t) => setContact({ ...contact, title: t })}
           />
 
