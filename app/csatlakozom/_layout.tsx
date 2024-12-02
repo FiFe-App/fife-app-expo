@@ -22,6 +22,7 @@ export default function RootLayout() {
     "/csatlakozom/iranyelvek",
     "/csatlakozom/regisztracio",
     "/csatlakozom/email-regisztracio",
+    "/csatlakozom/email-ellenorzes",
     "/csatlakozom/elso-lepesek",
   ];
   const canGoNext = !!useGlobalSearchParams().canGoNext;
@@ -89,7 +90,8 @@ export default function RootLayout() {
             !next ||
             (path === "/csatlakozom/iranyelvek" && !canGoNext) ||
             path === "/csatlakozom/regisztracio" ||
-            path === "/csatlakozom/email-regisztracio"
+            path === "/csatlakozom/email-regisztracio" ||
+            path === "/csatlakozom/email-ellenorzes"
           ) && (
             <Link href={next} asChild>
               <Button mode="contained">Tovább</Button>

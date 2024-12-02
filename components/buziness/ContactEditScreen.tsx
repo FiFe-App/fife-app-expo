@@ -131,9 +131,9 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
       setLoading(false);
       const text = contact.public
         ? "Bárki láthatja a részleteit az oldaladon, vagy egy bizniszed oldalán."
-        : "Senki sem láthatja a részleteit.";
+        : "Csak az láthatja majd a részleteit, akinek külön engedélyezed.";
       const onSubmit = () => {
-        router.navigate({ pathname: "/user/edit" });
+        router.navigate({ pathname: "/user" });
       };
       dispatch(
         addDialog({
@@ -232,7 +232,6 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
             label="Leírás (opcionális)"
             onChangeText={(t) => setContact({ ...contact, title: t })}
           />
-
           <TouchableRipple
             disabled={loading}
             onPressOut={(e) =>
@@ -248,8 +247,17 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
               />
             </View>
           </TouchableRipple>
+          <View style={{ padding: 16 }}>
+            <Text>
+              Ha nem publikus az elérhetőséged akkor csak te engedélyezheted,
+              hogy ki lássa.
+            </Text>
+          </View>
           <View style={{ padding: 16, gap: 8 }}>
-            <Text>Így fog megjelenni másoknak:</Text>
+            <Text>
+              Így fog megjelenni{" "}
+              {contact.public ? "másoknak" : "akinek engedélyezed"}:
+            </Text>
             <List.Item
               title={contact.title || contact.data}
               onPress={() => {}}
