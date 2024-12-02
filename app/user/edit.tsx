@@ -11,15 +11,18 @@ import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { View } from "react-native";
-import { IconButton, TextInput } from "react-native-paper";
+import { IconButton, Text, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { ThemedText } from "@/components/ThemedText";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
-  const { uid: myUid, name }: UserState = useSelector(
-    (state: RootState) => state.user,
-  );
+  const {
+    uid: myUid,
+    name,
+    userData,
+  }: UserState = useSelector((state: RootState) => state.user);
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [profile, setProfile] = useState<UserInfo>({});
@@ -73,7 +76,7 @@ export default function Index() {
               return;
             }
             setProfile(profile);
-            dispatch(setName(profile.full_name));
+            dispatch(setName(profile?.full_name));
             dispatch(setUserData(profile));
             console.log(res);
             router.navigate("/user");
@@ -85,7 +88,7 @@ export default function Index() {
             title: "Mentés",
             icon: "check",
             onPress: save,
-            disabled: !profile.full_name,
+            disabled: !profile?.full_name,
           },
         ]),
       );
@@ -157,8 +160,6 @@ export default function Index() {
     return upload;
   };
 
-  console.log(profile.full_name);
-
   if (myUid)
     return (
       <ThemedView style={{ flex: 1 }}>
@@ -167,12 +168,11 @@ export default function Index() {
             <ProfileImage
               key={profile?.avatar_url}
               uid={myUid}
-              avatar_url={profile.avatar_url}
+              avatar_url={profile?.avatar_url}
               propLoading={imageLoading}
               style={{
                 width: 100,
                 height: 100,
-                borderRadius: 12,
               }}
             />
             <IconButton
@@ -185,10 +185,14 @@ export default function Index() {
         </View>
         <TextInput
           label="Teljes név"
-          value={profile.full_name || ""}
+          value={profile?.full_name || ""}
           disabled={loading}
           onChangeText={(t) => setProfile({ ...profile, full_name: t })}
         />
+        <View style={{ padding: 16 }}>
+          <ThemedText type="label">Email</ThemedText>
+          <ThemedText>{userData?.email}</ThemedText>
+        </View>
       </ThemedView>
     );
 }

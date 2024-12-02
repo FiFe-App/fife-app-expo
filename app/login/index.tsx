@@ -8,7 +8,7 @@ import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
-import { Link, Redirect, useLocalSearchParams } from "expo-router";
+import { Link, Redirect, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
 import { Button, Divider, Text, TextInput } from "react-native-paper";
@@ -17,6 +17,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { loadViewedFunctions } from "@/redux/reducers/tutorialReducer";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -65,6 +66,12 @@ export default function Index() {
     });
 
     if (error) {
+      console.log(error.code);
+
+      if (error.code === "email_not_confirmed") {
+        AsyncStorage.setItem("email", email);
+        router.navigate("/csatlakozom/email-ellenorzes");
+      }
       setError(error.message);
     } else {
       getUserData(data.user);

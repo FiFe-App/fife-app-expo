@@ -2,16 +2,19 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { supabase } from "@/lib/supabase/supabase";
 import {
+  login,
   setName,
   setUserData,
   login as sliceLogin,
 } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User } from "@supabase/supabase-js";
 import { Link, Redirect, router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
+import * as WebBrowser from "expo-web-browser";
 
 import {
   Button,
@@ -23,6 +26,7 @@ import {
   useTheme,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { makeRedirectUri } from "expo-auth-session";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -33,9 +37,8 @@ AppState.addEventListener("change", (state) => {
 });
 
 export default function Index() {
-  const dispatch = useDispatch();
   const theme = useTheme();
-  console.log(theme);
+  const dispatch = useDispatch();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,42 +51,54 @@ export default function Index() {
   const isPasswordWeak = !!!passwordRegex.exec(password)?.length;
 
   const { uid }: UserState = useSelector((state: RootState) => state.user);
+  WebBrowser.maybeCompleteAuthSession(); // required for web only
+  const redirectTo = makeRedirectUri({ path: "/csatlakozom/elso-lepesek" });
 
   const createUser = async () => {
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: redirectTo,
+      },
     });
+    if (data.user) {
+      if (data?.user.identities && data.user.identities.length > 0) {
+        console.log("Sign-up successful!");
+        AsyncStorage.setItem("email", email);
+        router.navigate("/csatlakozom/email-ellenorzes");
+      } else {
+        console.log("Email address is already taken.");
+        const signInResponse = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInResponse.error) {
+          console.error(
+            "An error occurred during sign-in:",
+            signInResponse.error.message,
+          );
+        } else {
+          console.log("Successfully signed in existing user!");
+          dispatch(login(signInResponse.data.user.id));
+          dispatch(setUserData(signInResponse.data.user));
+          router.navigate("/user");
+        }
+      }
+    }
     if (error) {
       setError(error.message);
-    }
-    if (data?.user) {
-      getUserData(data.user).then((res) => {});
     }
     console.log(data, error);
+
     setLoading(false);
   };
 
-  const getUserData = async (userData: User) => {
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select()
-      .eq("id", userData.id)
-      .single();
-    if (error) {
-      setError(error.message);
-    }
-    if (profile) {
-      console.log("profile", profile);
-
-      dispatch(sliceLogin(profile?.id));
-      dispatch(setName(profile?.full_name));
-      dispatch(setUserData({ ...userData, ...profile }));
-      router.navigate("/csatlakozom/elso-lepesek");
-    }
-    setLoading(false);
-  };
+  useEffect(() => {
+    AsyncStorage.setItem("email", email);
+  }, [email]);
 
   if (uid) return <Redirect href="/" />;
   return (
@@ -149,7 +164,7 @@ export default function Index() {
             onPress={(e) => setAcceptConditions(!acceptConditions)}
             status={acceptConditions ? "checked" : "unchecked"}
           />
-          <ThemedText>
+          <ThemedText onPress={(e) => setAcceptConditions(!acceptConditions)}>
             Elfogadom a
             <ThemedText type="link">
               <Link href="/csatlakozom/iranyelvek"> feltételeket</Link>

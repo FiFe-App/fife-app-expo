@@ -1,5 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { UserState } from "../store.type";
+import { supabase } from "@/lib/supabase/supabase";
 
 const initialState: UserState = {
   uid: undefined,
@@ -23,6 +24,9 @@ const userReducer = createSlice({
       console.log("logged in as", payload.toString());
     },
     logout: (state) => {
+      supabase.auth.signOut().then((error) => {
+        console.log(error);
+      });
       state = initialState;
       return initialState;
     },
