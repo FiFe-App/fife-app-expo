@@ -38,8 +38,26 @@ export default function Index() {
   );
 
   useEffect(() => {
+    const getUserData = async (userData: User) => {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select()
+        .eq("id", userData.id)
+        .single();
+      if (error) {
+        setError(error.message);
+      }
+      if (profile) {
+        console.log("profile", profile);
+
+        dispatch(sliceLogin(profile?.id));
+        dispatch(setName(profile?.full_name));
+        return;
+        dispatch(setUserData({ ...userData, ...profile }));
+      }
+    };
     if (token_data) {
-      dispatch(logout());
+      //dispatch(logout());
       console.log(token_data);
 
       supabase.auth
@@ -54,23 +72,9 @@ export default function Index() {
     }
   }, [dispatch, token_data]);
 
-  const getUserData = async (userData: User) => {
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select()
-      .eq("id", userData.id)
-      .single();
-    if (error) {
-      setError(error.message);
-    }
-    if (profile) {
-      console.log("profile", profile);
-
-      dispatch(sliceLogin(profile?.id));
-      dispatch(setName(profile?.full_name));
-      dispatch(setUserData({ ...userData, ...profile }));
-    }
-  };
+  useEffect(() => {
+    console.log(token_data);
+  }, []);
 
   return (
     <ThemedView

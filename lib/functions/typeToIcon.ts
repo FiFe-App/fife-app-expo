@@ -1,6 +1,6 @@
 import { IconSource } from "react-native-paper/lib/typescript/components/Icon";
 
-const typeToIcon = (type: string): IconSource => {
+const typeToIcon = (type: string | undefined): IconSource => {
   if (type === "TEL") return "phone";
   if (type === "EMAIL") return "email";
   if (type === "INSTAGRAM") return "instagram";

@@ -29,9 +29,6 @@ const TagInput = ({
     .filter((e) => e.length);
   const text = (value || "").split(" $ ").slice(-1)[0];
 
-  console.log(list);
-  console.log(text);
-
   const edit = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
     if (e.nativeEvent.key === "Backspace" && text === "") {
       e.preventDefault();
@@ -51,7 +48,6 @@ const TagInput = ({
     }
   };
   const onChangeText = (e: string) => {
-    console.log("change", e);
     if (!e.includes("$")) onChange(toString(list) + " $ " + e);
   };
 
@@ -97,6 +93,7 @@ const TagInput = ({
           flexGrow: 1,
           fontSize: 17,
           padding: 4,
+          borderRadius: 0,
         }}
         onSubmitEditing={onSubmit}
         onChangeText={onChangeText}

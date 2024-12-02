@@ -14,17 +14,28 @@ import { Pressable, ScrollView, View } from "react-native";
 import {
   Button,
   Card,
+  Divider,
+  Headline,
   Icon,
   IconButton,
+  MD3DarkTheme,
   Modal,
   Portal,
   Text,
   TextInput,
+  TouchableRipple,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { MapView, Marker } from "../mapView/mapView";
 import { ThemedView } from "../ThemedView";
 import { setLocationError } from "@/redux/reducers/userReducer";
+import {
+  Dropdown,
+  DropdownInputProps,
+  Option,
+} from "react-native-paper-dropdown";
+import typeToIcon from "@/lib/functions/typeToIcon";
+import { ThemedText } from "../ThemedText";
 
 interface NewBuzinessInterface {
   title: string;
@@ -44,6 +55,8 @@ export default function BuzinessEditScreen({
     title: "",
     description: "",
   });
+  const [myContacts, setMyContacts] = useState<Option[]>([]);
+  const [defaultContact, setDefaultContact] = useState<number | undefined>();
   const { myLocation, error: locationError } = useMyLocation();
   const [circle, setCircle] = useState<MapCircleType | undefined>(undefined);
   const selectedLocation = circle?.position || myLocation?.coords;
@@ -77,6 +90,7 @@ export default function BuzinessEditScreen({
           title,
           author: uid,
           location: `POINT(${selectedLocation?.longitude} ${selectedLocation?.latitude})`,
+          defaultContact,
         },
         { onConflict: "id" },
       )
@@ -119,7 +133,7 @@ export default function BuzinessEditScreen({
 
   useFocusEffect(
     useCallback(() => {
-      if (editId) {
+      if (editId && uid) {
         navigation.setOptions({ title: "biznisz szerkesztése" });
         supabase
           .from("buziness")
@@ -142,6 +156,8 @@ export default function BuzinessEditScreen({
                   .reduce((partialSum, a) => partialSum + " $ " + a, "") +
                   " $ ",
               );
+              if (editingBuziness.defaultContact)
+                setDefaultContact(editingBuziness.defaultContact);
 
               const cords = locationToCoords(String(editingBuziness.location));
 
@@ -150,6 +166,22 @@ export default function BuzinessEditScreen({
                 radius: 200,
                 radiusDisplay: null,
               });
+            }
+          });
+        supabase
+          .from("contacts")
+          .select("id, data")
+          .eq("author", uid)
+          .then((res) => {
+            if (res.data) {
+              setMyContacts(
+                res.data.map((contact) => {
+                  return {
+                    label: contact.data,
+                    value: contact.id.toString(),
+                  };
+                }),
+              );
             }
           });
       }
@@ -211,6 +243,65 @@ export default function BuzinessEditScreen({
             onChangeText={(t) =>
               setNewBuziness({ ...newBuziness, description: t })
             }
+          />
+          <Dropdown
+            label="Kiemelt elérhetőséged"
+            options={myContacts}
+            value={defaultContact?.toString()}
+            CustomDropdownInput={({
+              placeholder,
+              selectedLabel,
+              label,
+              rightIcon,
+            }: DropdownInputProps) => (
+              <TextInput
+                placeholder={placeholder}
+                label={label}
+                value={selectedLabel}
+                right={rightIcon}
+              />
+            )}
+            CustomDropdownItem={({
+              width,
+              option,
+              value,
+              onSelect,
+              toggleMenu,
+              isLast,
+            }) => {
+              return (
+                <>
+                  <TouchableRipple
+                    onPress={() => {
+                      onSelect?.(option.value);
+                      toggleMenu();
+                    }}
+                  >
+                    <Headline
+                      style={{
+                        color:
+                          value === option.value
+                            ? MD3DarkTheme.colors.onPrimary
+                            : MD3DarkTheme.colors.primary,
+                        alignItems: "center",
+                        display: "flex",
+                        padding: 8,
+                      }}
+                    >
+                      <Icon source={typeToIcon(option.value)} size={22} />
+                      <ThemedText style={{ marginLeft: 8 }}>
+                        {option.label}
+                      </ThemedText>
+                    </Headline>
+                  </TouchableRipple>
+                  {!isLast && <Divider />}
+                </>
+              );
+            }}
+            hideMenuHeader
+            onSelect={(e) => {
+              setDefaultContact(Number(e));
+            }}
           />
           <Card>
             <Card.Title

@@ -77,7 +77,10 @@ export function ContactList({ uid, edit }: ContactListProps) {
                     right={
                       edit
                         ? () => (
-                            <List.Icon icon="pencil" style={{ height: 24 }} />
+                            <List.Icon
+                              icon={contact.public ? "eye" : "eye-off"}
+                              style={{ height: 24 }}
+                            />
                           )
                         : undefined
                     }
