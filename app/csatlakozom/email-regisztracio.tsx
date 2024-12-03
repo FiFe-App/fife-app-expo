@@ -1,21 +1,17 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { supabase } from "@/lib/supabase/supabase";
-import {
-  login,
-  setName,
-  setUserData,
-  login as sliceLogin,
-} from "@/redux/reducers/userReducer";
+import { login, setUserData } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { User } from "@supabase/supabase-js";
 import { Link, Redirect, router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
-import * as WebBrowser from "expo-web-browser";
 
+import { addSnack } from "@/redux/reducers/infoReducer";
+import { makeRedirectUri } from "expo-auth-session";
 import {
   Button,
   Checkbox,
@@ -26,8 +22,6 @@ import {
   useTheme,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { makeRedirectUri } from "expo-auth-session";
-import { addSnack } from "@/redux/reducers/infoReducer";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {

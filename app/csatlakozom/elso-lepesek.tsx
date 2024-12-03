@@ -1,14 +1,9 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import {
-  logout,
-  setName,
-  setUserData,
-  login as sliceLogin,
-} from "@/redux/reducers/userReducer";
+import { supabase } from "@/lib/supabase/supabase";
+import { setName, login as sliceLogin } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
-import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
@@ -53,7 +48,6 @@ export default function Index() {
         dispatch(sliceLogin(profile?.id));
         dispatch(setName(profile?.full_name));
         return;
-        dispatch(setUserData({ ...userData, ...profile }));
       }
     };
     if (token_data) {
@@ -71,10 +65,6 @@ export default function Index() {
         });
     }
   }, [dispatch, token_data]);
-
-  useEffect(() => {
-    console.log(token_data);
-  }, []);
 
   return (
     <ThemedView

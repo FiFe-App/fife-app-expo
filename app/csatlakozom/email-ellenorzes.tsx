@@ -1,18 +1,15 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { RootState } from "@/redux/store";
-import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
+import { login, setUserData } from "@/redux/reducers/userReducer";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
-import { useDispatch, useSelector } from "react-redux";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { login, setUserData } from "@/redux/reducers/userReducer";
-import { router } from "expo-router";
+import { useDispatch } from "react-redux";
 
 export default function Index() {
-  const { uid }: UserState = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [edit, setEdit] = useState(false);
@@ -48,7 +45,7 @@ export default function Index() {
             if (res.error) {
               const err = res.error;
               console.log(err);
-              if (err.code == "over_email_send_rate_limit")
+              if (err.code === "over_email_send_rate_limit")
                 setRes(
                   "Kérlek várj még egy kicsit mielőtt újabb email-t kérsz.",
                 );

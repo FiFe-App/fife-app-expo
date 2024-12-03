@@ -2,10 +2,13 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Enums, Tables } from "@/database.types";
 import typeToIcon from "@/lib/functions/typeToIcon";
+import typeToPlaceholder from "@/lib/functions/typeToPlaceholder";
+import typeToPrefix from "@/lib/functions/typeToPrefix";
+import typeToValueLabel from "@/lib/functions/typeToValueLabel";
 import wrapper from "@/lib/functions/wrapper";
+import { supabase } from "@/lib/supabase/supabase";
 import { addDialog, setOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { supabase } from "@/lib/supabase/supabase";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { View } from "react-native";
@@ -25,10 +28,6 @@ import { Dropdown, DropdownInputProps } from "react-native-paper-dropdown";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import TutorialCard from "../TutorialCard";
-import typeToPlaceholder from "@/lib/functions/typeToPlaceholder";
-import typeToPrefix from "@/lib/functions/typeToPrefix";
-import typeToValueLabel from "@/lib/functions/typeToValueLabel";
-import edit from "@/app/user/edit";
 
 const types: {
   label: string;
