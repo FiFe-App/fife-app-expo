@@ -10,6 +10,7 @@ const BottomNavigation = () => {
   const segment = useSegments();
   const { functions } = useSelector((state: RootState) => state.tutorial);
   const bizniszActive = segment[0]?.includes("biznisz");
+  const homeActive = segment[0]?.includes("home");
   const profilActive = segment[0]?.includes("user");
 
   return (
@@ -27,6 +28,22 @@ const BottomNavigation = () => {
               Biznisz
             </ThemedText>
             {functions.includes("buzinessPage") && (
+              <Badge style={globStyles.badge}>ÚJ</Badge>
+            )}
+          </View>
+        </TouchableRipple>
+      </Link>
+      <Link asChild href="/home">
+        <TouchableRipple style={styles.button}>
+          <View style={{ alignItems: "center" }}>
+            <Icon
+              source={homeActive ? "home" : "home-outline"}
+              size={homeActive ? 30 : 24}
+            />
+            <ThemedText type={homeActive ? "defaultSemiBold" : "default"}>
+              Főoldal
+            </ThemedText>
+            {functions.includes("homePage") && (
               <Badge style={globStyles.badge}>ÚJ</Badge>
             )}
           </View>

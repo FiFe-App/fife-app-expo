@@ -29,6 +29,10 @@ export default function RootLayout() {
               options={{ headerShown: false, animation: "slide_from_right" }}
             />
             <Stack.Screen
+              name="home/index"
+              options={{ title: "Üdvözöllek a FiFe Appban" }}
+            />
+            <Stack.Screen
               name="biznisz/new"
               options={{ title: "Új Biznisz" }}
             />
