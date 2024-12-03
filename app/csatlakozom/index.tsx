@@ -1,4 +1,3 @@
-import Smiley from "@/components/Smiley";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { View } from "react-native";

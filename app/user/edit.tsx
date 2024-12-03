@@ -1,28 +1,25 @@
-import { ContactList } from "@/components/buziness/ContactList";
 import ProfileImage from "@/components/ProfileImage";
+import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Tables } from "@/database.types";
+import { supabase } from "@/lib/supabase/supabase";
 import { setOptions } from "@/redux/reducers/infoReducer";
 import { setName, setUserData } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
-import { supabase } from "@/lib/supabase/supabase";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { View } from "react-native";
-import { IconButton, Text, TextInput } from "react-native-paper";
+import { IconButton, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { ThemedText } from "@/components/ThemedText";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
-  const {
-    uid: myUid,
-    name,
-    userData,
-  }: UserState = useSelector((state: RootState) => state.user);
+  const { uid: myUid, userData }: UserState = useSelector(
+    (state: RootState) => state.user,
+  );
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [profile, setProfile] = useState<UserInfo>({});
