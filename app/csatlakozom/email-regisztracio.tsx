@@ -27,6 +27,7 @@ import {
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { makeRedirectUri } from "expo-auth-session";
+import { addSnack } from "@/redux/reducers/infoReducer";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -80,10 +81,17 @@ export default function Index() {
             "An error occurred during sign-in:",
             signInResponse.error.message,
           );
+          console.log(signInResponse.error.code);
+          if (signInResponse.error.code === "invalid_credentials") {
+            setError("Ez az email már foglalt");
+          } else {
+            setError(signInResponse.error.message);
+          }
         } else {
           console.log("Successfully signed in existing user!");
           dispatch(login(signInResponse.data.user.id));
           dispatch(setUserData(signInResponse.data.user));
+          dispatch(addSnack({ title: "Bejelentkeztél!" }));
           router.navigate("/user");
         }
       }
