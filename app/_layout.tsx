@@ -56,6 +56,7 @@ export default function RootLayout() {
               name="contact-edit/[editId]"
               options={{ title: "Elérhetőség Szerkesztése" }}
             />
+            <Stack.Screen name="events/[id]" options={{ title: "Esemény" }} />
           </Stack>
           {pathname !== "/" &&
             !pathname.includes("login") &&
