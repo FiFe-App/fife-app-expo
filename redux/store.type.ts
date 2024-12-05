@@ -41,6 +41,13 @@ export interface BuzinessItemInterface {
   avatarUrl?: string | null;
   buzinessRecommendations: { author: string }[];
 }
+export interface EventItemInterface extends Tables<"events"> {
+  lat: number | null;
+  long: number | null;
+  authorName?: string;
+  avatarUrl?: string | null;
+  eventResponses: Tables<"eventResponses">[];
+}
 export interface BuzinessSearchParams {
   text?: string;
   location?: {

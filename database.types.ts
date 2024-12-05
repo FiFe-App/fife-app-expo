@@ -202,33 +202,47 @@ export type Database = {
       }
       events: {
         Row: {
+          author: string
           created_at: string
           date: string
           description: string | null
           duration: string | null
           id: number
-          location: string | null
+          location: unknown | null
+          locationName: string
           title: string
         }
         Insert: {
+          author: string
           created_at?: string
           date: string
           description?: string | null
           duration?: string | null
           id?: number
-          location?: string | null
+          location?: unknown | null
+          locationName: string
           title: string
         }
         Update: {
+          author?: string
           created_at?: string
           date?: string
           description?: string | null
           duration?: string | null
           id?: number
-          location?: string | null
+          location?: unknown | null
+          locationName?: string
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
