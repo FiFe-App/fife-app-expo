@@ -9,6 +9,7 @@ interface ProfileImageProps {
   uid: string;
   avatar_url?: string | null;
   style?: StyleProp<ImageStyle>;
+  size?: number;
   resizeMode?: ImageContentFit | undefined;
   propLoading?: boolean;
   modal?: boolean;
@@ -18,6 +19,7 @@ const ProfileImage = ({
   uid,
   avatar_url,
   style,
+  size,
   resizeMode,
   propLoading = false,
   modal = false,
@@ -81,7 +83,7 @@ const ProfileImage = ({
         <View
           style={[style, { alignItems: "center", justifyContent: "center" }]}
         >
-          <Icon source="emoticon-cool" size={50} />
+          <Icon source="emoticon-cool" size={size || 50} />
         </View>
       )}
     </View>

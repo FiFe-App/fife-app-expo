@@ -57,12 +57,7 @@ const GoingInput = ({
       });
   };
   return (
-    <View
-      onStartShouldSetResponder={(event) => true}
-      onTouchEnd={(e) => {
-        e.stopPropagation();
-      }}
-    >
+    <View>
       <ThemedText>Mennyire valószínű, hogy itt leszel?</ThemedText>
       <View
         style={{
@@ -83,6 +78,7 @@ const GoingInput = ({
           onResponderEnd={(e) => {
             e.stopPropagation();
           }}
+          onSlidingComplete={onValueChange}
           //disabled={loading}
         />
       </View>

@@ -39,14 +39,19 @@ const EventItem = ({ event }: EventItemProps) => {
       }}
     >
       <Card.Content>
-        <View style={{ flexDirection: "row" }}>
-          <ThemedText type="defaultSemiBold">{event.title}</ThemedText>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <ThemedText
+            type="defaultSemiBold"
+            style={{ flex: 1, marginHorizontal: 4 }}
+          >
+            {event.title}
+          </ThemedText>
           <Link
             asChild
-            style={{ flex: 1, padding: 8 }}
+            style={{ margin: 0 }}
             href={{ pathname: "/events/[id]", params: { id: event.id } }}
           >
-            <IconButton icon="arrow" />
+            <IconButton icon="arrow-right" />
           </Link>
         </View>
         <View
@@ -58,11 +63,13 @@ const EventItem = ({ event }: EventItemProps) => {
         >
           <ThemedText style={{ flex: 1 }}>
             <Icon source="calendar" size={16} />
-            {date.toLocaleString("hu-HU")}
+            <Text style={{ marginHorizontal: 4 }}>
+              {date.toLocaleString("hu-HU")}
+            </Text>
           </ThemedText>
           <ThemedText>
+            <Text style={{ marginHorizontal: 4 }}>{event.duration}</Text>
             <Icon source="clock" size={16} />
-            {event.duration}
           </ThemedText>
         </View>
         <View
@@ -73,12 +80,14 @@ const EventItem = ({ event }: EventItemProps) => {
           }}
         >
           <ThemedText style={{ flexGrow: 1 }}>
-            <Icon source="account-multiple" size={16} />
-            {Math.round(sumPeople - defaultValue + value)} fő
+            <Icon source="map-marker" size={16} />
+            <Text style={{ marginHorizontal: 4 }}>{event.locationName}</Text>
           </ThemedText>
           <ThemedText>
-            <Icon source="map-marker" size={16} />
-            {event.locationName}
+            <Text style={{ marginHorizontal: 4 }}>
+              {Math.round(sumPeople - defaultValue + value)} fő
+            </Text>
+            <Icon source="account-multiple" size={16} />
           </ThemedText>
         </View>
         <GoingInput
