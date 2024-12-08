@@ -89,7 +89,8 @@
     "jest-expo": "~51.0.4",
     "prettier": "^3.3.2",
     "react-test-renderer": "18.2.0",
-    "typescript": "~5.3.3"
+    "typescript": "~5.3.3",
+    "workbox-cli": "^7.3.0"
   },
   "private": true,
   "volta": {
