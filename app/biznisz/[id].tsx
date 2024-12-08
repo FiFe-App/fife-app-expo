@@ -5,7 +5,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { ContactList } from "@/components/buziness/ContactList";
 import Comments from "@/components/comments/Comments";
 import { LatLng, MapView, Marker } from "@/components/mapView/mapView";
-import BuzinessRecommendationsModal from "@/components/user/BuzinessRecommendationsModal";
+import BuzinessRecommendationsModal from "@/components/buziness/BuzinessRecommendationsModal";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";

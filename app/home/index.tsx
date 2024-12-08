@@ -6,9 +6,11 @@ import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { Redirect, useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
-import { ActivityIndicator } from "react-native-paper";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Button } from "react-native-paper";
 import { useSelector } from "react-redux";
+import OneSignal from "react-onesignal";
+import { View } from "react-native";
 
 export interface EventWithRes extends Tables<"events"> {
   eventResponses?:
@@ -23,6 +25,13 @@ export default function Index() {
   const [events, setEvents] = useState<EventWithRes[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>();
+  const oneSignalAppId = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID;
+  const pushToken = OneSignal.User.PushSubscription.token;
+
+  useEffect(() => {
+    if (pushToken) {
+    }
+  }, [pushToken]);
 
   useFocusEffect(
     useCallback(() => {
@@ -43,6 +52,29 @@ export default function Index() {
     }, []),
   );
 
+  const initializeOneSignal = async () => {
+    if (!uid || !oneSignalAppId) return;
+    if (pushToken) {
+      //return;
+    }
+    await OneSignal.init({
+      appId: oneSignalAppId,
+      notifyButton: {
+        enable: true,
+      },
+
+      allowLocalhostAsSecureOrigin: true,
+    });
+
+    await OneSignal.login(uid)
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
   if (!uid)
     return (
       <ThemedView style={{ flex: 1 }}>
@@ -61,9 +93,16 @@ export default function Index() {
         Közelgő események
       </ThemedText>
       {loading && <ActivityIndicator />}
-      {events.map((event, index) => (
-        <EventItem key={index + "event"} event={event} />
-      ))}
+      <View style={{ gap: 8 }}>
+        {events.map((event, index) => (
+          <EventItem key={index + "event"} event={event} />
+        ))}
+      </View>
+      {!pushToken && (
+        <Button onPress={initializeOneSignal}>
+          Engedélyezd az értesítéseket
+        </Button>
+      )}
     </ThemedView>
   );
 }
