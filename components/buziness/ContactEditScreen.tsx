@@ -2,10 +2,13 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Enums, Tables } from "@/database.types";
 import typeToIcon from "@/lib/functions/typeToIcon";
+import typeToPlaceholder from "@/lib/functions/typeToPlaceholder";
+import typeToPrefix from "@/lib/functions/typeToPrefix";
+import typeToValueLabel from "@/lib/functions/typeToValueLabel";
 import wrapper from "@/lib/functions/wrapper";
+import { supabase } from "@/lib/supabase/supabase";
 import { addDialog, setOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { supabase } from "@/lib/supabase/supabase";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { View } from "react-native";
@@ -25,10 +28,6 @@ import { Dropdown, DropdownInputProps } from "react-native-paper-dropdown";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import TutorialCard from "../TutorialCard";
-import typeToPlaceholder from "@/lib/functions/typeToPlaceholder";
-import typeToPrefix from "@/lib/functions/typeToPrefix";
-import typeToValueLabel from "@/lib/functions/typeToValueLabel";
-import edit from "@/app/user/edit";
 
 const types: {
   label: string;
@@ -131,9 +130,9 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
       setLoading(false);
       const text = contact.public
         ? "Bárki láthatja a részleteit az oldaladon, vagy egy bizniszed oldalán."
-        : "Senki sem láthatja a részleteit.";
+        : "Csak az láthatja majd a részleteit, akinek külön engedélyezed.";
       const onSubmit = () => {
-        router.navigate({ pathname: "/user/edit" });
+        router.navigate({ pathname: "/user" });
       };
       dispatch(
         addDialog({
@@ -232,7 +231,6 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
             label="Leírás (opcionális)"
             onChangeText={(t) => setContact({ ...contact, title: t })}
           />
-
           <TouchableRipple
             disabled={loading}
             onPressOut={(e) =>
@@ -248,8 +246,17 @@ const ContactEditScreen = ({ id }: { id?: string }) => {
               />
             </View>
           </TouchableRipple>
+          <View style={{ padding: 16 }}>
+            <Text>
+              Ha nem publikus az elérhetőséged akkor csak te engedélyezheted,
+              hogy ki lássa.
+            </Text>
+          </View>
           <View style={{ padding: 16, gap: 8 }}>
-            <Text>Így fog megjelenni másoknak:</Text>
+            <Text>
+              Így fog megjelenni{" "}
+              {contact.public ? "másoknak" : "akinek engedélyezed"}:
+            </Text>
             <List.Item
               title={contact.title || contact.data}
               onPress={() => {}}

@@ -5,8 +5,10 @@ import { ThemedView } from "@/components/ThemedView";
 import { ContactList } from "@/components/buziness/ContactList";
 import Comments from "@/components/comments/Comments";
 import { LatLng, MapView, Marker } from "@/components/mapView/mapView";
-import BuzinessRecommendationsModal from "@/components/buziness/BuzinessRecommendationsModal";
+import BuzinessRecommendationsModal from "@/components/user/BuzinessRecommendationsModal";
+import { Tables } from "@/database.types";
 import { useMyLocation } from "@/hooks/useMyLocation";
+import getLinkForContact from "@/lib/functions/getLinkForContact";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
 import { supabase } from "@/lib/supabase/supabase";
@@ -45,10 +47,13 @@ export default function Index() {
   );
   const id: number = Number(paramId);
   const [data, setData] = useState<BuzinessItemInterface | undefined>();
+  const [defaultContact, setDefaultContact] =
+    useState<Tables<"contacts"> | null>();
+  const [requestContanct, setRequestContanct] = useState(false);
   const [error, setError] = useState<null | Partial<PostgrestError>>(null);
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
-  const iRecommended = recommendations.includes(myUid || "");
+  const iRecommended = recommendations?.includes(myUid || "");
   const location: LatLng | null = data
     ? { latitude: data.lat, longitude: data.long }
     : null;
@@ -72,7 +77,7 @@ export default function Index() {
         supabase
           .from("buziness")
           .select(
-            "*, profiles ( full_name, avatar_url ), buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(author)",
+            "*, contacts(*), profiles ( full_name, avatar_url ), buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(author)",
           )
           .eq("id", id)
           .maybeSingle()
@@ -95,8 +100,16 @@ export default function Index() {
                 authorName: data?.profiles?.full_name || "???",
                 avatarUrl: data?.profiles?.avatar_url,
               });
+              if (data.defaultContact) {
+                if (data.contacts) {
+                  setDefaultContact(data.contacts);
+                } else {
+                  setRequestContanct(true);
+                }
+              }
+
               setRecommendations(
-                data.buzinessRecommendations.map((pr) => pr.author),
+                data?.buzinessRecommendations?.map((pr) => pr.author),
               );
             } else
               setError({
@@ -179,7 +192,7 @@ export default function Index() {
                   justifyContent: "center",
                 }}
                 onPress={
-                  recommendations.length
+                  recommendations?.length
                     ? () => setShowRecommendsModal(true)
                     : undefined
                 }
@@ -228,6 +241,20 @@ export default function Index() {
                   Szerkesztés
                 </Button>
               )}
+
+              {defaultContact && (
+                <Link asChild href={getLinkForContact(defaultContact)}>
+                  <Button style={{ flex: 1 }} mode="contained">
+                    {defaultContact.title || defaultContact?.data}
+                  </Button>
+                </Link>
+              )}
+              {requestContanct && (
+                <Button style={{ flex: 1 }} mode="contained">
+                  Kérd el a kontaktját
+                </Button>
+              )}
+
               {!myBuziness && (
                 <RecommendBuzinessButton
                   buzinessId={id}
@@ -340,7 +367,11 @@ export default function Index() {
                 <TabScreen label="Elérhetőségek" icon="contacts">
                   <ContactList uid={data.author} />
                 </TabScreen>
-                <TabScreen label="Vélemények" icon="chat" badge={commentsCount}>
+                <TabScreen
+                  label="Vélemények"
+                  icon="chat"
+                  badge={commentsCount || undefined}
+                >
                   <Comments
                     path={"buziness/" + id}
                     placeholder="Mondd el a véleményed"

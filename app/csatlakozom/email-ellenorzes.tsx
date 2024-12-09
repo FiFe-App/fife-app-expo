@@ -1,110 +1,149 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import {
-  logout,
-  setName,
-  setUserData,
-  login as sliceLogin,
-} from "@/redux/reducers/userReducer";
-import { RootState } from "@/redux/store";
-import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
-import { User } from "@supabase/auth-js";
-import { Link, useLocalSearchParams } from "expo-router";
+import { login, setUserData } from "@/redux/reducers/userReducer";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { AppState, View } from "react-native";
-import { ActivityIndicator, Button, Icon } from "react-native-paper";
-import { useDispatch, useSelector } from "react-redux";
-
-AppState.addEventListener("change", (state) => {
-  if (state === "active") {
-    supabase.auth.startAutoRefresh();
-  } else {
-    supabase.auth.stopAutoRefresh();
-  }
-});
+import { View } from "react-native";
+import { Button, TextInput } from "react-native-paper";
+import { useDispatch } from "react-redux";
 
 export default function Index() {
   const dispatch = useDispatch();
-  const { uid }: UserState = useSelector((state: RootState) => state.user);
-  const { "#": hash } = useLocalSearchParams<{ "#": string }>();
-  const token_data = hash
-    ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
-    : null;
-  const [error, setError] = useState<string | null>(
-    uid || token_data ? null : "Ejj hát ide nem kellett volna tévedned!",
-  );
+  const [loading, setLoading] = useState(false);
+  const [edit, setEdit] = useState(false);
+  const [res, setRes] = useState<null | string>(null);
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
-    if (token_data) {
-      dispatch(logout());
-      console.log(token_data);
+    supabase.auth.getSession().then(({ data, error }) => {
+      console.log(data, error);
 
-      supabase.auth
-        .setSession({
-          refresh_token: token_data.refresh_token,
-          access_token: token_data?.access_token,
-        })
-        .then(({ data, error }) => {
-          if (error) setError(error.message);
-          if (data.user) getUserData(data.user);
-        });
-    }
-  }, [dispatch, token_data]);
+      if (data.session?.user.confirmed_at) {
+        dispatch(setUserData({ ...data.session.user }));
+        dispatch(login(data.session.user.id));
+        router.push("/csatlakozom/elso-lepesek");
+      }
+    });
+  }, [dispatch, res]);
 
-  const getUserData = async (userData: User) => {
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select()
-      .eq("id", userData.id)
-      .single();
-    if (error) {
-      setError(error.message);
-    }
-    if (profile) {
-      console.log("profile", profile);
+  const send = () => {
+    console.log("sending");
+    update()
+      .then(() => {
+        supabase.auth
+          .resend({
+            type: "signup",
+            email,
+            options: {
+              emailRedirectTo: "http://localhost:8081/csatlakozom/elso-lepesek",
+            },
+          })
+          .then((res) => {
+            console.log(res);
+            if (res.error) {
+              const err = res.error;
+              console.log(err);
+              if (err.code === "over_email_send_rate_limit")
+                setRes(
+                  "Kérlek várj még egy kicsit mielőtt újabb email-t kérsz.",
+                );
+              else if (err.code === "validation_failed")
+                setRes("Nem megfelelő email-cím");
+              else setRes(err.message);
+              return;
+            }
 
-      dispatch(sliceLogin(profile?.id));
-      dispatch(setName(profile?.full_name));
-      dispatch(setUserData({ ...userData, ...profile }));
-    }
+            if (res.data)
+              setRes("Email elküldve! Nézd meg a spam mappában is!");
+          })
+          .catch((err) => {
+            console.error("asd", err);
+            setRes("A túróba. Valami hiba történt, próbáld meg újra!");
+          });
+      })
+      .catch((err) => {
+        console.log("err");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
+  const update = async () => {
+    if (edit) {
+      return await supabase.auth
+        .updateUser({
+          email,
+        })
+        .then((res) => {
+          console.log(res);
+
+          if (res.error) {
+            if (res.error?.code === "user_not_found")
+              setRes("Nem létezik ez a felhasználó");
+            throw new Error(res.error.message);
+          }
+        });
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    if (edit) setEmail("");
+  }, [edit]);
+  useEffect(() => {
+    AsyncStorage.getItem("email").then((res) => {
+      if (res) setEmail(res);
+    });
+  }, []);
+
   return (
-    <ThemedView
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 32,
-      }}
-    >
-      {!error && !uid && <ActivityIndicator />}
-      {error && (
-        <>
-          <Icon source="emoticon-sad" size={100} />
-          <ThemedText type="title">Valami hiba történt!</ThemedText>
-          <ThemedText type="title">{error}</ThemedText>
-          <Link asChild href="/csatlakozom/regisztracio">
-            <Button mode="contained">Újra próbálom</Button>
-          </Link>
-        </>
-      )}
-      {!error && uid && (
-        <>
-          <Icon source="check-circle" size={100} />
-          <ThemedText type="title" style={{ textAlign: "center" }}>
-            Gratulálok!
-          </ThemedText>
-          <View style={{ alignItems: "center" }}>
-            <ThemedText>Most már te is FiFe vagy!</ThemedText>
-            <ThemedText>Első lépésként állítsd be az adataidat</ThemedText>
-          </View>
-          <Link asChild href="/user/edit">
-            <Button mode="contained">Profilom szerkesztése</Button>
-          </Link>
-        </>
-      )}
+    <ThemedView style={{ flex: 1, padding: 16 }}>
+      <View style={{ justifyContent: "center", marginBottom: 16 }}></View>
+      <View
+        style={{
+          maxWidth: 400,
+          width: "100%",
+          gap: 8,
+          flex: 3,
+          justifyContent: "center",
+        }}
+      >
+        <ThemedText type="title">
+          Kérlek igazold vissza az email-címedet
+        </ThemedText>
+        <View style={{}}>
+          <ThemedText>Küldtünk egy email-t erre a címre:</ThemedText>
+          {!edit ? (
+            <ThemedText style={{ textAlign: "center" }}>{email}</ThemedText>
+          ) : (
+            <>
+              <TextInput
+                style={{
+                  textAlign: "center",
+                  borderRadius: 8,
+                  margin: 5,
+                }}
+                placeholder="Az új email-címed"
+                value={email}
+                onChangeText={setEmail}
+              />
+            </>
+          )}
+          <Button
+            onPress={send}
+            loading={loading}
+            disabled={!email}
+            mode={edit ? "contained" : "contained-tonal"}
+          >
+            Email újra-küldése
+          </Button>
+          {res && <ThemedText type="subtitle">{res}</ThemedText>}
+          <Button onPress={() => setEdit(true)}>Elírtad az email-címed?</Button>
+        </View>
+      </View>
     </ThemedView>
   );
 }
