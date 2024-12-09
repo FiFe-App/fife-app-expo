@@ -55,7 +55,9 @@ export default function Index() {
   const myEvent = myUid === data?.author;
   const { myLocation } = useMyLocation();
   const nav = useNavigation();
-  const [commentsCount, setCommentsCount] = useState<number>();
+  const [commentsCount, setCommentsCount] = useState<number | undefined>(
+    undefined,
+  );
   const [defaultValue, setDefaultValue] = useState(0);
 
   const sumPeople =
@@ -113,7 +115,7 @@ export default function Index() {
           .then((res) => {
             console.log(res);
 
-            setCommentsCount(res.data?.count);
+            setCommentsCount(res.data?.count || undefined);
           });
       };
       load();
@@ -218,42 +220,46 @@ export default function Index() {
                 </TouchableRipple>
               </View>
             </View>
-            <TouchableRipple
-              onPress={
-                isLongDescription !== undefined
-                  ? () => {
-                      setIsLongDescription(!isLongDescription);
-                    }
-                  : undefined
-              }
-              disabled={isLongDescription !== undefined}
-              style={{ margin: 16 }}
-            >
-              <ThemedText
-                numberOfLines={isLongDescription ? 10 : undefined}
-                onLayout={(e) => {
-                  if (
-                    isLongDescription === undefined &&
-                    e.nativeEvent.layout.height > 165
-                  ) {
+            {!myEvent && !data.description && (
+              <>
+                <TouchableRipple
+                  onPress={
+                    isLongDescription !== undefined
+                      ? () => {
+                          setIsLongDescription(!isLongDescription);
+                        }
+                      : undefined
                   }
-                }}
-              >
-                {data?.description}
-                {isLongDescription !== undefined && (
-                  <ThemedText>{isLongDescription ? "Több" : ""}</ThemedText>
-                )}
-              </ThemedText>
-            </TouchableRipple>
-            <Card style={{ padding: 8, margin: 4 }}>
-              {!myEvent && (
-                <GoingInput
-                  eventId={data.id}
-                  value={goingValue}
-                  onOuterValueChange={setGoingValue}
-                />
-              )}
-            </Card>
+                  disabled={isLongDescription !== undefined}
+                  style={{ margin: 16 }}
+                >
+                  <ThemedText
+                    numberOfLines={isLongDescription ? 10 : undefined}
+                    onLayout={(e) => {
+                      if (
+                        isLongDescription === undefined &&
+                        e.nativeEvent.layout.height > 165
+                      ) {
+                      }
+                    }}
+                  >
+                    {data?.description}
+                    {isLongDescription !== undefined && (
+                      <ThemedText>{isLongDescription ? "Több" : ""}</ThemedText>
+                    )}
+                  </ThemedText>
+                </TouchableRipple>
+                <Card style={{ padding: 8, margin: 4 }}>
+                  {!myEvent && (
+                    <GoingInput
+                      eventId={data.id}
+                      value={goingValue}
+                      onOuterValueChange={setGoingValue}
+                    />
+                  )}
+                </Card>
+              </>
+            )}
             <TabsProvider defaultIndex={0}>
               <Tabs showTextLabel={width > 400}>
                 {location && (

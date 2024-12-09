@@ -4,7 +4,14 @@ import { supabase } from "@/lib/supabase/supabase";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { Divider, IconButton, Text, TouchableRipple } from "react-native-paper";
+import {
+  DefaultTheme,
+  Divider,
+  IconButton,
+  ProgressBar,
+  Text,
+  TouchableRipple,
+} from "react-native-paper";
 import SupabaseImage from "../SupabaseImage";
 import { ThemedView } from "../ThemedView";
 import ProfileImage from "../ProfileImage";
@@ -66,7 +73,11 @@ const EventGoingResponses = ({ id, name }: RMP) => {
                 />
                 <View style={{ flex: 1, justifyContent: "center" }}>
                   <Text>{rec.profiles?.full_name}</Text>
-                  <Text>{probabilityToText(rec.value)}</Text>
+                  <ProgressBar
+                    style={{ marginTop: 4 }}
+                    progress={rec.value / 10}
+                    color={DefaultTheme.colors.primary}
+                  />
                 </View>
                 <IconButton icon="account" />
               </View>
