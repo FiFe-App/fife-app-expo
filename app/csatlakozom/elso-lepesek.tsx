@@ -1,14 +1,9 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import {
-  logout,
-  setName,
-  setUserData,
-  login as sliceLogin,
-} from "@/redux/reducers/userReducer";
+import { supabase } from "@/lib/supabase/supabase";
+import { setName, login as sliceLogin } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
-import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
@@ -38,8 +33,25 @@ export default function Index() {
   );
 
   useEffect(() => {
+    const getUserData = async (userData: User) => {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select()
+        .eq("id", userData.id)
+        .single();
+      if (error) {
+        setError(error.message);
+      }
+      if (profile) {
+        console.log("profile", profile);
+
+        dispatch(sliceLogin(profile?.id));
+        dispatch(setName(profile?.full_name));
+        return;
+      }
+    };
     if (token_data) {
-      dispatch(logout());
+      //dispatch(logout());
       console.log(token_data);
 
       supabase.auth
@@ -53,24 +65,6 @@ export default function Index() {
         });
     }
   }, [dispatch, token_data]);
-
-  const getUserData = async (userData: User) => {
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select()
-      .eq("id", userData.id)
-      .single();
-    if (error) {
-      setError(error.message);
-    }
-    if (profile) {
-      console.log("profile", profile);
-
-      dispatch(sliceLogin(profile?.id));
-      dispatch(setName(profile?.full_name));
-      dispatch(setUserData({ ...userData, ...profile }));
-    }
-  };
 
   return (
     <ThemedView

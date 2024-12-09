@@ -71,15 +71,16 @@ export default function Index() {
             "*, profileRecommendations!profileRecommendations_profile_id_fkey(*)",
           )
           .eq("id", uid)
+          .single()
           .then(({ data, error }) => {
             if (error) {
               console.log("err", error.message);
               return;
             }
             if (data) {
-              setData(data[0]);
+              setData(data);
               setRecommendations(
-                data[0].profileRecommendations.map((pr) => pr.author),
+                data.profileRecommendations.map((pr) => pr.author),
               );
               console.log(data);
             }

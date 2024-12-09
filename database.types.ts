@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           author: string;
           created_at: string;
+          defaultContact: number | null;
           description: string;
           id: number;
           images: string[] | null;
@@ -23,6 +24,7 @@ export type Database = {
         Insert: {
           author: string;
           created_at?: string;
+          defaultContact?: number | null;
           description: string;
           id?: number;
           images?: string[] | null;
@@ -33,6 +35,7 @@ export type Database = {
         Update: {
           author?: string;
           created_at?: string;
+          defaultContact?: number | null;
           description?: string;
           id?: number;
           images?: string[] | null;
@@ -46,6 +49,13 @@ export type Database = {
             columns: ["author"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "buziness_defaultContact_fkey";
+            columns: ["defaultContact"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
             referencedColumns: ["id"];
           },
         ];
