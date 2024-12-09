@@ -3,7 +3,7 @@ import { Image, ImageContentFit } from "expo-image";
 import { useEffect, useState } from "react";
 import { ImageStyle, StyleProp, StyleSheet, View } from "react-native";
 import ImageModal from "react-native-image-modal";
-import { ActivityIndicator, Icon, Text } from "react-native-paper";
+import { ActivityIndicator, Icon } from "react-native-paper";
 
 interface ProfileImageProps {
   uid: string;
