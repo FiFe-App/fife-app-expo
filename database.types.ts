@@ -161,6 +161,89 @@ export type Database = {
         };
         Relationships: [];
       };
+      eventResponses: {
+        Row: {
+          created_at: string;
+          event_id: number;
+          id: number;
+          user_id: string;
+          value: number;
+        };
+        Insert: {
+          created_at?: string;
+          event_id: number;
+          id?: number;
+          user_id?: string;
+          value: number;
+        };
+        Update: {
+          created_at?: string;
+          event_id?: number;
+          id?: number;
+          user_id?: string;
+          value?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "eventResponses_event_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "eventResponses_user_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      events: {
+        Row: {
+          author: string;
+          created_at: string;
+          date: string;
+          description: string | null;
+          duration: string | null;
+          id: number;
+          location: unknown | null;
+          locationName: string;
+          title: string;
+        };
+        Insert: {
+          author: string;
+          created_at?: string;
+          date: string;
+          description?: string | null;
+          duration?: string | null;
+          id?: number;
+          location?: unknown | null;
+          locationName: string;
+          title: string;
+        };
+        Update: {
+          author?: string;
+          created_at?: string;
+          date?: string;
+          description?: string | null;
+          duration?: string | null;
+          id?: number;
+          location?: unknown | null;
+          locationName?: string;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "events_author_fkey";
+            columns: ["author"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       messages: {
         Row: {
           author: string;
