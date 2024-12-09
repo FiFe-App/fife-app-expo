@@ -4,12 +4,19 @@ const initialState: InfoState = {
   dialogs: [],
   options: [],
   snacks: [],
+  notificationToken: null,
 };
 
 const infoReducer = createSlice({
   initialState,
   name: "info",
   reducers: {
+    setNotificationToken: (
+      state,
+      action: PayloadAction<string | null | undefined>,
+    ) => {
+      state.notificationToken = action.payload;
+    },
     addDialog: (state, action: PayloadAction<DialogProps>) => {
       state.dialogs = [
         ...(state.dialogs || []),
@@ -46,6 +53,7 @@ const infoReducer = createSlice({
 });
 
 export const {
+  setNotificationToken,
   addDialog,
   popDialog,
   setOptions,

@@ -84,7 +84,7 @@ export interface InfoState {
   dialogs: DialogProps[];
   options: OptionProps[];
   snacks: SnackProps[];
-  notificationsEnabled: boolean;
+  notificationToken: null | undefined | string;
 }
 
 export interface TutorialState {

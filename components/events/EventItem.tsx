@@ -22,15 +22,12 @@ const EventItem = ({ event }: EventItemProps) => {
   const [value, setValue] = useState<number>(0);
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   const [loading, setLoading] = useState(true);
-  const [defaultValue, setDefaultValue] = useState(0);
-
-  console.log(event);
-
   const sumPeople =
     event?.eventResponses?.reduce((e, c) => {
       if (c.value) return e + c.value / 10;
       return e;
     }, 0) || 0;
+  const [defaultValue, setDefaultValue] = useState(sumPeople);
 
   return (
     <Card
@@ -90,11 +87,13 @@ const EventItem = ({ event }: EventItemProps) => {
             <Icon source="account-multiple" size={16} />
           </ThemedText>
         </View>
-        <GoingInput
-          eventId={event.id}
-          value={value}
-          onOuterValueChange={setValue}
-        />
+        {!defaultValue && (
+          <GoingInput
+            eventId={event.id}
+            value={value}
+            onOuterValueChange={setValue}
+          />
+        )}
       </Card.Content>
     </Card>
   );

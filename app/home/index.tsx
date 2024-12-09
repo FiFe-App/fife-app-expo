@@ -8,9 +8,14 @@ import { UserState } from "@/redux/store.type";
 import { Redirect, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Button } from "react-native-paper";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import OneSignal from "react-onesignal";
 import { View } from "react-native";
+import {
+  addDialog,
+  addSnack,
+  setNotificationToken,
+} from "@/redux/reducers/infoReducer";
 
 export interface EventWithRes extends Tables<"events"> {
   eventResponses?:
@@ -21,17 +26,18 @@ export interface EventWithRes extends Tables<"events"> {
 }
 
 export default function Index() {
+  const dispatch = useDispatch();
   const { uid }: UserState = useSelector((state: RootState) => state.user);
+  const { notificationToken } = useSelector((state: RootState) => state.info);
   const [events, setEvents] = useState<EventWithRes[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>();
   const oneSignalAppId = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID;
-  const pushToken = OneSignal.User.PushSubscription.token;
+  const token = OneSignal.User.PushSubscription.token;
 
   useEffect(() => {
-    if (pushToken) {
-    }
-  }, [pushToken]);
+    if (token) dispatch(setNotificationToken(token));
+  }, [dispatch, token]);
 
   useFocusEffect(
     useCallback(() => {
@@ -52,23 +58,31 @@ export default function Index() {
     }, []),
   );
 
+  const showNotificationDialog = () => {
+    dispatch(
+      addDialog({
+        title: "Kérsz értesítéseket?",
+        text: "Szeretnél értesülni a FiFe app új eseményeiről?",
+        onSubmit: initializeOneSignal,
+        submitText: "Igen, kérek!",
+      }),
+    );
+  };
+
   const initializeOneSignal = async () => {
     if (!uid || !oneSignalAppId) return;
-    if (pushToken) {
-      //return;
-    }
+    Notification.requestPermission();
+    OneSignal.Debug.setLogLevel("");
     await OneSignal.init({
       appId: oneSignalAppId,
-      notifyButton: {
-        enable: true,
-      },
+      autoResubscribe: true,
 
       allowLocalhostAsSecureOrigin: true,
     });
-
     await OneSignal.login(uid)
       .then((res) => {
         console.log(res);
+        dispatch(addSnack({ title: "Feliratkoztál az értesítésekre!" }));
       })
       .catch((err) => {
         console.log(err);
@@ -98,8 +112,8 @@ export default function Index() {
           <EventItem key={index + "event"} event={event} />
         ))}
       </View>
-      {!pushToken && (
-        <Button onPress={initializeOneSignal}>
+      {!notificationToken && (
+        <Button onPress={showNotificationDialog}>
           Engedélyezd az értesítéseket
         </Button>
       )}
