@@ -35,6 +35,8 @@ export default function Index() {
   const oneSignalAppId = process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID;
   const token = OneSignal.User.PushSubscription.token;
 
+  console.log("app_id", oneSignalAppId);
+
   useEffect(() => {
     if (token) dispatch(setNotificationToken(token));
   }, [dispatch, token]);
