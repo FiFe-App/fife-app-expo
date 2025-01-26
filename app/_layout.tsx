@@ -29,10 +29,6 @@ export default function RootLayout() {
               options={{ headerShown: false, animation: "slide_from_right" }}
             />
             <Stack.Screen
-              name="home/index"
-              options={{ title: "Üdvözöllek a FiFe Appban" }}
-            />
-            <Stack.Screen
               name="biznisz/new"
               options={{ title: "Új Biznisz" }}
             />
@@ -56,7 +52,6 @@ export default function RootLayout() {
               name="contact-edit/[editId]"
               options={{ title: "Elérhetőség Szerkesztése" }}
             />
-            <Stack.Screen name="events/[id]" options={{ title: "Esemény" }} />
           </Stack>
           {pathname !== "/" &&
             !pathname.includes("login") &&
@@ -74,15 +69,17 @@ const MyAppbar = (props: NativeStackHeaderProps) => {
   const { width } = useWindowDimensions();
   const dispatch = useDispatch();
   const segments = useSegments();
+  const pathname = usePathname();
 
   useEffect(() => {
     dispatch(clearOptions());
   }, [dispatch, segments]);
 
+  if (pathname == "/biznisz") return;
   return (
     <Appbar.Header mode="center-aligned">
       {false && <Appbar.BackAction onPress={navigation.goBack} />}
-      <Appbar.Content title={props.options.title} />
+      <Appbar.Content title={"FiFe App"} />
       {options?.length === 1 && <Appbar.Action {...options[0]} />}
       {options?.length > 1 && (
         <>
