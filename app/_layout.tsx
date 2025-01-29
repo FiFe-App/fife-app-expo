@@ -4,6 +4,7 @@ import { clearOptions } from "@/redux/reducers/infoReducer";
 import { persistor, RootState, store } from "@/redux/store";
 import { NativeStackHeaderProps } from "@react-navigation/native-stack/lib/typescript/src/types";
 import { Stack, useNavigation, usePathname, useSegments } from "expo-router";
+import React from "react";
 import { useEffect, useState } from "react";
 import { useWindowDimensions } from "react-native";
 import { Appbar, Menu, PaperProvider } from "react-native-paper";
@@ -75,7 +76,7 @@ const MyAppbar = (props: NativeStackHeaderProps) => {
     dispatch(clearOptions());
   }, [dispatch, segments]);
 
-  if (pathname == "/biznisz") return;
+  if (pathname === "/biznisz") return;
   return (
     <Appbar.Header mode="center-aligned">
       {false && <Appbar.BackAction onPress={navigation.goBack} />}
