@@ -132,6 +132,8 @@ export default function Index() {
 
       dispatch(sliceLogin(profile?.id));
       dispatch(setName(profile?.full_name));
+      console.log("user-data", { ...userData, ...profile });
+
       dispatch(setUserData({ ...userData, ...profile }));
       if (profile?.viewed_functions)
         dispatch(loadViewedFunctions(profile?.viewed_functions));
