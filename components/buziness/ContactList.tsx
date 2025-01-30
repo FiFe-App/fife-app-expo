@@ -73,13 +73,16 @@ export function ContactList({ uid, edit }: ContactListProps) {
                   }}
                 >
                   <List.Item
-                    title={contact.title || typeToValueLabel(contact.type)}
-                    description={contact.data}
+                    title={contact.data}
+                    description={
+                      contact.title || typeToValueLabel(contact.type)
+                    }
+                    descriptionNumberOfLines={0}
                     left={(props) => (
                       <List.Icon {...props} icon={typeToIcon(contact.type)} />
                     )}
                     right={(props) => (
-                      <List.Icon {...props} icon="chevron-right-circle" />
+                      <List.Icon {...props} icon="open-in-new" />
                     )}
                   />
                 </Link>

@@ -147,7 +147,7 @@ const ContactEditScreen = forwardRef<{ saveContacts: () => void }>(
                 <TextInput
                   value={current?.title || ""}
                   disabled={loading}
-                  label="Leírás (opcionális)"
+                  label="Plusz infó (opcionális)"
                   onChangeText={(t) => saveContact(ind, { title: t })}
                 />
                 {error?.type === type.value && (
