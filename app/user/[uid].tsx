@@ -21,7 +21,7 @@ import {
   useFocusEffect,
   useGlobalSearchParams,
 } from "expo-router";
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { View } from "react-native";
 import {
   Badge,
