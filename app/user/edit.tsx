@@ -27,8 +27,14 @@ export default function Index() {
   const [profile, setProfile] = useState<UserInfo>({});
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
-    saveContacts: () => Promise<PostgrestSingleResponse<null>>;
-  }>();
+    saveContacts: () => Promise<
+        | PostgrestSingleResponse<any>
+        | {
+            error: string;
+          }
+        | undefined
+      >;
+  }>(null);
 
   const load = () => {
     console.log("loaded user", myUid);
@@ -198,7 +204,9 @@ export default function Index() {
             <ThemedText>{userData?.email}</ThemedText>
           </View>
           <View style={{ gap: 8 }}>
-            <ThemedText type="subtitle">Elérhetőségeid</ThemedText>
+            <ThemedText type="subtitle">
+              Elérhetőségeid (minden opcionális)
+            </ThemedText>
             <ThemedText
               style={{ textAlign: "center", margin: 16 }}
               type="defaultSemiBold"
