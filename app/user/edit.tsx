@@ -4,7 +4,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
-import { addDialog, setOptions } from "@/redux/reducers/infoReducer";
+import { setOptions } from "@/redux/reducers/infoReducer";
 import { setName, setUserData } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
@@ -13,7 +13,7 @@ import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { IconButton, Text, TextInput } from "react-native-paper";
+import { IconButton, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 type UserInfo = Partial<Tables<"profiles">>;
@@ -113,7 +113,7 @@ export default function Index() {
     }, [myUid]),
   );
   const pickImage = async () => {
-    let result = await ExpoImagePicker.launchImageLibraryAsync({
+    const result = await ExpoImagePicker.launchImageLibraryAsync({
       mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
@@ -205,7 +205,7 @@ export default function Index() {
           </View>
           <View style={{ gap: 8 }}>
             <ThemedText type="subtitle">
-              Elérhetőségeid (minden opcionális)
+              Elérhetőségeid, semmi sem kötelező!
             </ThemedText>
             <ThemedText
               style={{ textAlign: "center", margin: 16 }}
