@@ -4,6 +4,7 @@
     "strict": true,
     "declaration": true,
     "noImplicitAny": true,
+    "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./*"]
     }

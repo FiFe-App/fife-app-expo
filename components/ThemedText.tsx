@@ -1,6 +1,6 @@
 import { StyleSheet, Text, type TextProps } from "react-native";
 
-import { MD3DarkTheme, useTheme } from "react-native-paper";
+import { DefaultTheme, MD3DarkTheme, useTheme } from "react-native-paper";
 
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
@@ -11,6 +11,7 @@ export type ThemedTextProps = TextProps & {
     | "defaultSemiBold"
     | "subtitle"
     | "link"
+    | "error"
     | "label"
     | "none";
 };
@@ -33,6 +34,7 @@ export function ThemedText({
         type === "defaultSemiBold" ? styles.defaultSemiBold : undefined,
         type === "subtitle" ? styles.subtitle : undefined,
         type === "link" ? styles.link : undefined,
+        type === "error" ? styles.error : undefined,
         type === "label"
           ? { ...styles.label, color: theme.colors.onBackground }
           : undefined,
@@ -61,6 +63,11 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 18,
+  },
+  error: {
+    lineHeight: 30,
+    fontSize: 16,
+    color: DefaultTheme.colors.error,
   },
   link: {
     lineHeight: 30,

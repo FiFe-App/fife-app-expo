@@ -38,7 +38,13 @@ export default function Index() {
         </Text>
         <Image
           source={require("../assets/images/img-main.png")}
-          style={{ width: "95%", aspectRatio: 1, padding: 5, maxWidth: 300 }}
+          style={{
+            width: "95%",
+            aspectRatio: 1,
+            padding: 5,
+            maxWidth: 300,
+            maxHeight: 300,
+          }}
         />
         <ThemedText type="title" style={{ textAlign: "center" }}>
           Együtt boldogulunk!
@@ -48,7 +54,7 @@ export default function Index() {
           értesz.
         </ThemedText>
       </View>
-      <View style={{ margin: 8, gap: 16, marginBottom: 24, zIndex: -1 }}>
+      <View style={{ margin: 8, gap: 16, marginBottom: 24 }}>
         <Link href="/csatlakozom" asChild>
           <Button mode="contained">Csatlakozom</Button>
         </Link>

@@ -1,3 +1,4 @@
+import ContactEditScreen from "@/components/buziness/ContactEditScreen";
 import ProfileImage from "@/components/ProfileImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -7,10 +8,11 @@ import { setOptions } from "@/redux/reducers/infoReducer";
 import { setName, setUserData } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
+import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
-import { View } from "react-native";
+import { useCallback, useRef, useState } from "react";
+import { ScrollView, View } from "react-native";
 import { IconButton, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -24,6 +26,15 @@ export default function Index() {
   const [imageLoading, setImageLoading] = useState(false);
   const [profile, setProfile] = useState<UserInfo>({});
   const dispatch = useDispatch();
+  const contactEditRef = useRef<{
+    saveContacts: () => Promise<
+        | PostgrestSingleResponse<any>
+        | {
+            error: string;
+          }
+        | undefined
+      >;
+  }>(null);
 
   const load = () => {
     console.log("loaded user", myUid);
@@ -48,15 +59,17 @@ export default function Index() {
   };
   useFocusEffect(
     useCallback(() => {
-      const save = () => {
+      const save = async () => {
         setLoading(true);
         if (!myUid) return;
 
-        console.log({
-          ...profile,
-          id: myUid,
-        });
+        const response = await contactEditRef.current?.saveContacts();
+        console.log(response);
 
+        if (response?.error) {
+          console.log(response.error);
+          return;
+        }
         supabase
           .from("profiles")
           .upsert(
@@ -100,7 +113,7 @@ export default function Index() {
     }, [myUid]),
   );
   const pickImage = async () => {
-    let result = await ExpoImagePicker.launchImageLibraryAsync({
+    const result = await ExpoImagePicker.launchImageLibraryAsync({
       mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
@@ -156,40 +169,53 @@ export default function Index() {
 
     return upload;
   };
-
   if (myUid)
     return (
       <ThemedView style={{ flex: 1 }}>
-        <View style={{ alignItems: "center", marginBottom: 16 }}>
-          <View style={{ width: 100 }}>
-            <ProfileImage
-              key={profile?.avatar_url}
-              uid={myUid}
-              avatar_url={profile?.avatar_url}
-              propLoading={imageLoading}
-              style={{
-                width: 100,
-                height: 100,
-              }}
-            />
-            <IconButton
-              icon="upload"
-              onPress={pickImage}
-              mode="contained-tonal"
-              style={{ position: "absolute", right: 0, bottom: 0 }}
-            />
+        <ScrollView style={{ flex: 1, padding: 8 }}>
+          <View style={{ alignItems: "center", marginBottom: 16 }}>
+            <View style={{ width: 100 }}>
+              <ProfileImage
+                key={profile?.avatar_url}
+                uid={myUid}
+                avatar_url={profile?.avatar_url}
+                propLoading={imageLoading}
+                style={{
+                  width: 100,
+                  height: 100,
+                }}
+              />
+              <IconButton
+                icon="upload"
+                onPress={pickImage}
+                mode="contained-tonal"
+                style={{ position: "absolute", right: 0, bottom: 0 }}
+              />
+            </View>
           </View>
-        </View>
-        <TextInput
-          label="Teljes név"
-          value={profile?.full_name || ""}
-          disabled={loading}
-          onChangeText={(t) => setProfile({ ...profile, full_name: t })}
-        />
-        <View style={{ padding: 16 }}>
-          <ThemedText type="label">Email</ThemedText>
-          <ThemedText>{userData?.email}</ThemedText>
-        </View>
+          <TextInput
+            label="Teljes név"
+            value={profile?.full_name || ""}
+            disabled={loading}
+            onChangeText={(t) => setProfile({ ...profile, full_name: t })}
+          />
+          <View style={{ padding: 16 }}>
+            <ThemedText type="label">Email, amivel regisztráltál:</ThemedText>
+            <ThemedText>{userData?.email}</ThemedText>
+          </View>
+          <View style={{ gap: 8 }}>
+            <ThemedText type="subtitle">
+              Elérhetőségeid, semmi sem kötelező!
+            </ThemedText>
+            <ThemedText
+              style={{ textAlign: "center", margin: 16 }}
+              type="defaultSemiBold"
+            >
+              Figyelem! Az alábbi adatok láthatóak minden felhasználónak.
+            </ThemedText>
+            <ContactEditScreen ref={contactEditRef} />
+          </View>
+        </ScrollView>
       </ThemedView>
     );
 }

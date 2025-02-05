@@ -31,7 +31,7 @@ const userReducer = createSlice({
       return initialState;
     },
     setUserData: (state, { payload }) => {
-      state.userData = payload;
+      state.userData = { ...state.userData, ...payload };
     },
     setName: (state, { payload }) => {
       state.name = payload;
