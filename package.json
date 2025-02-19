@@ -37,12 +37,14 @@
     "expo-auth-session": "~5.5.2",
     "expo-clipboard": "~6.0.3",
     "expo-constants": "~16.0.2",
+    "expo-crypto": "~13.0.2",
     "expo-dev-client": "~4.0.29",
     "expo-font": "~12.0.7",
     "expo-image": "~1.13.0",
-    "expo-image-picker": "~15.0.7",
+    "expo-image-picker": "~15.1.0",
     "expo-linking": "~6.3.1",
     "expo-location": "~17.0.1",
+    "expo-notifications": "~0.28.19",
     "expo-router": "~3.5.24",
     "expo-splash-screen": "~0.27.7",
     "expo-status-bar": "~1.12.1",
@@ -72,9 +74,7 @@
     "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
     "resize-observer-polyfill": "^1.5.1",
-    "wkx": "^0.5.0",
-    "expo-notifications": "~0.28.19",
-    "expo-crypto": "~13.0.2"
+    "wkx": "^0.5.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
@@ -89,6 +89,7 @@
     "jest-expo": "~51.0.4",
     "prettier": "^3.3.2",
     "react-test-renderer": "18.2.0",
+    "supabase": "^2.9.6",
     "typescript": "~5.3.3",
     "workbox-cli": "^7.3.0"
   },
