@@ -81,10 +81,10 @@ export default function BuzinessEditScreen({
 
     console.log(selectedLocation);
 
-    supabase
-      .from("buziness")
-      .upsert(
-        {
+    supabase.functions
+      .invoke("create-buziness", {
+        body: {
+          name: "Functions",
           id: editId,
           ...newBuziness,
           title,
@@ -92,8 +92,7 @@ export default function BuzinessEditScreen({
           location: `POINT(${selectedLocation?.longitude} ${selectedLocation?.latitude})`,
           defaultContact,
         },
-        { onConflict: "id" },
-      )
+      })
       .then((res) => {
         setLoading(false);
         if (res.error) {

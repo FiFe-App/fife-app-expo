@@ -93,10 +93,13 @@ export default function Index() {
           }
         : null;
     if (searchLocation)
-      supabase
-        .rpc("nearby_buziness", searchLocation)
-        .range(mySkip, mySkip + take - 1)
+      supabase.functions
+        .invoke("business-search", {
+          body: { name: "Functions", query: searchText, take, skip: mySkip },
+        })
         .then((res) => {
+          console.log(res);
+
           setLoading(false);
           if (res.data) {
             dispatch(loadBuzinesses(res.data));
@@ -106,6 +109,9 @@ export default function Index() {
           if (res.error) {
             console.log(res.error);
           }
+        })
+        .catch((err) => {
+          console.log(err);
         });
   };
   useFocusEffect(
