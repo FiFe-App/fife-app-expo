@@ -10,6 +10,15 @@ const initialState: BuzinessState = {
   buzinessSearchParams: {
     skip: 0,
     text: "",
+    loading: false,
+    searchCircle: {
+      location: {
+        latitude: 0,
+        longitude: 0,
+      },
+      radius: 0,
+    },
+    searchType: "map",
   },
 };
 
@@ -31,12 +40,20 @@ const buzinessReducer = createSlice({
     },
     storeBuzinessSearchParams: (
       state,
-      action: PayloadAction<BuzinessSearchParams>,
+      action: PayloadAction<Partial<BuzinessSearchParams>>,
     ) => {
       state.buzinessSearchParams = {
         ...state.buzinessSearchParams,
         ...action.payload,
       };
+    },
+    storeBuzinessLoading: (state, action: PayloadAction<boolean>) => {
+      if (state.buzinessSearchParams)
+        state.buzinessSearchParams.loading = action.payload;
+    },
+    storeBuzinessSearchType: (state, action: PayloadAction<"map" | "list">) => {
+      if (state.buzinessSearchParams)
+        state.buzinessSearchParams.searchType = action.payload;
     },
     clearBuzinessSearchParams: (state) => {
       state.buzinessSearchParams = {};
@@ -65,6 +82,8 @@ export const {
   loadBuzinesses,
   clearBuziness,
   storeBuzinessSearchParams,
+  storeBuzinessSearchType,
+  storeBuzinessLoading,
   clearBuzinessSearchParams,
 } = buzinessReducer.actions;
 
