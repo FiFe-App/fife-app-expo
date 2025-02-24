@@ -3,16 +3,23 @@ import { View, StyleSheet } from "react-native";
 import BuzinessItem from "./BuzinessItem";
 import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
-import { Camera, Details, MapView, Marker, Region } from "../mapView/mapView";
+import {
+  Camera,
+  Circle,
+  Details,
+  MapView,
+  Marker,
+  Region,
+} from "../mapView/mapView";
 import MyLocationIcon from "@/assets/images/myLocationIcon";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
-import { FAB } from "react-native-paper";
+import { Button, FAB, IconButton } from "react-native-paper";
 import mapStyles from "../mapView/style";
 
 interface BuzinessBuzinessMapProps {
-  load: (arg0: number) => void;
+  load: (arg0?: number) => void;
 }
 
 export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
@@ -45,6 +52,17 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
     mapRef.current.animateToRegion(region, 1000);
   };
 
+  const panToCoords = (latitude: number, longitude: number) => {
+    if (!mapRef.current) return;
+    const region = {
+      latitude,
+      longitude,
+      latitudeDelta: 0.0043,
+      longitudeDelta: 0.0034,
+    };
+    mapRef.current.animateToRegion(region, 1000);
+  };
+
   const zoom = (zoomTo: number) => {
     if (!mapRef.current) return;
     mapRef?.current?.getCamera().then((cam: Camera) => {
@@ -52,12 +70,13 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
       mapRef?.current?.animateCamera(cam);
     });
   };
+
   const onRegionChange = (region: Region, details: Details) => {
     dispatch(
       storeBuzinessSearchParams({
         searchCircle: {
           location: { latitude: region.latitude, longitude: region.longitude },
-          radius: region.latitudeDelta,
+          radius: region.longitudeDelta * 50000,
         },
       }),
     );
@@ -92,6 +111,8 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
         provider="google"
         googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
         pitchEnabled={false}
+        showsPointsOfInterest={false}
+        showsUserLocation
         rotateEnabled={false}
         toolbarEnabled={false}
         onRegionChangeComplete={onRegionChange}
@@ -106,10 +127,19 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
               coordinate={{ latitude: cords[1], longitude: cords[0] }}
               title={buziness.title}
               key={buziness.id}
-              onPress={() => setSelectedBuzinessId(buziness.id)}
+              onPress={() => {
+                setSelectedBuzinessId(buziness.id);
+                panToCoords(Number(cords[1]), Number(cords[0]));
+              }}
             />
           );
         })}
+
+        <FAB
+          style={mapStyles.myLocationButton}
+          icon={myLocation ? "map-marker" : "map-marker-question"}
+          onPress={panToMyLocation}
+        />
         {myLocation && (
           <Marker
             centerOffset={{ x: 10, y: 10 }}
@@ -119,20 +149,52 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
             <MyLocationIcon style={{ width: 20, height: 20 }} />
           </Marker>
         )}
-
-        {!!myLocation && (
-          <FAB
-            icon="map-marker"
-            style={mapStyles.myLocationButton}
-            onPress={panToMyLocation}
-          />
-        )}
       </MapView>
-      {selectedBuziness && (
-        <View style={{ position: "absolute", bottom: 8, width: "100%" }}>
-          <BuzinessItem data={selectedBuziness} />
+      <View
+        style={{
+          position: "absolute",
+          bottom: 8,
+          width: "100%",
+          alignItems: "flex-end",
+          flexDirection: "column",
+        }}
+      >
+        <View style={{ padding: 8 }}>
+          <IconButton
+            icon="plus"
+            style={{
+              borderBottomLeftRadius: 0,
+              borderBottomRightRadius: 0,
+              margin: 0,
+            }}
+            onPress={() => zoom(1)}
+            mode="contained-tonal"
+          />
+          <IconButton
+            icon="minus"
+            style={{
+              borderTopLeftRadius: 0,
+              borderTopRightRadius: 0,
+              margin: 0,
+            }}
+            onPress={() => zoom(-1)}
+            mode="contained-tonal"
+          />
         </View>
-      )}
+        {selectedBuziness ? (
+          <View style={{ width: "100%" }}>
+            <BuzinessItem data={selectedBuziness} />
+          </View>
+        ) : (
+          <Button
+            mode="contained-tonal"
+            style={{ alignSelf: "center" }}
+            onPress={() => load()}
+          >
+            Keress ezen a környéken
+          </Button>
+        )}
+      </View>
     </View>
   );
 };
