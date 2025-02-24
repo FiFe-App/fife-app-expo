@@ -1,7 +1,10 @@
+import { BuzinessList } from "@/components/buziness/BuzinessList";
+import { BuzinessMap } from "@/components/buziness/BuzinessMap";
 import MapSelector from "@/components/MapSelector/MapSelector";
 import { containerStyle } from "@/components/styles";
 import { ThemedView } from "@/components/ThemedView";
 import { useMyLocation } from "@/hooks/useMyLocation";
+import { supabase } from "@/lib/supabase/supabase";
 import {
   clearBuzinessSearchParams,
   loadBuzinesses,
@@ -10,27 +13,20 @@ import {
   storeBuzinessSearchType,
   storeBuzinesses,
 } from "@/redux/reducers/buzinessReducer";
+import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
-import { supabase } from "@/lib/supabase/supabase";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import {
   Button,
   Card,
-  Drawer,
-  Icon,
   Modal,
   Portal,
-  RadioButton,
   SegmentedButtons,
-  Text,
   TextInput,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { viewFunction } from "@/redux/reducers/tutorialReducer";
-import { BuzinessList } from "@/components/buziness/BuzinessList";
-import { BuzinessMap } from "@/components/buziness/BuzinessMap";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
@@ -40,7 +36,7 @@ export default function Index() {
   const searchType = buzinessSearchParams?.searchType;
   const [searchFilter, setSearchFilter] = useState("");
   const skip = buzinessSearchParams?.skip || 0;
-  const take = 5;
+  const take = 10;
   const searchCircle = buzinessSearchParams?.searchCircle;
   const searchText = buzinessSearchParams?.text || "";
   const dispatch = useDispatch();
@@ -61,6 +57,9 @@ export default function Index() {
     dispatch(storeBuzinesses([]));
     load();
   };
+  useEffect(() => {
+    console.log(buzinessSearchParams?.searchCircle);
+  }, [buzinessSearchParams?.searchCircle]);
 
   const load = (paramSkip: number = 0) => {
     dispatch(storeBuzinessLoading(true));
@@ -71,23 +70,28 @@ export default function Index() {
       ? {
           lat: searchCircle?.location.latitude,
           long: searchCircle?.location.longitude,
-          search: searchText,
+          maxdistance: searchCircle?.radius,
         }
       : myLocation
         ? {
             lat: myLocation?.coords.latitude,
             long: myLocation?.coords.longitude,
-            search: searchText,
+            maxdistance: 10,
           }
         : {
             lat: 47.4979,
             long: 19.0402,
-            search: searchText,
+            maxdistance: 10,
           };
     if (searchLocation)
       supabase
-        .rpc("nearby_buziness", searchLocation)
-        .range(mySkip, mySkip + take - 1)
+        .rpc("nearby_buziness", {
+          ...searchLocation,
+          search: searchText,
+          take:
+            buzinessSearchParams?.searchType === "map" ? -1 : mySkip + take - 1,
+          skip: buzinessSearchParams?.searchType === "map" ? -1 : mySkip,
+        })
         .then((res) => {
           dispatch(storeBuzinessLoading(false));
           if (res.data) {
@@ -124,7 +128,10 @@ export default function Index() {
       <ThemedView style={{ flex: 1 }}>
         <Card
           mode="elevated"
-          style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+          style={{
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
+          }}
         >
           <Card.Content>
             <TextInput
@@ -150,6 +157,7 @@ export default function Index() {
             <View
               style={{
                 flexDirection: "row",
+                flexWrap: "wrap",
                 alignItems: "center",
                 justifyContent: "space-between",
                 marginTop: 4,
@@ -161,7 +169,7 @@ export default function Index() {
                   if (e === "map" || e === "list")
                     dispatch(storeBuzinessSearchType(e));
                 }}
-                style={{ width: "50%" }}
+                style={{ minWidth: 200 }}
                 buttons={[
                   {
                     value: "map",
@@ -175,24 +183,24 @@ export default function Index() {
                   },
                 ]}
               />
+              {searchType === "list" && (
+                <Button
+                  mode="contained"
+                  onPress={() => setLocationMenuVisible(true)}
+                >
+                  Hol keresel?
+                </Button>
+              )}
             </View>
           </Card.Content>
         </Card>
         {searchType === "map" ? (
-          <BuzinessMap load={load} />
+          <BuzinessMap load={search} />
         ) : (
           <BuzinessList load={load} canLoadMore={canLoadMore} />
         )}
 
         <Portal>
-          <Modal
-            visible={mapModalVisible}
-            onDismiss={() => {
-              setMapModalVisible(false);
-            }}
-          >
-            <ThemedView></ThemedView>
-          </Modal>
           <Modal
             visible={locationMenuVisible}
             onDismiss={() => {
@@ -200,56 +208,22 @@ export default function Index() {
             }}
             contentContainerStyle={[
               {
-                backgroundColor: "white",
-                margin: 40,
-                padding: 10,
                 height: "auto",
                 borderRadius: 16,
               },
             ]}
           >
             <ThemedView style={containerStyle}>
-              <RadioButton.Group
-                onValueChange={(newValue) => setSearchFilter(newValue)}
-                value={searchFilter}
-              >
-                <View style={{ flexDirection: "row" }}>
-                  <Text>Hozzám közel</Text>
-                  <RadioButton
-                    value="nearby"
-                    onPress={() => {}}
-                    right={() => <Icon source="navigation-variant" size={20} />}
-                  />
-                </View>
-                <View style={{ flexDirection: "row" }}>
-                  <Text>Válassz a térképen</Text>
-                  <RadioButton
-                    value="map"
-                    onPress={() => {}}
-                    right={() => <Icon source="map" size={20} />}
-                  />
-                </View>
-                <View style={{ flexDirection: "row" }}>
-                  <Text>Mindegy hol</Text>
-                  <RadioButton
-                    value="anywhere"
-                    onPress={() => {}}
-                    right={() => (
-                      <Icon source="map-marker-question-outline" size={20} />
-                    )}
-                  />
-                </View>
-              </RadioButton.Group>
               <MapSelector
                 data={searchCircle}
                 setData={(sC) => {
                   console.log("set", sC);
 
-                  if (sC)
+                  if (sC && "location" in sC && "radius" in sC)
                     dispatch(storeBuzinessSearchParams({ searchCircle: sC }));
                 }}
                 searchEnabled
-                setOpen={setMapModalVisible}
+                setOpen={setLocationMenuVisible}
               />
             </ThemedView>
           </Modal>

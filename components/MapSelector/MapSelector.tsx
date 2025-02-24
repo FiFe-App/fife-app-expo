@@ -44,7 +44,7 @@ const MapSelector = ({
         latitude: e.latitude,
         longitude: e.longitude,
       },
-      radius: km,
+      radius: km * 1000,
     });
     setCircleRadiusText(text);
   };
@@ -70,7 +70,7 @@ const MapSelector = ({
 
   const onSubmit = () => {
     if (setData && circle) {
-      console.log("map submit", circle);
+      console.log("map submit", circle, setOpen);
       setData(circle);
       if (setOpen) setOpen(false);
     }
