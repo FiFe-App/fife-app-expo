@@ -59,7 +59,7 @@ export default function BuzinessEditScreen({
   const [defaultContact, setDefaultContact] = useState<number | undefined>();
   const { myLocation, error: locationError } = useMyLocation();
   const [circle, setCircle] = useState<MapCircleType | undefined>(undefined);
-  const selectedLocation = circle?.position || myLocation?.coords;
+  const selectedLocation = circle?.location || myLocation?.coords;
   const [loading, setLoading] = useState(false);
 
   const [mapModalVisible, setMapModalVisible] = useState(false);
@@ -84,7 +84,6 @@ export default function BuzinessEditScreen({
     supabase.functions
       .invoke("create-buziness", {
         body: {
-          name: "Functions",
           id: editId,
           ...newBuziness,
           title,

@@ -19,6 +19,7 @@ android
 ios
 .env
 .env.prod
+.env.dev
 
 # macOS
 .DS_Store

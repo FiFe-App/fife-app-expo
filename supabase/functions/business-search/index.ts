@@ -16,14 +16,14 @@ Deno.serve(async (req) => {
       headers: corsHeaders,
     });
   }
-  const { query, skip, take } = await req.json();
+  const { query, skip, take, lat, long, maxdistance } = await req.json();
 
   // Instantiate OpenAI client
   const openai = new OpenAI({ apiKey: openaiApiKey });
 
   // Generate a one-time embedding for the user's query
   const embeddingResponse = await openai.embeddings.create({
-    model: "text-embedding-3-large",
+    model: "text-embedding-3-small",
     input: query,
     dimensions: 512,
   });
@@ -45,10 +45,11 @@ Deno.serve(async (req) => {
 
   // Call hybrid_search Postgres function via RPC
   const res = await supabase.rpc("hybrid_buziness_search", {
-    distance: 50000,
-    lat: 47.4979,
-    long: 19.0402,
-    match_count: 10,
+    distance: maxdistance,
+    skip,
+    take,
+    lat,
+    long,
     query_embedding: embedding,
     query_text: query,
   });

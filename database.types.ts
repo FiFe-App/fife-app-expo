@@ -409,7 +409,10 @@ export type Database = {
         Args: {
           lat: number
           long: number
+          maxdistance: number
           search: string
+          take: number
+          skip: number
         }
         Returns: {
           id: number

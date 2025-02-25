@@ -26,6 +26,8 @@ export interface BuzinessSearchItemInterface {
   description: string;
   author: string;
   recommendations: number;
+  radius: number;
+  location: string;
   authorName?: string;
   distance?: number;
 }
@@ -50,10 +52,15 @@ export interface EventItemInterface extends Tables<"events"> {
 }
 export interface BuzinessSearchParams {
   text?: string;
-  location?: {
-    latitude: number;
-    longitude: number;
+  searchCircle?: {
+    location: {
+      latitude: number;
+      longitude: number;
+    };
+    radius: number;
   };
+  loading?: boolean;
+  searchType?: string;
   skip?: number;
 }
 export interface BuzinessState {
