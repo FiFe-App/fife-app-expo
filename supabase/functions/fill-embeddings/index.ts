@@ -23,6 +23,7 @@ Deno.serve(async (req) => {
     if (!businesses) return;
 
     for (const business of businesses) {
+      //if (business.embedding) continue;
       console.log("id", business.id, business.title);
 
       if (business.title) {
@@ -33,10 +34,20 @@ Deno.serve(async (req) => {
             ? " | Description: " + business.description
             : "");
         console.log("run embedding with input", input);
+        const completion = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content:
+                "Írd körül röviden azt az embert, aki ezekhez ért: " + input,
+            },
+          ],
+        });
 
         const embeddingResponse = await openai.embeddings.create({
-          model: "text-embedding-3-large",
-          input,
+          model: "text-embedding-3-small",
+          input: completion.choices[0].message.content,
           dimensions: 512,
         });
         console.log(embeddingResponse);

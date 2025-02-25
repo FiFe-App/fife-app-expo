@@ -19,15 +19,14 @@ const MapSelector = ({
   const circleSize = mapHeight / 3;
   const [circle, setCircle] = useState<MapCircleType>(
     data || {
-      position: { latitude: 47.4979, longitude: 19.0402 },
+      location: { latitude: 47.4979, longitude: 19.0402 },
       radius: 300,
-      radiusDisplay: null,
     },
   );
   const [circleRadiusText, setCircleRadiusText] = useState("0 km");
   const mapRef = useRef<any>(null);
 
-  const { myLocation, error } = useMyLocation();
+  const { myLocation, locationError } = useMyLocation();
 
   const onRegionChange:
     | ((region: Region, details: Details) => void)
@@ -41,12 +40,11 @@ const MapSelector = ({
     }
 
     setCircle({
-      position: {
+      location: {
         latitude: e.latitude,
         longitude: e.longitude,
       },
-      radius: km,
-      radiusDisplay: text,
+      radius: km * 1000,
     });
     setCircleRadiusText(text);
   };
@@ -72,7 +70,7 @@ const MapSelector = ({
 
   const onSubmit = () => {
     if (setData && circle) {
-      console.log("map submit");
+      console.log("map submit", circle, setOpen);
       setData(circle);
       if (setOpen) setOpen(false);
     }
@@ -110,8 +108,8 @@ const MapSelector = ({
             initialCamera={{
               altitude: 10,
               center: {
-                latitude: circle.position.latitude,
-                longitude: circle.position.longitude,
+                latitude: circle.location.latitude,
+                longitude: circle.location.longitude,
               },
               heading: 0,
               pitch: 0,
@@ -166,7 +164,7 @@ const MapSelector = ({
             mode="contained-tonal"
           />
         </View>
-        <Text>{error}</Text>
+        <Text>{locationError}</Text>
         <View style={{ width: "100%", alignItems: "center" }}>
           <Button
             mode="contained"
