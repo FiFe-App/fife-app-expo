@@ -27,10 +27,10 @@ Deno.serve(async (req) => {
 
       if (business.title) {
         const input =
-          "This business is tagged as " +
+          "Categories: " +
           business.title.replace(/(\s\$\s)+/g, ", ") +
           (business.description
-            ? " business | More about it: " + business.description
+            ? " | Description: " + business.description
             : "");
         console.log("run embedding with input", input);
 
