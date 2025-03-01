@@ -22,26 +22,21 @@ Deno.serve(async (req) => {
   const openai = new OpenAI({ apiKey: openaiApiKey });
 
   // Generate a one-time embedding for the user's query
-  const embeddingResponse = await openai.embeddings.create({
-    model: "text-embedding-3-small",
-    input: query,
-    dimensions: 512,
-  });
+  let embedding = null;
+  if (query) {
+    const embeddingResponse = await openai.embeddings.create({
+      model: "text-embedding-3-large",
+      input: query,
+      dimensions: 512,
+    });
+    console.log(embeddingResponse.data);
 
-  const [{ embedding }] = embeddingResponse.data;
+    const [{ embedding }] = embeddingResponse.data;
+  }
 
   // Instantiate the Supabase client
   // (replace service role key with user's JWT if using Supabase auth and RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
-
-  console.log("parameters", {
-    distance: 50000,
-    lat: 47.4979,
-    long: 19.0402,
-    match_count: 10,
-    query_embedding: embedding,
-    query_text: query,
-  });
 
   // Call hybrid_search Postgres function via RPC
   const res = await supabase.rpc("hybrid_buziness_search", {
@@ -50,7 +45,7 @@ Deno.serve(async (req) => {
     take,
     lat,
     long,
-    query_embedding: embedding,
+    query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),
     query_text: query,
   });
 
