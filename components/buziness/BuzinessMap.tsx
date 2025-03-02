@@ -17,6 +17,7 @@ import locationToCoords from "@/lib/functions/locationToCoords";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { Button, FAB, IconButton } from "react-native-paper";
 import mapStyles from "../mapView/style";
+import { addDialog } from "@/redux/reducers/infoReducer";
 
 interface BuzinessBuzinessMapProps {
   load: (arg0?: number) => void;
@@ -42,6 +43,16 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
   const { myLocation, locationError } = useMyLocation();
 
   const panToMyLocation = () => {
+    if (!myLocation) {
+      dispatch(
+        addDialog({
+          title: "Nem elérhető a pozíciód.",
+          text: "Ha szeretnéd, hogy a hozzád közel található bizniszeket látsd, kapcsold be.",
+          onSubmit: () => {},
+          submitText: "Vettem",
+        }),
+      );
+    }
     if (!mapRef.current || !myLocation) return;
     const region = {
       latitude: myLocation.coords.latitude,
@@ -129,7 +140,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
               key={buziness.id}
               onPress={() => {
                 setSelectedBuzinessId(buziness.id);
-                panToCoords(Number(cords[1]), Number(cords[0]));
+                //panToCoords(Number(cords[1]), Number(cords[0]));
               }}
             />
           );
@@ -137,7 +148,13 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
 
         <FAB
           style={mapStyles.myLocationButton}
-          icon={myLocation ? "map-marker" : "map-marker-question"}
+          icon={
+            myLocation
+              ? "map-marker"
+              : locationError
+                ? "map-marker-alert"
+                : "map-marker-question"
+          }
           onPress={panToMyLocation}
         />
         {myLocation && (
