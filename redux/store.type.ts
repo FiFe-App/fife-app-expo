@@ -1,5 +1,6 @@
 import { Comment } from "@/components/comments/comments.types";
 import { Tables } from "@/database.types";
+import { ImagePickerAsset } from "expo-image-picker";
 
 export interface UserState {
   uid?: string;
@@ -41,6 +42,7 @@ export interface BuzinessItemInterface {
   author: string;
   authorName?: string;
   avatarUrl?: string | null;
+  images?: string[] | null;
   buzinessRecommendations: { author: string }[];
 }
 export interface EventItemInterface extends Tables<"events"> {
@@ -96,4 +98,11 @@ export interface InfoState {
 
 export interface TutorialState {
   functions: string[];
+}
+
+export interface ImageDataType extends ImagePickerAsset {
+  description?: string;
+  path: string;
+  url: string;
+  status: "toUpload" | "uploaded" | "toDelete";
 }

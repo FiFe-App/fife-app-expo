@@ -384,10 +384,11 @@ export type Database = {
         Args: {
           query_text: string
           query_embedding: string
-          match_count: number
           lat: number
           long: number
           distance: number
+          skip: number
+          take: number
           full_text_weight?: number
           semantic_weight?: number
           match_threshold?: number
@@ -405,6 +406,7 @@ export type Database = {
           lat: number
           long: number
           distance: number
+          relevance: number
           defaultcontact: number
         }[]
       }

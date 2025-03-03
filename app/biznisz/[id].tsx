@@ -1,6 +1,7 @@
 import MyLocationIcon from "@/assets/images/myLocationIcon";
 import ErrorScreen from "@/components/ErrorScreen";
 import ProfileImage from "@/components/ProfileImage";
+import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import BuzinessRecommendationsModal from "@/components/buziness/BuzinessRecommendationsModal";
 import { ContactList } from "@/components/buziness/ContactList";
@@ -8,13 +9,18 @@ import Comments from "@/components/comments/Comments";
 import { LatLng, MapView, Marker } from "@/components/mapView/mapView";
 import { Tables } from "@/database.types";
 import { useMyLocation } from "@/hooks/useMyLocation";
+import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
 import getLinkForContact from "@/lib/functions/getLinkForContact";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
 import { supabase } from "@/lib/supabase/supabase";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { RootState } from "@/redux/store";
-import { BuzinessItemInterface, UserState } from "@/redux/store.type";
+import {
+  BuzinessItemInterface,
+  ImageDataType,
+  UserState,
+} from "@/redux/store.type";
 import { PostgrestError } from "@supabase/supabase-js";
 import {
   Link,
@@ -25,6 +31,7 @@ import {
 } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
+import ImageModal from "react-native-image-modal";
 import openMap from "react-native-open-maps";
 import {
   ActivityIndicator,
@@ -59,6 +66,7 @@ export default function Index() {
     : null;
   const categories = data?.title?.split(" $ ");
   const title = categories?.[0];
+  const [images, setImages] = useState<ImageDataType[]>([]);
   const [isLongDescription, setIsLongDescription] = useState<
     undefined | boolean
   >(undefined);
@@ -91,7 +99,6 @@ export default function Index() {
 
             if (data) {
               const cords = locationToCoords(String(data.location));
-              nav.setOptions({ title: data?.title.split(" ")[0] });
               setData({
                 ...data,
                 lat: cords[1],
@@ -100,6 +107,7 @@ export default function Index() {
                 authorName: data?.profiles?.full_name || "???",
                 avatarUrl: data?.profiles?.avatar_url,
               });
+              if (data.images) setImages(getImagesUrlFromSupabase(data.images));
               if (data.defaultContact) {
                 if (data.contacts) {
                   setDefaultContact(data.contacts);
@@ -204,6 +212,9 @@ export default function Index() {
                 </Text>
               </TouchableRipple>
             </View>
+            <View>
+              <ThemedText type="subtitle">{categories?.[0]}</ThemedText>
+            </View>
             <View
               style={{
                 flexWrap: "wrap",
@@ -241,7 +252,6 @@ export default function Index() {
                   Szerkesztés
                 </Button>
               )}
-
               {defaultContact && (
                 <Link asChild href={getLinkForContact(defaultContact)}>
                   <Button style={{ flex: 1 }} mode="contained">
@@ -300,6 +310,23 @@ export default function Index() {
                 )}
               </Text>
             </TouchableRipple>
+            <ScrollView
+              horizontal
+              style={{ flexGrow: 0 }}
+              contentContainerStyle={{ alignItems: "center" }}
+            >
+              {images.map((image, ind) => {
+                return (
+                  <View key={"image-" + ind}>
+                    <ImageModal
+                      source={{ uri: image.url }}
+                      style={{ width: 100, height: 100 }}
+                    />
+                    <Text>{image.description}</Text>
+                  </View>
+                );
+              })}
+            </ScrollView>
             <TabsProvider defaultIndex={0}>
               <Tabs showTextLabel={width > 400}>
                 <TabScreen label="Helyzete" icon="map-marker">
