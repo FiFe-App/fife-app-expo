@@ -34,7 +34,7 @@ export default function RootLayout() {
             />
             <Stack.Screen
               name="biznisz/[id]"
-              options={{ title: "FiFe Biznisz" }}
+              options={{ headerShown: false, title: "FiFe Biznisz" }}
             />
             <Stack.Screen
               name="user/[uid]"

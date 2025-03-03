@@ -6,10 +6,10 @@ import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import { setOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { UserState } from "@/redux/store.type";
+import { ImageDataType, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { router, useFocusEffect, useNavigation } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import {
   Button,
@@ -36,6 +36,10 @@ import {
 } from "react-native-paper-dropdown";
 import typeToIcon from "@/lib/functions/typeToIcon";
 import { ThemedText } from "../ThemedText";
+import BuzinessImageUpload, {
+  BuzinessImageUploadHandle,
+} from "./BuzinessImageUpload";
+import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
 
 interface NewBuzinessInterface {
   title: string;
@@ -57,9 +61,12 @@ export default function BuzinessEditScreen({
   });
   const [myContacts, setMyContacts] = useState<Option[]>([]);
   const [defaultContact, setDefaultContact] = useState<number | undefined>();
-  const { myLocation, error: locationError } = useMyLocation();
+
+  const [images, setImages] = useState<ImageDataType[]>([]);
+  const imagesUploadRef = useRef<BuzinessImageUploadHandle | null>(null);
+  const { myLocation, locationError } = useMyLocation();
   const [circle, setCircle] = useState<MapCircleType | undefined>(undefined);
-  const selectedLocation = circle?.position || myLocation?.coords;
+  const selectedLocation = circle?.location || myLocation?.coords;
   const [loading, setLoading] = useState(false);
 
   const [mapModalVisible, setMapModalVisible] = useState(false);
@@ -75,11 +82,12 @@ export default function BuzinessEditScreen({
     categories &&
     newBuziness.description
   );
+  useEffect(() => {
+    console.log("images", images);
+  }, [images]);
   const save = useCallback(() => {
     setLoading(true);
     if (!uid) return;
-
-    console.log(selectedLocation);
 
     supabase
       .from("buziness")
@@ -94,7 +102,33 @@ export default function BuzinessEditScreen({
         },
         { onConflict: "id" },
       )
-      .then((res) => {
+      .then(async (res) => {
+        console.log(res, images.length, editId);
+
+        if (images.length && editId) {
+          const newImages = await imagesUploadRef.current?.uploadImages(editId);
+          console.log("uploadRes", newImages);
+          if (uid && newImages)
+            supabase
+              .from("buziness")
+              .update({
+                author: uid,
+                images: newImages
+                  .filter((i, ind) => i.status !== "toDelete")
+                  .map((i, ind) =>
+                    JSON.stringify({
+                      description: i.description,
+                      path: i.path,
+                    }),
+                  ) as string[],
+              })
+              .eq("id", editId)
+              .then((res) => {
+                console.log("images upsert", res);
+              });
+
+          //return images.filter((i, ind) => i && imagesRes?.[ind]?.error);
+        }
         setLoading(false);
         if (res.error) {
           console.log(res.error);
@@ -109,7 +143,16 @@ export default function BuzinessEditScreen({
         console.log(res);
         router.navigate("/user");
       });
-  }, [editId, newBuziness, selectedLocation, title, uid]);
+  }, [
+    defaultContact,
+    editId,
+    images,
+    newBuziness,
+    selectedLocation?.latitude,
+    selectedLocation?.longitude,
+    title,
+    uid,
+  ]);
 
   useEffect(() => {
     if (circle) {
@@ -117,19 +160,17 @@ export default function BuzinessEditScreen({
     }
   }, [circle]);
   useEffect(() => {
-    console.log("canSubmit", canSubmit);
-
     dispatch(
       setOptions([
         {
           title: "Mentés",
           icon: "check",
-          disabled: !canSubmit,
+          disabled: !canSubmit || loading,
           onPress: save,
         },
       ]),
     );
-  }, [canSubmit, dispatch, save]);
+  }, [canSubmit, dispatch, save, loading]);
 
   useFocusEffect(
     useCallback(() => {
@@ -158,13 +199,14 @@ export default function BuzinessEditScreen({
               );
               if (editingBuziness.defaultContact)
                 setDefaultContact(editingBuziness.defaultContact);
+              if (editingBuziness.images)
+                setImages(getImagesUrlFromSupabase(editingBuziness.images));
 
               const cords = locationToCoords(String(editingBuziness.location));
 
               setCircle({
-                position: { latitude: cords[1], longitude: cords[0] },
+                location: { latitude: cords[1], longitude: cords[0] },
                 radius: 200,
-                radiusDisplay: null,
               });
             }
           });
@@ -189,10 +231,8 @@ export default function BuzinessEditScreen({
       return () => {
         console.log("This route is now unfocused.");
       };
-    }, [dispatch, editId, uid]),
+    }, [editId, navigation, uid]),
   );
-
-  console.log(newBuziness);
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -303,6 +343,12 @@ export default function BuzinessEditScreen({
               setDefaultContact(Number(e));
             }}
           />
+          <BuzinessImageUpload
+            images={images}
+            setImages={setImages}
+            buzinessId={editId}
+            ref={imagesUploadRef}
+          />
           <Card>
             <Card.Title
               title="A bizniszed helyzete:"
@@ -324,7 +370,7 @@ export default function BuzinessEditScreen({
                 <Pressable
                   style={{ flex: 1 }}
                   onPress={() => {
-                    if (locationError) dispatch(setLocationError(false));
+                    if (locationError) dispatch(setLocationError(""));
                   }}
                 >
                   {!!locationError && !circle && (
@@ -354,6 +400,7 @@ export default function BuzinessEditScreen({
           </Card>
           <View style={{ minHeight: 300 }}>
             <MapView
+              // @ts-ignore
               options={{
                 mapTypeControl: false,
                 fullscreenControl: false,
