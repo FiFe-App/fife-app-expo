@@ -25,12 +25,11 @@ Ahogy egy jó demokráciában, úgy egy jó alkalmazásban is meghallgatjuk a fe
 
 # Közreműködés
 
-Nagyon szívesen látunk mindenkit!  
-Ha érdekel a projekt írj nekem egy emailt: kristofakos1229@gmail.com
+Nagyon szívesen látunk mindenkit!:)
+Ha tesztelnél, vagy fejlesztenél vagy ötletelnél a projektről, írj nekem egy [emailt](kristofakos1229@gmail.com) vagy keress meg [facebookon](https://www.facebook.com/kristof.akos.37/)
 
-A projektet weben, androidon és ios-en lehet futtatni.
-
-## Futtatás weben
+## Futtatás
+A projektet első körben webes környezetben fejlesztjük, mobilra.
  1. Duplikáld az example.env fájlt és nevezd át .env-re.
  2. ```npm install```
  3. ```npm start -w```
