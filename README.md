@@ -6,13 +6,13 @@ A FiFe app egy megbízhatóságon és helyzeten alapuló online eszköz. Megoszt
 
 ## Miben lesz más a FiFe App, mint a mai közösségi alkalmazások?
 
-### Több kontroll
-
-Ma már mindent a neten csinálunk. Fontos lenne, hogy olyan felületeket használjunk, ami figyel az emberi igényekre, hogy mikor és mennyi időt szeretnél az interneten tölteni. Milyen tartalommal szeretnél találkozni és milyennel nem. Egyszóval több kontrollt ad a felhasználónak. A Fife appon kiemelt cél, hogy figyeljünk az emberek testi- és lelki egészségére: testreszabhatósággal és ajánlásokkal.
-
 ### Közösségi oldal
 
 Hányszor hallottuk ezt? A legtöbb “közösségi”-nek mondott oldal kimerül a tagok közötti kommunikációban. Mi úgy gondoljuk, ez nem elég. Egy valódi közösség tagjai összetartanak, segítik egymást. Komment-háborúk helyett a FiFe app funkciói lehetőséget nyújtanak, hogy megtudd ki, miben lehet a segítségedre, és fordítva, megoszthatod, hogy te miben lehetsz a közösség hasznára.
+
+### Több kontroll
+
+Ma már mindent a neten csinálunk. Fontos lenne, hogy olyan felületeket használjunk, ami figyel az emberi igényekre, hogy mikor és mennyi időt szeretnél az interneten tölteni. Milyen tartalommal szeretnél találkozni és milyennel nem. Egyszóval több kontrollt ad a felhasználónak. A Fife appon kiemelt cél, hogy figyeljünk az emberek testi- és lelki egészségére: testreszabhatósággal és ajánlásokkal.
 
 ### Segít a mindennapi életben
 
