@@ -37,6 +37,10 @@ export default function RootLayout() {
               options={{ headerShown: false, title: "FiFe Biznisz" }}
             />
             <Stack.Screen
+              name="biznisz/edit/[id]"
+              options={{ title: "FiFe Biznisz" }}
+            />
+            <Stack.Screen
               name="user/[uid]"
               options={{ title: "FiFe Profil" }}
             />
@@ -75,11 +79,11 @@ const MyAppbar = (props: NativeStackHeaderProps) => {
     dispatch(clearOptions());
   }, [dispatch, segments]);
 
-  if (pathname == "/biznisz") return;
+  if (pathname === "/biznisz") return;
   return (
     <Appbar.Header mode="center-aligned">
       {false && <Appbar.BackAction onPress={navigation.goBack} />}
-      <Appbar.Content title={"FiFe App"} />
+      <Appbar.Content title={props.options.title || "FiFe App"} />
       {options?.length === 1 && <Appbar.Action {...options[0]} />}
       {options?.length > 1 && (
         <>

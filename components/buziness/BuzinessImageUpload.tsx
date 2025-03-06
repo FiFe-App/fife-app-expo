@@ -3,9 +3,9 @@ import { RootState } from "@/redux/store";
 import { ImageDataType, UserState } from "@/redux/store.type";
 import * as ExpoImagePicker from "expo-image-picker";
 import { forwardRef, useImperativeHandle, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, useWindowDimensions, View } from "react-native";
 import ImageModal from "react-native-image-modal";
-import { IconButton, TextInput } from "react-native-paper";
+import { IconButton, ProgressBar, Text, TextInput } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { ThemedText } from "../ThemedText";
 
@@ -36,6 +36,8 @@ const BuzinessImageUpload = forwardRef<
       return Promise.all(uploadPromises);
     },
   }));
+  const { width: w } = useWindowDimensions();
+  const width = w * 0.8;
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
@@ -99,7 +101,7 @@ const BuzinessImageUpload = forwardRef<
       setImages(images.filter((i) => i.path !== image.path));
     return;
   };
-  const toDeleteImage = async (ind: number) => {
+  const toDeleteImage = async (ind: number, undo?: boolean) => {
     console.log("delete", buzinessId, images[ind], ind);
 
     if (buzinessId) {
@@ -107,30 +109,65 @@ const BuzinessImageUpload = forwardRef<
         images
           .filter((i, ind2) => i.path || ind2 !== ind)
           .map((i, ind2) =>
-            ind2 !== ind ? i : { ...i, status: "toDelete" },
+            ind2 !== ind ? i : { ...i, status: undo ? "uploaded" : "toDelete" },
           ) as ImageDataType[],
       );
     }
   };
   return (
     <View>
-      <ThemedText type="label">Képek feltöltése</ThemedText>
-      <ScrollView horizontal contentContainerStyle={{ alignItems: "center" }}>
+      <ThemedText style={{ padding: 8 }}>Képek feltöltése</ThemedText>
+      <ScrollView
+        horizontal
+        contentContainerStyle={{ alignItems: "center", gap: 4 }}
+      >
         {images.map((image, ind) => {
           return (
             <View
               key={"image-" + ind}
               style={{
+                width: width,
                 backgroundColor:
                   image.status === "toDelete" ? "red" : "transparent",
               }}
             >
+              {image.status === "toDelete" && (
+                <>
+                  <ThemedText
+                    style={{
+                      position: "absolute",
+                      top: 100,
+                      width,
+                      zIndex: 10,
+                      textAlign: "center",
+                      color: "white",
+                    }}
+                  >
+                    Törlésre kijelölve
+                  </ThemedText>
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width,
+                      height: 200,
+                      zIndex: 1,
+                      backgroundColor: "#ff000066",
+                    }}
+                  />
+                </>
+              )}
               <ImageModal
+                resizeMode="cover"
                 source={{ uri: image.url }}
-                style={{ width: 100, height: 100 }}
+                style={{ width: width, height: 200 }}
               />
               <TextInput
+                style={{ width: width }}
                 value={images[ind]?.description || ""}
+                multiline
+                placeholder="Mesélj erről a képről"
                 onChangeText={(text) => {
                   setImages(
                     images.map((i, ind2) => {
@@ -141,11 +178,11 @@ const BuzinessImageUpload = forwardRef<
               />
               <IconButton
                 mode="contained-tonal"
-                icon="close"
+                icon={image.status === "toDelete" ? "delete-off" : "delete"}
                 onPress={() => {
-                  toDeleteImage(ind);
+                  toDeleteImage(ind, image.status === "toDelete");
                 }}
-                style={{ position: "absolute", top: 0, right: 0 }}
+                style={{ position: "absolute", zIndex: 2, top: 0, right: 0 }}
               />
             </View>
           );

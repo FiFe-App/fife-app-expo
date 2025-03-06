@@ -18,7 +18,7 @@ export type Database = {
           embedding: string | null
           id: number
           images: string[] | null
-          location: unknown
+          location: unknown | null
           radius: number | null
           title: string
         }
@@ -30,7 +30,7 @@ export type Database = {
           embedding?: string | null
           id?: number
           images?: string[] | null
-          location: unknown
+          location?: unknown | null
           radius?: number | null
           title: string
         }
@@ -42,7 +42,7 @@ export type Database = {
           embedding?: string | null
           id?: number
           images?: string[] | null
-          location?: unknown
+          location?: unknown | null
           radius?: number | null
           title?: string
         }
