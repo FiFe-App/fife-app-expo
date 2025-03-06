@@ -35,8 +35,9 @@ export interface BuzinessSearchItemInterface {
 export interface BuzinessItemInterface {
   id: number;
   title: string;
-  lat: number;
-  long: number;
+  lat?: number;
+  long?: number;
+  location?: unknown;
   distance?: number;
   description: string;
   author: string;
@@ -84,6 +85,10 @@ export interface OptionProps {
   disabled?: boolean;
   onPress: () => void;
 }
+export interface LoadingProps {
+  title: string;
+  dismissable: boolean;
+}
 
 export interface SnackProps {
   title: string;
@@ -93,6 +98,7 @@ export interface InfoState {
   dialogs: DialogProps[];
   options: OptionProps[];
   snacks: SnackProps[];
+  loading?: LoadingProps;
   notificationToken: null | undefined | string;
 }
 

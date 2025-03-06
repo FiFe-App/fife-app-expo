@@ -45,8 +45,11 @@ const styles = StyleSheet.create({
   },
   submit: {
     position: "absolute",
+    alignSelf: "center",
+    alignItems: "center",
     bottom: 20,
     zIndex: 10,
+    width: "100%",
   },
 });
 

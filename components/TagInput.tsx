@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   NativeSyntheticEvent,
   StyleProp,
@@ -23,6 +23,7 @@ const TagInput = ({
   placeholder,
   value,
 }: TagInputType) => {
+  const inputRef = useRef(null);
   const list = (value || "")
     .split(" $ ")
     .slice(0, -1)
@@ -40,7 +41,6 @@ const TagInput = ({
   ) => {
     onChange(toString([...list, text.trim() + " $ "]));
     e.preventDefault();
-    e.currentTarget.focus();
   };
   const onBlur = () => {
     if (text.length) {
@@ -62,6 +62,7 @@ const TagInput = ({
           return (
             <Chip
               key={"tags" + i}
+              mode="outlined"
               style={{ margin: 4 }}
               onClose={() => {
                 onChange(toString(list.filter((el, ind) => ind !== i)) + " $ ");
@@ -83,7 +84,12 @@ const TagInput = ({
         flexWrap: "wrap",
         alignItems: "center",
       }}
-      style={[{}, style]}
+      style={[
+        {
+          borderRadius: 0,
+        },
+        style,
+      ]}
     >
       <TagList />
       <TextInput
@@ -95,6 +101,9 @@ const TagInput = ({
           padding: 4,
           borderRadius: 0,
         }}
+        ref={inputRef}
+        returnKeyType="next"
+        blurOnSubmit={false}
         onSubmitEditing={onSubmit}
         onChangeText={onChangeText}
         onKeyPress={edit}
