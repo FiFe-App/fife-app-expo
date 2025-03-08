@@ -390,22 +390,19 @@ export type Database = {
           distance: number
           full_text_weight?: number
           semantic_weight?: number
-          match_threshold?: number
           rrf_k?: number
         }
         Returns: {
-          id: number
-          title: string
-          description: string
           author: string
           created_at: string
-          images: string[]
+          defaultContact: number | null
+          description: string
+          embedding: string | null
+          id: number
+          images: string[] | null
           location: unknown
-          recommendations: number
-          lat: number
-          long: number
-          distance: number
-          defaultcontact: number
+          radius: number | null
+          title: string
         }[]
       }
       nearby_buziness: {

@@ -59,7 +59,7 @@ export default function BuzinessEditScreen({
   const [defaultContact, setDefaultContact] = useState<number | undefined>();
   const { myLocation, error: locationError } = useMyLocation();
   const [circle, setCircle] = useState<MapCircleType | undefined>(undefined);
-  const selectedLocation = circle?.position || myLocation?.coords;
+  const selectedLocation = circle?.location || myLocation?.coords;
   const [loading, setLoading] = useState(false);
 
   const [mapModalVisible, setMapModalVisible] = useState(false);
@@ -81,10 +81,9 @@ export default function BuzinessEditScreen({
 
     console.log(selectedLocation);
 
-    supabase
-      .from("buziness")
-      .upsert(
-        {
+    supabase.functions
+      .invoke("create-buziness", {
+        body: {
           id: editId,
           ...newBuziness,
           title,
@@ -92,8 +91,7 @@ export default function BuzinessEditScreen({
           location: `POINT(${selectedLocation?.longitude} ${selectedLocation?.latitude})`,
           defaultContact,
         },
-        { onConflict: "id" },
-      )
+      })
       .then((res) => {
         setLoading(false);
         if (res.error) {

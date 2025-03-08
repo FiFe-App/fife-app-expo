@@ -84,13 +84,17 @@ export default function Index() {
             maxdistance: 10,
           };
     if (searchLocation)
-      supabase
-        .rpc("nearby_buziness", {
-          ...searchLocation,
-          search: searchText,
-          take:
-            buzinessSearchParams?.searchType === "map" ? -1 : mySkip + take - 1,
-          skip: buzinessSearchParams?.searchType === "map" ? -1 : mySkip,
+      supabase.functions
+        .invoke("business-search", {
+          body: {
+            query: searchText,
+            take:
+              buzinessSearchParams?.searchType === "map"
+                ? -1
+                : mySkip + take - 1,
+            skip: buzinessSearchParams?.searchType === "map" ? -1 : mySkip,
+            ...searchLocation,
+          },
         })
         .then((res) => {
           dispatch(storeBuzinessLoading(false));
@@ -102,6 +106,9 @@ export default function Index() {
           if (res.error) {
             console.log(res.error);
           }
+        })
+        .catch((err) => {
+          console.log(err);
         });
   };
   useFocusEffect(
