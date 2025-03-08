@@ -13,7 +13,7 @@ import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { IconButton, TextInput } from "react-native-paper";
+import { Icon, IconButton, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 type UserInfo = Partial<Tables<"profiles">>;
@@ -211,7 +211,7 @@ export default function Index() {
               style={{ textAlign: "center", margin: 16 }}
               type="defaultSemiBold"
             >
-              Figyelem! Az alábbi adatok láthatóak minden felhasználónak.
+              <Icon source="alert" size={16} />Figyelem! Az alábbi adatok láthatóak minden felhasználónak.
             </ThemedText>
             <ContactEditScreen ref={contactEditRef} />
           </View>
