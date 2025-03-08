@@ -1,15 +1,18 @@
 import { useMyLocation } from "@/hooks/useMyLocation";
 import React, { useRef, useState } from "react";
 import { Text, TextInput, View } from "react-native";
-import { Button, FAB, IconButton } from "react-native-paper";
+import { Button, FAB, Icon, IconButton } from "react-native-paper";
 import MyLocationIcon from "../../assets/images/myLocationIcon";
 import { Camera, Details, MapView, Marker, Region } from "../mapView/mapView";
 import styles from "../mapView/style";
 import { MapCircleType, MapSelectorProps } from "./MapSelector.types";
+import { ThemedText } from "../ThemedText";
 
 const MapSelector = ({
   style,
   searchEnabled,
+  title,
+  text,
   data,
   setData,
   setOpen,
@@ -75,124 +78,130 @@ const MapSelector = ({
       if (setOpen) setOpen(false);
     }
   };
+  const removeSumbit = () => {
+    if (setData) {
+      setData(undefined);
+      console.log("map submit", circle, setOpen);
+      if (setOpen) setOpen(false);
+    }
+  };
 
   return (
     <View style={[{ flex: 1 }, style]}>
-      {false && (
-        <View style={{ width: "100%" }}>
-          <TextInput
-            style={styles.search}
-            value={search}
-            onChangeText={setSearch}
-            placeholder={"Keress a térképen"}
-            placeholderTextColor={"#666"}
-          />
-        </View>
-      )}
-      <View style={{ width: "100%", height: "100%" }}>
-        <View
-          style={{ width: "100%", height: "100%" }}
-          onLayout={(e) => {
-            setMapHeight(e.nativeEvent.layout.height);
+      <View
+        style={{ width: "100%", height: "100%" }}
+        onLayout={(e) => {
+          setMapHeight(e.nativeEvent.layout.height);
+        }}
+      >
+        <ThemedText type="title">{title}</ThemedText>
+        <ThemedText>{text}</ThemedText>
+        <MapView
+          ref={mapRef}
+          //@ts-ignore
+          options={{
+            mapTypeControl: false,
+            fullscreenControl: false,
+            streetViewControl: false,
+            zoomControl: false,
           }}
+          style={{ width: "100%", height: "100%" }}
+          initialCamera={{
+            altitude: 10,
+            center: {
+              latitude: circle.location.latitude,
+              longitude: circle.location.longitude,
+            },
+            heading: 0,
+            pitch: 0,
+            zoom: 12,
+          }}
+          provider="google"
+          googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
+          pitchEnabled={false}
+          rotateEnabled={false}
+          toolbarEnabled={false}
+          onRegionChangeComplete={onRegionChange}
         >
-          <MapView
-            ref={mapRef}
-            options={{
-              mapTypeControl: false,
-              fullscreenControl: false,
-              streetViewControl: false,
-              zoomControl: false,
-            }}
-            style={{ width: "100%", height: "100%" }}
-            initialCamera={{
-              altitude: 10,
-              center: {
-                latitude: circle.location.latitude,
-                longitude: circle.location.longitude,
-              },
-              heading: 0,
-              pitch: 0,
-              zoom: 12,
-            }}
-            provider="google"
-            googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
-            pitchEnabled={false}
-            rotateEnabled={false}
-            toolbarEnabled={false}
-            onRegionChangeComplete={onRegionChange}
-          >
-            {myLocation && (
-              <Marker
-                centerOffset={{ x: 10, y: 10 }}
-                coordinate={myLocation?.coords}
-                style={{ justifyContent: "center", alignItems: "center" }}
-              >
-                <MyLocationIcon style={{ width: 20, height: 20 }} />
-              </Marker>
-            )}
-          </MapView>
-        </View>
-
-        {!!myLocation && (
-          <FAB
-            icon="map-marker"
-            style={styles.myLocationButton}
-            onPress={panToMyLocation}
-          />
-        )}
-
-        <View style={styles.zoom}>
-          <IconButton
-            icon="plus"
-            style={{
-              borderBottomLeftRadius: 0,
-              borderBottomRightRadius: 0,
-              margin: 0,
-            }}
-            onPress={() => zoom(1)}
-            mode="contained-tonal"
-          />
-          <IconButton
-            icon="minus"
-            style={{
-              borderTopLeftRadius: 0,
-              borderTopRightRadius: 0,
-              margin: 0,
-            }}
-            onPress={() => zoom(-1)}
-            mode="contained-tonal"
-          />
-        </View>
-        <Text>{locationError}</Text>
-        <View style={{ width: "100%", alignItems: "center" }}>
+          {myLocation && (
+            <Marker
+              centerOffset={{ x: 10, y: 10 }}
+              coordinate={myLocation?.coords}
+              style={{ justifyContent: "center", alignItems: "center" }}
+            >
+              <MyLocationIcon style={{ width: 20, height: 20 }} />
+            </Marker>
+          )}
+          <View style={styles.submit}>
+            <Button mode="contained" onPress={onSubmit} disabled={!circle}>
+              <Text>Helyzet mentése</Text>
+            </Button>
+          </View>
+          <View style={styles.zoom}>
+            <IconButton
+              icon="plus"
+              style={{
+                borderBottomLeftRadius: 0,
+                borderBottomRightRadius: 0,
+                margin: 0,
+              }}
+              onPress={() => zoom(1)}
+              mode="contained-tonal"
+            />
+            <IconButton
+              icon="minus"
+              style={{
+                borderTopLeftRadius: 0,
+                borderTopRightRadius: 0,
+                margin: 0,
+              }}
+              onPress={() => zoom(-1)}
+              mode="contained-tonal"
+            />
+          </View>
+        </MapView>
+        <View style={{ padding: 8 }}>
+          {!!locationError && (
+            <ThemedText>
+              <Icon source="map-marker-alert" size={16} />
+              {locationError}
+            </ThemedText>
+          )}
           <Button
-            mode="contained"
-            style={styles.submit}
-            onPress={onSubmit}
-            disabled={!circle}
+            style={{ alignSelf: "flex-end" }}
+            mode="elevated"
+            onPress={removeSumbit}
+            icon="delete"
           >
-            <Text>Helyzet mentése</Text>
+            Helyzet törlése
           </Button>
         </View>
-
-        {!!circleSize && (
-          <View
-            style={[
-              styles.circleFixed,
-              {
-                width: circleSize,
-                height: circleSize,
-                marginLeft: -circleSize / 2,
-                marginTop: -circleSize / 2,
-                borderRadius: circleSize,
-              },
-            ]}
-          >
-            <Text style={styles.circleText}>Átmérő: {circleRadiusText}</Text>
-          </View>
-        )}
       </View>
+
+      {!!myLocation && (
+        <FAB
+          style={styles.myLocationButton}
+          icon={myLocation ? "map-marker" : "map-marker-question"}
+          onPress={panToMyLocation}
+        />
+      )}
+
+      {!!circleSize && (
+        <View
+          style={[
+            styles.circleFixed,
+            {
+              width: circleSize,
+              height: circleSize,
+              marginLeft: -circleSize / 2,
+              marginTop: -circleSize / 2,
+              borderRadius: circleSize,
+            },
+          ]}
+        >
+          <Text style={styles.circleText}>Átmérő: {circleRadiusText}</Text>
+        </View>
+      )}
     </View>
   );
 };

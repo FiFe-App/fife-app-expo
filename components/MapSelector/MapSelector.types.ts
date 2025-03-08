@@ -10,6 +10,8 @@ export interface MapSelectorProps {
   style?: StyleProp<ViewStyle>;
   searchEnabled: boolean;
   data?: MapCircleType;
+  title?: string;
+  text?: string;
   setData?: React.Dispatch<React.SetStateAction<MapCircleType | undefined>>;
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }

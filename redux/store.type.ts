@@ -1,5 +1,6 @@
 import { Comment } from "@/components/comments/comments.types";
 import { Tables } from "@/database.types";
+import { ImagePickerAsset } from "expo-image-picker";
 
 export interface UserState {
   uid?: string;
@@ -34,13 +35,15 @@ export interface BuzinessSearchItemInterface {
 export interface BuzinessItemInterface {
   id: number;
   title: string;
-  lat: number;
-  long: number;
+  lat?: number;
+  long?: number;
+  location?: unknown;
   distance?: number;
   description: string;
   author: string;
   authorName?: string;
   avatarUrl?: string | null;
+  images?: string[] | null;
   buzinessRecommendations: { author: string }[];
 }
 export interface EventItemInterface extends Tables<"events"> {
@@ -82,6 +85,10 @@ export interface OptionProps {
   disabled?: boolean;
   onPress: () => void;
 }
+export interface LoadingProps {
+  title: string;
+  dismissable: boolean;
+}
 
 export interface SnackProps {
   title: string;
@@ -91,9 +98,17 @@ export interface InfoState {
   dialogs: DialogProps[];
   options: OptionProps[];
   snacks: SnackProps[];
+  loading?: LoadingProps;
   notificationToken: null | undefined | string;
 }
 
 export interface TutorialState {
   functions: string[];
+}
+
+export interface ImageDataType extends ImagePickerAsset {
+  description?: string;
+  path: string;
+  url: string;
+  status: "toUpload" | "uploaded" | "toDelete";
 }

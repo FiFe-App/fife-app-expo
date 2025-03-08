@@ -1,6 +1,7 @@
 import MyLocationIcon from "@/assets/images/myLocationIcon";
 import ErrorScreen from "@/components/ErrorScreen";
 import ProfileImage from "@/components/ProfileImage";
+import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import BuzinessRecommendationsModal from "@/components/buziness/BuzinessRecommendationsModal";
 import { ContactList } from "@/components/buziness/ContactList";
@@ -8,13 +9,18 @@ import Comments from "@/components/comments/Comments";
 import { LatLng, MapView, Marker } from "@/components/mapView/mapView";
 import { Tables } from "@/database.types";
 import { useMyLocation } from "@/hooks/useMyLocation";
+import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
 import getLinkForContact from "@/lib/functions/getLinkForContact";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
 import { supabase } from "@/lib/supabase/supabase";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { RootState } from "@/redux/store";
-import { BuzinessItemInterface, UserState } from "@/redux/store.type";
+import {
+  BuzinessItemInterface,
+  ImageDataType,
+  UserState,
+} from "@/redux/store.type";
 import { PostgrestError } from "@supabase/supabase-js";
 import {
   Link,
@@ -25,6 +31,7 @@ import {
 } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
+import ImageModal from "react-native-image-modal";
 import openMap from "react-native-open-maps";
 import {
   ActivityIndicator,
@@ -54,11 +61,13 @@ export default function Index() {
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
   const iRecommended = recommendations?.includes(myUid || "");
-  const location: LatLng | null = data
-    ? { latitude: data.lat, longitude: data.long }
-    : null;
+  const location: LatLng | null =
+    data?.lat && data?.long
+      ? { latitude: data.lat, longitude: data.long }
+      : null;
   const categories = data?.title?.split(" $ ");
   const title = categories?.[0];
+  const [images, setImages] = useState<ImageDataType[]>([]);
   const [isLongDescription, setIsLongDescription] = useState<
     undefined | boolean
   >(undefined);
@@ -87,19 +96,21 @@ export default function Index() {
               setError(error);
               return;
             }
-            console.log(data);
+            console.log(data?.location);
 
             if (data) {
-              const cords = locationToCoords(String(data.location));
-              nav.setOptions({ title: data?.title.split(" ")[0] });
+              const cords = data?.location
+                ? locationToCoords(String(data.location))
+                : null;
               setData({
                 ...data,
-                lat: cords[1],
-                long: cords[0],
+                lat: cords?.[1],
+                long: cords?.[0],
                 distance: 0,
                 authorName: data?.profiles?.full_name || "???",
                 avatarUrl: data?.profiles?.avatar_url,
               });
+              if (data.images) setImages(getImagesUrlFromSupabase(data.images));
               if (data.defaultContact) {
                 if (data.contacts) {
                   setDefaultContact(data.contacts);
@@ -204,6 +215,9 @@ export default function Index() {
                 </Text>
               </TouchableRipple>
             </View>
+            <View>
+              <ThemedText type="subtitle">{categories?.[0]}</ThemedText>
+            </View>
             <View
               style={{
                 flexWrap: "wrap",
@@ -241,7 +255,6 @@ export default function Index() {
                   Szerkesztés
                 </Button>
               )}
-
               {defaultContact && (
                 <Link asChild href={getLinkForContact(defaultContact)}>
                   <Button style={{ flex: 1 }} mode="contained">
@@ -302,68 +315,102 @@ export default function Index() {
             </TouchableRipple>
             <TabsProvider defaultIndex={0}>
               <Tabs showTextLabel={width > 400}>
-                <TabScreen label="Helyzete" icon="map-marker">
-                  <View style={{ minHeight: 200, flex: 1 }}>
-                    <MapView
-                      // @ts-ignore
-                      options={{
-                        mapTypeControl: false,
-                        fullscreenControl: false,
-                        streetViewControl: false,
-                        zoomControl: false,
-                      }}
-                      style={{ width: "100%", height: "100%" }}
-                      initialCamera={{
-                        altitude: 10,
-                        center: location || {
-                          latitude: 47.4979,
-                          longitude: 19.0402,
-                        },
-                        heading: 0,
-                        pitch: 0,
-                        zoom: 12,
-                      }}
-                      provider="google"
-                      googleMapsApiKey={
-                        process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
-                      }
-                      pitchEnabled={false}
-                      rotateEnabled={false}
-                      toolbarEnabled={false}
-                    >
-                      {location && <Marker coordinate={location} />}
-                      {myLocation && (
-                        <Marker
-                          centerOffset={{ x: 10, y: 10 }}
-                          coordinate={myLocation?.coords}
-                          style={{
-                            justifyContent: "center",
-                            alignItems: "center",
-                          }}
-                        >
-                          <MyLocationIcon style={{ width: 20, height: 20 }} />
-                        </Marker>
-                      )}
-                    </MapView>
-                    {location && (
-                      <IconButton
-                        icon="directions"
-                        mode="contained"
-                        onPress={() =>
-                          openMap({
-                            latitude: location.latitude,
-                            longitude: location.longitude,
-                            navigate: true,
-                            start: "My Location",
-                            travelType: "public_transport",
-                            end: location.latitude + "," + location.longitude,
-                          })
+                {data.location && (
+                  <TabScreen label="Helyzete" icon="map-marker">
+                    <View style={{ minHeight: 200, flex: 1 }}>
+                      <MapView
+                        // @ts-ignore
+                        options={{
+                          mapTypeControl: false,
+                          fullscreenControl: false,
+                          streetViewControl: false,
+                          zoomControl: false,
+                        }}
+                        style={{ width: "100%", height: "100%" }}
+                        initialCamera={{
+                          altitude: 10,
+                          center: location || {
+                            latitude: 47.4979,
+                            longitude: 19.0402,
+                          },
+                          heading: 0,
+                          pitch: 0,
+                          zoom: 12,
+                        }}
+                        provider="google"
+                        googleMapsApiKey={
+                          process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
                         }
-                        style={{ right: 5, bottom: 5, position: "absolute" }}
-                      />
-                    )}
-                  </View>
-                </TabScreen>
+                        pitchEnabled={false}
+                        rotateEnabled={false}
+                        toolbarEnabled={false}
+                      >
+                        {location && <Marker coordinate={location} />}
+                        {myLocation && (
+                          <Marker
+                            centerOffset={{ x: 10, y: 10 }}
+                            coordinate={myLocation?.coords}
+                            style={{
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
+                          >
+                            <MyLocationIcon style={{ width: 20, height: 20 }} />
+                          </Marker>
+                        )}
+                      </MapView>
+                      {location && (
+                        <IconButton
+                          icon="directions"
+                          mode="contained"
+                          onPress={() =>
+                            openMap({
+                              latitude: location.latitude,
+                              longitude: location.longitude,
+                              navigate: true,
+                              start: "My Location",
+                              travelType: "public_transport",
+                              end: location.latitude + "," + location.longitude,
+                            })
+                          }
+                          style={{ right: 5, bottom: 5, position: "absolute" }}
+                        />
+                      )}
+                    </View>
+                  </TabScreen>
+                )}
+                {images.length && (
+                  <TabScreen label="Képek" icon="image">
+                    <ScrollView
+                      style={{ flexGrow: 1 }}
+                      contentContainerStyle={{ width: "100%" }}
+                    >
+                      {images.map((image, ind) => {
+                        return (
+                          <View key={"image-" + ind} style={{ width: "100%" }}>
+                            <ImageModal
+                              source={{ uri: image.url }}
+                              resizeMode="cover"
+                              modalImageResizeMode="contain"
+                              overlayBackgroundColor="#00000066"
+                              style={{ width: width, height: 200 }}
+                              renderFooter={() => (
+                                <View style={{}}>
+                                  <ThemedText style={{ color: "white" }}>
+                                    {image.description}
+                                  </ThemedText>
+                                </View>
+                              )}
+                            />
+                            <View style={{ padding: 4 }}>
+                              <ThemedText>{image.description}</ThemedText>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </ScrollView>
+                  </TabScreen>
+                )}
                 <TabScreen label="Elérhetőségek" icon="contacts">
                   <ContactList uid={data.author} />
                 </TabScreen>

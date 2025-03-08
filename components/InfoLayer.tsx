@@ -1,17 +1,33 @@
 import {
+  hideLoading,
   popSnack,
   popDialog as slicepopDialog,
 } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { Button, Dialog, Portal, Snackbar, Text } from "react-native-paper";
+import {
+  ActivityIndicator,
+  Button,
+  Dialog,
+  Portal,
+  Snackbar,
+  Text,
+} from "react-native-paper";
 import { usePromiseTracker } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
+import { ThemedText } from "./ThemedText";
 
 const InfoLayer = () => {
-  const { dialogs, snacks } = useSelector((state: RootState) => state.info);
+  const { dialogs, snacks, loading } = useSelector(
+    (state: RootState) => state.info,
+  );
   const dialog = dialogs?.[0];
   const { promiseInProgress } = usePromiseTracker({ area: "dialog" });
   const dispath = useDispatch();
+  function dismissLoading() {
+    if (dialog?.dismissable) {
+      dispath(hideLoading());
+    }
+  }
   function cancelDialog() {
     if (dialog?.onCancel) {
       dialog.onCancel();
@@ -68,6 +84,18 @@ const InfoLayer = () => {
             {snack.title}
           </Snackbar>
         ))}
+        {loading && (
+          <Dialog
+            visible={!!loading}
+            onDismiss={cancelDialog}
+            dismissable={loading?.dismissable}
+          >
+            <Dialog.Content style={{ alignItems: "center", gap: 16 }}>
+              <ActivityIndicator size="large" />
+              <ThemedText>{loading?.title || "Kérlek várj..."}</ThemedText>
+            </Dialog.Content>
+          </Dialog>
+        )}
       </Portal>
     </>
   );
