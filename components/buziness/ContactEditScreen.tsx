@@ -63,7 +63,6 @@ const ContactEditScreen = forwardRef<{
           setLoading(false);
         });
   };
-  console.log(contacts);
 
   useFocusEffect(
     useCallback(() => {
@@ -76,16 +75,21 @@ const ContactEditScreen = forwardRef<{
 
   const saveContact = (c_ind: number, contact: Partial<IContact>) => {
     if (uid === undefined) return;
+
+    
     const newArray = types
       .map((type, ind) => {
         const current = contacts.find((c) => c?.type === type.value);
-        if (c_ind === ind && current) {
+
+        if (c_ind === ind) {
           return {
+            data:'',
+            title:null,
             ...current,
             ...contact,
             type: type.value,
             author: uid,
-            data: contact?.data || "",
+            public:true,
             created_at: current?.created_at || new Date().toISOString(),
           };
         } else return current;
@@ -132,13 +136,12 @@ const ContactEditScreen = forwardRef<{
   }));
   return (
     <View style={{ flex: 1, gap: 8 }}>
-      {types.map((type, ind) => {
+      {!loading && types.map((type, ind) => {
         const current = {
           title: "",
           data: "",
           ...contacts.find((c) => c?.type === type.value),
         };
-        if (!loading)
           return (
             <View key={ind}>
               <View
@@ -161,7 +164,7 @@ const ContactEditScreen = forwardRef<{
                 onChangeText={(t) => saveContact(ind, { data: t })}
                 error={error?.type === type.value}
               />
-              {(current.data || current.title) && (
+              {(!!current.data || !!current.title) && (
                 <TextInput
                   value={current?.title || ""}
                   disabled={loading}
