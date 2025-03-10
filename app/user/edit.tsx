@@ -13,14 +13,21 @@ import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { Icon, IconButton, TextInput } from "react-native-paper";
+import {
+  Divider,
+  HelperText,
+  Icon,
+  IconButton,
+  MD3Colors,
+  TextInput,
+} from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
   const { uid: myUid, userData }: UserState = useSelector(
-    (state: RootState) => state.user,
+    (state: RootState) => state.user
   );
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
@@ -28,12 +35,12 @@ export default function Index() {
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
-        | PostgrestSingleResponse<any>
-        | {
-            error: string;
-          }
-        | undefined
-      >;
+      | PostgrestSingleResponse<any>
+      | {
+        error: string;
+      }
+      | undefined
+    >;
   }>(null);
 
   const load = () => {
@@ -77,7 +84,7 @@ export default function Index() {
               ...profile,
               id: myUid,
             },
-            { onConflict: "id" },
+            { onConflict: "id" }
           )
           .then((res) => {
             setLoading(false);
@@ -100,17 +107,17 @@ export default function Index() {
             onPress: save,
             disabled: !profile?.full_name,
           },
-        ]),
+        ])
       );
-      return () => {};
-    }, [dispatch, myUid, profile]),
+      return () => { };
+    }, [dispatch, myUid, profile])
   );
   useFocusEffect(
     useCallback(() => {
       load();
-      return () => {};
+      return () => { };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [myUid]),
+    }, [myUid])
   );
   const pickImage = async () => {
     const result = await ExpoImagePicker.launchImageLibraryAsync({
@@ -155,7 +162,7 @@ export default function Index() {
                 avatar_url: image.fileName,
                 id: myUid,
               },
-              { onConflict: "id" },
+              { onConflict: "id" }
             )
             .then((res) => {
               console.log("profile upsert", res);
@@ -203,16 +210,15 @@ export default function Index() {
             <ThemedText type="label">Email, amivel regisztráltál:</ThemedText>
             <ThemedText>{userData?.email}</ThemedText>
           </View>
-          <View style={{ gap: 8 }}>
-            <ThemedText type="subtitle">
-              Elérhetőségeid, semmi sem kötelező!
-            </ThemedText>
-            <ThemedText
-              style={{ textAlign: "center", margin: 16 }}
-              type="defaultSemiBold"
-            >
-              <Icon source="alert" size={16} />Figyelem! Az alábbi adatok láthatóak minden felhasználónak.
-            </ThemedText>
+          <Divider />
+          <View style={{ gap: 8, paddingTop: 8 }}>
+            <ThemedText type="subtitle">Elérhetőségeid</ThemedText>
+            <View style={{ alignItems:"center" }}>
+              <Icon source="alert" size={24} color={MD3Colors.error80} />
+              <HelperText type="error" style={{textAlign:"center"}}>
+                Figyelem! Az alábbi adatok láthatóak minden felhasználónak.
+              </HelperText>
+            </View>
             <ContactEditScreen ref={contactEditRef} />
           </View>
         </ScrollView>
