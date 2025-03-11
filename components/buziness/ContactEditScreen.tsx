@@ -168,7 +168,7 @@ const ContactEditScreen = forwardRef<{
                 <TextInput
                   value={current?.title || ""}
                   disabled={loading}
-                  label="Plusz infó"
+                  label="Egyéb információ"
                   placeholder="Munkanapokon keress / csak hétvégén"
                   onChangeText={(t) => saveContact(ind, { title: t })}
                 />
