@@ -54,7 +54,7 @@ const Register = () => {
             { key: "Nem leszek rosszindulatú senkivel!" },
             { key: "Saját és mások érdekeit is figyelembe veszem!" },
             {
-              key: "Ha valaki valaki bántóan viselkedik velem vagy mással, jelentem!",
+              key: "Ha valaki bántóan viselkedik velem vagy mással, jelentem!",
             },
           ]}
           style={[styles.text, { flex: undefined }]}
