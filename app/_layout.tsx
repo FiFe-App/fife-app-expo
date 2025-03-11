@@ -2,8 +2,9 @@ import InfoLayer from "@/components/InfoLayer";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { clearOptions } from "@/redux/reducers/infoReducer";
 import { persistor, RootState, store } from "@/redux/store";
-import { NativeStackHeaderProps } from "@react-navigation/native-stack/lib/typescript/src/types";
 import { Stack, useNavigation, usePathname, useSegments } from "expo-router";
+import { NativeStackHeaderProps } from "@react-navigation/native-stack";
+import React from "react";
 import { useEffect, useState } from "react";
 import { useWindowDimensions } from "react-native";
 import { Appbar, Menu, PaperProvider } from "react-native-paper";
@@ -44,14 +45,6 @@ export default function RootLayout() {
               name="user/edit"
               options={{ title: "Profil Szerkesztése" }}
             />
-            <Stack.Screen
-              name="contact-edit/index"
-              options={{ title: "Új Elérhetőség" }}
-            />
-            <Stack.Screen
-              name="contact-edit/[editId]"
-              options={{ title: "Elérhetőség Szerkesztése" }}
-            />
           </Stack>
           {pathname !== "/" &&
             !pathname.includes("login") &&
@@ -75,7 +68,7 @@ const MyAppbar = (props: NativeStackHeaderProps) => {
     dispatch(clearOptions());
   }, [dispatch, segments]);
 
-  if (pathname == "/biznisz") return;
+  if (pathname === "/biznisz") return;
   return (
     <Appbar.Header mode="center-aligned">
       {false && <Appbar.BackAction onPress={navigation.goBack} />}
