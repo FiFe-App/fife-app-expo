@@ -61,6 +61,8 @@ export function ContactList({ uid, edit }: ContactListProps) {
                 <Link
                   key={contact.id}
                   asChild
+                  rel="nofollow"
+                  target="_blank"
                   href={getLinkForContact(contact, edit)}
                   onLongPress={() => {
                     Clipboard.setStringAsync(contact.data).then((res) => {
@@ -97,7 +99,6 @@ export function ContactList({ uid, edit }: ContactListProps) {
                   Itt fognak megjelenni az elérhetőségeid, hogy könnyebben
                   elérjenek.
                 </ThemedText>
-                <ThemedText type="subtitle"></ThemedText>
               </View>
             ))}
         </List.Section>
