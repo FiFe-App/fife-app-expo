@@ -20,12 +20,14 @@ import {
   IconButton,
   MD3Colors,
   TextInput,
+  useTheme,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
+  const theme = useTheme();
   const { uid: myUid, userData }: UserState = useSelector(
     (state: RootState) => state.user
   );
@@ -214,9 +216,9 @@ export default function Index() {
           <View style={{ gap: 8, paddingTop: 8 }}>
             <ThemedText type="subtitle">Elérhetőségeid</ThemedText>
             <View style={{ alignItems:"center" }}>
-              <Icon source="alert" size={24} color={MD3Colors.error80} />
+              <Icon source="alert" size={24} color={theme.colors.error} />
               <HelperText type="error" style={{textAlign:"center"}}>
-                Figyelem! Az alábbi adatok láthatóak minden felhasználónak.
+                Figyelem! Az alább megadott adatok láthatóak minden felhasználónak.
               </HelperText>
             </View>
             <ContactEditScreen ref={contactEditRef} />
