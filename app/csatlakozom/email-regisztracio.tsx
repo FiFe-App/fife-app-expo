@@ -8,9 +8,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link, Redirect, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
-import { AppState, View } from "react-native";
+import { AppState, Pressable, View } from "react-native";
 
-import { addSnack } from "@/redux/reducers/infoReducer";
+import { addDialog, addSnack } from "@/redux/reducers/infoReducer";
 import { makeRedirectUri } from "expo-auth-session";
 import {
   Button,
@@ -98,6 +98,26 @@ export default function Index() {
     setLoading(false);
   };
 
+  const showText = () => {
+    dispatch(
+      addDialog({
+        title: "Feltételek",
+        text: `
+Lorem ipsum, dolor sit amet consectetur adipisicing elit. Vero dolor non voluptatum quis deleniti labore assumenda modi maiores fugiat, sit sequi ad eveniet quae optio? Dignissimos fugiat officiis voluptates architecto?
+Lorem ipsum, dolor sit amet consectetur adipisicing elit. Vero dolor non voluptatum quis deleniti labore assumenda modi maiores fugiat, sit sequi ad eveniet quae optio? Dignissimos fugiat officiis voluptates architecto?
+Lorem ipsum, dolor sit amet consectetur adipisicing elit. Vero dolor non voluptatum quis deleniti labore assumenda modi maiores fugiat, sit sequi ad eveniet quae optio? Dignissimos fugiat officiis voluptates architecto?
+Lorem ipsum, dolor sit amet consectetur adipisicing elit. Vero dolor non voluptatum quis deleniti labore assumenda modi maiores fugiat, sit sequi ad eveniet quae optio? Dignissimos fugiat officiis voluptates architecto?
+Lorem ipsum, dolor sit amet consectetur adipisicing elit. Vero dolor non voluptatum quis deleniti labore assumenda modi maiores fugiat, sit sequi ad eveniet quae optio? Dignissimos fugiat officiis voluptates architecto?
+Lorem ipsum, dolor sit amet consectetur adipisicing elit. Vero dolor non voluptatum quis deleniti labore assumenda modi maiores fugiat, sit sequi ad eveniet quae optio? Dignissimos fugiat officiis voluptates architecto?
+        `,
+        onSubmit: () => {
+          setAcceptConditions(true);
+        },
+        submitText: "Elfogadom",
+      }),
+    );
+  };
+
   useEffect(() => {
     AsyncStorage.setItem("email", email);
   }, [email]);
@@ -163,15 +183,13 @@ export default function Index() {
         <Divider style={{ marginVertical: 16 }} />
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Checkbox
-            onPress={(e) => setAcceptConditions(!acceptConditions)}
+            onPress={(e) => {
+              acceptConditions ? setAcceptConditions(false) : showText();
+            }}
             status={acceptConditions ? "checked" : "unchecked"}
           />
-          <ThemedText onPress={(e) => setAcceptConditions(!acceptConditions)}>
-            Elfogadom a
-            <ThemedText type="link">
-              <Link href="/csatlakozom/iranyelvek"> feltételeket</Link>
-            </ThemedText>
-            .
+          <ThemedText onPress={showText}>
+            Elfogadom a<ThemedText type="link"> feltételeket</ThemedText>.
           </ThemedText>
         </View>
         <Button

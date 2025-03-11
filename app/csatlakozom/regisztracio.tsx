@@ -55,11 +55,11 @@ export default function Index() {
       >
         <Button
           mode="contained"
-          icon="facebook"
+          icon="apple"
           disabled
           onPress={signInWithFacebook}
         >
-          Csatlakozom Facebook-al
+          Csatlakozom Apple-vel
         </Button>
         <Button mode="contained" icon="google" disabled>
           Csatlakozom Google-lel

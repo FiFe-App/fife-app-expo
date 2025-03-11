@@ -3,6 +3,7 @@ import {
   popDialog as slicepopDialog,
 } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
+import { ScrollView } from "react-native";
 import { Button, Dialog, Portal, Snackbar, Text } from "react-native-paper";
 import { usePromiseTracker } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
@@ -37,7 +38,9 @@ const InfoLayer = () => {
           >
             <Dialog.Title>{dialog?.title}</Dialog.Title>
             <Dialog.Content>
-              <Text variant="bodyMedium">{dialog?.text}</Text>
+              <ScrollView style={{ maxHeight: 400 }}>
+                <Text variant="bodyMedium">{dialog?.text}</Text>
+              </ScrollView>
             </Dialog.Content>
             <Dialog.Actions>
               {dialog?.dismissable && (
