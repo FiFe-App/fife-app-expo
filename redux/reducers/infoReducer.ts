@@ -1,9 +1,16 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { DialogProps, InfoState, OptionProps, SnackProps } from "../store.type";
+import {
+  DialogProps,
+  InfoState,
+  LoadingProps,
+  OptionProps,
+  SnackProps,
+} from "../store.type";
 const initialState: InfoState = {
   dialogs: [],
   options: [],
   snacks: [],
+  loading: undefined,
   notificationToken: null,
 };
 
@@ -49,6 +56,12 @@ const infoReducer = createSlice({
     clearOptions: (state) => {
       state.options = [];
     },
+    showLoading: (state, action: PayloadAction<LoadingProps>) => {
+      state.loading = action.payload;
+    },
+    hideLoading: (state) => {
+      state.loading = undefined;
+    },
   },
 });
 
@@ -61,6 +74,8 @@ export const {
   clearOptions,
   addSnack,
   popSnack,
+  showLoading,
+  hideLoading,
 } = infoReducer.actions;
 
 export default infoReducer.reducer;

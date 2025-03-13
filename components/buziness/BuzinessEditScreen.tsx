@@ -4,12 +4,17 @@ import { containerStyle } from "@/components/styles";
 import TagInput from "@/components/TagInput";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
-import { setOptions } from "@/redux/reducers/infoReducer";
+import {
+  addDialog,
+  hideLoading,
+  setOptions,
+  showLoading,
+} from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { UserState } from "@/redux/store.type";
+import { ImageDataType, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { router, useFocusEffect, useNavigation } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import {
   Button,
@@ -26,7 +31,7 @@ import {
   TouchableRipple,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { MapView, Marker } from "../mapView/mapView";
+import { Circle, MapView, Marker } from "../mapView/mapView";
 import { ThemedView } from "../ThemedView";
 import { setLocationError } from "@/redux/reducers/userReducer";
 import {
@@ -36,6 +41,11 @@ import {
 } from "react-native-paper-dropdown";
 import typeToIcon from "@/lib/functions/typeToIcon";
 import { ThemedText } from "../ThemedText";
+import BuzinessImageUpload, {
+  BuzinessImageUploadHandle,
+} from "./BuzinessImageUpload";
+import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
+import { Image } from "expo-image";
 
 interface NewBuzinessInterface {
   title: string;
@@ -57,9 +67,13 @@ export default function BuzinessEditScreen({
   });
   const [myContacts, setMyContacts] = useState<Option[]>([]);
   const [defaultContact, setDefaultContact] = useState<number | undefined>();
-  const { myLocation, error: locationError } = useMyLocation();
+
+  const [images, setImages] = useState<ImageDataType[]>([]);
+  const imagesUploadRef = useRef<BuzinessImageUploadHandle | null>(null);
+  const { myLocation, locationError } = useMyLocation();
   const [circle, setCircle] = useState<MapCircleType | undefined>(undefined);
-  const selectedLocation = circle?.position || myLocation?.coords;
+  const selectedLocation = circle?.location || myLocation?.coords;
+  const selectedRadius = circle?.radius || 10;
   const [loading, setLoading] = useState(false);
 
   const [mapModalVisible, setMapModalVisible] = useState(false);
@@ -70,18 +84,18 @@ export default function BuzinessEditScreen({
   const navigation = useNavigation();
 
   const canSubmit = !!(
-    (!!myLocation || !!circle) &&
     newBuziness.title &&
     categories &&
     newBuziness.description
   );
-  const save = useCallback(() => {
+  useEffect(() => {
+    console.log("images", images);
+  }, [images]);
+  const save = useCallback(async () => {
     setLoading(true);
     if (!uid) return;
 
-    console.log(selectedLocation);
-
-    supabase
+    await supabase
       .from("buziness")
       .upsert(
         {
@@ -89,12 +103,39 @@ export default function BuzinessEditScreen({
           ...newBuziness,
           title,
           author: uid,
-          location: `POINT(${selectedLocation?.longitude} ${selectedLocation?.latitude})`,
+          location: selectedLocation
+            ? `POINT(${selectedLocation?.longitude} ${selectedLocation?.latitude})`
+            : null,
           defaultContact,
         },
         { onConflict: "id" },
       )
-      .then((res) => {
+      .then(async (res) => {
+        console.log(res, images.length, editId);
+        if (images.length && editId) {
+          const newImages = await imagesUploadRef.current?.uploadImages(editId);
+          console.log("uploadRes", newImages);
+          if (uid && newImages)
+            await supabase
+              .from("buziness")
+              .update({
+                author: uid,
+                images: newImages
+                  .filter((i, ind) => i.status !== "toDelete")
+                  .map((i, ind) =>
+                    JSON.stringify({
+                      description: i.description,
+                      path: i.path,
+                    }),
+                  ) as string[],
+              })
+              .eq("id", editId)
+              .then((res) => {
+                console.log("images upsert", res);
+              });
+
+          //return images.filter((i, ind) => i && imagesRes?.[ind]?.error);
+        }
         setLoading(false);
         if (res.error) {
           console.log(res.error);
@@ -109,7 +150,16 @@ export default function BuzinessEditScreen({
         console.log(res);
         router.navigate("/user");
       });
-  }, [editId, newBuziness, selectedLocation, title, uid]);
+  }, [
+    defaultContact,
+    editId,
+    images,
+    newBuziness,
+    selectedLocation?.latitude,
+    selectedLocation?.longitude,
+    title,
+    uid,
+  ]);
 
   useEffect(() => {
     if (circle) {
@@ -117,24 +167,31 @@ export default function BuzinessEditScreen({
     }
   }, [circle]);
   useEffect(() => {
-    console.log("canSubmit", canSubmit);
-
     dispatch(
       setOptions([
         {
           title: "Mentés",
-          icon: "check",
-          disabled: !canSubmit,
-          onPress: save,
+          icon: "content-save",
+          disabled: !canSubmit || loading,
+          onPress: async () => {
+            dispatch(
+              showLoading({
+                dismissable: false,
+                title: "Kérlek várj, amíg a bizniszed feltöltődik",
+              }),
+            );
+            await save();
+            dispatch(hideLoading());
+          },
         },
       ]),
     );
-  }, [canSubmit, dispatch, save]);
+  }, [canSubmit, dispatch, save, loading]);
 
   useFocusEffect(
     useCallback(() => {
       if (editId && uid) {
-        navigation.setOptions({ title: "biznisz szerkesztése" });
+        navigation.setOptions({ title: "Biznisz szerkesztése" });
         supabase
           .from("buziness")
           .select("*")
@@ -158,14 +215,18 @@ export default function BuzinessEditScreen({
               );
               if (editingBuziness.defaultContact)
                 setDefaultContact(editingBuziness.defaultContact);
+              if (editingBuziness.images)
+                setImages(getImagesUrlFromSupabase(editingBuziness.images));
+              if (editingBuziness.location) {
+                const cords = locationToCoords(
+                  String(editingBuziness.location),
+                );
 
-              const cords = locationToCoords(String(editingBuziness.location));
-
-              setCircle({
-                position: { latitude: cords[1], longitude: cords[0] },
-                radius: 200,
-                radiusDisplay: null,
-              });
+                setCircle({
+                  location: { latitude: cords[1], longitude: cords[0] },
+                  radius: editingBuziness.radius || 200,
+                });
+              }
             }
           });
         supabase
@@ -189,10 +250,8 @@ export default function BuzinessEditScreen({
       return () => {
         console.log("This route is now unfocused.");
       };
-    }, [dispatch, editId, uid]),
+    }, [editId, navigation, uid]),
   );
-
-  console.log(newBuziness);
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -303,93 +362,87 @@ export default function BuzinessEditScreen({
               setDefaultContact(Number(e));
             }}
           />
-          <Card>
-            <Card.Title
-              title="A bizniszed helyzete:"
-              right={() => (
-                <IconButton
-                  icon="help-circle-outline"
-                  onPress={() => setLocationTutorialVisible(true)}
-                />
-              )}
-            />
-            <Card.Content>
-              {locationTutorialVisible && (
-                <Text>
-                  A helyzet fontos, ugyanis kereséskor mindig a közelebbi
-                  bizniszek jönnek először.
-                </Text>
-              )}
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Pressable
-                  style={{ flex: 1 }}
-                  onPress={() => {
-                    if (locationError) dispatch(setLocationError(false));
-                  }}
-                >
-                  {!!locationError && !circle && (
-                    <Text>
-                      <Icon size={16} source="map-marker-question" />
-                      {locationError}
-                    </Text>
-                  )}
-                  {!!myLocation && !circle && (
-                    <Text>
-                      <Icon size={16} source="map-marker" />
-                      Keresés jelenlegi helyzeted alapján.
-                    </Text>
-                  )}
-                  {!!circle && (
-                    <Text>
-                      <Icon size={16} source="map-marker" />
-                      Keresés térképen választott hely alapján.
-                    </Text>
-                  )}
-                </Pressable>
-                <Button onPress={() => setMapModalVisible(true)}>
-                  {!!circle ? "Környék kiválasztva" : "Válassz környéket"}
-                </Button>
-              </View>
-            </Card.Content>
-          </Card>
-          <View style={{ minHeight: 300 }}>
-            <MapView
-              options={{
-                mapTypeControl: false,
-                fullscreenControl: false,
-                streetViewControl: false,
+          <BuzinessImageUpload
+            images={images}
+            setImages={setImages}
+            buzinessId={editId}
+            ref={imagesUploadRef}
+          />
+          {!!circle && (
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: 8,
               }}
-              zoomControlEnabled={false}
-              initialCamera={{
-                altitude: 10,
-                center: selectedLocation ||
-                  myLocation?.coords || {
-                    latitude: 47.4979,
-                    longitude: 19.0402,
-                  },
-                heading: 0,
-                pitch: 0,
-                zoom: 12,
-              }}
-              style={{}}
-              provider="google"
-              googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
-              pitchEnabled={false}
-              rotateEnabled={false}
-              toolbarEnabled={false}
             >
-              {(!!selectedLocation || !!myLocation) && (
-                <Marker
-                  coordinate={
-                    selectedLocation ||
+              <ThemedText>A bizniszed helyzete</ThemedText>
+              <Button onPress={() => setMapModalVisible(true)} mode="contained">
+                Környék módosítása
+              </Button>
+            </View>
+          )}
+          <View style={{ minHeight: !!circle ? 300 : 100 }}>
+            {!!circle ? (
+              <MapView
+                // @ts-ignore
+                options={{
+                  mapTypeControl: false,
+                  fullscreenControl: false,
+                  streetViewControl: false,
+                }}
+                zoomControlEnabled={false}
+                initialCamera={{
+                  altitude: 10,
+                  center: selectedLocation ||
                     myLocation?.coords || {
                       latitude: 47.4979,
                       longitude: 19.0402,
+                    },
+                  heading: 0,
+                  pitch: 0,
+                  zoom: 12,
+                }}
+                style={{}}
+                provider="google"
+                googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
+                pitchEnabled={false}
+                rotateEnabled={false}
+                toolbarEnabled={false}
+              >
+                {(!!selectedLocation || !!myLocation) && (
+                  <Circle
+                    fillColor="rgba(253, 207, 153,1)"
+                    strokeColor="rgba(253, 207, 153,1)"
+                    center={
+                      selectedLocation ||
+                      myLocation?.coords || {
+                        latitude: 47.4979,
+                        longitude: 19.0402,
+                      }
                     }
-                  }
+                    radius={selectedRadius}
+                  />
+                )}
+              </MapView>
+            ) : (
+              <View style={{ alignItems: "center", gap: 8, padding: 16 }}>
+                <Image
+                  style={{ width: 100, height: 100 }}
+                  source={require("@/assets/images/img-map.png")}
                 />
-              )}
-            </MapView>
+                <ThemedText type="subtitle">
+                  Találjanak meg a helyiek
+                </ThemedText>
+                <Button
+                  onPress={() => setMapModalVisible(true)}
+                  mode={"contained"}
+                >
+                  Válassz környéket
+                </Button>
+              </View>
+            )}
           </View>
         </View>
         <Portal>
@@ -398,9 +451,19 @@ export default function BuzinessEditScreen({
             onDismiss={() => {
               setMapModalVisible(false);
             }}
-            contentContainerStyle={containerStyle}
+            contentContainerStyle={{ height: 500 }}
+            dismissableBackButton
           >
-            <MapSelector data={circle} setData={setCircle} searchEnabled />
+            <ThemedView style={[{ flex: 1, padding: 16 }]}>
+              <MapSelector
+                data={circle}
+                setData={setCircle}
+                setOpen={setMapModalVisible}
+                searchEnabled
+                title="Találjanak meg a helyiek!"
+                text="Ha fontos a földrajzi helyzete a bizniszednek, itt megadhatod tetszőleges pontossággal."
+              />
+            </ThemedView>
           </Modal>
         </Portal>
       </ScrollView>
