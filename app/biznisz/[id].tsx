@@ -1,4 +1,5 @@
 import MyLocationIcon from "@/assets/images/myLocationIcon";
+import CollapsibleText from "@/components/CollapsibleText";
 import ErrorScreen from "@/components/ErrorScreen";
 import ProfileImage from "@/components/ProfileImage";
 import { ThemedText } from "@/components/ThemedText";
@@ -68,9 +69,7 @@ export default function Index() {
   const categories = data?.title?.split(" $ ");
   const title = categories?.[0];
   const [images, setImages] = useState<ImageDataType[]>([]);
-  const [isLongDescription, setIsLongDescription] = useState<
-    undefined | boolean
-  >(undefined);
+
   const myBuziness = myUid === data?.author;
   const { myLocation } = useMyLocation();
   const nav = useNavigation();
@@ -78,7 +77,6 @@ export default function Index() {
 
   useFocusEffect(
     useCallback(() => {
-      setIsLongDescription(undefined);
       const load = () => {
         setShowRecommendsModal(false);
 
@@ -146,10 +144,6 @@ export default function Index() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]),
   );
-
-  useEffect(() => {
-    console.log("islongDesc", isLongDescription);
-  }, [isLongDescription]);
 
   const onPimary = () => {
     if (myBuziness) {
@@ -286,33 +280,7 @@ export default function Index() {
                 />
               )}
             </View>
-            <TouchableRipple
-              style={{ padding: 10 }}
-              onPress={
-                isLongDescription !== undefined
-                  ? () => {
-                      setIsLongDescription(!isLongDescription);
-                    }
-                  : undefined
-              }
-              disabled={isLongDescription !== undefined}
-            >
-              <Text
-                numberOfLines={isLongDescription ? 10 : undefined}
-                onLayout={(e) => {
-                  if (
-                    isLongDescription === undefined &&
-                    e.nativeEvent.layout.height > 165
-                  ) {
-                  }
-                }}
-              >
-                {data?.description}
-                {isLongDescription !== undefined && (
-                  <Text>{isLongDescription ? "Több" : ""}</Text>
-                )}
-              </Text>
-            </TouchableRipple>
+            <CollapsibleText>{data.description}</CollapsibleText>
             <TabsProvider defaultIndex={0}>
               <Tabs showTextLabel={width > 400}>
                 {data.location && (
@@ -392,18 +360,26 @@ export default function Index() {
                               source={{ uri: image.url }}
                               resizeMode="cover"
                               modalImageResizeMode="contain"
-                              overlayBackgroundColor="#00000066"
+                              overlayBackgroundColor="#00000096"
                               style={{ width: width, height: 200 }}
                               renderFooter={() => (
-                                <View style={{}}>
-                                  <ThemedText style={{ color: "white" }}>
+                                <ScrollView style={{ maxHeight: 250 }}>
+                                  <ThemedText
+                                    style={{
+                                      color: "white",
+                                      textShadowColor: "black",
+                                      textShadowRadius: 3,
+                                    }}
+                                  >
                                     {image.description}
                                   </ThemedText>
-                                </View>
+                                </ScrollView>
                               )}
                             />
                             <View style={{ padding: 4 }}>
-                              <ThemedText>{image.description}</ThemedText>
+                              <CollapsibleText>
+                                {image.description}
+                              </CollapsibleText>
                             </View>
                           </View>
                         );
