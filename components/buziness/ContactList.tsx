@@ -13,6 +13,9 @@ import { StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 import { ThemedText } from "../ThemedText";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
+import typeToValueLabel from "@/lib/functions/typeToValueLabel";
+import typeToPrefix from "@/lib/functions/typeToPrefix";
+import typeToPlaceholder from "@/lib/functions/typeToPlaceholder";
 
 export interface ContactListProps {
   uid: string;
@@ -58,6 +61,8 @@ export function ContactList({ uid, edit }: ContactListProps) {
                 <Link
                   key={contact.id}
                   asChild
+                  rel="nofollow"
+                  target="_blank"
                   href={getLinkForContact(contact, edit)}
                   onLongPress={() => {
                     Clipboard.setStringAsync(contact.data).then((res) => {
@@ -70,20 +75,17 @@ export function ContactList({ uid, edit }: ContactListProps) {
                   }}
                 >
                   <List.Item
-                    title={contact.title || contact.data}
+                    title={contact.data}
+                    description={
+                      contact.title || typeToValueLabel(contact.type)
+                    }
+                    descriptionNumberOfLines={0}
                     left={(props) => (
                       <List.Icon {...props} icon={typeToIcon(contact.type)} />
                     )}
-                    right={
-                      edit
-                        ? () => (
-                            <List.Icon
-                              icon={contact.public ? "eye" : "eye-off"}
-                              style={{ height: 24 }}
-                            />
-                          )
-                        : undefined
-                    }
+                    right={(props) => (
+                      <List.Icon {...props} icon="open-in-new" />
+                    )}
                   />
                 </Link>
               ))
@@ -97,7 +99,6 @@ export function ContactList({ uid, edit }: ContactListProps) {
                   Itt fognak megjelenni az elérhetőségeid, hogy könnyebben
                   elérjenek.
                 </ThemedText>
-                <ThemedText type="subtitle"></ThemedText>
               </View>
             ))}
         </List.Section>
@@ -105,10 +106,10 @@ export function ContactList({ uid, edit }: ContactListProps) {
 
       {edit && (
         <FAB
-          icon={"plus"}
-          label={"Új elérhetőség"}
+          icon={"pencil"}
+          label={"Szerkesztés"}
           style={[styles.fabStyle]}
-          onPress={() => router.push("/contact-edit/index")}
+          onPress={() => router.push("/user/edit")}
         />
       )}
     </>
