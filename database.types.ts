@@ -18,7 +18,7 @@ export type Database = {
           embedding: string | null
           id: number
           images: string[] | null
-          location: unknown
+          location: unknown | null
           radius: number | null
           title: string
         }
@@ -30,7 +30,7 @@ export type Database = {
           embedding?: string | null
           id?: number
           images?: string[] | null
-          location: unknown
+          location?: unknown | null
           radius?: number | null
           title: string
         }
@@ -42,7 +42,7 @@ export type Database = {
           embedding?: string | null
           id?: number
           images?: string[] | null
-          location?: unknown
+          location?: unknown | null
           radius?: number | null
           title?: string
         }
@@ -384,10 +384,11 @@ export type Database = {
         Args: {
           query_text: string
           query_embedding: string
-          match_count: number
           lat: number
           long: number
           distance: number
+          skip: number
+          take: number
           full_text_weight?: number
           semantic_weight?: number
           rrf_k?: number
@@ -401,8 +402,12 @@ export type Database = {
           id: number
           images: string[] | null
           location: unknown
-          radius: number | null
-          title: string
+          recommendations: number
+          lat: number
+          long: number
+          distance: number
+          relevance: number
+          defaultcontact: number
         }[]
       }
       nearby_buziness: {
