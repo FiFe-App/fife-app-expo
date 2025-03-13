@@ -160,6 +160,8 @@ const BuzinessImageUpload = forwardRef<
               )}
               <ImageModal
                 resizeMode="cover"
+                modalImageResizeMode="contain"
+                overlayBackgroundColor="#00000066"
                 source={{ uri: image.url }}
                 style={{ width: width, height: 200 }}
               />
