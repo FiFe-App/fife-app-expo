@@ -24,17 +24,18 @@ Deno.serve(async (req) => {
   // Generate a one-time embedding for the user's query
   let embedding = null;
   if (query) {
-    console.log('query',query)
+    console.log("query", query);
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
-          content:
-            "Írd körül röviden azt az embert, aki ezekhez ért: " + query,
+          content: "Írd körül röviden azt az embert, aki ezekhez ért: " + query,
         },
       ],
     });
+
+    console.log("embedding input", completion.choices[0].message.content);
 
     const embeddingResponse = await openai.embeddings.create({
       model: "text-embedding-3-large",
@@ -48,7 +49,7 @@ Deno.serve(async (req) => {
   // (replace service role key with user's JWT if using Supabase auth and RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-  console.log("params",{
+  console.log("params", {
     distance: maxdistance,
     skip,
     take,
@@ -57,7 +58,7 @@ Deno.serve(async (req) => {
     query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),
     query_text: query,
   });
-  
+
   // Call hybrid_search Postgres function via RPC
   const res = await supabase.rpc("hybrid_buziness_search", {
     distance: maxdistance,

@@ -16,3 +16,7 @@ declare module "react-native-maps" {
     options?: google.maps.MapOptions;
   }
 }
+declare module "*.png" {
+  const value: unknown;
+  export default value;
+}

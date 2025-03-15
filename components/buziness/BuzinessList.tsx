@@ -41,6 +41,7 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
           recommendations: 0,
           radius: 0,
           location: "",
+          buzinessRecommendations: []
         },
       ]),
     );
