@@ -28,7 +28,7 @@ function CollapsibleText({ children }: PropsWithChildren) {
             }
           : undefined
       }
-      disabled={isLongDescription == undefined}
+      disabled={isLongDescription === undefined}
     >
       <Text>
         <Text

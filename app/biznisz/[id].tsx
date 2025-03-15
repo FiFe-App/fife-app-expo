@@ -28,9 +28,8 @@ import {
   router,
   useFocusEffect,
   useGlobalSearchParams,
-  useNavigation,
 } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import ImageModal from "react-native-image-modal";
 import openMap from "react-native-open-maps";
@@ -72,7 +71,6 @@ export default function Index() {
 
   const myBuziness = myUid === data?.author;
   const { myLocation } = useMyLocation();
-  const nav = useNavigation();
   const [commentsCount, setCommentsCount] = useState<number>();
 
   useFocusEffect(
@@ -151,7 +149,6 @@ export default function Index() {
         pathname: "/biznisz/edit/[editId]",
         params: { editId: id },
       });
-    } else {
     }
   };
   return (
@@ -287,7 +284,7 @@ export default function Index() {
                   <TabScreen label="Helyzete" icon="map-marker">
                     <View style={{ minHeight: 200, flex: 1 }}>
                       <MapView
-                        // @ts-ignore
+                        // @ts-expect-error options type are colliding in different mapViews
                         options={{
                           mapTypeControl: false,
                           fullscreenControl: false,

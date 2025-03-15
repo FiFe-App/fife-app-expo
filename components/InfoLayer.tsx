@@ -1,5 +1,4 @@
 import {
-  hideLoading,
   popSnack,
   popDialog as slicepopDialog,
 } from "@/redux/reducers/infoReducer";
@@ -23,11 +22,6 @@ const InfoLayer = () => {
   const dialog = dialogs?.[0];
   const { promiseInProgress } = usePromiseTracker({ area: "dialog" });
   const dispath = useDispatch();
-  function dismissLoading() {
-    if (dialog?.dismissable) {
-      dispath(hideLoading());
-    }
-  }
   function cancelDialog() {
     if (dialog?.onCancel) {
       dialog.onCancel();

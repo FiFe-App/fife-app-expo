@@ -43,7 +43,7 @@ export default function Index() {
   const [error, setError] = useState<string | undefined>();
   const [showPassword, setShowPassword] = useState(false);
   const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
-  const isPasswordWeak = !!!passwordRegex.exec(password)?.length;
+  const isPasswordWeak = !passwordRegex.exec(password)?.length;
 
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   WebBrowser.maybeCompleteAuthSession(); // required for web only

@@ -6,7 +6,6 @@ import { ThemedView } from "@/components/ThemedView";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import { supabase } from "@/lib/supabase/supabase";
 import {
-  clearBuzinessSearchParams,
   loadBuzinesses,
   storeBuzinessLoading,
   storeBuzinessSearchParams,
@@ -34,19 +33,16 @@ export default function Index() {
     (state: RootState) => state.buziness,
   );
   const searchType = buzinessSearchParams?.searchType;
-  const [searchFilter, setSearchFilter] = useState("");
   const skip = buzinessSearchParams?.skip || 0;
   const take = 10;
   const searchCircle = buzinessSearchParams?.searchCircle;
   const searchText = buzinessSearchParams?.text || "";
   const dispatch = useDispatch();
 
-  const { myLocation, locationError } = useMyLocation();
+  const { myLocation } = useMyLocation();
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
-  const canSearch = !!searchCircle || !!myLocation;
+  const canSearch = true; //!!searchCircle || !!myLocation;
   const [canLoadMore, setCanLoadMore] = useState(true);
-
-  const [mapModalVisible, setMapModalVisible] = useState(false);
 
   const search = () => {
     console.log("search");
@@ -81,27 +77,37 @@ export default function Index() {
         : {
             lat: 47.4979,
             long: 19.0402,
-            maxdistance: 10,
+            maxdistance: 10000,
           };
     if (searchLocation)
-      supabase
-        .rpc("nearby_buziness", {
-          ...searchLocation,
-          search: searchText,
-          take:
-            buzinessSearchParams?.searchType === "map" ? -1 : mySkip + take - 1,
-          skip: buzinessSearchParams?.searchType === "map" ? -1 : mySkip,
+      supabase.functions
+        .invoke("business-search", {
+          body: {
+            query: searchText,
+            take:
+              buzinessSearchParams?.searchType === "map"
+                ? -1
+                : mySkip + take - 1,
+            skip: buzinessSearchParams?.searchType === "map" ? -1 : mySkip,
+            ...searchLocation,
+          },
         })
         .then((res) => {
           dispatch(storeBuzinessLoading(false));
           if (res.data) {
             dispatch(loadBuzinesses(res.data));
-            setCanLoadMore(!(res.data.length < take));
+            setCanLoadMore(
+              buzinessSearchParams?.searchType !== "map" &&
+                !(res.data.length < take),
+            );
             console.log(res.data);
           }
           if (res.error) {
             console.log(res.error);
           }
+        })
+        .catch((err) => {
+          console.log(err);
         });
   };
   useFocusEffect(
@@ -113,15 +119,6 @@ export default function Index() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [skip]),
   );
-  useEffect(() => {
-    if (buzinessSearchParams?.searchCircle) {
-      setMapModalVisible(false);
-    }
-  }, [buzinessSearchParams?.searchCircle]);
-
-  const clearSearch = () => {
-    dispatch(clearBuzinessSearchParams());
-  };
 
   if (uid)
     return (
@@ -185,7 +182,9 @@ export default function Index() {
               />
               {searchType === "list" && (
                 <Button
-                  mode="contained"
+                  mode={
+                    searchCircle || myLocation ? "contained-tonal" : "contained"
+                  }
                   onPress={() => setLocationMenuVisible(true)}
                 >
                   Hol keresel?
@@ -219,7 +218,10 @@ export default function Index() {
                 setData={(sC) => {
                   console.log("set", sC);
 
-                  if (sC && "location" in sC && "radius" in sC)
+                  if (
+                    (sC && "location" in sC && "radius" in sC) ||
+                    sC == undefined
+                  )
                     dispatch(storeBuzinessSearchParams({ searchCircle: sC }));
                 }}
                 searchEnabled
