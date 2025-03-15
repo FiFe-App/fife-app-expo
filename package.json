@@ -44,7 +44,6 @@
     "expo-image-picker": "~16.0.4",
     "expo-linking": "~7.0.5",
     "expo-location": "~18.0.5",
-    "expo-notifications": "~0.29.13",
     "expo-router": "~4.0.17",
     "expo-splash-screen": "~0.29.21",
     "expo-status-bar": "~2.0.1",
@@ -92,7 +91,8 @@
     "jest-expo": "^52.0.0",
     "prettier": "^3.3.2",
     "react-test-renderer": "18.2.0",
-    "typescript": "^5.3.3",
+    "supabase": "^2.9.6",
+    "typescript": "~5.3.3",
     "workbox-cli": "^7.3.0"
   },
   "private": true,

@@ -95,10 +95,11 @@ export default function BuzinessEditScreen({
     setLoading(true);
     if (!uid) return;
 
-    await supabase
-      .from("buziness")
-      .upsert(
-        {
+    console.log(selectedLocation);
+
+    supabase.functions
+      .invoke("create-buziness", {
+        body: {
           id: editId,
           ...newBuziness,
           title,
@@ -108,8 +109,7 @@ export default function BuzinessEditScreen({
             : null,
           defaultContact,
         },
-        { onConflict: "id" },
-      )
+      })
       .then(async (res) => {
         console.log(res, images.length, editId);
         if (images.length && editId) {
