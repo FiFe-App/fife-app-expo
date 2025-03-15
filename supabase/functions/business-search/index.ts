@@ -24,20 +24,40 @@ Deno.serve(async (req) => {
   // Generate a one-time embedding for the user's query
   let embedding = null;
   if (query) {
+    console.log('query',query)
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content:
+            "Írd körül röviden azt az embert, aki ezekhez ért: " + query,
+        },
+      ],
+    });
+
     const embeddingResponse = await openai.embeddings.create({
       model: "text-embedding-3-large",
-      input: query,
+      input: completion.choices[0].message.content,
       dimensions: 512,
     });
-    console.log(embeddingResponse.data);
-
-    const [{ embedding }] = embeddingResponse.data;
+    embedding = embeddingResponse.data[0].embedding;
   }
 
   // Instantiate the Supabase client
   // (replace service role key with user's JWT if using Supabase auth and RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
+  console.log("params",{
+    distance: maxdistance,
+    skip,
+    take,
+    lat,
+    long,
+    query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),
+    query_text: query,
+  });
+  
   // Call hybrid_search Postgres function via RPC
   const res = await supabase.rpc("hybrid_buziness_search", {
     distance: maxdistance,
@@ -48,12 +68,6 @@ Deno.serve(async (req) => {
     query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),
     query_text: query,
   });
-
-  console.log("RESPONSE BELOW");
-
-  console.log("-----------------------------------------------");
-  console.log(res);
-  console.log("-----------------------------------------------");
 
   return new Response(JSON.stringify(res.data), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },

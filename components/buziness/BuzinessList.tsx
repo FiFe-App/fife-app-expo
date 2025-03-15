@@ -54,7 +54,7 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
         style={{ flex: 1 }}
         contentContainerStyle={{
           gap: 8,
-          marginTop: 8,
+          marginVertical: 8,
         }}
       >
         {buzinesses.map((buzinessItem) =>
@@ -74,16 +74,18 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
               Válassz környéket a kereséshez
             </ThemedText>
           )}
-        {!loading &&
-          (!!buzinesses.length && canLoadMore ? (
-            <Button onPress={loadNext} style={{ alignSelf: "center" }}>
-              További bizniszek
-            </Button>
-          ) : (
-            <ThemedText style={{ alignSelf: "center" }}>
-              Nem található több biznisz
-            </ThemedText>
-          ))}
+        <View style={{padding:16}}>
+          {!loading &&
+            (!!buzinesses.length && canLoadMore ? (
+              <Button onPress={loadNext} style={{ alignSelf: "center" }}>
+                További bizniszek
+              </Button>
+            ) : (
+              <ThemedText style={{ alignSelf: "center" }}>
+                Nem található több biznisz
+              </ThemedText>
+            ))}
+        </View>
       </ScrollView>
 
       {buzinessSearchParams?.loading && !buzinesses.length && (
