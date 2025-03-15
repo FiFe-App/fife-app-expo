@@ -18,7 +18,6 @@ import {
   HelperText,
   Icon,
   IconButton,
-  MD3Colors,
   TextInput,
   useTheme,
 } from "react-native-paper";
@@ -29,7 +28,7 @@ type UserInfo = Partial<Tables<"profiles">>;
 export default function Index() {
   const theme = useTheme();
   const { uid: myUid, userData }: UserState = useSelector(
-    (state: RootState) => state.user
+    (state: RootState) => state.user,
   );
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
@@ -37,10 +36,10 @@ export default function Index() {
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
-      | PostgrestSingleResponse<any>
+      | PostgrestSingleResponse<unknown>
       | {
-        error: string;
-      }
+          error: string;
+        }
       | undefined
     >;
   }>(null);
@@ -86,7 +85,7 @@ export default function Index() {
               ...profile,
               id: myUid,
             },
-            { onConflict: "id" }
+            { onConflict: "id" },
           )
           .then((res) => {
             setLoading(false);
@@ -109,17 +108,17 @@ export default function Index() {
             onPress: save,
             disabled: !profile?.full_name,
           },
-        ])
+        ]),
       );
-      return () => { };
-    }, [dispatch, myUid, profile])
+      return () => {};
+    }, [dispatch, myUid, profile]),
   );
   useFocusEffect(
     useCallback(() => {
       load();
-      return () => { };
+      return () => {};
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [myUid])
+    }, [myUid]),
   );
   const pickImage = async () => {
     const result = await ExpoImagePicker.launchImageLibraryAsync({
@@ -164,7 +163,7 @@ export default function Index() {
                 avatar_url: image.fileName,
                 id: myUid,
               },
-              { onConflict: "id" }
+              { onConflict: "id" },
             )
             .then((res) => {
               console.log("profile upsert", res);
@@ -215,10 +214,11 @@ export default function Index() {
           <Divider />
           <View style={{ gap: 8, paddingTop: 8 }}>
             <ThemedText type="subtitle">Elérhetőségeid</ThemedText>
-            <View style={{ alignItems:"center" }}>
+            <View style={{ alignItems: "center" }}>
               <Icon source="alert" size={24} color={theme.colors.error} />
-              <HelperText type="error" style={{textAlign:"center"}}>
-                Figyelem! Az alább megadott adatok láthatóak minden felhasználónak.
+              <HelperText type="error" style={{ textAlign: "center" }}>
+                Figyelem! Az alább megadott adatok láthatóak minden
+                felhasználónak.
               </HelperText>
             </View>
             <ContactEditScreen ref={contactEditRef} />

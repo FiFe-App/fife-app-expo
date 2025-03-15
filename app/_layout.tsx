@@ -89,8 +89,9 @@ const MyAppbar = (props: NativeStackHeaderProps) => {
             visible={showMenu}
             onDismiss={() => setShowMenu(false)}
           >
-            {options.map((option) => (
+            {options.map((option, ind) => (
               <Menu.Item
+                key={"option" + ind}
                 onPress={option.onPress}
                 title={option.title}
                 disabled={option.disabled}

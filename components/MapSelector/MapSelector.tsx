@@ -1,12 +1,12 @@
 import { useMyLocation } from "@/hooks/useMyLocation";
 import React, { useRef, useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import { Button, FAB, Icon, IconButton } from "react-native-paper";
 import MyLocationIcon from "../../assets/images/myLocationIcon";
 import { Camera, Details, MapView, Marker, Region } from "../mapView/mapView";
 import styles from "../mapView/style";
-import { MapCircleType, MapSelectorProps } from "./MapSelector.types";
 import { ThemedText } from "../ThemedText";
+import { MapCircleType, MapSelectorProps } from "./MapSelector.types";
 
 const MapSelector = ({
   style,
@@ -17,7 +17,6 @@ const MapSelector = ({
   setData,
   setOpen,
 }: MapSelectorProps) => {
-  const [search, setSearch] = useState<string>("");
   const [mapHeight, setMapHeight] = useState<number>(0);
   const circleSize = mapHeight / 3;
   const [circle, setCircle] = useState<MapCircleType>(
@@ -27,7 +26,7 @@ const MapSelector = ({
     },
   );
   const [circleRadiusText, setCircleRadiusText] = useState("0 km");
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<MapView>(null);
 
   const { myLocation, locationError } = useMyLocation();
 
@@ -98,7 +97,7 @@ const MapSelector = ({
         <ThemedText>{text}</ThemedText>
         <MapView
           ref={mapRef}
-          //@ts-ignore
+          // @ts-expect-error options type are colliding in different mapViews
           options={{
             mapTypeControl: false,
             fullscreenControl: false,

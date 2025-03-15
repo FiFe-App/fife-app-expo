@@ -13,7 +13,6 @@ import { Icon, Text, TextInput } from "react-native-paper";
 
 const Register = () => {
   const textInput = useRef<TIRN>(null);
-  const [numberOfLines, setNumberOfLines] = useState(0);
   const [text, setText] = useState("");
   const textToType = "Nem leszek rosszindulatú";
   const handleTextInput = (input: string) => {
