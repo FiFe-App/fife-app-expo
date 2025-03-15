@@ -7,6 +7,7 @@ import { Link, Redirect } from "expo-router";
 import { View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { useSelector } from "react-redux";
+import mainImage from "../assets/images/img-main.png";
 
 export default function Index() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
@@ -37,7 +38,7 @@ export default function Index() {
           {"\n"}
         </Text>
         <Image
-          source={require("../assets/images/img-main.png")}
+          source={mainImage}
           style={{
             width: "95%",
             aspectRatio: 1,

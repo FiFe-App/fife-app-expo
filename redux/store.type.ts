@@ -9,7 +9,7 @@ export interface UserState {
     authorization: string;
     email: string;
     emailVerified: boolean;
-    providerData: any;
+    providerData: unknown;
     createdAt: Date;
     lastLoginAt: Date;
   } | null;
@@ -31,6 +31,7 @@ export interface BuzinessSearchItemInterface {
   location: string;
   authorName?: string;
   distance?: number;
+  buzinessRecommendations: { author: string }[];
 }
 export interface BuzinessItemInterface {
   id: number;
