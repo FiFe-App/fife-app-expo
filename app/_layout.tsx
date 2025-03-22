@@ -10,49 +10,68 @@ import { useWindowDimensions } from "react-native";
 import { Appbar, Menu, PaperProvider } from "react-native-paper";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
+import { ThemedView } from "@/components/ThemedView";
 
 export default function RootLayout() {
   const pathname = usePathname();
+  const { width } = useWindowDimensions();
+
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <PaperProvider>
           <InfoLayer />
-          <Stack screenOptions={{ header: (props) => <MyAppbar {...props} /> }}>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="login/index"
-              options={{ title: "Bejelentkezés" }}
-            />
-            <Stack.Screen name="biznisz/index" options={{ title: "Biznisz" }} />
-            <Stack.Screen
-              name="csatlakozom"
-              options={{ headerShown: false, animation: "slide_from_right" }}
-            />
-            <Stack.Screen
-              name="biznisz/new"
-              options={{ title: "Új Biznisz" }}
-            />
-            <Stack.Screen
-              name="biznisz/[id]"
-              options={{ headerShown: false, title: "FiFe Biznisz" }}
-            />
-            <Stack.Screen
-              name="biznisz/edit/[id]"
-              options={{ title: "FiFe Biznisz" }}
-            />
-            <Stack.Screen
-              name="user/[uid]"
-              options={{ title: "FiFe Profil" }}
-            />
-            <Stack.Screen
-              name="user/edit"
-              options={{ title: "Profil Szerkesztése" }}
-            />
-          </Stack>
-          {pathname !== "/" &&
-            !pathname.includes("login") &&
-            !pathname.includes("csatlakozom") && <BottomNavigation />}
+          <ThemedView
+            style={{
+              flex: 1,
+              ...(width > 600 && {
+                maxWidth: 600,
+                alignSelf: "center",
+                width: "100%",
+              }),
+            }}
+          >
+            <Stack
+              screenOptions={{ header: (props) => <MyAppbar {...props} /> }}
+            >
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="login/index"
+                options={{ title: "Bejelentkezés" }}
+              />
+              <Stack.Screen
+                name="biznisz/index"
+                options={{ title: "Biznisz" }}
+              />
+              <Stack.Screen
+                name="csatlakozom"
+                options={{ headerShown: false, animation: "slide_from_right" }}
+              />
+              <Stack.Screen
+                name="biznisz/new"
+                options={{ title: "Új Biznisz" }}
+              />
+              <Stack.Screen
+                name="biznisz/[id]"
+                options={{ headerShown: false, title: "FiFe Biznisz" }}
+              />
+              <Stack.Screen
+                name="biznisz/edit/[id]"
+                options={{ title: "FiFe Biznisz" }}
+              />
+              <Stack.Screen
+                name="user/[uid]"
+                options={{ title: "FiFe Profil" }}
+              />
+              <Stack.Screen
+                name="user/edit"
+                options={{ title: "Profil Szerkesztése" }}
+              />
+            </Stack>
+            {pathname !== "/" &&
+              !pathname.includes("login") &&
+              !pathname.includes("csatlakozom") && <BottomNavigation />}
+          </ThemedView>
         </PaperProvider>
       </PersistGate>
     </Provider>
