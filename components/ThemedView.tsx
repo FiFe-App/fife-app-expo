@@ -22,10 +22,13 @@ export function ThemedView({
       backgroundColor: theme.colors.surface,
     },
   });
+
   return (
     <View
       style={[
-        { backgroundColor: theme.colors.background },
+        {
+          backgroundColor: theme.colors.background,
+        },
         type === "card" ? styles.card : undefined,
         style,
       ]}
