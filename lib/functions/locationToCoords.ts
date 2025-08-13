@@ -1,9 +1,9 @@
 const locationToCoords = (geometry: string): number[] => {
-  var Buffer = require("@craftzdog/react-native-buffer").Buffer;
-  var wkx = require("wkx");
+  const Buffer = require("@craftzdog/react-native-buffer").Buffer;
+  const wkx = require("wkx");
 
-  var wkbBuffer = new Buffer(geometry, "hex");
-  var parsedGeometry = wkx.Geometry.parse(wkbBuffer);
+  const wkbBuffer = new Buffer(geometry, "hex");
+  const parsedGeometry = wkx.Geometry.parse(wkbBuffer);
 
   return parsedGeometry.toGeoJSON().coordinates;
 };

@@ -10,7 +10,7 @@ import {
   storeBuzinessSearchParams,
 } from "@/redux/reducers/buzinessReducer";
 import { useMyLocation } from "@/hooks/useMyLocation";
-import { MapCircleType } from "../MapSelector/MapSelector.types";
+import { MapLocationType } from "../MapSelector/MapSelector.types";
 
 interface BuzinessListProps {
   load: (arg0: number) => void;
@@ -41,7 +41,7 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
           recommendations: 0,
           radius: 0,
           location: "",
-          buzinessRecommendations: []
+          buzinessRecommendations: [],
         },
       ]),
     );
@@ -75,7 +75,7 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
               Válassz környéket a kereséshez
             </ThemedText>
           )}
-        <View style={{padding:16}}>
+        <View style={{ padding: 16 }}>
           {!loading &&
             (!!buzinesses.length && canLoadMore ? (
               <Button onPress={loadNext} style={{ alignSelf: "center" }}>

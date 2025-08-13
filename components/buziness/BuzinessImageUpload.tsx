@@ -45,7 +45,7 @@ const BuzinessImageUpload = forwardRef<
 
   const pickImage = async () => {
     setLoading(true);
-    let result = await ExpoImagePicker.launchImageLibraryAsync({
+    const result = await ExpoImagePicker.launchImageLibraryAsync({
       mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,

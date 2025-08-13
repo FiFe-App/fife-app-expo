@@ -50,7 +50,7 @@ export default function Index() {
   const { width } = useWindowDimensions();
   const dispatch = useDispatch();
   const { uid: myUid }: UserState = useSelector(
-    (state: RootState) => state.user,
+    (state: RootState) => state.user
   );
   const id: number = Number(paramId);
   const [data, setData] = useState<BuzinessItemInterface | undefined>();
@@ -82,7 +82,7 @@ export default function Index() {
         supabase
           .from("buziness")
           .select(
-            "*, contacts(*), profiles ( full_name, avatar_url ), buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(author)",
+            "*, contacts(*), profiles ( full_name, avatar_url ), buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(author)"
           )
           .eq("id", id)
           .maybeSingle()
@@ -116,7 +116,7 @@ export default function Index() {
               }
 
               setRecommendations(
-                data?.buzinessRecommendations?.map((pr) => pr.author),
+                data?.buzinessRecommendations?.map((pr) => pr.author)
               );
             } else
               setError({
@@ -140,7 +140,7 @@ export default function Index() {
         setShowRecommendsModal(false);
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]),
+    }, [id])
   );
 
   const onPimary = () => {
@@ -157,6 +157,9 @@ export default function Index() {
         {!data && !error && <ActivityIndicator />}
         {!!id && !!data && (
           <>
+            <View style={{ padding: 16, paddingBottom: 0 }}>
+              <ThemedText type="title">{categories?.[0]}</ThemedText>
+            </View>
             <View style={{ flexDirection: "row" }}>
               <Link
                 asChild
@@ -169,6 +172,7 @@ export default function Index() {
                       flexDirection: "row",
                       alignItems: "center",
                       justifyContent: "center",
+                      gap: 8,
                     }}
                   >
                     <ProfileImage
@@ -176,7 +180,7 @@ export default function Index() {
                       style={{
                         width: 30,
                         height: 30,
-                        borderRadius: 0,
+                        borderRadius: 30,
                         margin: 4,
                       }}
                       avatar_url={data.avatarUrl}
@@ -205,9 +209,6 @@ export default function Index() {
                     : "Még senki sem ajánlja"}
                 </Text>
               </TouchableRipple>
-            </View>
-            <View>
-              <ThemedText type="subtitle">{categories?.[0]}</ThemedText>
             </View>
             <View
               style={{
@@ -270,7 +271,7 @@ export default function Index() {
                         setRecommendations([...recommendations, myUid]);
                       else
                         setRecommendations(
-                          recommendations.filter((uid) => uid !== myUid),
+                          recommendations.filter((uid) => uid !== myUid)
                         );
                     }
                   }}
