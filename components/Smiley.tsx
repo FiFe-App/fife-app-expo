@@ -34,7 +34,7 @@ const Smiley = ({ style }) => {
       >
         <Pressable onPress={handleGrow}>
           <Image
-            source={require("../assets/images/logo.png")}
+            source={require("../assets/images/icon.png")}
             style={[{ width: 50, height: 50, zIndex: 20 }, style]}
           />
         </Pressable>

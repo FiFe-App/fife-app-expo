@@ -5,7 +5,12 @@ import { addDialog } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { BuzinessItemInterface } from "@/redux/store.type";
 import { Link, router } from "expo-router";
-import { GestureResponderEvent, StyleSheet, View } from "react-native";
+import {
+  GestureResponderEvent,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import { Chip, Icon, IconButton, Surface, Text } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
@@ -47,74 +52,77 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
                 .eq("id", id)
                 .then((res) => {
                   router.navigate({ pathname: "/user", params: { uid } });
-                }),
+                })
             ),
-            "dialog",
+            "dialog"
           );
         },
         submitText: "Törlés",
-      }),
+      })
     );
   };
 
   return (
     <Link href={{ pathname: "/biznisz/[id]", params: { id: id } }} asChild>
-      <Surface style={styles.container} elevation={1}>
-        <View style={{ flexDirection: "row" }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{}}>{categories?.[0]}</Text>
-            <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4 }}>
-              {categories?.slice(1).map((e, i) => {
-                if (e.trim())
-                  return (
-                    <Chip key={"category" + i} textStyle={{ margin: 4 }}>
-                      <Text>{e}</Text>
-                    </Chip>
-                  );
-              })}
-            </View>
-          </View>
-          <View
-            style={{
-              marginRight: 8,
-            }}
-          >
-            <View style={{}}>
-              {!showOptions && !!distance !== null && (
-                <Text style={{}}>
-                  <Icon size={16} source="earth" /> <Text>{distanceText}</Text>
-                </Text>
-              )}
-            </View>
-            <View style={{ flexDirection: "row" }}>
-              <Text>
-                <Icon size={16} source="account-group" />{" "}
-                <Text>{data.recommendations} ember ajánlja</Text>
-              </Text>
-            </View>
-          </View>
-        </View>
-        <Text numberOfLines={4} ellipsizeMode="tail" style={{ flex: 1 }}>
-          {description}
-        </Text>
-
-        {showOptions && myBuziness && (
+      <Pressable>
+        <Surface style={styles.container} elevation={1}>
           <View style={{ flexDirection: "row" }}>
-            <IconButton
-              icon="pencil-circle"
-              onPress={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                router.navigate({
-                  pathname: "/biznisz/edit/[editId]",
-                  params: { editId: id },
-                });
+            <View style={{ flex: 1 }}>
+              <Text style={{}}>{categories?.[0]}</Text>
+              <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4 }}>
+                {categories?.slice(1).map((e, i) => {
+                  if (e.trim())
+                    return (
+                      <Chip key={"category" + i} textStyle={{ margin: 4 }}>
+                        <Text>{e}</Text>
+                      </Chip>
+                    );
+                })}
+              </View>
+            </View>
+            <View
+              style={{
+                marginRight: 8,
               }}
-            />
-            <IconButton icon="delete-circle" onPress={showDelete} />
+            >
+              <View style={{}}>
+                {!showOptions && !!distance !== null && (
+                  <Text style={{}}>
+                    <Icon size={16} source="earth" />{" "}
+                    <Text>{distanceText}</Text>
+                  </Text>
+                )}
+              </View>
+              <View style={{ flexDirection: "row" }}>
+                <Text>
+                  <Icon size={16} source="account-group" />{" "}
+                  <Text>{data.recommendations} ember ajánlja</Text>
+                </Text>
+              </View>
+            </View>
           </View>
-        )}
-      </Surface>
+          <Text numberOfLines={4} ellipsizeMode="tail" style={{ flex: 1 }}>
+            {description}
+          </Text>
+
+          {showOptions && myBuziness && (
+            <View style={{ flexDirection: "row" }}>
+              <IconButton
+                icon="pencil-circle"
+                onPress={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  router.navigate({
+                    pathname: "/biznisz/edit/[editId]",
+                    params: { editId: id },
+                  });
+                }}
+              />
+              <IconButton icon="delete-circle" onPress={showDelete} />
+            </View>
+          )}
+        </Surface>
+      </Pressable>
     </Link>
   );
 };
