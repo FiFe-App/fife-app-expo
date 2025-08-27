@@ -17,15 +17,20 @@ export function ThemedView({
 }: ThemedViewProps) {
   const theme = useTheme();
 
+  console.log(theme.colors);
+
   const styles = StyleSheet.create({
     card: {
       backgroundColor: theme.colors.surface,
+    },
+    default: {
+      backgroundColor: theme.colors.background,
     },
   });
   return (
     <View
       style={[
-        { backgroundColor: theme.colors.background },
+        type === "default" ? styles.default : undefined,
         type === "card" ? styles.card : undefined,
         style,
       ]}
