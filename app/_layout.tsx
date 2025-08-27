@@ -10,13 +10,14 @@ import { useWindowDimensions } from "react-native";
 import { Appbar, Menu, PaperProvider } from "react-native-paper";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
+import { theme } from "@/assets/theme";
 
 export default function RootLayout() {
   const pathname = usePathname();
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <PaperProvider>
+        <PaperProvider theme={theme}>
           <InfoLayer />
           <Stack screenOptions={{ header: (props) => <MyAppbar {...props} /> }}>
             <Stack.Screen name="index" options={{ headerShown: false }} />
