@@ -42,7 +42,7 @@ export default function RootLayout() {
   if (uid && path === "/csatlakozom") return <Redirect href="/user" />;
 
   return (
-    <>
+    <ThemedView type="default" style={{ flex: 1 }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flex: 1 }}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -99,6 +99,6 @@ export default function RootLayout() {
           )}
         </View>
       </ThemedView>
-    </>
+    </ThemedView>
   );
 }
