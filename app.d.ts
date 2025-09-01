@@ -1,6 +1,6 @@
 /// <reference types="react" />
 /// <reference types="google.maps" />
-import type { MapViewProps as RNMapViewProps } from "react-native-maps/lib/MapView";
+import type { MapViewProps as RNMapViewProps } from "react-native-maps/lib/MapView"
 
 /**
  * Overrides MapView props to include additional web-specific props
@@ -10,13 +10,18 @@ import type { MapViewProps as RNMapViewProps } from "react-native-maps/lib/MapVi
  */
 declare module "react-native-maps" {
   interface MapViewProps extends RNMapViewProps {
-    googleMapsApiKey?: string;
-    googleMapsMapId?: string;
-    loadingFallback?: JSX.Element;
-    options?: google.maps.MapOptions;
+    googleMapsApiKey?: string
+    googleMapsMapId?: string
+    loadingFallback?: JSX.Element
+    options?: google.maps.MapOptions
   }
 }
 declare module "*.png" {
-  const value: unknown;
-  export default value;
+  const value: unknown
+  export default value
+}
+
+declare module "*.ttf" {
+  const value: unknown
+  export default value
 }

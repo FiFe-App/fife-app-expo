@@ -28,7 +28,7 @@ export function ThemedText({
   return (
     <Text
       style={[
-        { color: theme.colors.onBackground },
+        { color: theme.colors.onBackground, fontFamily: "Piazzolla" },
         type === "default" ? styles.default : undefined,
         type === "title" ? styles.title : undefined,
         type === "defaultSemiBold" ? styles.defaultSemiBold : undefined,
