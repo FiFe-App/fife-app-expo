@@ -263,7 +263,7 @@ const Banner = () => {
   return (
     <ThemedView
       responsive={600}
-      onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
+      //onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
       style={{
         alignItems: "center",
         justifyContent: "center",

@@ -42,7 +42,7 @@ export default function Index() {
         }
       | undefined
     >;
-  }>(null);
+      }>(null);
 
   const load = () => {
     console.log("loaded user", myUid);

@@ -65,11 +65,11 @@ export function Button({
         compact &&
           (true
             ? {
-                maxHeight: 12,
-                paddingVertical: 12,
-                paddingHorizontal: 4,
-                borderRadius: 8,
-              }
+              maxHeight: 12,
+              paddingVertical: 12,
+              paddingHorizontal: 4,
+              borderRadius: 8,
+            }
             : {}),
         style,
       ]}

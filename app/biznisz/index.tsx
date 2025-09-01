@@ -64,21 +64,21 @@ export default function Index() {
 
     const searchLocation = searchCircle
       ? {
-          lat: searchCircle?.location.latitude,
-          long: searchCircle?.location.longitude,
-          maxdistance: searchCircle?.radius,
-        }
+        lat: searchCircle?.location.latitude,
+        long: searchCircle?.location.longitude,
+        maxdistance: searchCircle?.radius,
+      }
       : myLocation
         ? {
-            lat: myLocation?.coords.latitude,
-            long: myLocation?.coords.longitude,
-            maxdistance: 10,
-          }
+          lat: myLocation?.coords.latitude,
+          long: myLocation?.coords.longitude,
+          maxdistance: 10,
+        }
         : {
-            lat: 47.4979,
-            long: 19.0402,
-            maxdistance: 10000,
-          };
+          lat: 47.4979,
+          long: 19.0402,
+          maxdistance: 10000,
+        };
     if (searchLocation)
       supabase.functions
         .invoke("business-search", {
