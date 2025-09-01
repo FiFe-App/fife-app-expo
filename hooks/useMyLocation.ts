@@ -19,7 +19,7 @@ export function useMyLocation() {
   useEffect(() => {
     const getLocation = async () => {
       (async () => {
-        let location = await Location.getCurrentPositionAsync({});
+        const location = await Location.getCurrentPositionAsync({});
         if (location) {
           dispatch(setLocationError(null));
           setLocation(location);

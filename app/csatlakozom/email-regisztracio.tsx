@@ -163,10 +163,10 @@ export default function Index() {
         <Divider style={{ marginVertical: 16 }} />
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Checkbox
-            onPress={(e) => setAcceptConditions(!acceptConditions)}
+            onPress={() => setAcceptConditions(!acceptConditions)}
             status={acceptConditions ? "checked" : "unchecked"}
           />
-          <ThemedText onPress={(e) => setAcceptConditions(!acceptConditions)}>
+          <ThemedText onPress={() => setAcceptConditions(!acceptConditions)}>
             Elfogadom a
             <ThemedText type="link">
               <Link href="/csatlakozom/iranyelvek"> feltételeket</Link>

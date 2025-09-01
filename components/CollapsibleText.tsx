@@ -22,10 +22,10 @@ function CollapsibleText({ children }: PropsWithChildren) {
       onPress={
         isLongDescription !== undefined
           ? () => {
-              console.log("asd");
+            console.log("asd");
 
-              setIsLongDescription(!isLongDescription);
-            }
+            setIsLongDescription(!isLongDescription);
+          }
           : undefined
       }
       disabled={isLongDescription === undefined}

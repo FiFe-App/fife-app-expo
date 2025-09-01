@@ -64,7 +64,7 @@ export default function Index() {
           });
       })
       .catch((err) => {
-        console.log("err");
+        console.log("err",err);
       })
       .finally(() => {
         setLoading(false);

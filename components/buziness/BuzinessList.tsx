@@ -71,10 +71,10 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
         {!buzinessSearchParams?.searchCircle &&
           !myLocation &&
           !buzinesses.length && (
-            <ThemedText style={{ alignSelf: "center" }}>
+          <ThemedText style={{ alignSelf: "center" }}>
               Válassz környéket a kereséshez
-            </ThemedText>
-          )}
+          </ThemedText>
+        )}
         <View style={{padding:16}}>
           {!loading &&
             (!!buzinesses.length && canLoadMore ? (

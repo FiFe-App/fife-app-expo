@@ -43,105 +43,105 @@ const ContactEditScreen = forwardRef<{
       }
     | undefined
   >;
-}>((_props, ref) => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<{
+    }>((_props, ref) => {
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState<{
     type: Enums<"contact_type">;
     text: string;
   } | null>(null);
-  const { uid, userData } = useSelector((state: RootState) => state.user);
-  const dispatch = useDispatch();
-  const [contacts, setContacts] = useState<IContact[]>([]);
-  const loadContacts = () => {
-    if (uid)
-      supabase
-        .from("contacts")
-        .select("*")
-        .eq("author", uid)
-        .then((res) => {
-          if (res.data?.length) setContacts(res.data);
-          setLoading(false);
-        });
-  };
+      const { uid, userData } = useSelector((state: RootState) => state.user);
+      const dispatch = useDispatch();
+      const [contacts, setContacts] = useState<IContact[]>([]);
+      const loadContacts = () => {
+        if (uid)
+          supabase
+            .from("contacts")
+            .select("*")
+            .eq("author", uid)
+            .then((res) => {
+              if (res.data?.length) setContacts(res.data);
+              setLoading(false);
+            });
+      };
 
-  useFocusEffect(
-    useCallback(() => {
-      loadContacts();
-      setError(null);
-      return () => {};
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [uid, dispatch]),
-  );
+      useFocusEffect(
+        useCallback(() => {
+          loadContacts();
+          setError(null);
+          return () => {};
+          // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [uid, dispatch]),
+      );
 
-  const saveContact = (c_ind: number, contact: Partial<IContact>) => {
-    if (uid === undefined) return;
+      const saveContact = (c_ind: number, contact: Partial<IContact>) => {
+        if (uid === undefined) return;
 
-    
-    const newArray = types
-      .map((type, ind) => {
-        const current = contacts.find((c) => c?.type === type.value);
+        const newArray = types
+          .map((type, ind) => {
+            const current = contacts.find((c) => c?.type === type.value);
 
-        if (c_ind === ind) {
-          return {
-            data:'',
-            title:null,
-            ...current,
-            ...contact,
-            type: type.value,
-            author: uid,
-            public:true,
-            created_at: current?.created_at || new Date().toISOString(),
-          };
-        } else return current;
-      })
-      .filter((item): item is NonNullable<typeof item> => item !== undefined);
-    setContacts(newArray);
-  };
-  const save = async () => {
-    const invalid = contacts.find((c) => c && !c.data && !!c.title);
-    console.log("invalid", invalid);
+            if (c_ind === ind) {
+              return {
+                data: "",
+                title: null,
+                ...current,
+                ...contact,
+                type: type.value,
+                author: uid,
+                public: true,
+                created_at: current?.created_at || new Date().toISOString(),
+              };
+            } else return current;
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== undefined);
+        setContacts(newArray);
+      };
+      const save = async () => {
+        const invalid = contacts.find((c) => c && !c.data && !!c.title);
+        console.log("invalid", invalid);
 
-    if (invalid) {
-      setError({ type: invalid.type, text: "Töltsd ki ezt a mezőt." });
-      return { error: "Invalid field" };
-    }
-    const noNullContacts = contacts.filter((c) => !!c && c.data.length);
-    if (uid && contacts.length) {
-      const response = await supabase.from("contacts").upsert(noNullContacts, {
-        onConflict: "id",
-        defaultToNull: false,
-      });
+        if (invalid) {
+          setError({ type: invalid.type, text: "Töltsd ki ezt a mezőt." });
+          return { error: "Invalid field" };
+        }
+        const noNullContacts = contacts.filter((c) => !!c && c.data.length);
+        if (uid && contacts.length) {
+          const response = await supabase.from("contacts").upsert(noNullContacts, {
+            onConflict: "id",
+            defaultToNull: false,
+          });
 
-      // üres mezők törlése
-      const deletableIds: number[] = contacts
-        .filter((c) => c !== undefined && ((c.title && !c.data) || !c.data))
-        .map((c) => c?.id)
-        .filter((id): id is number => id !== undefined);
+          // üres mezők törlése
+          const deletableIds: number[] = contacts
+            .filter((c) => c !== undefined && ((c.title && !c.data) || !c.data))
+            .map((c) => c?.id)
+            .filter((id): id is number => id !== undefined);
 
-      const del_response = await supabase
-        .from("contacts")
-        .delete()
-        .in("id", deletableIds);
-      console.log("del", del_response);
+          const del_response = await supabase
+            .from("contacts")
+            .delete()
+            .in("id", deletableIds);
+          console.log("del", del_response);
 
-      return response;
-    }
-  };
-  useImperativeHandle(ref, () => ({
-    async saveContacts(): Promise<
+          return response;
+        }
+      };
+      useImperativeHandle(ref, () => ({
+        async saveContacts(): Promise<
       PostgrestSingleResponse<any> | { error: string } | undefined
-    > {
-      return await save();
-    },
-  }));
-  return (
-    <View style={{ flex: 1, gap: 8 }}>
-      {!loading && types.map((type, ind) => {
-        const current = {
-          title: "",
-          data: "",
-          ...contacts.find((c) => c?.type === type.value),
-        };
+      > {
+          return await save();
+        },
+      }));
+      return (
+        <View style={{ flex: 1, gap: 8 }}>
+          {!loading &&
+        types.map((type, ind) => {
+          const current = {
+            title: "",
+            data: "",
+            ...contacts.find((c) => c?.type === type.value),
+          };
           return (
             <View key={ind}>
               <View
@@ -180,10 +180,10 @@ const ContactEditScreen = forwardRef<{
               )}
             </View>
           );
-      })}
-    </View>
-  );
-});
+        })}
+        </View>
+      );
+    });
 ContactEditScreen.displayName = "ContactEditScreen";
 
 export default ContactEditScreen;
