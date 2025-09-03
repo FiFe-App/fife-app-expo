@@ -27,6 +27,12 @@ const fontConfig: Record<string, Partial<MD3Type>> = {
     lineHeight: isDesktop ? 55 : 38,
     fontSize: isDesktop ? 45 : 30,
   },
+  displaySmall: {
+    fontFamily: "Piazzolla-ExtraBold",
+    fontWeight: "bold",
+    fontSize: isDesktop ? 40 : 26,
+    lineHeight: isDesktop ? 48 : 32,
+  },
   headlineSmall: {
     fontFamily: "Piazzolla-ExtraBold",
     fontSize: isDesktop ? 24 : 20,
@@ -97,10 +103,10 @@ const fontConfig: Record<string, Partial<MD3Type>> = {
   },
   bodySmall: {
     fontFamily: "RedHatText",
-    fontSize: 12,
     fontWeight: "400",
     letterSpacing: 0.4,
-    lineHeight: 16,
+    fontSize: isDesktop ? 14 : 10,
+    lineHeight: isDesktop ? 20 : 18,
   },
 
   bodyMedium: {
@@ -143,7 +149,7 @@ export const theme: MD3Theme = {
       onErrorContainer: "#410002",
       background: "#FFF5E0",
       onBackground: "#1e1b16",
-      surface: "#FFFCF5",
+      surface: "#FFF5E0",
       onSurface: "#1e1b16",
       surfaceVariant: "#FFF5E0",
       onSurfaceVariant: "#4d4639",
@@ -156,11 +162,11 @@ export const theme: MD3Theme = {
       inversePrimary: "#f0c048",
       elevation: {
         level0: "transparent",
-        level1: "#f8f3f2",
-        level2: "#f4eeeb",
-        level3: "#f0e9e3",
-        level4: "#efe8e0",
-        level5: "#ece5db",
+        level1: "#fff8e8ff",
+        level2: "#fffaedff",
+        level3: "#fffbefff",
+        level4: "#fffcf3ff",
+        level5: "#ffffffff",
       },
       surfaceDisabled: "rgba(30, 27, 22, 0.12)",
       onSurfaceDisabled: "rgba(30, 27, 22, 0.38)",

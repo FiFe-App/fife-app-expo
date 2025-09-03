@@ -1,4 +1,5 @@
 import MyLocationIcon from "@/assets/images/myLocationIcon";
+import { theme } from "@/assets/theme";
 import CollapsibleText from "@/components/CollapsibleText";
 import ErrorScreen from "@/components/ErrorScreen";
 import ProfileImage from "@/components/ProfileImage";
@@ -278,8 +279,8 @@ export default function Index() {
               )}
             </View>
             <CollapsibleText>{data.description}</CollapsibleText>
-            <TabsProvider defaultIndex={0}>
-              <Tabs showTextLabel={width > 400}>
+            <TabsProvider defaultIndex={0} >
+              <Tabs showTextLabel={width > 400} theme={theme} iconPosition="top" >
                 {data.location && (
                   <TabScreen label="Helyzete" icon="map-marker">
                     <View style={{ minHeight: 200, flex: 1 }}>
