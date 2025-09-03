@@ -1,25 +1,21 @@
-import { StyleSheet, Text, type TextProps } from "react-native";
+import { StyleSheet } from "react-native";
 
-import { DefaultTheme, MD3DarkTheme, useTheme } from "react-native-paper";
+import { DefaultTheme, MD3DarkTheme, useTheme, Text, type TextProps } from "react-native-paper";
 
-export type ThemedTextProps = TextProps & {
-  lightColor?: string;
-  darkColor?: string;
+export type ThemedTextProps = TextProps<Text> & {
   type?:
-    | "default"
-    | "title"
-    | "defaultSemiBold"
-    | "subtitle"
-    | "link"
-    | "error"
-    | "label"
-    | "none";
+  | "default"
+  | "title"
+  | "defaultSemiBold"
+  | "subtitle"
+  | "link"
+  | "error"
+  | "label"
+  | "none";
 };
 
 export function ThemedText({
   style,
-  lightColor,
-  darkColor,
   type = "default",
   ...rest
 }: ThemedTextProps) {
@@ -29,18 +25,20 @@ export function ThemedText({
     <Text
       style={[
         { color: theme.colors.onBackground, fontFamily: "Piazzolla" },
-        type === "default" ? styles.default : undefined,
-        type === "title" ? styles.title : undefined,
-        type === "defaultSemiBold" ? styles.defaultSemiBold : undefined,
-        type === "subtitle" ? styles.subtitle : undefined,
-        type === "link" ? styles.link : undefined,
-        type === "error" ? styles.error : undefined,
-        type === "label"
-          ? { ...styles.label, color: theme.colors.onBackground }
-          : undefined,
-        type === "none" && undefined,
+        type === "defaultSemiBold" && styles.defaultSemiBold,
         style,
       ]}
+      variant={
+        type === "default" ? "bodyMedium" :
+          type === "title" ? "displayMedium" :
+            type === "defaultSemiBold" ? "bodyMedium" :
+              type === "subtitle" ? "headlineSmall" :
+                type === "link" ? "bodyMedium" :
+                  type === "error" ? "bodyMedium" :
+                    type === "label"
+                      ? "labelMedium"
+                      : "bodyMedium"
+      }
       {...rest}
     />
   );
@@ -52,8 +50,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   defaultSemiBold: {
-    fontSize: 16,
-    lineHeight: 24,
     fontWeight: "600",
   },
   title: {

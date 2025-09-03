@@ -64,7 +64,7 @@ export default function Index() {
           });
       })
       .catch((err) => {
-        console.log("err",err);
+        console.log("err", err);
       })
       .finally(() => {
         setLoading(false);
@@ -93,6 +93,7 @@ export default function Index() {
   useEffect(() => {
     if (edit) setEmail("");
   }, [edit]);
+
   useEffect(() => {
     AsyncStorage.getItem("email").then((res) => {
       if (res) setEmail(res);
@@ -114,7 +115,7 @@ export default function Index() {
         <ThemedText type="title">
           Kérlek igazold vissza az email-címedet
         </ThemedText>
-        <View style={{}}>
+        <View style={{ gap: 16 }}>
           <ThemedText>Küldtünk egy email-t erre a címre:</ThemedText>
           {!edit ? (
             <ThemedText style={{ textAlign: "center" }}>{email}</ThemedText>
@@ -124,7 +125,8 @@ export default function Index() {
                 style={{
                   textAlign: "center",
                   borderRadius: 8,
-                  margin: 5,
+                  padding: 0,
+                  marginBottom: 16
                 }}
                 placeholder="Az új email-címed"
                 value={email}
