@@ -114,12 +114,18 @@ const Megbizhatosag = () => {
                 <Pressable
                   style={styles.inputView}
                   onPress={() => {
-                    console.log("pressed");
-
-                    textInput?.current?.focus();
+                  // Delay focus to ensure Pressable registers before input focus
+                    setTimeout(() => {
+                      textInput?.current?.focus();
+                    }, 10);
                   }}
+                  android_disableSound={true}
+                  accessible={true}
+                  accessibilityRole="text"
                 >
-                  <Text style={[styles.textToType, { opacity: 0.5 }]}>
+                  <Text pointerEvents="none"
+                    style={[styles.textToType, { opacity: 0.5 }]}
+                  >
                     {textToType}
                   </Text>
                   <ThemedInput
@@ -131,11 +137,12 @@ const Megbizhatosag = () => {
                     scrollEnabled={false}
                     value={typed}
                     onFocus={(e) => {
-                      console.log("focused", e.nativeEvent.type);
+                    // No-op or custom logic
                     }}
                     onChangeText={handleTextInput}
                   />
-                  <Text style={[styles.textToType, {}]}>{typed}</Text>
+                  <Text style={[styles.textToType, {}]} 
+                    pointerEvents="none">{typed}</Text>
                 </Pressable>
               </View>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", width: "100%", gap: 16 }}>

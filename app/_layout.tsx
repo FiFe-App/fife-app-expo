@@ -3,7 +3,7 @@ import InfoLayer from "@/components/InfoLayer";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { clearOptions } from "@/redux/reducers/infoReducer";
 import { persistor, RootState, store } from "@/redux/store";
-import { Stack, useNavigation, usePathname, useSegments } from "expo-router";
+import { Link, Stack, useNavigation, usePathname, useSegments } from "expo-router";
 import { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import React from "react";
 import { useFonts } from "expo-font";
@@ -16,6 +16,7 @@ import { theme } from "@/assets/theme";
 import Piazzolla from "@/assets/fonts/Piazzolla.ttf";
 import RedHatText from "@/assets/fonts/RedHatText.ttf";
 import PiazzollaExtraBold from "@/assets/fonts/Piazzolla-ExtraBold.ttf";
+import { Image } from "expo-image";
 
 export default function RootLayout() {
   const pathname = usePathname();
@@ -34,7 +35,7 @@ export default function RootLayout() {
             <Stack
               screenOptions={{ header: (props) => <MyAppbar {...props} /> }}
             >
-              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="index" />
               <Stack.Screen
                 name="login/index"
                 options={{ title: "Bejelentkezés" }}
@@ -68,7 +69,7 @@ export default function RootLayout() {
                 options={{ title: "Profil Szerkesztése" }}
               />
             </Stack>
-            {pathname !== "/" &&
+            {pathname !== "/" && !pathname.includes("projekt") && 
               !pathname.includes("login") &&
               !pathname.includes("csatlakozom") && <BottomNavigation />}
           </PaperProvider>
@@ -101,13 +102,18 @@ const MyAppbar = (props: NativeStackHeaderProps) => {
         shadowOpacity: 0.06,
         shadowRadius: 4,
         elevation: 2,
-        // subtle divider fallback for web
         borderBottomColor: "rgba(0,0,0,0.06)",
         borderBottomWidth: 0.5,
+        alignItems:"center",
+        width:"100%"
       }}
     >
       {false && <Appbar.BackAction onPress={navigation.goBack} />}
-      <Appbar.Content title={props.options.title || "FiFe App"} />
+        <Link href="/" style={{flex:1}} asChild><Image
+          source={require("../assets/Logo.png")}
+          style={{ width: 239, height: 40, zIndex: 20 }}
+          contentFit="contain"
+        /></Link>
       {options?.length === 1 && <Appbar.Action {...options[0]} />}
       {options?.length > 1 && (
         <>

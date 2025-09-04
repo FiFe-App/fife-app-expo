@@ -1,15 +1,17 @@
 import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { Image } from "expo-image";
+import { Image, ImageSource } from "expo-image";
 import { Text } from "react-native-paper";
 import { ThemedInput as TextInput } from "@/components/ThemedInput";
 import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
-import { Link } from "expo-router";
+import { Link, Redirect } from "expo-router";
 import { useState } from "react";
+import { RootState } from "@/redux/store";
+import { UserState } from "@/redux/store.type";
+import { useSelector } from "react-redux";
 
-const Header = () => {
-  const { isDesktop } = useBreakpoint();
+export const Header = () => {
   return (
     <ThemedView style={styles.headerRow} type="default">
       <View style={styles.flex1} />
@@ -91,7 +93,7 @@ const StepItem = ({
   title,
   description,
 }: {
-  image: any;
+  image: ImageSource;
   title: string;
   description: string;
 }) => {
@@ -220,6 +222,7 @@ const About = () => {
       <ThemedView
         style={[{ paddingVertical: 16, alignItems: "flex-start", gap: 32 }]}
         responsive={800}
+        reverseOnCol
       >
         <View
           style={[
@@ -228,7 +231,6 @@ const About = () => {
             {
               width: "100%",
               justifyContent: "center",
-              order: isDesktop ? 0 : 3,
             },
           ]}
         >
@@ -263,7 +265,7 @@ const Banner = () => {
   return (
     <ThemedView
       responsive={600}
-      //onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
+      onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
       style={{
         alignItems: "center",
         justifyContent: "center",
@@ -313,6 +315,7 @@ const Banner = () => {
     </ThemedView>
   );
 };
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const Newsletter = () => {
   const { isDesktop, screenPadding } = useBreakpoint();
   return (
@@ -323,6 +326,7 @@ const Newsletter = () => {
       <ThemedView
         style={[{ paddingVertical: 16, alignItems: "flex-start", gap: 32 }]}
         responsive={800}
+        reverseOnCol
       >
         <View
           style={[
@@ -339,7 +343,7 @@ const Newsletter = () => {
         </View>
         <View
           style={[
-            isDesktop ? [styles.flex1] : { order: -1 },
+            isDesktop ? [styles.flex1] : { },
             { gap: 16, width: "100%", alignItems: "center" },
           ]}
         >
@@ -387,9 +391,11 @@ const AboutMe = () => {
             ezek, kérlek támogasd a FiFe Appot!
           </Text>
           <ThemedView responsive={1000} style={{ gap: 16, zIndex: 10 }}>
-            <Button type="secondary" big>
+            <Link href="/projekt" asChild>
+              <Button type="secondary" big>
               Beszállnál a projektbe?
-            </Button>
+              </Button>
+            </Link>
             <Link href="https://www.patreon.com/c/fifeapp">
               <Button mode="contained" big>
                 Patreon
@@ -420,7 +426,7 @@ const AboutMe = () => {
   );
 };
 
-const Footer = () => {
+export const Footer = () => {
   return (
     <ThemedView
       responsive={600}
@@ -448,9 +454,10 @@ const Footer = () => {
 };
 
 export default function App() {
+  const { uid }: UserState = useSelector((state: RootState) => state.user);
+  if (uid) return <Redirect href="/biznisz"/>;
   return (
     <ScrollView style={{ flex: 1 }}>
-      <Header />
       <ThemedView type="default" style={{ flex: 1, alignItems: "center" }}>
         <View style={{ flex: 1, gap: 16, maxWidth: 1000 }}>
           <Hero />
@@ -458,7 +465,6 @@ export default function App() {
           <Trust />
           <About />
           <Banner />
-          <Newsletter />
           <AboutMe />
         </View>
       </ThemedView>

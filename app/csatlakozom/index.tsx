@@ -1,7 +1,7 @@
-import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { View } from "react-native";
 import { Image } from "expo-image";
+import { ThemedText } from "@/components/ThemedText";
 
 const Register = () => {
   return (
@@ -25,7 +25,7 @@ const Register = () => {
         </ThemedText>
         <View
           style={{
-            zIndex: 1,
+            zIndex: -1,
             bottom: 0,
             left: 0,
             position: "fixed",
@@ -38,6 +38,7 @@ const Register = () => {
             source={require("@/assets/images/Community_Big.png")}
             style={{ width: "100%", height: 500, resizeMode: "cover" }}
             contentFit="cover"
+            contentPosition="top"
           />
         </View>
       </View>

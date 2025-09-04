@@ -9,7 +9,7 @@ import { MD3Type } from "react-native-paper/lib/typescript/types";
 const isDesktop = Dimensions.get("window").width > 600;
 const fontConfig: Record<string, Partial<MD3Type>> = {
   default: {
-    fontFamily: "Piazzallo",
+    fontFamily: "RedHatText",
     fontWeight: "400",
     letterSpacing: 0.5,
     lineHeight: 22,
@@ -34,7 +34,7 @@ const fontConfig: Record<string, Partial<MD3Type>> = {
     lineHeight: isDesktop ? 48 : 32,
   },
   headlineSmall: {
-    fontFamily: "Piazzolla-ExtraBold",
+    fontFamily: "Piazzolla",
     fontSize: isDesktop ? 24 : 20,
     lineHeight: isDesktop ? 28 : 24,
     fontWeight: "400",
@@ -42,14 +42,14 @@ const fontConfig: Record<string, Partial<MD3Type>> = {
   },
 
   headlineMedium: {
-    fontFamily: "Piazzolla-ExtraBold",
+    fontFamily: "Piazzolla",
     fontWeight: "300",
     letterSpacing: 0,
     fontSize: isDesktop ? 30 : 24,
   },
 
   headlineLarge: {
-    fontFamily: "Piazzolla-ExtraBold",
+    fontFamily: "Piazzolla",
     fontSize: isDesktop ? 32 : 28,
     fontWeight: "400",
     letterSpacing: 0,

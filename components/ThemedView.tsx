@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { StyleSheet, View, type ViewProps } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useMediaQuery } from "react-responsive";
@@ -8,14 +7,14 @@ export type ThemedViewProps = ViewProps & {
   darkColor?: string;
   type?: "default" | "card";
   responsive?: number;
+  reverseOnCol?: boolean;
 };
 
 export function ThemedView({
   style,
-  lightColor,
-  darkColor,
   type,
   responsive,
+  reverseOnCol,
   ...otherProps
 }: ThemedViewProps) {
   const theme = useTheme();
@@ -31,7 +30,7 @@ export function ThemedView({
       backgroundColor: theme.colors.background,
     },
     flexCol: {
-      flexDirection: "column",
+      flexDirection: !reverseOnCol ? "column" : "column-reverse",
     },
     flexRow: {
       flexDirection: "row",
