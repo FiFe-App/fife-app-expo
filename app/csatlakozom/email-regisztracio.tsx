@@ -15,7 +15,6 @@ import { makeRedirectUri } from "expo-auth-session";
 import {
   Button,
   Checkbox,
-  Divider,
   HelperText,
   Icon,
   TextInput,
@@ -119,8 +118,10 @@ export default function Index() {
           Juhé!
         </ThemedText>
         <ThemedText>Már csak a fiókodat kell létrehozni:</ThemedText>
-        <TextInput onChangeText={setEmail} value={email} label="Email" />
+        <TextInput 
+          mode="outlined" onChangeText={setEmail} value={email} label="Email" />
         <TextInput
+          mode="outlined"
           onChangeText={setPassword}
           value={password}
           label="Jelszó"
@@ -145,6 +146,7 @@ export default function Index() {
           </ThemedText>
         </View>
         <TextInput
+          mode="outlined"
           onChangeText={setPasswordAgain}
           value={passwordAgain}
           secureTextEntry
@@ -160,15 +162,14 @@ export default function Index() {
             />
           }
         />
-        <Divider style={{ marginVertical: 16 }} />
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <View style={{ flexDirection: "row", alignItems: "center",marginTop:16 }}>
           <Checkbox
             onPress={() => setAcceptConditions(!acceptConditions)}
             status={acceptConditions ? "checked" : "unchecked"}
           />
-          <ThemedText onPress={() => setAcceptConditions(!acceptConditions)}>
+          <ThemedText variant="labelLarge" onPress={() => setAcceptConditions(!acceptConditions)}>
             Elfogadom a
-            <ThemedText type="link">
+            <ThemedText  variant="labelLarge" type="link">
               <Link href="/csatlakozom/iranyelvek"> feltételeket</Link>
             </ThemedText>
             .

@@ -1,6 +1,7 @@
+import { theme } from "@/assets/theme";
 import { StyleSheet } from "react-native";
 
-import { DefaultTheme, MD3DarkTheme, useTheme, Text, type TextProps } from "react-native-paper";
+import { useTheme, Text, type TextProps } from "react-native-paper";
 
 export type ThemedTextProps = TextProps<Text> & {
   type?:
@@ -25,19 +26,18 @@ export function ThemedText({
     <Text
       style={[
         { color: theme.colors.onBackground, fontFamily: "Piazzolla" },
-        type === "defaultSemiBold" && styles.defaultSemiBold,
+        type === "link" ? styles.link : undefined,
+        type === "error" ? styles.error : undefined,
+        type === "none" && undefined,
         style,
       ]}
       variant={
-        type === "default" ? "bodyMedium" :
+        (type === "default" || !type) ? "bodyMedium" :
           type === "title" ? "displayMedium" :
-            type === "defaultSemiBold" ? "bodyMedium" :
-              type === "subtitle" ? "headlineSmall" :
-                type === "link" ? "bodyMedium" :
-                  type === "error" ? "bodyMedium" :
-                    type === "label"
-                      ? "labelMedium"
-                      : "bodyMedium"
+            type === "subtitle" ? "headlineSmall" :
+              type === "label"
+                ? "labelMedium"
+                : "bodyMedium"
       }
       {...rest}
     />
@@ -63,12 +63,10 @@ const styles = StyleSheet.create({
   error: {
     lineHeight: 30,
     fontSize: 16,
-    color: DefaultTheme.colors.error,
+    color: theme.colors.error,
   },
   link: {
-    lineHeight: 30,
-    fontSize: 16,
-    color: MD3DarkTheme.colors.primary,
+    color: theme.colors.secondary,
   },
   label: {
     fontSize: 14,
