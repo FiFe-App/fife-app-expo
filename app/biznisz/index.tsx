@@ -1,5 +1,7 @@
+import { theme } from "@/assets/theme";
 import { BuzinessList } from "@/components/buziness/BuzinessList";
 import { BuzinessMap } from "@/components/buziness/BuzinessMap";
+import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 import MapSelector from "@/components/MapSelector/MapSelector";
 import { containerStyle } from "@/components/styles";
 import { ThemedView } from "@/components/ThemedView";
@@ -28,6 +30,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
+  const {isDesktop} = useBreakpoint();
   const { uid } = useSelector((state: RootState) => state.user);
   const { buzinesses, buzinessSearchParams } = useSelector(
     (state: RootState) => state.buziness,
@@ -64,21 +67,21 @@ export default function Index() {
 
     const searchLocation = searchCircle
       ? {
-          lat: searchCircle?.location.latitude,
-          long: searchCircle?.location.longitude,
-          maxdistance: searchCircle?.radius,
-        }
+        lat: searchCircle?.location.latitude,
+        long: searchCircle?.location.longitude,
+        maxdistance: searchCircle?.radius,
+      }
       : myLocation
         ? {
-            lat: myLocation?.coords.latitude,
-            long: myLocation?.coords.longitude,
-            maxdistance: 10,
-          }
+          lat: myLocation?.coords.latitude,
+          long: myLocation?.coords.longitude,
+          maxdistance: 10,
+        }
         : {
-            lat: 47.4979,
-            long: 19.0402,
-            maxdistance: 10000,
-          };
+          lat: 47.4979,
+          long: 19.0402,
+          maxdistance: 10000,
+        };
     if (searchLocation)
       supabase.functions
         .invoke("business-search", {
@@ -134,8 +137,9 @@ export default function Index() {
             <TextInput
               value={searchText}
               mode="outlined"
+              
               outlineStyle={{ borderRadius: 1000 }}
-              style={{ marginTop: 4 }}
+              style={{ marginTop: 4, backgroundColor:theme.colors.elevation.level5 }}
               onChangeText={(text) => {
                 if (!text.includes("$"))
                   dispatch(storeBuzinessSearchParams({ text }));
@@ -166,17 +170,18 @@ export default function Index() {
                   if (e === "map" || e === "list")
                     dispatch(storeBuzinessSearchType(e));
                 }}
-                style={{ minWidth: 200 }}
+                density="small"
+                style={{ minWidth: isDesktop ? 200 : 0 }}
                 buttons={[
                   {
                     value: "map",
-                    label: "Térkép",
+                    label: isDesktop ? "Térkép" : undefined,
                     icon: "map-marker",
                   },
                   {
                     value: "list",
-                    label: "Lista",
-                    icon: "format-list-bulleted",
+                    label: isDesktop ? "Lista" : undefined,
+                    icon:"format-list-bulleted" ,
                   },
                 ]}
               />
@@ -193,7 +198,7 @@ export default function Index() {
             </View>
           </Card.Content>
         </Card>
-        {searchType === "map" ? (
+        {searchType === "map" || !searchType ? (
           <BuzinessMap load={search} />
         ) : (
           <BuzinessList load={load} canLoadMore={canLoadMore} />
