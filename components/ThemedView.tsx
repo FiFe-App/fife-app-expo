@@ -21,7 +21,7 @@ export function ThemedView({
   // Normalize to the same breakpoints used in ResponsiveLayout
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const isCol = responsive ? useMediaQuery({ maxWidth: responsive }) : false;
-
+  
   const styles = StyleSheet.create({
     card: {
       backgroundColor: theme.colors.surface,
@@ -36,14 +36,12 @@ export function ThemedView({
       flexDirection: "row",
     },
   });
-
   return (
     <View
       style={[
         {
           backgroundColor: theme.colors.background,
         },
-        styles.default,
         type === "card" ? styles.card : undefined,
         style,
         responsive ? (!isCol ? styles.flexRow : styles.flexCol) : undefined,
