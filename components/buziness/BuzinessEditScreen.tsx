@@ -383,8 +383,8 @@ export default function BuzinessEditScreen({
               </Button>
             </View>
           )}
-          <View style={{ minHeight: !!circle ? 300 : 100 }}>
-            {!!circle ? (
+          <View style={{ minHeight: circle ? 300 : 100 }}>
+            {circle ? (
               <MapView
                 // @ts-ignore
                 options={{
@@ -397,9 +397,9 @@ export default function BuzinessEditScreen({
                   altitude: 10,
                   center: selectedLocation ||
                     myLocation?.coords || {
-                      latitude: 47.4979,
-                      longitude: 19.0402,
-                    },
+                    latitude: 47.4979,
+                    longitude: 19.0402,
+                  },
                   heading: 0,
                   pitch: 0,
                   zoom: 12,

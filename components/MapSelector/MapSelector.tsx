@@ -33,23 +33,23 @@ const MapSelector = ({
   const onRegionChange:
     | ((region: Region, details: Details) => void)
     | undefined = async (e) => {
-    if (!mapHeight) return;
-    const km = (e.latitudeDelta * 111.32 * circleSize) / mapHeight;
+      if (!mapHeight) return;
+      const km = (e.latitudeDelta * 111.32 * circleSize) / mapHeight;
 
-    let text = Math.round(km) + " km";
-    if (km < 2) {
-      text = Math.round(km * 1000) + " m";
-    }
+      let text = Math.round(km) + " km";
+      if (km < 2) {
+        text = Math.round(km * 1000) + " m";
+      }
 
-    setCircle({
-      location: {
-        latitude: e.latitude,
-        longitude: e.longitude,
-      },
-      radius: km * 1000,
-    });
-    setCircleRadiusText(text);
-  };
+      setCircle({
+        location: {
+          latitude: e.latitude,
+          longitude: e.longitude,
+        },
+        radius: km * 1000,
+      });
+      setCircleRadiusText(text);
+    };
 
   const panToMyLocation = () => {
     if (!mapRef.current || !myLocation) return;

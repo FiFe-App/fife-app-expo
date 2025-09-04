@@ -11,13 +11,14 @@ import { User } from "@supabase/auth-js";
 import { Link, Redirect, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
-import { Button, Divider, Text, TextInput } from "react-native-paper";
+import { Divider, Text, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 import { makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { loadViewedFunctions } from "@/redux/reducers/tutorialReducer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Button } from "@/components/Button";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -142,7 +143,7 @@ export default function Index() {
 
   if (!uid)
     return (
-      <ThemedView style={{ flex: 1 }}>
+      <ThemedView style={{ flex: 1 }} type="default">
         <View style={{ maxWidth: 300, width: "100%", gap: 8, margin: "auto" }}>
           <Button onPress={autoLogin} mode="contained">
             Próba felhasználó
@@ -164,8 +165,14 @@ export default function Index() {
             Google bejelentkezés
           </Button>
           <Divider style={{ marginVertical: 16 }} />
-          <TextInput onChangeText={setEmail} value={email} label="Email" />
           <TextInput
+            mode="outlined"
+            onChangeText={setEmail}
+            value={email}
+            label="Email"
+          />
+          <TextInput
+            mode="outlined"
             onChangeText={setPassword}
             value={password}
             label="Jelszó"
@@ -177,10 +184,15 @@ export default function Index() {
               />
             }
           />
-          <Button onPress={signInWithEmail} loading={loading} mode="contained">
+          <Button
+            onPress={signInWithEmail}
+            loading={loading}
+            mode="contained"
+            type="secondary"
+          >
             Bejelentkezés
           </Button>
-          <View style={{ flexDirection: "row" }}>
+          <View style={{ flexDirection: "row", justifyContent: "center" }}>
             <Link href="/csatlakozom" asChild>
               <Button>Még nincs fiókom</Button>
             </Link>

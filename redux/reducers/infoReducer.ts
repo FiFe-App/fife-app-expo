@@ -45,7 +45,7 @@ const infoReducer = createSlice({
     updateOption: (state, action: PayloadAction<Partial<OptionProps>>) => {
       console.log("update", action.payload);
 
-      let toUpdate = state.options.findIndex(
+      const toUpdate = state.options.findIndex(
         (opt) => opt.title === action.payload.title,
       );
       state.options[toUpdate] = {
