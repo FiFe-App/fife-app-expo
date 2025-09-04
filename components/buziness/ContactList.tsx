@@ -56,7 +56,7 @@ export function ContactList({ uid, edit }: ContactListProps) {
         )}
         <List.Section>
           {!loading &&
-            (!!contacts.length ? (
+            (contacts.length ? (
               contacts.map((contact) => (
                 <Link
                   key={contact.id}

@@ -62,7 +62,7 @@ const RecommendationsModal = ({ show, setShow, uid, name }: RMP) => {
           margin: 30,
         }}
       >
-        {!!list.length ? (
+        {list.length ? (
           <>
             <ThemedText>{name}ban megbíznak ők:</ThemedText>
             {list.map((rec, ind) => (

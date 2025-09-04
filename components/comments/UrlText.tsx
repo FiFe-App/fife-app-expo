@@ -10,7 +10,7 @@ const UrlText = ({ text = "" }: { text: string }) => {
 
   const [result, setResult] = useState<any[] | null>(null);
   const makeText = useCallback(() => {
-    let list: any[] = [];
+    const list: any[] = [];
     let pre = 0;
 
     if (arr?.length)

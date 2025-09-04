@@ -38,6 +38,7 @@ import {
   clearTutorialState,
   viewFunction,
 } from "@/redux/reducers/tutorialReducer";
+import { theme } from "@/assets/theme";
 
 type UserInfo = Tables<"profiles">;
 
@@ -203,7 +204,7 @@ export default function Index() {
               )}
             </View>
             <TabsProvider defaultIndex={0}>
-              <Tabs>
+              <Tabs theme={theme}>
                 <TabScreen
                   label="Bizniszek"
                   badge={

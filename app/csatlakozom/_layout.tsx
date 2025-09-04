@@ -1,3 +1,5 @@
+import { theme } from "@/assets/theme";
+import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 import { ThemedView } from "@/components/ThemedView";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
@@ -19,13 +21,12 @@ export default function RootLayout() {
   const pages: Href<string>[] = [
     "/csatlakozom/",
     "/csatlakozom/megbizhatosag",
-    "/csatlakozom/iranyelvek",
-    "/csatlakozom/regisztracio",
     "/csatlakozom/email-regisztracio",
     "/csatlakozom/email-ellenorzes",
     "/csatlakozom/elso-lepesek",
   ];
-  const canGoNext = !!useGlobalSearchParams().canGoNext;
+  const canGoNext = useGlobalSearchParams().canGoNext === "true";
+  const { screenPadding } = useBreakpoint();
 
   const path = usePathname().split("#")[0];
   console.log(path);
@@ -38,12 +39,14 @@ export default function RootLayout() {
 
   const prev: Href<string> = pages[current - 1 || 0] || "";
   const next: Href<string> = pages[current + 1 || 0] || "";
+  console.log(path == "/csatlakozom/megbizhatosag" && canGoNext);
+
 
   if (uid && path === "/csatlakozom") return <Redirect href="/user" />;
 
   return (
-    <>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flex: 1 }}>
+    <ThemedView type="default" style={{ flex: 1 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flex: 1, padding: screenPadding }}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="iranyelvek" options={{ headerShown: false }} />
@@ -61,11 +64,12 @@ export default function RootLayout() {
           />
         </Stack>
       </ScrollView>
-      <ThemedView style={{ alignItems: "center", width: "100%" }}>
+      <ThemedView style={{ alignItems: "center", width: "100%", position: "absolute", bottom: 0, backgroundColor: "transparent" }}>
         <Dots
           length={pages.length}
           active={current}
-          activeColor={MD3DarkTheme.colors.onPrimary}
+          passiveColor={theme.colors.backdrop}
+          activeColor={theme.colors.onBackground}
         />
         <View
           style={{
@@ -87,18 +91,17 @@ export default function RootLayout() {
             </Button>
           </Link>
           {!(
-            !next ||
-            (path === "/csatlakozom/iranyelvek" && !canGoNext) ||
             path === "/csatlakozom/regisztracio" ||
             path === "/csatlakozom/email-regisztracio" ||
             path === "/csatlakozom/email-ellenorzes"
           ) && (
-            <Link href={next} asChild>
-              <Button mode="contained">Tovább</Button>
-            </Link>
-          )}
+              <Link href={next} asChild
+                disabled={path === "/csatlakozom/megbizhatosag" && !canGoNext}>
+                <Button mode="contained">Tovább</Button>
+              </Link>
+            )}
         </View>
       </ThemedView>
-    </>
+    </ThemedView>
   );
 }

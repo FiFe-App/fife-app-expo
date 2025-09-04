@@ -5,6 +5,7 @@ import { ThemedText } from "../ThemedText";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import globStyles from "@/constants/Styles";
+import { theme } from "@/assets/theme";
 
 const BottomNavigation = () => {
   const segment = useSegments();
@@ -13,9 +14,9 @@ const BottomNavigation = () => {
   const profilActive = segment[0]?.includes("user");
 
   return (
-    <Surface style={{ flexDirection: "row" }} elevation={2}>
+    <Surface style={{ flexDirection: "row" }}>
       <Link asChild href="/biznisz">
-        <TouchableRipple style={styles.button}>
+        <TouchableRipple style={{ ...styles.button, backgroundColor: theme.colors.elevation.level4 }}>
           <View style={{ alignItems: "center" }}>
             <Icon
               source={
@@ -33,7 +34,7 @@ const BottomNavigation = () => {
         </TouchableRipple>
       </Link>
       <Link asChild href="/user">
-        <TouchableRipple style={styles.button}>
+        <TouchableRipple style={{ ...styles.button, backgroundColor: theme.colors.elevation.level4 }}>
           <View style={{ alignItems: "center" }}>
             <Icon
               source={profilActive ? "account" : "account-outline"}
