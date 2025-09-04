@@ -171,7 +171,7 @@ export default function Index() {
                     dispatch(storeBuzinessSearchType(e));
                 }}
                 density="small"
-                style={{ minWidth: isDesktop ? 200 : 0 }}
+                style={{ minWidth: isDesktop ? 300 : 0 }}
                 buttons={[
                   {
                     value: "map",
