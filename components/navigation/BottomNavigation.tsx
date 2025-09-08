@@ -5,22 +5,21 @@ import { ThemedText } from "../ThemedText";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import globStyles from "@/constants/Styles";
-import { theme } from "@/assets/theme";
-
 const BottomNavigation = () => {
   const segment = useSegments();
   const { functions } = useSelector((state: RootState) => state.tutorial);
   const bizniszActive = segment[0]?.includes("biznisz");
   const profilActive = segment[0]?.includes("user");
+  const homeActive = segment[0]?.includes("home");
 
   return (
-    <Surface style={{ flexDirection: "row" }}>
+    <Surface style={{ flexDirection: "row" }} elevation={1}>
       <Link asChild href="/biznisz">
-        <TouchableRipple style={{ ...styles.button, backgroundColor: theme.colors.elevation.level4 }}>
+        <TouchableRipple style={{ ...styles.button }}>
           <View style={{ alignItems: "center" }}>
             <Icon
               source={
-                bizniszActive ? "briefcase-search" : "briefcase-search-outline"
+                bizniszActive ? "magnify" : "magnify"
               }
               size={bizniszActive ? 30 : 24}
             />
@@ -33,8 +32,21 @@ const BottomNavigation = () => {
           </View>
         </TouchableRipple>
       </Link>
+      <Link asChild href="/home">
+        <TouchableRipple style={{ ...styles.button }}>
+          <View style={{ alignItems: "center" }}>
+            <Icon
+              source={homeActive ? "home" : "home-outline"}
+              size={homeActive ? 30 : 24}
+            />
+            <ThemedText type={homeActive ? "defaultSemiBold" : "default"}>
+              Otthon
+            </ThemedText>
+          </View>
+        </TouchableRipple>
+      </Link>
       <Link asChild href="/user">
-        <TouchableRipple style={{ ...styles.button, backgroundColor: theme.colors.elevation.level4 }}>
+        <TouchableRipple style={{ ...styles.button }}>
           <View style={{ alignItems: "center" }}>
             <Icon
               source={profilActive ? "account" : "account-outline"}

@@ -66,18 +66,7 @@ const Megbizhatosag = () => {
           másokat, megbízhatónak jelölheted őt, a profilján, hogy így támogasd
           és a bizalom által építsük fel a közösségünket.
         </ThemedText>
-        <View
-          style={{ alignItems: "center", justifyContent: "center", margin: 24 }}
-        >
-          <Image
-            source={require("@/assets/images/Trust.png")}
-            style={{ width: "70%", aspectRatio: 1 / 1, resizeMode: "cover" }}
-            contentFit="cover"
-          />
-        </View>
-
-        {/* Accept Terms Button and Modal */}
-        <View style={{ alignItems: "center" }}>
+        <View style={{ alignItems: "center", paddingTop: 32 }}>
           <Button
             mode="contained"
             onPress={() => setModalVisible(true)}
@@ -87,6 +76,16 @@ const Megbizhatosag = () => {
           >
             Irányelvek {accepted ? "elfogadva" : "elfogadása"}
           </Button>
+        </View>
+
+        <View
+          style={{ alignItems: "center", justifyContent: "center", margin: 24 }}
+        >
+          <Image
+            source={require("@/assets/images/Trust.png")}
+            style={{ width: "70%", aspectRatio: 1 / 1, resizeMode: "cover" }}
+            contentFit="cover"
+          />
         </View>
 
         <Modal
@@ -114,7 +113,7 @@ const Megbizhatosag = () => {
                 <Pressable
                   style={styles.inputView}
                   onPress={() => {
-                  // Delay focus to ensure Pressable registers before input focus
+                    // Delay focus to ensure Pressable registers before input focus
                     setTimeout(() => {
                       textInput?.current?.focus();
                     }, 10);
@@ -137,11 +136,11 @@ const Megbizhatosag = () => {
                     scrollEnabled={false}
                     value={typed}
                     onFocus={(e) => {
-                    // No-op or custom logic
+                      // No-op or custom logic
                     }}
                     onChangeText={handleTextInput}
                   />
-                  <Text style={[styles.textToType, {}]} 
+                  <Text style={[styles.textToType, {}]}
                     pointerEvents="none">{typed}</Text>
                 </Pressable>
               </View>

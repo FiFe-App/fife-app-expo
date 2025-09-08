@@ -10,6 +10,7 @@ import { useState } from "react";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { useSelector } from "react-redux";
+import Smiley from "@/components/Smiley";
 
 export const Header = () => {
   return (
@@ -19,7 +20,7 @@ export const Header = () => {
       <View style={styles.centerRow}>
         <View style={styles.titleRow}>
           <Image
-            source={require("../assets/Logo.png")}
+            source={require("../assets/logo.png")}
             style={{ width: 239, height: 40, zIndex: 20 }}
             contentFit="contain"
           />
@@ -343,7 +344,7 @@ const Newsletter = () => {
         </View>
         <View
           style={[
-            isDesktop ? [styles.flex1] : { },
+            isDesktop ? [styles.flex1] : {},
             { gap: 16, width: "100%", alignItems: "center" },
           ]}
         >
@@ -393,7 +394,7 @@ const AboutMe = () => {
           <ThemedView responsive={1000} style={{ gap: 16, zIndex: 10 }}>
             <Link href="/projekt" asChild>
               <Button type="secondary" big>
-              Beszállnál a projektbe?
+                Beszállnál a projektbe?
               </Button>
             </Link>
             <Link href="https://www.patreon.com/c/fifeapp">
@@ -433,19 +434,11 @@ export const Footer = () => {
       type="card"
       style={{ flexDirection: "row", padding: 48 }}
     >
-      <View style={styles.flex1}>
-        <Text>Rólunk</Text>
-      </View>
-      <View style={styles.flex1}>
-        <Text>Rólunk</Text>
-      </View>
-      <View style={styles.flex1}>
-        <Text>Rólunk</Text>
-      </View>
-      <View style={styles.flex1}>
+      <View style={[styles.flex1, { flexDirection: "row", alignItems: "center", justifyContent: "center" }]}>
+        <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
         <Image
-          source={require("../assets/Logo.png")}
-          style={{ width: 239, height: 40, zIndex: 20 }}
+          source={require("../assets/logo.png")}
+          style={{ width: 180, height: 30, zIndex: 20 }}
           contentFit="contain"
         />
       </View>
@@ -455,7 +448,7 @@ export const Footer = () => {
 
 export default function App() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
-  if (uid) return <Redirect href="/biznisz"/>;
+  if (uid) return <Redirect href="/home" />;
   return (
     <ScrollView style={{ flex: 1 }}>
       <ThemedView type="default" style={{ flex: 1, alignItems: "center" }}>

@@ -48,7 +48,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
         addDialog({
           title: "Nem elérhető a pozíciód.",
           text: "Ha szeretnéd, hogy a hozzád közel található bizniszeket látsd, kapcsold be.",
-          onSubmit: () => {},
+          onSubmit: () => { },
           submitText: "Vettem",
         }),
       );
@@ -150,7 +150,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
           style={mapStyles.myLocationButton}
           icon={
             myLocation
-              ? "map-marker"
+              ? "crosshairs-gps"
               : locationError
                 ? "map-marker-alert"
                 : "map-marker-question"
@@ -176,7 +176,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
           flexDirection: "column",
         }}
       >
-        <View style={{ padding: 8 }}>
+        <View style={{ padding: 8, bottom: 32 }}>
           <IconButton
             icon="plus"
             style={{
@@ -185,7 +185,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
               margin: 0,
             }}
             onPress={() => zoom(1)}
-            mode="contained-tonal"
+            mode="contained"
           />
           <IconButton
             icon="minus"
@@ -195,7 +195,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
               margin: 0,
             }}
             onPress={() => zoom(-1)}
-            mode="contained-tonal"
+            mode="contained"
           />
         </View>
         {selectedBuziness ? (
@@ -205,6 +205,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
         ) : (
           <Button
             mode="contained-tonal"
+            loading={loading}
             style={{ alignSelf: "center" }}
             onPress={() => load()}
           >
