@@ -25,7 +25,7 @@ export function ThemedText({
   return (
     <Text
       style={[
-        { color: theme.colors.onBackground, fontFamily: "Piazzolla" },
+        { color: theme.colors.onBackground, fontFamily: "RedHatText" },
         type === "link" ? styles.link : undefined,
         type === "error" ? styles.error : undefined,
         type === "none" && undefined,

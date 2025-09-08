@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { Divider, ActivityIndicator, Button } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
@@ -10,7 +10,6 @@ import {
   storeBuzinessSearchParams,
 } from "@/redux/reducers/buzinessReducer";
 import { useMyLocation } from "@/hooks/useMyLocation";
-import { MapCircleType } from "../MapSelector/MapSelector.types";
 
 interface BuzinessListProps {
   load: (arg0: number) => void;
@@ -25,11 +24,10 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
   const { buzinesses, buzinessSearchParams } = useSelector(
     (state: RootState) => state.buziness,
   );
-  const { myLocation, locationError } = useMyLocation();
+  const { myLocation } = useMyLocation();
   const skip = buzinessSearchParams?.skip || 0;
   const loading = buzinessSearchParams?.loading || false;
   const take = 5;
-  const [mapModalVisible, setMapModalVisible] = useState(false);
   const loadNext = () => {
     dispatch(
       loadBuzinesses([
@@ -70,12 +68,11 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
         )}
         {!buzinessSearchParams?.searchCircle &&
           !myLocation &&
-          !buzinesses.length && (
-          <ThemedText style={{ alignSelf: "center" }}>
-              Válassz környéket a kereséshez
-          </ThemedText>
-        )}
-        <View style={{padding:16}}>
+          !buzinesses.length &&
+          (<ThemedText style={{ alignSelf: "center" }}>
+            Válassz környéket a kereséshez
+          </ThemedText>)}
+        <View style={{ padding: 16 }}>
           {!loading &&
             (!!buzinesses.length && canLoadMore ? (
               <Button onPress={loadNext} style={{ alignSelf: "center" }}>

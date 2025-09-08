@@ -1,6 +1,5 @@
 import { theme } from "@/assets/theme";
 import { BuzinessList } from "@/components/buziness/BuzinessList";
-import { BuzinessMap } from "@/components/buziness/BuzinessMap";
 import MapSelector from "@/components/MapSelector/MapSelector";
 import { containerStyle } from "@/components/styles";
 import { ThemedText } from "@/components/ThemedText";
@@ -10,7 +9,7 @@ import { supabase } from "@/lib/supabase/supabase";
 import {
   loadBuzinesses,
   storeBuzinessLoading,
-  storeBuzinessSearchParams, storeBuzinessSearchType, storeBuzinesses
+  storeBuzinessSearchParams, storeBuzinesses
 } from "@/redux/reducers/buzinessReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
@@ -18,14 +17,13 @@ import { useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import {
-  FAB,
   Modal,
-  Portal
+  Portal, Text
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { MyAppbar } from "../_layout";
+import { MyAppbar } from "./_layout";
+import Smiley from "@/components/Smiley";
 import BuzinessSearchInput from "@/components/BuzinessSearchInput";
-import { Button } from "@/components/Button";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
@@ -33,11 +31,9 @@ export default function Index() {
   const { buzinesses, buzinessSearchParams } = useSelector(
     (state: RootState) => state.buziness,
   );
-  const searchType = buzinessSearchParams?.searchType;
   const skip = buzinessSearchParams?.skip || 0;
   const take = 10;
   const searchCircle = buzinessSearchParams?.searchCircle;
-  const searchText = buzinessSearchParams?.text || "";
   const dispatch = useDispatch();
 
   const { myLocation } = useMyLocation();
@@ -63,42 +59,30 @@ export default function Index() {
     const mySkip = paramSkip || skip;
     console.log("load from ", mySkip, " to ", mySkip + take);
 
-    const searchLocation = searchCircle
+    const searchLocation = searchCircle?.location.latitude && searchCircle?.location.longitude
       ? {
-        lat: searchCircle?.location.latitude,
-        long: searchCircle?.location.longitude,
-        maxdistance: searchCircle?.radius,
+        lat: searchCircle?.location?.latitude,
+        long: searchCircle?.location?.longitude,
+        distance: searchCircle?.radius,
       }
       : myLocation
         ? {
           lat: myLocation?.coords.latitude,
           long: myLocation?.coords.longitude,
-          maxdistance: 100000,
+          distance: 1000,
         }
         : {
           lat: 47.4979,
           long: 19.0402,
-          maxdistance: 100000,
+          distance: 16000,
         };
     if (searchLocation)
-      supabase.functions
-        .invoke("business-search", {
-          body: {
-            query: searchText || "biznisz",
-            take:
-              buzinessSearchParams?.searchType === "map"
-                ? -1
-                : mySkip + take - 1,
-            skip: buzinessSearchParams?.searchType === "map" ? -1 : mySkip,
-            ...searchLocation,
-          },
-        })
+      supabase.rpc("newest_buziness", { ...searchLocation, skip: mySkip, take })
         .then((res) => {
           dispatch(storeBuzinessLoading(false));
           if (res.data) {
             dispatch(loadBuzinesses(res.data));
             setCanLoadMore(
-              buzinessSearchParams?.searchType !== "map" &&
               !(res.data.length < take),
             );
             console.log(res.data);
@@ -107,17 +91,14 @@ export default function Index() {
             console.log(res.error);
           }
         })
-        .catch((err) => {
-          console.log(err);
-        });
   };
 
   useFocusEffect(
     useCallback(() => {
       console.log("skip changed", skip);
-      if (!buzinesses.length && searchText && (searchCircle || myLocation))
-        load();
-      if (uid) dispatch(viewFunction({ key: "buzinessPage", uid }));
+      dispatch(storeBuzinesses([]))
+      load();
+      if (uid) dispatch(viewFunction({ key: "homePage", uid }));
       navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={search} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [skip]),
@@ -126,24 +107,19 @@ export default function Index() {
   if (uid)
     return (
       <ThemedView style={{ flex: 1 }} type="default">
-        <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-
-          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Találatok</ThemedText>
-          <Button icon='filter' mode="text" onPress={() => setLocationMenuVisible(true)}>Finomítás</Button>
+        <View style={{ width: "100%", alignItems: "center" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
+            <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
+            <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, flex: 1 }}>
+              <Text variant="titleMedium">Üdvözöllek a FiFe Appban!</Text>
+              <Text variant="bodyMedium">Fedezd fel a legújabb bizniszeket a környékeden.</Text>
+            </View>
+          </View>
         </View>
-        {searchType === "list" || !searchType ? (
-          <BuzinessList load={load} canLoadMore={canLoadMore} />
-        ) : (
-          <BuzinessMap load={search} />
-        )}
-        <FAB
-          icon={searchType === "map" ? "format-list-bulleted" : "map-marker"}
-          style={{ position: "absolute", bottom: 16, right: 16 }}
-          variant="primary"
-          onPress={() => {
-            dispatch(storeBuzinessSearchType(searchType === "map" ? "list" : "map"));
-          }} />
-
+        <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
+          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Új bizniszek Budapesten</ThemedText>
+        </View>
+        <BuzinessList load={load} canLoadMore={canLoadMore} />
         <Portal>
           <Modal
             visible={locationMenuVisible}

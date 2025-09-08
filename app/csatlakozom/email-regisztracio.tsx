@@ -85,7 +85,7 @@ export default function Index() {
           dispatch(login(signInResponse.data.user.id));
           dispatch(setUserData(signInResponse.data.user));
           dispatch(addSnack({ title: "Bejelentkeztél!" }));
-          router.navigate("/user");
+          router.navigate("/home");
         }
       }
     }
@@ -118,7 +118,7 @@ export default function Index() {
           Juhé!
         </ThemedText>
         <ThemedText>Már csak a fiókodat kell létrehozni:</ThemedText>
-        <TextInput 
+        <TextInput
           mode="outlined" onChangeText={setEmail} value={email} label="Email" />
         <TextInput
           mode="outlined"
@@ -162,14 +162,14 @@ export default function Index() {
             />
           }
         />
-        <View style={{ flexDirection: "row", alignItems: "center",marginTop:16 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16 }}>
           <Checkbox
             onPress={() => setAcceptConditions(!acceptConditions)}
             status={acceptConditions ? "checked" : "unchecked"}
           />
           <ThemedText variant="labelLarge" onPress={() => setAcceptConditions(!acceptConditions)}>
             Elfogadom a
-            <ThemedText  variant="labelLarge" type="link">
+            <ThemedText variant="labelLarge" type="link">
               <Link href="/csatlakozom/iranyelvek"> feltételeket</Link>
             </ThemedText>
             .

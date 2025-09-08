@@ -20,7 +20,7 @@ const Smiley = ({ style }: { style?: ViewStyle }) => {
       }).start();
   };
   return (
-    <View style={[{ position: "relative" }, style]}>
+    <View style={[{ position: "relative", width: 40, height: 40, borderRadius: 4 }, style]}>
       <Animated.View // Special animatable View
         style={[
           {
@@ -35,7 +35,7 @@ const Smiley = ({ style }: { style?: ViewStyle }) => {
         <Pressable onPress={handleGrow}>
           <Image
             source={require("../assets/smiley.gif")}
-            style={[{ width: 50, height: 50, zIndex: 20 }, style]}
+            style={[{ width: 40, height: 40, zIndex: 20, borderRadius: 6 }, style]}
           />
         </Pressable>
       </Animated.View>

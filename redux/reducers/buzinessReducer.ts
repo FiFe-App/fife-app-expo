@@ -11,13 +11,7 @@ const initialState: BuzinessState = {
     skip: 0,
     text: "",
     loading: false,
-    searchCircle: {
-      location: {
-        latitude: 0,
-        longitude: 0,
-      },
-      radius: 0,
-    },
+    searchCircle: undefined,
     searchType: "map",
   },
 };
