@@ -7,10 +7,12 @@ import commentsReducer from "./reducers/commentsReducer";
 import buzinessReducer from "./reducers/buzinessReducer";
 import infoReducer from "./reducers/infoReducer";
 import tutorialReducer from "./reducers/tutorialReducer";
+import usersReducer from "./reducers/usersReducer";
 
 export const rootReducer = combineReducers({
   comments: commentsReducer,
   user: userReducer.reducer,
+  users: usersReducer.reducer,
   buziness: buzinessReducer.reducer,
   info: infoReducer,
   tutorial: tutorialReducer.reducer,
