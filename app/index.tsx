@@ -10,7 +10,7 @@ import { useState } from "react";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { useSelector } from "react-redux";
-import Smiley from "@/components/Smiley";
+import { ThemedText } from "@/components/ThemedText";
 
 export const Header = () => {
   return (
@@ -432,10 +432,14 @@ export const Footer = () => {
     <ThemedView
       responsive={600}
       type="card"
-      style={{ flexDirection: "row", padding: 48 }}
+      style={{ flexDirection: "row", padding: 48, alignItems:"flex-start" }}
     >
-      <View style={[styles.flex1, { flexDirection: "row", alignItems: "center", justifyContent: "center" }]}>
-        <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
+      <View style={[styles.flex1,{padding: 10}]}>
+        <ThemedText>Hasznos linkek</ThemedText>
+        <Link href="/projekt"><ThemedText type="defaultSemiBold">Beszállnál?</ThemedText></Link>
+        <Link href="https://github.com/FiFe-App/fife-app-expo"><ThemedText type="defaultSemiBold">Github</ThemedText></Link>
+      </View>
+      <View style={[styles.flex1,{height:"100%",alignItems:"center",justifyContent:"center"}]}>
         <Image
           source={require("../assets/logo.png")}
           style={{ width: 180, height: 30, zIndex: 20 }}

@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Platform } from "react-native";
 import BuzinessItem from "./BuzinessItem";
 import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Camera,
-  Circle,
   Details,
   MapView,
   Marker,
+  PROVIDER_DEFAULT,
   Region,
 } from "../mapView/mapView";
 import MyLocationIcon from "@/assets/images/myLocationIcon";
@@ -119,7 +119,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
           pitch: 0,
           zoom: 12,
         }}
-        provider="google"
+        provider={Platform.OS == "web" ? "google" : PROVIDER_DEFAULT}
         googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
         pitchEnabled={false}
         showsPointsOfInterest={false}

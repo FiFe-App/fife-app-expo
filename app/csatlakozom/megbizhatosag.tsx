@@ -66,16 +66,27 @@ const Megbizhatosag = () => {
           másokat, megbízhatónak jelölheted őt, a profilján, hogy így támogasd
           és a bizalom által építsük fel a közösségünket.
         </ThemedText>
-        <View style={{ alignItems: "center", paddingTop: 32 }}>
+
+        {/* Accept Terms Button and Modal */}
+        <View style={{ alignItems: "center", marginTop:20 }}>
           <Button
             mode="contained"
             onPress={() => setModalVisible(true)}
             icon={accepted ? (props => <Icon {...props} source="check" />) : undefined}
             disabled={accepted}
-            style={{ marginBottom: 16, minWidth: 220 }}
+            style={{  minWidth: 220 }}
           >
             Irányelvek {accepted ? "elfogadva" : "elfogadása"}
           </Button>
+        </View>
+        <View
+          style={{ alignItems: "center", justifyContent: "center", margin: 24 }}
+        >
+          <Image
+            source={require("@/assets/images/Trust.png")}
+            style={{ width: "80%", aspectRatio: 1 / 1, resizeMode: "cover" }}
+            contentFit="cover"
+          />
         </View>
 
         <View
