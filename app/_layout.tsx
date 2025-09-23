@@ -4,10 +4,10 @@ import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { clearOptions } from "@/redux/reducers/infoReducer";
 import { persistor, RootState, store } from "@/redux/store";
 import { Link, Stack, useNavigation, usePathname, useSegments } from "expo-router";
-import React from "react";
+import React, { ReactNode } from "react";
 import { useFonts } from "expo-font";
 import { useEffect, useState } from "react";
-import { useWindowDimensions, View } from "react-native";
+import { useWindowDimensions, View, ViewStyle } from "react-native";
 import { Appbar, Menu, PaperProvider } from "react-native-paper";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -17,6 +17,7 @@ import Piazzolla from "@/assets/fonts/Piazzolla.ttf";
 import RedHatText from "@/assets/fonts/RedHatText.ttf";
 import PiazzollaExtraBold from "@/assets/fonts/Piazzolla-ExtraBold.ttf";
 import { Image } from "expo-image";
+import Smiley from "@/components/Smiley";
 
 export default function RootLayout() {
   const pathname = usePathname();
@@ -87,7 +88,7 @@ export default function RootLayout() {
     );
 }
 
-const MyAppbar = () => {
+export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewStyle }) => {
   const navigation = useNavigation();
   const { options } = useSelector((state: RootState) => state.info);
   const [showMenu, setShowMenu] = useState(false);
@@ -114,37 +115,43 @@ const MyAppbar = () => {
         borderBottomWidth: 0.5,
         alignItems: "center",
         width: "100%"
-      }]}
+      }, style]}
     >
-      {navigation.canGoBack() && pathname !="/" && <Appbar.BackAction onPress={navigation.goBack} />}
-      <Link href="/" style={{flex:1}} asChild><Image
-        source={require("../assets/Logo.png")}
-        style={{ width: 239, height: 40, zIndex: 20 }}
-        contentFit="contain"
-      /></Link>
-      {options?.length === 1 && <Appbar.Action {...options[0]} />}
-      {options?.length > 1 && (
-        <>
-          <Appbar.Action
-            icon="dots-vertical"
-            onPress={() => setShowMenu(true)}
-          />
-          <Menu
-            anchor={{ x: width, y: 0 }}
-            visible={showMenu}
-            onDismiss={() => setShowMenu(false)}
-          >
-            {options.map((option, ind) => (
-              <Menu.Item
-                key={"option" + ind}
-                onPress={option.onPress}
-                title={option.title}
-                disabled={option.disabled}
-                leadingIcon={option.icon}
+      {navigation.canGoBack() && pathname !== "/home" && pathname !== "/" ? <Appbar.BackAction onPress={navigation.goBack} /> : <View style={{ width: 48 }} />}
+      {center || <Link href="/" style={{ flex: 1 }} asChild>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}><Smiley />
+          <Image
+            source={require("../assets/Logo.png")}
+            style={{ width: 180, height: 30, zIndex: 20 }}
+            contentFit="contain"
+          /></View>
+      </Link>}
+      {options.length > 0 ?
+        <> {options?.length === 1 && <Appbar.Action {...options[0]} />}
+          {options?.length > 1 && (
+            <>
+              <Appbar.Action
+                icon="dots-vertical"
+                onPress={() => setShowMenu(true)}
               />
-            ))}
-          </Menu>
-        </>)} : <View style={{ width: 48 }} />
+              <Menu
+                anchor={{ x: width, y: 0 }}
+                visible={showMenu}
+                onDismiss={() => setShowMenu(false)}
+              >
+                {options.map((option, ind) => (
+                  <Menu.Item
+                    key={"option" + ind}
+                    onPress={option.onPress}
+                    title={option.title}
+                    disabled={option.disabled}
+                    leadingIcon={option.icon}
+                  />
+                ))}
+              </Menu>
+            </>
+          )}
+        </> : <View style={{ width: 48 }} />}
     </Appbar.Header>
   );
 };
