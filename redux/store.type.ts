@@ -15,6 +15,15 @@ export interface UserState {
   } | null;
   locationError: string | null;
 }
+
+export type User = Tables<"profiles">;
+
+export interface UsersState {
+  users: User[];
+  userSearchParams?: SearchParams;
+}
+
+
 export interface CommentsState {
   comments: Comment[];
 }
@@ -54,7 +63,7 @@ export interface EventItemInterface extends Tables<"events"> {
   avatarUrl?: string | null;
   eventResponses: Tables<"eventResponses">[];
 }
-export interface BuzinessSearchParams {
+export interface SearchParams {
   text?: string;
   searchCircle?: {
     location: {
@@ -69,7 +78,7 @@ export interface BuzinessSearchParams {
 }
 export interface BuzinessState {
   buzinesses: BuzinessSearchItemInterface[];
-  buzinessSearchParams?: BuzinessSearchParams;
+  searchParams?: SearchParams;
 }
 
 export interface DialogProps {

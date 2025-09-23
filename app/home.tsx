@@ -1,5 +1,5 @@
 import { theme } from "@/assets/theme";
-import { BuzinessList } from "@/components/buziness/BuzinessList";
+import { UsersList } from "@/components/user/UsersList";
 import MapSelector from "@/components/MapSelector/MapSelector";
 import { containerStyle } from "@/components/styles";
 import { ThemedText } from "@/components/ThemedText";
@@ -7,13 +7,13 @@ import { ThemedView } from "@/components/ThemedView";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import { supabase } from "@/lib/supabase/supabase";
 import {
-  loadBuzinesses,
-  storeBuzinessLoading,
-  storeBuzinessSearchParams, storeBuzinesses
-} from "@/redux/reducers/buzinessReducer";
+  loadUsers,
+  storeUserLoading,
+  storeUserSearchParams, storeUsers
+} from "@/redux/reducers/usersReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
-import { useFocusEffect, useNavigation } from "expo-router";
+import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import {
@@ -24,82 +24,48 @@ import { useDispatch, useSelector } from "react-redux";
 import { MyAppbar } from "./_layout";
 import Smiley from "@/components/Smiley";
 import BuzinessSearchInput from "@/components/BuzinessSearchInput";
+import { useProfileSearch } from "@/hooks/useProfileSearch";
+import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
-  const { buzinesses, buzinessSearchParams } = useSelector(
-    (state: RootState) => state.buziness,
+  const { users, userSearchParams } = useSelector(
+    (state: RootState) => state.users,
   );
-  const skip = buzinessSearchParams?.skip || 0;
+  const skip = userSearchParams?.skip || 0;
   const take = 10;
-  const searchCircle = buzinessSearchParams?.searchCircle;
+  const searchCircle = userSearchParams?.searchCircle;
   const dispatch = useDispatch();
 
   const { myLocation } = useMyLocation();
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const canSearch = true; //!!searchCircle || !!myLocation;
   const [canLoadMore, setCanLoadMore] = useState(true);
+  const { results, search, error } = useProfileSearch();
 
-  const search = () => {
-    console.log("search");
+  console.log(error, results);
 
-    if (!canSearch) return;
-
-    dispatch(storeBuzinessSearchParams({ skip: 0 }));
-    dispatch(storeBuzinesses([]));
-    load();
+  const handleSearch = () => {
+    dispatch(storeBuzinesses([]))
+    router.push("/biznisz");
   };
-  useEffect(() => {
-    console.log(buzinessSearchParams?.searchCircle);
-  }, [buzinessSearchParams?.searchCircle]);
 
   const load = (paramSkip: number = 0) => {
-    dispatch(storeBuzinessLoading(true));
+    dispatch(storeUserLoading(true));
     const mySkip = paramSkip || skip;
     console.log("load from ", mySkip, " to ", mySkip + take);
 
-    const searchLocation = searchCircle?.location.latitude && searchCircle?.location.longitude
-      ? {
-        lat: searchCircle?.location?.latitude,
-        long: searchCircle?.location?.longitude,
-        distance: searchCircle?.radius,
-      }
-      : myLocation
-        ? {
-          lat: myLocation?.coords.latitude,
-          long: myLocation?.coords.longitude,
-          distance: 1000,
-        }
-        : {
-          lat: 47.4979,
-          long: 19.0402,
-          distance: 16000,
-        };
-    if (searchLocation)
-      supabase.rpc("newest_buziness", { ...searchLocation, skip: mySkip, take })
-        .then((res) => {
-          dispatch(storeBuzinessLoading(false));
-          if (res.data) {
-            dispatch(loadBuzinesses(res.data));
-            setCanLoadMore(
-              !(res.data.length < take),
-            );
-            console.log(res.data);
-          }
-          if (res.error) {
-            console.log(res.error);
-          }
-        })
+
   };
 
   useFocusEffect(
     useCallback(() => {
       console.log("skip changed", skip);
-      dispatch(storeBuzinesses([]))
-      load();
+      dispatch(storeUsers([]))
+      search()
       if (uid) dispatch(viewFunction({ key: "homePage", uid }));
-      navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={search} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
+      navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={handleSearch} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [skip]),
   );
@@ -112,14 +78,14 @@ export default function Index() {
             <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
             <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, flex: 1 }}>
               <Text variant="titleMedium">Üdvözöllek a FiFe Appban!</Text>
-              <Text variant="bodyMedium">Fedezd fel a legújabb bizniszeket a környékeden.</Text>
+              <Text variant="bodyMedium">Fedezd fel az új fiféket a környékeden.</Text>
             </View>
           </View>
         </View>
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
-          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Új bizniszek Budapesten</ThemedText>
+          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Új fifék Budapesten</ThemedText>
         </View>
-        <BuzinessList load={load} canLoadMore={canLoadMore} />
+        <UsersList load={load} canLoadMore={canLoadMore} />
         <Portal>
           <Modal
             visible={locationMenuVisible}
@@ -143,7 +109,7 @@ export default function Index() {
                     (sC && "location" in sC && "radius" in sC) ||
                     sC == undefined
                   )
-                    dispatch(storeBuzinessSearchParams({ searchCircle: sC }));
+                    dispatch(storeUserSearchParams({ searchCircle: sC }));
                 }}
                 searchEnabled
                 setOpen={setLocationMenuVisible}
