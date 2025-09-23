@@ -5,6 +5,7 @@ import { ThemedText } from "../ThemedText";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import globStyles from "@/constants/Styles";
+import { theme } from "@/assets/theme";
 const BottomNavigation = () => {
   const segment = useSegments();
   const { functions } = useSelector((state: RootState) => state.tutorial);
@@ -21,7 +22,8 @@ const BottomNavigation = () => {
               source={
                 bizniszActive ? "magnify" : "magnify"
               }
-              size={24}
+              size={bizniszActive ? 30 : 24}
+              color={bizniszActive ? theme.colors.secondary : undefined}
             />
             <Text style={{fontWeight: bizniszActive ? "bold" : "100"}} variant="labelLarge">
               Biznisz
@@ -38,6 +40,7 @@ const BottomNavigation = () => {
             <Icon
               source={homeActive ? "home" : "home-outline"}
               size={homeActive ? 30 : 24}
+              color={homeActive ? theme.colors.secondary : undefined}
             />
             <ThemedText type={homeActive ? "defaultSemiBold" : "default"}>
               Otthon
@@ -50,7 +53,8 @@ const BottomNavigation = () => {
           <View style={{ alignItems: "center" }}>
             <Icon
               source={profilActive ? "account" : "account-outline"}
-              size={24}
+              size={profilActive ? 30 : 24}
+              color={profilActive ? theme.colors.secondary : undefined}
             />
             <Text  style={{fontWeight: profilActive ? "bold" : "100"}} variant="labelLarge">
               Profil
@@ -65,7 +69,7 @@ const BottomNavigation = () => {
 const styles = StyleSheet.create({
   button: {
     flex: 1,
-    padding: 16,
+    padding: 8,
     alignItems: "center",
     justifyContent: "center",
   },

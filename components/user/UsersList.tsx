@@ -2,48 +2,48 @@ import React from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { Divider, ActivityIndicator, Button } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
-import BuzinessItem from "./BuzinessItem";
+import UserItem from "./UserItem";
 import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  loadBuzinesses,
-  storeBuzinessSearchParams,
-} from "@/redux/reducers/buzinessReducer";
+  loadUsers,
+  storeUserSearchParams,
+} from "@/redux/reducers/usersReducer";
 import { useMyLocation } from "@/hooks/useMyLocation";
 
-interface BuzinessListProps {
+interface UsersListProps {
   load: (arg0: number) => void;
   canLoadMore: boolean;
 }
 
-export const BuzinessList: React.FC<BuzinessListProps> = ({
+export const UsersList: React.FC<UsersListProps> = ({
   load,
   canLoadMore,
 }) => {
   const dispatch = useDispatch();
-  const { buzinesses, searchParams } = useSelector(
-    (state: RootState) => state.buziness,
+  const { users, userSearchParams } = useSelector(
+    (state: RootState) => state.users,
   );
   const { myLocation } = useMyLocation();
-  const skip = searchParams?.skip || 0;
-  const loading = searchParams?.loading || false;
+  const skip = userSearchParams?.skip || 0;
+  const loading = userSearchParams?.loading || false;
   const take = 5;
   const loadNext = () => {
     dispatch(
-      loadBuzinesses([
+      loadUsers([
         {
-          id: -1,
-          title: "",
-          description: "",
-          author: "",
-          recommendations: 0,
-          radius: 0,
-          location: "",
-          buzinessRecommendations: []
+          id: "-1",
+          avatar_url: null,
+          created_at: null,
+          full_name: null,
+          updated_at: null,
+          username: null,
+          viewed_functions: null,
+          website: null
         },
       ]),
     );
-    dispatch(storeBuzinessSearchParams({ skip: skip + take }));
+    dispatch(storeUserSearchParams({ skip: skip + take }));
     load(skip + take);
   };
 
@@ -56,37 +56,31 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
           marginVertical: 8,
         }}
       >
-        {buzinesses.map((buzinessItem) =>
-          buzinessItem.id === -1 ? (
+        {users.map((userItem) =>
+          userItem.id === "-1" ? (
             <Divider
               key={Math.random() * 100000 + 100000 + "div"}
               style={{ marginVertical: 16 }}
             />
           ) : (
-            <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
+            <UserItem data={userItem} key={userItem.id} />
           ),
         )}
-        {!searchParams?.searchCircle &&
-          !myLocation &&
-          !buzinesses.length &&
-          (<ThemedText style={{ alignSelf: "center" }}>
-            Válassz környéket a kereséshez
-          </ThemedText>)}
         <View style={{ padding: 16 }}>
           {!loading &&
-            (!!buzinesses.length && canLoadMore ? (
+            (!!users.length && canLoadMore ? (
               <Button onPress={loadNext} style={{ alignSelf: "center" }}>
-                További bizniszek
+                További fifék
               </Button>
             ) : (
               <ThemedText style={{ alignSelf: "center" }}>
-                Nem található több biznisz
+                Nem található több fifék
               </ThemedText>
             ))}
         </View>
       </ScrollView>
 
-      {searchParams?.loading && !buzinesses.length && (
+      {userSearchParams?.loading && !users.length && (
         <View style={{ flex: 1 }}>
           <ActivityIndicator />
         </View>
