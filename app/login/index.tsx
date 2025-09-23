@@ -196,7 +196,7 @@ export default function Index() {
             <Link href="/csatlakozom" asChild>
               <Button>Még nincs fiókom</Button>
             </Link>
-            <Link href="/elfelejtett-jelszo" asChild>
+            <Link href="/user/password-reset" asChild>
               <Button>Elfelejtettem a jelszavam</Button>
             </Link>
           </View>

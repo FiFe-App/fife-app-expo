@@ -93,13 +93,14 @@ export default function RootLayout() {
           {!(
             path === "/csatlakozom/regisztracio" ||
             path === "/csatlakozom/email-regisztracio" ||
+            path === "/csatlakozom/elso-lepesek" ||
             path === "/csatlakozom/email-ellenorzes"
           ) && (
-              <Link href={next} asChild
-                disabled={path === "/csatlakozom/megbizhatosag" && !canGoNext}>
-                <Button mode="contained">Tovább</Button>
-              </Link>
-            )}
+            <Link href={next} asChild
+              disabled={path === "/csatlakozom/megbizhatosag" && !canGoNext}>
+              <Button mode="contained">Tovább</Button>
+            </Link>
+          )}
         </View>
       </ThemedView>
     </ThemedView>
