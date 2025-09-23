@@ -115,7 +115,7 @@ export default function Index() {
   useFocusEffect(
     useCallback(() => {
       console.log("skip changed", skip);
-      if (!buzinesses.length && searchText && (searchCircle || myLocation))
+      if (searchText)
         load();
       if (uid) dispatch(viewFunction({ key: "buzinessPage", uid }));
       navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={search} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });

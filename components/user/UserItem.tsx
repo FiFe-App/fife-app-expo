@@ -1,23 +1,25 @@
 import elapsedTime from "@/lib/functions/elapsedTime";
-import { RootState } from "@/redux/store";
-import { User } from "@/redux/store.type";
-import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { Chip, Icon, Surface, Text } from "react-native-paper";
-import { useSelector } from "react-redux";
 import ProfileImage from "../ProfileImage";
 
 interface UserItemProps {
-  data: User;
+  data: {
+    id: string;
+    full_name: string;
+    avatar_url?: string | null;
+    created_at?: string;
+    buzinesses: { title: string }[];
+    profileRecommendations?: { count: number }[];
+  };
   showOptions?: boolean;
 }
 
 const UserItem = ({ data, showOptions }: UserItemProps) => {
   const { id, full_name, avatar_url, created_at } = data;
-  const recommendations = data?.recommendations || 0;
-  const buzinesses = ["Webfejlesztő"]
-  const { uid: myuid } = useSelector((state: RootState) => state.user);
+  const recommendations = data?.profileRecommendations?.[0].count || 0;
+  const buzinesses = data?.buzinesses?.map(b => b.title.split(" $ ")[0]) || [];
 
   return (
     <Link href={{ pathname: "/user/[uid]", params: { uid: id } }} asChild>
@@ -26,20 +28,19 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
           <ProfileImage
             modal
             uid={id}
-            size={80}
-            avatar_url={data.avatar_url}
-            style={{ width: 80, height: 80 }}
+            size={50}
+            avatar_url={avatar_url}
+            style={{ width: 80, height: 80, borderRadius: 999 }}
           />
           <View style={{ flex: 1, gap: 4 }}>
             <Text variant="titleLarge">{full_name}</Text>
             <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4 }}>
-              {buzinesses?.map((e, i) => {
-                if (e.trim())
-                  return (
-                    <Chip key={"buziness" + i} textStyle={{ margin: 4 }}>
-                      <Text variant="labelMedium">{e}</Text>
-                    </Chip>
-                  );
+              {buzinesses?.map((buziness, i) => {
+                return (
+                  <Chip key={"buziness" + i} textStyle={{ margin: 4 }}>
+                    <Text variant="labelMedium">{buziness}</Text>
+                  </Chip>
+                );
               })}
             </View>
             <View
@@ -52,14 +53,14 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
               <View style={{}}>
                 {!showOptions && !!created_at && (
                   <Text style={{}}>
-                    <Icon size={16} source="calendar" /> <Text>{elapsedTime(created_at)}</Text>
+                    <Icon size={16} source="calendar" /> <Text>{elapsedTime(created_at)} fife</Text>
                   </Text>
                 )}
               </View>
               <View style={{ flexDirection: "row" }}>
                 <Text>
                   <Icon size={16} source="account-group" />{" "}
-                  <Text>{recommendations} ember ajánlja</Text>
+                  <Text>{recommendations ? <Text>{recommendations} ember ajánlja</Text> : <Text>Még senki sem ajánlotta</Text>}</Text>
                 </Text>
               </View>
             </View>
