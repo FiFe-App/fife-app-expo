@@ -4,10 +4,10 @@ import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { clearOptions } from "@/redux/reducers/infoReducer";
 import { persistor, RootState, store } from "@/redux/store";
 import { Link, Stack, useNavigation, usePathname, useSegments } from "expo-router";
-import React, { ReactNode } from "react";
+import React from "react";
 import { useFonts } from "expo-font";
 import { useEffect, useState } from "react";
-import { useWindowDimensions, View, ViewStyle } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import { Appbar, Menu, PaperProvider } from "react-native-paper";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -17,7 +17,6 @@ import Piazzolla from "@/assets/fonts/Piazzolla.ttf";
 import RedHatText from "@/assets/fonts/RedHatText.ttf";
 import PiazzollaExtraBold from "@/assets/fonts/Piazzolla-ExtraBold.ttf";
 import { Image } from "expo-image";
-import Smiley from "@/components/Smiley";
 
 export default function RootLayout() {
   const pathname = usePathname();
@@ -29,14 +28,14 @@ export default function RootLayout() {
 
   if (loaded)
     return (
-      <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.elevation.level4 }}>
-        <View style={{ maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
+      <ThemedView type="card" style={{width:"100%",flex:1,alignContent:"center",backgroundColor:theme.colors.backdrop}}>
+        <View style={pathname=="/" ? {flex:1} : {maxWidth:600,width:"100%",flex:1,alignSelf:"center"}}>
           <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
               <PaperProvider theme={theme}>
                 <InfoLayer />
                 <Stack
-                  screenOptions={{ header: () => <MyAppbar /> }}
+                  screenOptions={{ header: () => <MyAppbar  /> }}
                 >
                   <Stack.Screen name="index" />
                   <Stack.Screen
@@ -71,9 +70,14 @@ export default function RootLayout() {
                     name="user/edit"
                     options={{ title: "Profil Szerkesztése" }}
                   />
+                  <Stack.Screen
+                    name="user/password-reset"
+                    options={{ title: "Jelszó visszaállítás" }}
+                  />
                 </Stack>
                 {pathname !== "/" && !pathname.includes("projekt") &&
-                  !pathname.includes("login") &&
+                  !pathname.includes("login") && 
+                  !pathname.includes("password") && 
                   !pathname.includes("csatlakozom") && <BottomNavigation />}
               </PaperProvider>
             </PersistGate>
@@ -83,7 +87,7 @@ export default function RootLayout() {
     );
 }
 
-export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewStyle }) => {
+const MyAppbar = () => {
   const navigation = useNavigation();
   const { options } = useSelector((state: RootState) => state.info);
   const [showMenu, setShowMenu] = useState(false);
@@ -110,43 +114,37 @@ export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewSt
         borderBottomWidth: 0.5,
         alignItems: "center",
         width: "100%"
-      }, style]}
+      }]}
     >
-      {navigation.canGoBack() && pathname !== "/home" && pathname !== "/" ? <Appbar.BackAction onPress={navigation.goBack} /> : <View style={{ width: 48 }} />}
-      {center || <Link href="/" style={{ flex: 1 }} asChild>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}><Smiley />
-          <Image
-            source={require("../assets/logo.png")}
-            style={{ width: 180, height: 30, zIndex: 20 }}
-            contentFit="contain"
-          /></View>
-      </Link>}
-      {options.length > 0 ?
-        <> {options?.length === 1 && <Appbar.Action {...options[0]} />}
-          {options?.length > 1 && (
-            <>
-              <Appbar.Action
-                icon="dots-vertical"
-                onPress={() => setShowMenu(true)}
+      {navigation.canGoBack() && pathname !="/" && <Appbar.BackAction onPress={navigation.goBack} />}
+      <Link href="/" style={{flex:1}} asChild><Image
+        source={require("../assets/Logo.png")}
+        style={{ width: 239, height: 40, zIndex: 20 }}
+        contentFit="contain"
+      /></Link>
+      {options?.length === 1 && <Appbar.Action {...options[0]} />}
+      {options?.length > 1 && (
+        <>
+          <Appbar.Action
+            icon="dots-vertical"
+            onPress={() => setShowMenu(true)}
+          />
+          <Menu
+            anchor={{ x: width, y: 0 }}
+            visible={showMenu}
+            onDismiss={() => setShowMenu(false)}
+          >
+            {options.map((option, ind) => (
+              <Menu.Item
+                key={"option" + ind}
+                onPress={option.onPress}
+                title={option.title}
+                disabled={option.disabled}
+                leadingIcon={option.icon}
               />
-              <Menu
-                anchor={{ x: width, y: 0 }}
-                visible={showMenu}
-                onDismiss={() => setShowMenu(false)}
-              >
-                {options.map((option, ind) => (
-                  <Menu.Item
-                    key={"option" + ind}
-                    onPress={option.onPress}
-                    title={option.title}
-                    disabled={option.disabled}
-                    leadingIcon={option.icon}
-                  />
-                ))}
-              </Menu>
-            </>
-          )}
-        </> : <View style={{ width: 48 }} />}
+            ))}
+          </Menu>
+        </>)} : <View style={{ width: 48 }} />
     </Appbar.Header>
   );
 };

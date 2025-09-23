@@ -1,6 +1,6 @@
 import { Link, useSegments } from "expo-router";
 import { StyleSheet, View } from "react-native";
-import { Badge, Icon, Surface, TouchableRipple } from "react-native-paper";
+import { Badge, Icon, Surface, Text, TouchableRipple } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -21,11 +21,11 @@ const BottomNavigation = () => {
               source={
                 bizniszActive ? "magnify" : "magnify"
               }
-              size={bizniszActive ? 30 : 24}
+              size={24}
             />
-            <ThemedText type={bizniszActive ? "defaultSemiBold" : "default"}>
+            <Text style={{fontWeight: bizniszActive ? "bold" : "100"}} variant="labelLarge">
               Biznisz
-            </ThemedText>
+            </Text>
             {functions.includes("buzinessPage") && (
               <Badge style={globStyles.badge}>ÚJ</Badge>
             )}
@@ -50,11 +50,11 @@ const BottomNavigation = () => {
           <View style={{ alignItems: "center" }}>
             <Icon
               source={profilActive ? "account" : "account-outline"}
-              size={profilActive ? 30 : 24}
+              size={24}
             />
-            <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
+            <Text  style={{fontWeight: profilActive ? "bold" : "100"}} variant="labelLarge">
               Profil
-            </ThemedText>
+            </Text>
           </View>
         </TouchableRipple>
       </Link>

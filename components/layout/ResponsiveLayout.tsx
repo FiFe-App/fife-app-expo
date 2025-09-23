@@ -1,13 +1,16 @@
+
 import React, { ReactNode } from "react";
-import { StyleSheet, ViewStyle } from "react-native";
+import { Dimensions, StyleSheet, ViewStyle } from "react-native";
 import { ThemedView as View } from "@/components/ThemedView";
 import { useMediaQuery } from "react-responsive";
 
 export type Breakpoint = "mobile" | "tablet" | "desktop";
 
 export const useBreakpoint = () => {
-  const isMobile = useMediaQuery({ maxWidth: 599 });
-  const isDesktop = useMediaQuery({ minWidth: 600 });
+  const isMobile = Dimensions.get("window").width < 600; //useMediaQuery({ maxDeviceWidth: 599 });
+  console.log("isMobile",isMobile);
+  
+  const isDesktop = !isMobile;//useMediaQuery({ maxDeviceWidth: 600 });
   const screenPadding = isDesktop ? 32 : 8;
   const current: Breakpoint = isDesktop ? "desktop" : "mobile";
   return { isMobile, isDesktop: !isMobile, current, screenPadding };
