@@ -28,7 +28,6 @@ export function ThemedText({
         { color: theme.colors.onBackground, fontFamily: "RedHatText" },
         type === "link" ? styles.link : undefined,
         type === "error" ? styles.error : undefined,
-        type === "defaultSemiBold" ? styles.defaultSemiBold : undefined,
         type === "none" && undefined,
         style,
       ]}
@@ -51,7 +50,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   defaultSemiBold: {
-    fontWeight: "bold",
+    fontWeight: "600",
   },
   title: {
     fontSize: 32,

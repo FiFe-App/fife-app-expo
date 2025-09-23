@@ -203,7 +203,7 @@ export default function Index() {
               </View>
             </ThemedView>
             <TabsProvider defaultIndex={0}>
-              <Tabs theme={theme}  style={{backgroundColor:theme.colors.background}}>
+              <Tabs theme={theme} style={{ backgroundColor: theme.colors.background }}>
                 <TabScreen
                   label="Bizniszek"
                   badge={

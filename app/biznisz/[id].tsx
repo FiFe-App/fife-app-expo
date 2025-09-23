@@ -285,7 +285,7 @@ export default function Index() {
               )}
             </View>
             <TabsProvider defaultIndex={0} >
-              <Tabs showTextLabel={width > 400} theme={theme} iconPosition="top" style={{backgroundColor:theme.colors.background}}>
+              <Tabs showTextLabel={width > 400} theme={theme} style={{ backgroundColor: theme.colors.background, height: 20 }} >
                 {data.location && (
                   <TabScreen label="Helyzete" icon="map-marker">
                     <View style={{ minHeight: 200, flex: 1 }}>

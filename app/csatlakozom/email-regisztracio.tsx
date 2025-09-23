@@ -103,7 +103,7 @@ export default function Index() {
 
   if (uid) return <Redirect href="/" />;
   return (
-    <ThemedView style={{ flex: 1, padding: 16 }}>
+    <ThemedView style={{ flex: 1, padding: 16, alignItems:"center" }}>
       <View style={{ justifyContent: "center", marginBottom: 16 }}></View>
       <View
         style={{

@@ -28,8 +28,6 @@ import BuzinessSearchInput from "@/components/BuzinessSearchInput";
 import { Button } from "@/components/Button";
 
 export default function Index() {
-  const {isDesktop} = useBreakpoint();
-  
   const { uid } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
   const { buzinesses, searchParams } = useSelector(
@@ -127,80 +125,13 @@ export default function Index() {
 
   if (uid)
     return (
-      <ThemedView style={{ flex: 1 }}>
-        <Card
-          mode="elevated"
-          style={{
-            borderTopLeftRadius: 0,
-            borderTopRightRadius: 0,
-          }}
-        >
-          <Card.Content>
-            <TextInput
-              value={searchText}
-              mode="outlined"
-              
-              outlineStyle={{ borderRadius: 1000 }}
-              style={{ marginTop: 4, backgroundColor:theme.colors.elevation.level5 }}
-              onChangeText={(text) => {
-                if (!text.includes("$"))
-                  dispatch(storeBuzinessSearchParams({ text }));
-              }}
-              onSubmitEditing={search}
-              enterKeyHint="search"
-              placeholder="Keress a bizniszek közt..."
-              right={
-                <TextInput.Icon
-                  icon="magnify"
-                  onPress={search}
-                  disabled={!canSearch}
-                />
-              }
-            />
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginTop: 4,
-              }}
-            >
-              <SegmentedButtons
-                value={searchType || "map"}
-                onValueChange={(e) => {
-                  if (e === "map" || e === "list")
-                    dispatch(storeBuzinessSearchType(e));
-                }}
-                style={{ minWidth: isDesktop ? 300 : 0, width:100 }}
-                buttons={[
-                  {
-                    value: "map",
-                    label: isDesktop ? "Térkép" : undefined,
-                    icon: "map-marker",
-                  },
-                  {
-                    value: "list",
-                    label: isDesktop ? "Lista" : undefined,
-                    icon:"format-list-bulleted" ,
-                  },
-                ]}
-              />
-              {searchType === "list" && (
-                <Button
-                  mode={
-                    searchCircle || myLocation ? "contained-tonal" : "contained"
-                  }
-                  onPress={() => setLocationMenuVisible(true)}
-                >
-                  Hol keresel?
-                </Button>
-              )}
-            </View>
-          </Card.Content>
-        </Card>
-        {searchType === "map" || !searchType ? (
-          <BuzinessMap load={search} />
-        ) : (
+      <ThemedView style={{ flex: 1 }} type="default">
+        <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+
+          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Találatok</ThemedText>
+          <Button icon='filter' mode="text" onPress={() => setLocationMenuVisible(true)}>Finomítás</Button>
+        </View>
+        {searchType === "list" || !searchType ? (
           <BuzinessList load={load} canLoadMore={canLoadMore} />
         ) : (
           <BuzinessMap load={search} />
