@@ -30,16 +30,16 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 
 export default function Index() {
-  const {isDesktop} = useBreakpoint();
+  const { isDesktop } = useBreakpoint();
   const { uid } = useSelector((state: RootState) => state.user);
-  const { buzinesses, buzinessSearchParams } = useSelector(
+  const { buzinesses, searchParams } = useSelector(
     (state: RootState) => state.buziness,
   );
-  const searchType = buzinessSearchParams?.searchType;
-  const skip = buzinessSearchParams?.skip || 0;
+  const searchType = searchParams?.searchType;
+  const skip = searchParams?.skip || 0;
   const take = 10;
-  const searchCircle = buzinessSearchParams?.searchCircle;
-  const searchText = buzinessSearchParams?.text || "";
+  const searchCircle = searchParams?.searchCircle;
+  const searchText = searchParams?.text || "";
   const dispatch = useDispatch();
 
   const { myLocation } = useMyLocation();
@@ -57,8 +57,8 @@ export default function Index() {
     load();
   };
   useEffect(() => {
-    console.log(buzinessSearchParams?.searchCircle);
-  }, [buzinessSearchParams?.searchCircle]);
+    console.log(searchParams?.searchCircle);
+  }, [searchParams?.searchCircle]);
 
   const load = (paramSkip: number = 0) => {
     dispatch(storeBuzinessLoading(true));
@@ -88,10 +88,10 @@ export default function Index() {
           body: {
             query: searchText,
             take:
-              buzinessSearchParams?.searchType === "map"
+              searchParams?.searchType === "map"
                 ? -1
                 : mySkip + take - 1,
-            skip: buzinessSearchParams?.searchType === "map" ? -1 : mySkip,
+            skip: searchParams?.searchType === "map" ? -1 : mySkip,
             ...searchLocation,
           },
         })
@@ -100,8 +100,8 @@ export default function Index() {
           if (res.data) {
             dispatch(loadBuzinesses(res.data));
             setCanLoadMore(
-              buzinessSearchParams?.searchType !== "map" &&
-                !(res.data.length < take),
+              searchParams?.searchType !== "map" &&
+              !(res.data.length < take),
             );
             console.log(res.data);
           }
@@ -137,9 +137,9 @@ export default function Index() {
             <TextInput
               value={searchText}
               mode="outlined"
-              
+
               outlineStyle={{ borderRadius: 1000 }}
-              style={{ marginTop: 4, backgroundColor:theme.colors.elevation.level5 }}
+              style={{ marginTop: 4, backgroundColor: theme.colors.elevation.level5 }}
               onChangeText={(text) => {
                 if (!text.includes("$"))
                   dispatch(storeBuzinessSearchParams({ text }));
@@ -181,7 +181,7 @@ export default function Index() {
                   {
                     value: "list",
                     label: isDesktop ? "Lista" : undefined,
-                    icon:"format-list-bulleted" ,
+                    icon: "format-list-bulleted",
                   },
                 ]}
               />

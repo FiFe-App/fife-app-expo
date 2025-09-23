@@ -11,10 +11,10 @@ const BuzinessSearchInput = ({ onSearch }: { onSearch: () => void }) => {
   const dispatch = useDispatch();
 
   const canSearch = true;
-  const { buzinessSearchParams } = useSelector(
+  const { searchParams } = useSelector(
     (state: RootState) => state.buziness,
   );
-  const searchText = buzinessSearchParams?.text || "";
+  const searchText = searchParams?.text || "";
 
   return (<ThemedInput
     value={searchText}

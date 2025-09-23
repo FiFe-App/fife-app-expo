@@ -25,12 +25,12 @@ interface BuzinessBuzinessMapProps {
 
 export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
   const dispatch = useDispatch();
-  const { buzinesses, buzinessSearchParams } = useSelector(
+  const { buzinesses, searchParams } = useSelector(
     (state: RootState) => state.buziness,
   );
 
-  const skip = buzinessSearchParams?.skip || 0;
-  const loading = buzinessSearchParams?.loading || false;
+  const skip = searchParams?.skip || 0;
+  const loading = searchParams?.loading || false;
   const take = 5;
   const [selectedBuzinessId, setSelectedBuzinessId] = useState<null | number>(
     null,
@@ -93,9 +93,9 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
     );
   };
   useEffect(() => {
-    console.log(buzinessSearchParams?.searchCircle);
+    console.log(searchParams?.searchCircle);
     //load(skip + take);
-  }, [buzinessSearchParams?.searchCircle]);
+  }, [searchParams?.searchCircle]);
 
   return (
     <View style={styles.container}>
