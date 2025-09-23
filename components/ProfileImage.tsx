@@ -83,7 +83,7 @@ const ProfileImage = ({
         <View
           style={[style, { alignItems: "center", justifyContent: "center" }]}
         >
-          <Icon source="emoticon-cool" size={size || 50} />
+          <Image source={require('@/assets/images/Slimey.png')} style={style} />
         </View>
       )}
     </View>

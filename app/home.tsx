@@ -13,7 +13,7 @@ import {
 } from "@/redux/reducers/usersReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
-import { useFocusEffect, useNavigation } from "expo-router";
+import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import {
@@ -24,6 +24,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { MyAppbar } from "./_layout";
 import Smiley from "@/components/Smiley";
 import BuzinessSearchInput from "@/components/BuzinessSearchInput";
+import { useProfileSearch } from "@/hooks/useProfileSearch";
+import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
@@ -40,15 +42,13 @@ export default function Index() {
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const canSearch = true; //!!searchCircle || !!myLocation;
   const [canLoadMore, setCanLoadMore] = useState(true);
+  const { results, search, error } = useProfileSearch();
 
-  const search = () => {
-    console.log("search");
+  console.log(error, results);
 
-    if (!canSearch) return;
-
-    dispatch(storeUserSearchParams({ skip: 0 }));
-    dispatch(storeUsers([]));
-    load();
+  const handleSearch = () => {
+    dispatch(storeBuzinesses([]))
+    router.push("/biznisz");
   };
 
   const load = (paramSkip: number = 0) => {
@@ -56,31 +56,16 @@ export default function Index() {
     const mySkip = paramSkip || skip;
     console.log("load from ", mySkip, " to ", mySkip + take);
 
-    supabase
-      .from("profiles")
-      .select("*, profileRecommendations!profileRecommendations_profile_id_fkey(count), buzinesses:buziness(title)")
-      .order("created_at", { ascending: false })
-      .range(mySkip, mySkip + take - 1)
-      .then((res) => {
-        dispatch(storeUserLoading(false));
-        if (res.data) {
-          dispatch(loadUsers(res.data));
-          setCanLoadMore(!(res.data.length < take));
-          console.log(res.data);
-        }
-        if (res.error) {
-          console.log(res.error);
-        }
-      })
+
   };
 
   useFocusEffect(
     useCallback(() => {
       console.log("skip changed", skip);
       dispatch(storeUsers([]))
-      load();
+      search()
       if (uid) dispatch(viewFunction({ key: "homePage", uid }));
-      navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={search} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
+      navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={handleSearch} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [skip]),
   );

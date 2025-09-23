@@ -5,6 +5,7 @@ import { ThemedText } from "../ThemedText";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import globStyles from "@/constants/Styles";
+import { theme } from "@/assets/theme";
 const BottomNavigation = () => {
   const segment = useSegments();
   const { functions } = useSelector((state: RootState) => state.tutorial);
@@ -22,6 +23,7 @@ const BottomNavigation = () => {
                 bizniszActive ? "magnify" : "magnify"
               }
               size={bizniszActive ? 30 : 24}
+              color={bizniszActive ? theme.colors.secondary : undefined}
             />
             <ThemedText type={bizniszActive ? "defaultSemiBold" : "default"}>
               Biznisz
@@ -38,6 +40,7 @@ const BottomNavigation = () => {
             <Icon
               source={homeActive ? "home" : "home-outline"}
               size={homeActive ? 30 : 24}
+              color={homeActive ? theme.colors.secondary : undefined}
             />
             <ThemedText type={homeActive ? "defaultSemiBold" : "default"}>
               Otthon
@@ -51,6 +54,7 @@ const BottomNavigation = () => {
             <Icon
               source={profilActive ? "account" : "account-outline"}
               size={profilActive ? 30 : 24}
+              color={profilActive ? theme.colors.secondary : undefined}
             />
             <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
               Profil
@@ -65,7 +69,7 @@ const BottomNavigation = () => {
 const styles = StyleSheet.create({
   button: {
     flex: 1,
-    padding: 16,
+    padding: 8,
     alignItems: "center",
     justifyContent: "center",
   },
