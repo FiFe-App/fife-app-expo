@@ -121,8 +121,8 @@ export default function BuzinessEditScreen({
               .update({
                 author: uid,
                 images: newImages
-                  .filter((i, ind) => i.status !== "toDelete")
-                  .map((i, ind) =>
+                  .filter((i) => i.status !== "toDelete")
+                  .map((i) =>
                     JSON.stringify({
                       description: i.description,
                       path: i.path,
@@ -150,16 +150,7 @@ export default function BuzinessEditScreen({
         console.log(res);
         router.navigate("/user");
       });
-  }, [
-    defaultContact,
-    editId,
-    images,
-    newBuziness,
-    selectedLocation?.latitude,
-    selectedLocation?.longitude,
-    title,
-    uid,
-  ]);
+  }, [defaultContact, editId, images.length, newBuziness, selectedLocation, title, uid]);
 
   useEffect(() => {
     if (circle) {
@@ -211,7 +202,7 @@ export default function BuzinessEditScreen({
                   .split(" $ ")
                   .slice(1)
                   .reduce((partialSum, a) => partialSum + " $ " + a, "") +
-                  " $ ",
+                " $ ",
               );
               if (editingBuziness.defaultContact)
                 setDefaultContact(editingBuziness.defaultContact);
@@ -291,7 +282,7 @@ export default function BuzinessEditScreen({
             onChangeText={(t) => setNewBuziness({ ...newBuziness, title: t })}
           />
           <TagInput
-            placeholder="Kategóriái"
+            placeholder="Kategóriák, nyomj entert a hozzáadásukhoz"
             onChange={setCategories}
             value={categories}
           />

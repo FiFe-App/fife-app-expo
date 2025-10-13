@@ -48,7 +48,7 @@ export default function Index() {
   const [canLoadMore, setCanLoadMore] = useState(true);
 
   const search = () => {
-    console.log("search");
+    console.log("search", searchText);
 
     if (!canSearch) return;
 

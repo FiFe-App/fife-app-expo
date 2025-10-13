@@ -1,25 +1,35 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
-import { storeUsers } from "@/redux/reducers/usersReducer";
-import type { Database } from "@/database.types";
+import { storeUsers, storeUserSearchParams } from "@/redux/reducers/usersReducer";
 import { supabase } from "@/lib/supabase/supabase";
+import { User } from "@/redux/store.type";
+import { Dimensions } from "react-native";
 
-const PAGE_SIZE = 20;
 
-type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export function useProfileSearch() {
-  const [results, setResults] = useState<Profile[]>([]);
+  const PAGE_SIZE = Math.floor(Dimensions.get("window").height/100);
+  console.log("page size",PAGE_SIZE);
+  
+  const [results, setResults] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const pageRef = useRef(0);
   const lastQuery = useRef<string|undefined>("");
   const dispatch = useDispatch();
+  const request = useMemo(() => supabase
+    .from("profiles")
+    .select("*, profileRecommendations!profileRecommendations_profile_id_fkey(count), buzinesses:buziness(title)")
+    .not("full_name", "is", null), [])
+    .order("created_at", { ascending: false });
   // Store users in Redux whenever results change
   useEffect(() => {
     dispatch(storeUsers(results));
   }, [results, dispatch]);
+  useEffect(() => {
+    dispatch(storeUserSearchParams({ loading }));
+  }, [dispatch, loading]);
 
   const search = useCallback(async (query?: string) => {
     setLoading(true);
@@ -27,11 +37,7 @@ export function useProfileSearch() {
     pageRef.current = 0;
     lastQuery.current = query;
     setHasMore(true);
-    let q = supabase
-      .from("profiles")
-      .select("*, profileRecommendations!profileRecommendations_profile_id_fkey(count), buzinesses:buziness(title)")
-      .not("full_name", "is", null)
-      .order("created_at", { ascending: false })
+    const q = request
       .range(0, PAGE_SIZE - 1);
     const { data, error } = await q;
     console.log("recommendations",data?.map(p=>p.profileRecommendations));
@@ -45,17 +51,16 @@ export function useProfileSearch() {
     setResults(data || []);
     setHasMore((data?.length || 0) === PAGE_SIZE);
     setLoading(false);
-  }, []);
+  }, [request, PAGE_SIZE]);
 
   const loadNext = useCallback(async () => {
     if (!hasMore || loading) return;
     setLoading(true);
     setError(null);
     const nextPage = pageRef.current + 1;
-    let q = supabase.from("profiles").select("*").order("full_name", { ascending: true }).range(nextPage * PAGE_SIZE, (nextPage + 1) * PAGE_SIZE - 1);
-    if (lastQuery.current) {
-      q = q.ilike("full_name", `%${lastQuery.current}%`);
-    }
+    
+    const q = request
+      .range(nextPage * PAGE_SIZE, (nextPage + 1) * PAGE_SIZE - 1);
     const { data, error } = await q;
     if (error) {
       setError(error.message);
@@ -66,7 +71,7 @@ export function useProfileSearch() {
     setHasMore((data?.length || 0) === PAGE_SIZE);
     pageRef.current = nextPage;
     setLoading(false);
-  }, [hasMore, loading]);
+  }, [hasMore, loading, request, PAGE_SIZE]);
 
   return { results, loading, error, hasMore, search, loadNext };
 }

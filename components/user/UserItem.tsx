@@ -3,16 +3,10 @@ import { Link } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { Chip, Icon, Surface, Text } from "react-native-paper";
 import ProfileImage from "../ProfileImage";
+import { User } from "@/redux/store.type";
 
 interface UserItemProps {
-  data: {
-    id: string;
-    full_name: string;
-    avatar_url?: string | null;
-    created_at?: string;
-    buzinesses: { title: string }[];
-    profileRecommendations?: { count: number }[];
-  };
+  data: User;
   showOptions?: boolean;
 }
 
@@ -30,7 +24,7 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
             uid={id}
             size={50}
             avatar_url={avatar_url}
-            style={{ width: 80, height: 80, borderRadius: 999 }}
+            style={{ width: 80, height: 80 }}
           />
           <View style={{ flex: 1, gap: 4 }}>
             <Text variant="titleLarge">{full_name}</Text>
