@@ -80,11 +80,7 @@ const ProfileImage = ({
         />
       )}
       {error && !source && (
-        <View
-          style={[style, { alignItems: "center", justifyContent: "center" }]}
-        >
-          <Image source={require('@/assets/images/Slimey.png')} style={style} />
-        </View>
+        <Image source={require('@/assets/images/Slimey.png')} style={style} />
       )}
     </View>
   );

@@ -16,7 +16,10 @@ export interface UserState {
   locationError: string | null;
 }
 
-export type User = Tables<"profiles">;
+export type User = Tables<"profiles"> & {
+    buzinesses: { title: string }[];
+    profileRecommendations?: { count: number }[];
+  };
 
 export interface UsersState {
   users: User[];

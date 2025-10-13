@@ -1,18 +1,14 @@
 import React from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
-import { Divider, ActivityIndicator, Button } from "react-native-paper";
+import { Divider, ActivityIndicator } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import UserItem from "./UserItem";
 import { RootState } from "@/redux/store";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  loadUsers,
-  storeUserSearchParams,
-} from "@/redux/reducers/usersReducer";
-import { useMyLocation } from "@/hooks/useMyLocation";
+import { useSelector } from "react-redux";
+
 
 interface UsersListProps {
-  load: (arg0: number) => void;
+  load: () => void;
   canLoadMore: boolean;
 }
 
@@ -20,32 +16,10 @@ export const UsersList: React.FC<UsersListProps> = ({
   load,
   canLoadMore,
 }) => {
-  const dispatch = useDispatch();
   const { users, userSearchParams } = useSelector(
     (state: RootState) => state.users,
   );
-  const { myLocation } = useMyLocation();
-  const skip = userSearchParams?.skip || 0;
   const loading = userSearchParams?.loading || false;
-  const take = 5;
-  const loadNext = () => {
-    dispatch(
-      loadUsers([
-        {
-          id: "-1",
-          avatar_url: null,
-          created_at: null,
-          full_name: null,
-          updated_at: null,
-          username: null,
-          viewed_functions: null,
-          website: null
-        },
-      ]),
-    );
-    dispatch(storeUserSearchParams({ skip: skip + take }));
-    load(skip + take);
-  };
 
   return (
     <View style={styles.container}>
@@ -55,6 +29,16 @@ export const UsersList: React.FC<UsersListProps> = ({
           gap: 8,
           marginVertical: 8,
         }}
+        onScroll={({ nativeEvent }) => {
+          if (!canLoadMore || loading) return;
+          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+          const isBottom =
+            layoutMeasurement.height + contentOffset.y >= contentSize.height - 24;
+          if (isBottom && canLoadMore && !loading) {
+            load();
+          }
+        }}
+        scrollEventThrottle={100}
       >
         {users.map((userItem) =>
           userItem.id === "-1" ? (
@@ -69,12 +53,10 @@ export const UsersList: React.FC<UsersListProps> = ({
         <View style={{ padding: 16 }}>
           {!loading &&
             (!!users.length && canLoadMore ? (
-              <Button onPress={loadNext} style={{ alignSelf: "center" }}>
-                További fifék
-              </Button>
+              loading && <ActivityIndicator />
             ) : (
               <ThemedText style={{ alignSelf: "center" }}>
-                Nem található több fifék
+                Nem található több fife
               </ThemedText>
             ))}
         </View>

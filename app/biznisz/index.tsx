@@ -15,7 +15,7 @@ import {
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
 import { useFocusEffect, useNavigation } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { View } from "react-native";
 import {
   FAB,
@@ -38,27 +38,25 @@ export default function Index() {
   const take = 10;
   const searchCircle = searchParams?.searchCircle;
   const searchText = searchParams?.text || "";
+  const searchTextRef = useRef(searchText);
   const dispatch = useDispatch();
+
+  // Update ref when searchText changes
+  useEffect(() => {
+    searchTextRef.current = searchText;
+  }, [searchText]);
 
   const { myLocation } = useMyLocation();
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const canSearch = true; //!!searchCircle || !!myLocation;
   const [canLoadMore, setCanLoadMore] = useState(true);
+  const [lastSearch, setLastSearch] = useState(searchText);
 
-  const search = () => {
-    console.log("search");
-
-    if (!canSearch) return;
-
-    dispatch(storeBuzinessSearchParams({ skip: 0 }));
-    dispatch(storeBuzinesses([]));
-    load();
-  };
   useEffect(() => {
     console.log(searchParams?.searchCircle);
   }, [searchParams?.searchCircle]);
 
-  const load = (paramSkip: number = 0) => {
+  const load = useCallback(async (paramSkip: number = 0) => {
     dispatch(storeBuzinessLoading(true));
     const mySkip = paramSkip || skip;
     console.log("load from ", mySkip, " to ", mySkip + take);
@@ -84,7 +82,7 @@ export default function Index() {
       supabase.functions
         .invoke("business-search", {
           body: {
-            query: searchText || "biznisz",
+            query: searchTextRef.current || "akármi",
             take:
               searchParams?.searchType === "map"
                 ? -1
@@ -110,8 +108,18 @@ export default function Index() {
         .catch((err) => {
           console.log(err);
         });
-  };
+  }, [dispatch, myLocation, searchCircle, searchParams?.searchType, skip]);
 
+  const search = useCallback(() => {
+    console.log("search", searchText);
+
+    if (!canSearch) return;
+
+    setLastSearch(searchTextRef.current);
+    dispatch(storeBuzinessSearchParams({ skip: 0 }));
+    dispatch(storeBuzinesses([]));
+    load();
+  }, [canSearch, dispatch, load, searchText]);
   useFocusEffect(
     useCallback(() => {
       console.log("skip changed", skip);
@@ -128,7 +136,7 @@ export default function Index() {
       <ThemedView style={{ flex: 1 }} type="default">
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
 
-          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Találatok</ThemedText>
+          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Találatok {lastSearch ? "erre: " + lastSearch : ""}</ThemedText>
           <Button icon='filter' mode="text" onPress={() => setLocationMenuVisible(true)}>Finomítás</Button>
         </View>
         {searchType === "list" || !searchType ? (
