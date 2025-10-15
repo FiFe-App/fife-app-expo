@@ -1,203 +1,74 @@
+import { theme } from "@/assets/theme";
 import { BuzinessList } from "@/components/buziness/BuzinessList";
 import { BuzinessMap } from "@/components/buziness/BuzinessMap";
 import MapSelector from "@/components/MapSelector/MapSelector";
 import { containerStyle } from "@/components/styles";
+import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useMyLocation } from "@/hooks/useMyLocation";
-import { supabase } from "@/lib/supabase/supabase";
 import {
-  loadBuzinesses,
-  storeBuzinessLoading,
-  storeBuzinessSearchParams,
-  storeBuzinessSearchType,
-  storeBuzinesses,
+  storeBuzinessSearchParams, storeBuzinessSearchType
 } from "@/redux/reducers/buzinessReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import {
-  Button,
-  Card,
+  FAB,
   Modal,
-  Portal,
-  SegmentedButtons,
-  TextInput,
+  Portal
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { MyAppbar } from "../_layout";
+import BuzinessSearchInput from "@/components/BuzinessSearchInput";
+import { Button } from "@/components/Button";
+import { useBuzinessSearch } from "@/hooks/useBuzinessSearch";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
-  const { buzinesses, buzinessSearchParams } = useSelector(
+  const navigation = useNavigation();
+  const { searchParams } = useSelector(
     (state: RootState) => state.buziness,
   );
-  const searchType = buzinessSearchParams?.searchType;
-  const skip = buzinessSearchParams?.skip || 0;
-  const take = 10;
-  const searchCircle = buzinessSearchParams?.searchCircle;
-  const searchText = buzinessSearchParams?.text || "";
+  const searchType = searchParams?.searchType;
+  const searchCircle = searchParams?.searchCircle;
   const dispatch = useDispatch();
 
-  const { myLocation } = useMyLocation();
+  const { canLoadMore, search, loadNext } = useBuzinessSearch();
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
-  const canSearch = true; //!!searchCircle || !!myLocation;
-  const [canLoadMore, setCanLoadMore] = useState(true);
 
-  const search = () => {
-    console.log("search");
-
-    if (!canSearch) return;
-
-    dispatch(storeBuzinessSearchParams({ skip: 0 }));
-    dispatch(storeBuzinesses([]));
-    load();
-  };
   useEffect(() => {
-    console.log(buzinessSearchParams?.searchCircle);
-  }, [buzinessSearchParams?.searchCircle]);
+    console.log(searchParams?.searchCircle);
+  }, [searchParams?.searchCircle]);
 
-  const load = (paramSkip: number = 0) => {
-    dispatch(storeBuzinessLoading(true));
-    const mySkip = paramSkip || skip;
-    console.log("load from ", mySkip, " to ", mySkip + take);
-
-    const searchLocation = searchCircle
-      ? {
-          lat: searchCircle?.location.latitude,
-          long: searchCircle?.location.longitude,
-          maxdistance: searchCircle?.radius,
-        }
-      : myLocation
-        ? {
-            lat: myLocation?.coords.latitude,
-            long: myLocation?.coords.longitude,
-            maxdistance: 10,
-          }
-        : {
-            lat: 47.4979,
-            long: 19.0402,
-            maxdistance: 10000,
-          };
-    if (searchLocation)
-      supabase.functions
-        .invoke("business-search", {
-          body: {
-            query: searchText,
-            take:
-              buzinessSearchParams?.searchType === "map"
-                ? -1
-                : mySkip + take - 1,
-            skip: buzinessSearchParams?.searchType === "map" ? -1 : mySkip,
-            ...searchLocation,
-          },
-        })
-        .then((res) => {
-          dispatch(storeBuzinessLoading(false));
-          if (res.data) {
-            dispatch(loadBuzinesses(res.data));
-            setCanLoadMore(
-              buzinessSearchParams?.searchType !== "map" &&
-                !(res.data.length < take),
-            );
-            console.log(res.data);
-          }
-          if (res.error) {
-            console.log(res.error);
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-  };
   useFocusEffect(
     useCallback(() => {
-      console.log("skip changed", skip);
-      if (!buzinesses.length && searchText && (searchCircle || myLocation))
-        load();
       if (uid) dispatch(viewFunction({ key: "buzinessPage", uid }));
+      navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={search} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [skip]),
+    }, []),
   );
 
   if (uid)
     return (
-      <ThemedView style={{ flex: 1 }}>
-        <Card
-          mode="elevated"
-          style={{
-            borderTopLeftRadius: 0,
-            borderTopRightRadius: 0,
-          }}
-        >
-          <Card.Content>
-            <TextInput
-              value={searchText}
-              mode="outlined"
-              outlineStyle={{ borderRadius: 1000 }}
-              style={{ marginTop: 4 }}
-              onChangeText={(text) => {
-                if (!text.includes("$"))
-                  dispatch(storeBuzinessSearchParams({ text }));
-              }}
-              onSubmitEditing={search}
-              enterKeyHint="search"
-              placeholder="Keress a bizniszek közt..."
-              right={
-                <TextInput.Icon
-                  icon="magnify"
-                  onPress={search}
-                  disabled={!canSearch}
-                />
-              }
-            />
-            <View
-              style={{
-                flexDirection: "row",
-                flexWrap: "wrap",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginTop: 4,
-              }}
-            >
-              <SegmentedButtons
-                value={searchType || "map"}
-                onValueChange={(e) => {
-                  if (e === "map" || e === "list")
-                    dispatch(storeBuzinessSearchType(e));
-                }}
-                style={{ minWidth: 200 }}
-                buttons={[
-                  {
-                    value: "map",
-                    label: "Térkép",
-                    icon: "map-marker",
-                  },
-                  {
-                    value: "list",
-                    label: "Lista",
-                    icon: "format-list-bulleted",
-                  },
-                ]}
-              />
-              {searchType === "list" && (
-                <Button
-                  mode={
-                    searchCircle || myLocation ? "contained-tonal" : "contained"
-                  }
-                  onPress={() => setLocationMenuVisible(true)}
-                >
-                  Hol keresel?
-                </Button>
-              )}
-            </View>
-          </Card.Content>
-        </Card>
-        {searchType === "map" ? (
-          <BuzinessMap load={search} />
+      <ThemedView style={{ flex: 1 }} type="default">
+        <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+
+          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Találatok</ThemedText>
+          <Button icon='filter' mode="text" onPress={() => setLocationMenuVisible(true)}>Finomítás</Button>
+        </View>
+        {searchType === "list" || !searchType ? (
+          <BuzinessList load={loadNext} canLoadMore={canLoadMore} />
         ) : (
-          <BuzinessList load={load} canLoadMore={canLoadMore} />
+          <BuzinessMap load={search} />
         )}
+        <FAB
+          icon={searchType === "map" ? "format-list-bulleted" : "map-marker"}
+          style={{ position: "absolute", bottom: 16, right: 16 }}
+          variant="primary"
+          onPress={() => {
+            dispatch(storeBuzinessSearchType(searchType === "map" ? "list" : "map"));
+          }} />
 
         <Portal>
           <Modal

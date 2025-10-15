@@ -1,0 +1,9 @@
+node_modules
+.dist
+/dist
+/build
+android/**/build
+ios/**/build
+.expo
+.expo-shared
+patches

@@ -38,6 +38,7 @@ import {
   clearTutorialState,
   viewFunction,
 } from "@/redux/reducers/tutorialReducer";
+import { theme } from "@/assets/theme";
 
 type UserInfo = Tables<"profiles">;
 
@@ -115,95 +116,94 @@ export default function Index() {
       <ThemedView style={{ flex: 1 }}>
         {data && uid && (
           <>
-            <View style={{ flexDirection: "row" }}>
-              <ProfileImage
-                modal
-                uid={uid}
-                avatar_url={data.avatar_url}
-                style={{ width: 100, height: 100 }}
-              />
-
-              <View style={{ flex: 1 }}>
-                <View
-                  style={{
-                    flex: 1,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text>{data?.full_name}</Text>
-                </View>
-                <View style={{ flexDirection: "row", flex: 1 }}>
-                  <TouchableRipple
-                    style={{ flex: 1 }}
-                    onPress={() => {
-                      if (uid)
-                        dispatch(viewFunction({ key: "friendsProfile", uid }));
-                      setShowRecommendsModal(true);
+            <ThemedView style={{ padding: 16, gap: 8 }}>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <ProfileImage
+                  modal
+                  uid={uid}
+                  avatar_url={data.avatar_url}
+                  style={{ width: 100, height: 100 }}
+                />
+                <View style={{ flex: 1 }}>
+                  <View
+                    style={{
+                      flex: 1,
+                      paddingLeft: 16,
+                      justifyContent: "center",
                     }}
                   >
-                    <View
-                      style={{
-                        flex: 1,
-                        alignItems: "center",
-                        justifyContent: "center",
+                    <Text variant="titleLarge">{data?.full_name}</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", flex: 1 }}>
+                    <TouchableRipple
+                      style={{ flex: 1 }}
+                      onPress={() => {
+                        if (uid)
+                          dispatch(viewFunction({ key: "friendsProfile", uid }));
+                        setShowRecommendsModal(true);
                       }}
                     >
-                      <Text>{recommendations.length}</Text>
-                      <Text>Támogatók</Text>
-                      {functions.includes("friendsProfile") && (
-                        <Badge style={globStyles.badge}>ÚJ</Badge>
-                      )}
-                    </View>
-                  </TouchableRipple>
-                  {data?.created_at && (
-                    <View
-                      style={{
-                        flex: 1,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Text>
-                        {elapsedTime(Date.parse(data.created_at.toString()))}
-                      </Text>
-                      <Text>Fife</Text>
-                    </View>
-                  )}
+                      <View
+                        style={{
+                          flex: 1,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text> Támogatók: {recommendations.length}</Text>
+                        {functions.includes("friendsProfile") && (
+                          <Badge style={globStyles.badge}>ÚJ</Badge>
+                        )}
+                      </View>
+                    </TouchableRipple>
+                    {data?.created_at && (
+                      <View
+                        style={{
+                          flex: 1,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text>
+                          {elapsedTime(Date.parse(data.created_at.toString()))} Fife
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
               </View>
-            </View>
-            <View style={{ flexDirection: "row", gap: 4, margin: 4 }}>
-              {myProfile ? (
-                <Link
-                  asChild
-                  style={{ flex: 1 }}
-                  href={{ pathname: "/user/edit" }}
-                >
-                  <Button mode="contained">Profilom szerkesztése</Button>
-                </Link>
-              ) : (
-                <>
-                  <RecommendProfileButton
-                    profileId={uid}
+              <View style={{ flexDirection: "row", gap: 4, margin: 4 }}>
+                {myProfile ? (
+                  <Link
+                    asChild
                     style={{ flex: 1 }}
-                    recommended={iRecommended}
-                    setRecommended={(recommendedByMe) => {
-                      if (myUid) {
-                        if (recommendedByMe)
-                          setRecommendations([...recommendations, myUid]);
-                        else
-                          setRecommendations(
-                            recommendations.filter((uid) => uid !== myUid),
-                          );
-                      }
-                    }}
-                  />
-                </>
-              )}
-            </View>
+                    href={{ pathname: "/user/edit" }}
+                  >
+                    <Button mode="contained-tonal">Profilom szerkesztése</Button>
+                  </Link>
+                ) : (
+                  <>
+                    <RecommendProfileButton
+                      profileId={uid}
+                      style={{ flex: 1 }}
+                      recommended={iRecommended}
+                      setRecommended={(recommendedByMe) => {
+                        if (myUid) {
+                          if (recommendedByMe)
+                            setRecommendations([...recommendations, myUid]);
+                          else
+                            setRecommendations(
+                              recommendations.filter((uid) => uid !== myUid),
+                            );
+                        }
+                      }}
+                    />
+                  </>
+                )}
+              </View>
+            </ThemedView>
             <TabsProvider defaultIndex={0}>
-              <Tabs>
+              <Tabs theme={theme} style={{ backgroundColor: theme.colors.background }}>
                 <TabScreen
                   label="Bizniszek"
                   badge={

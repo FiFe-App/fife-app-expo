@@ -55,7 +55,7 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
           <View style={{ flex: 1, justifyContent: "center" }}>
             <ActivityIndicator style={{}} />
           </View>
-        ) : !!buzinesses.length ? (
+        ) : buzinesses.length ? (
           buzinesses.map((buzinessItem) => (
             <BuzinessItem
               data={buzinessItem}

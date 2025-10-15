@@ -62,9 +62,9 @@ const RecommendationsModal = ({ show, setShow, uid, name }: RMP) => {
           margin: 30,
         }}
       >
-        {!!list.length ? (
+        {list.length ? (
           <>
-            <ThemedText>{name}ban megbíznak ők:</ThemedText>
+            <ThemedText type="subtitle">{name}ban megbíznak ők:</ThemedText>
             {list.map((rec, ind) => (
               <>
                 <Link
@@ -90,7 +90,7 @@ const RecommendationsModal = ({ show, setShow, uid, name }: RMP) => {
                       <View style={{ flex: 1, justifyContent: "center" }}>
                         <Text>{rec.profiles?.full_name}</Text>
                         <Text>
-                          {elapsedTime(rec.created_at)} óta támogatója
+                          {elapsedTime(rec.created_at)} támogatója
                         </Text>
                       </View>
                       <IconButton icon="account" />

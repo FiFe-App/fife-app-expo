@@ -1,4 +1,5 @@
 import MyLocationIcon from "@/assets/images/myLocationIcon";
+import { theme } from "@/assets/theme";
 import CollapsibleText from "@/components/CollapsibleText";
 import ErrorScreen from "@/components/ErrorScreen";
 import ProfileImage from "@/components/ProfileImage";
@@ -28,6 +29,7 @@ import {
   router,
   useFocusEffect,
   useGlobalSearchParams,
+  useNavigation,
 } from "expo-router";
 import { useCallback, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
@@ -44,9 +46,11 @@ import {
 } from "react-native-paper";
 import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 import { useDispatch, useSelector } from "react-redux";
+import { MyAppbar } from "../_layout";
 
 export default function Index() {
   const { id: paramId } = useGlobalSearchParams();
+  const navigation = useNavigation();
   const { width } = useWindowDimensions();
   const dispatch = useDispatch();
   const { uid: myUid }: UserState = useSelector(
@@ -106,6 +110,8 @@ export default function Index() {
                 authorName: data?.profiles?.full_name || "???",
                 avatarUrl: data?.profiles?.avatar_url,
               });
+              navigation.setOptions({ header: () => <MyAppbar center={<Text variant="titleLarge">{data?.title?.split(" $ ")[0]}</Text>} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
+
               if (data.images) setImages(getImagesUrlFromSupabase(data.images));
               if (data.defaultContact) {
                 if (data.contacts) {
@@ -157,13 +163,37 @@ export default function Index() {
         {!data && !error && <ActivityIndicator />}
         {!!id && !!data && (
           <>
-            <View style={{ padding: 16, paddingBottom: 0 }}>
-              <ThemedText type="title">{categories?.[0]}</ThemedText>
+            <View
+              style={{
+                flexWrap: "wrap",
+                flexDirection: "row",
+                gap: 4,
+                paddingHorizontal: 10,
+              }}
+            >
+              {categories?.slice(1).map((e, i) => {
+                if (e.trim())
+                  return (
+                    <Chip
+                      key={"category" + i}
+                      textStyle={{ margin: 4 }}
+                      onPress={() => {
+                        dispatch(storeBuzinessSearchParams({ text: e }));
+                        router.navigate({
+                          pathname: "/biznisz",
+                        });
+                      }}
+                    >
+                      {e}
+                    </Chip>
+                  );
+              })}
             </View>
-            <View style={{ flexDirection: "row" }}>
+            <CollapsibleText>{data.description}</CollapsibleText>
+            <View style={{ width: "100%", flexDirection: "row", alignItems: "flex-start" }}>
               <Link
                 asChild
-                style={{ flex: 1, padding: 8 }}
+                style={{ flex: 1, padding: 8, justifyContent: "center" }}
                 href={{ pathname: "/user/[uid]", params: { uid: data.author } }}
               >
                 <TouchableRipple>
@@ -172,7 +202,7 @@ export default function Index() {
                       flexDirection: "row",
                       alignItems: "center",
                       justifyContent: "center",
-                      gap: 8,
+                      gap: 8
                     }}
                   >
                     <ProfileImage
@@ -195,7 +225,9 @@ export default function Index() {
                 style={{
                   flex: 1,
                   alignItems: "center",
-                  justifyContent: "center",
+                  justifyContent: "center", padding: 8,
+                  paddingLeft: 24,
+                  height: 55
                 }}
                 onPress={
                   recommendations?.length
@@ -209,32 +241,6 @@ export default function Index() {
                     : "Még senki sem ajánlja"}
                 </Text>
               </TouchableRipple>
-            </View>
-            <View
-              style={{
-                flexWrap: "wrap",
-                flexDirection: "row",
-                gap: 4,
-                padding: 10,
-              }}
-            >
-              {categories?.slice(1).map((e, i) => {
-                if (e.trim())
-                  return (
-                    <Chip
-                      key={"category" + i}
-                      textStyle={{ margin: 4 }}
-                      onPress={() => {
-                        dispatch(storeBuzinessSearchParams({ text: e }));
-                        router.navigate({
-                          pathname: "/biznisz",
-                        });
-                      }}
-                    >
-                      {e}
-                    </Chip>
-                  );
-              })}
             </View>
             <View style={{ flexDirection: "row", gap: 4, padding: 4 }}>
               {myBuziness && (
@@ -278,9 +284,8 @@ export default function Index() {
                 />
               )}
             </View>
-            <CollapsibleText>{data.description}</CollapsibleText>
-            <TabsProvider defaultIndex={0}>
-              <Tabs showTextLabel={width > 400}>
+            <TabsProvider defaultIndex={0} >
+              <Tabs showTextLabel={width > 400} theme={theme} style={{ backgroundColor: theme.colors.background, height: 20 }} >
                 {data.location && (
                   <TabScreen label="Helyzete" icon="map-marker">
                     <View style={{ minHeight: 200, flex: 1 }}>
@@ -339,7 +344,7 @@ export default function Index() {
                               end: location.latitude + "," + location.longitude,
                             })
                           }
-                          style={{ right: 5, bottom: 5, position: "absolute" }}
+                          style={{ right: 4, bottom: 17, position: "absolute" }}
                         />
                       )}
                     </View>
