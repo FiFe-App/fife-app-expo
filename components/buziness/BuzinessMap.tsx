@@ -130,7 +130,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
         onPress={() => setSelectedBuzinessId(null)}
       >
         {buzinesses.map((buziness) => {
-          if (buziness?.id < 0) return;
+          if (buziness?.id < 0 || !buziness.location) return;
 
           const cords = locationToCoords(String(buziness.location));
           return (

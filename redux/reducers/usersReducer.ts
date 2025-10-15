@@ -12,7 +12,7 @@ const initialState: UsersState = {
     text: "",
     loading: false,
     searchCircle: undefined,
-    searchType: "map",
+    searchType: "list",
   },
 };
 
