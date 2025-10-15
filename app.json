@@ -46,8 +46,16 @@
           "locationAlwaysAndWhenInUsePermission": "Allow FiFe app to use your location."
         }
       ],
-      "expo-router",
-      "expo-font"
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "assets/fonts/Piazzolla.ttf",
+            "assets/fonts/RedHatText.ttf",
+            "assets/fonts/Piazzolla-ExtraBold.ttf"
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

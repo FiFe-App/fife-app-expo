@@ -65,7 +65,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
   return (
     <Link href={{ pathname: "/biznisz/[id]", params: { id: id } }} asChild>
       <Pressable>
-        <Surface style={styles.container} elevation={1}>
+        <Surface style={styles.container} elevation={2} mode="flat">
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1 }}>
               <Text style={{}}>{categories?.[0]}</Text>
@@ -80,25 +80,26 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
                 })}
               </View>
             </View>
-            <View
-              style={{
-                marginRight: 8,
-              }}
-            >
-              <View style={{}}>
-                {!showOptions && !!distance !== null && (
-                  <Text style={{}}>
-                    <Icon size={16} source="earth" />{" "}
-                    <Text>{distanceText}</Text>
-                  </Text>
-                )}
-              </View>
-              <View style={{ flexDirection: "row" }}>
-                <Text>
-                  <Icon size={16} source="account-group" />{" "}
-                  <Text>{data.recommendations} ember ajánlja</Text>
+          </View>
+          <View
+            style={{
+              marginRight: 8,
+              flexDirection: "row",
+              gap: 16
+            }}
+          >
+            <View style={{}}>
+              {!showOptions && !!distance !== null && (
+                <Text style={{}}>
+                  <Icon size={16} source="earth" /> <Text>{distanceText}</Text>
                 </Text>
-              </View>
+              )}
+            </View>
+            <View style={{ flexDirection: "row" }}>
+              <Text>
+                <Icon size={16} source="account-group" />{" "}
+                <Text>{data.recommendations} ember ajánlja</Text>
+              </Text>
             </View>
           </View>
           <Text numberOfLines={4} ellipsizeMode="tail" style={{ flex: 1 }}>

@@ -26,12 +26,12 @@ interface BuzinessBuzinessMapProps {
 
 export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
   const dispatch = useDispatch();
-  const { buzinesses, buzinessSearchParams } = useSelector(
+  const { buzinesses, searchParams } = useSelector(
     (state: RootState) => state.buziness,
   );
 
-  const skip = buzinessSearchParams?.skip || 0;
-  const loading = buzinessSearchParams?.loading || false;
+  const skip = searchParams?.skip || 0;
+  const loading = searchParams?.loading || false;
   const take = 5;
   const [selectedBuzinessId, setSelectedBuzinessId] = useState<null | number>(
     null,
@@ -49,7 +49,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
         addDialog({
           title: "Nem elérhető a pozíciód.",
           text: "Ha szeretnéd, hogy a hozzád közel található bizniszeket látsd, kapcsold be.",
-          onSubmit: () => {},
+          onSubmit: () => { },
           submitText: "Vettem",
         }),
       );
@@ -94,9 +94,9 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
     );
   };
   useEffect(() => {
-    console.log(buzinessSearchParams?.searchCircle);
+    console.log(searchParams?.searchCircle);
     //load(skip + take);
-  }, [buzinessSearchParams?.searchCircle]);
+  }, [searchParams?.searchCircle]);
 
   return (
     <View style={styles.container}>
@@ -134,7 +134,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
         onPress={() => setSelectedBuzinessId(null)}
       >
         {buzinesses.map((buziness) => {
-          if (buziness?.id < 0) return;
+          if (buziness?.id < 0 || !buziness.location) return;
 
           const cords = locationToCoords(String(buziness.location));
           return (
@@ -156,6 +156,17 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
           );
         })}
 
+        <FAB
+          style={mapStyles.myLocationButton}
+          icon={
+            myLocation
+              ? "crosshairs-gps"
+              : locationError
+                ? "map-marker-alert"
+                : "map-marker-question"
+          }
+          onPress={panToMyLocation}
+        />
         {myLocation && (
           <Marker
             centerOffset={{ x: 10, y: 10 }}
@@ -187,7 +198,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
           flexDirection: "column",
         }}
       >
-        <View style={{ padding: 8 }}>
+        <View style={{ padding: 8, bottom: 32 }}>
           <IconButton
             icon="plus"
             style={{
@@ -196,7 +207,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
               margin: 0,
             }}
             onPress={() => zoom(1)}
-            mode="contained-tonal"
+            mode="contained"
           />
           <IconButton
             icon="minus"
@@ -206,7 +217,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
               margin: 0,
             }}
             onPress={() => zoom(-1)}
-            mode="contained-tonal"
+            mode="contained"
           />
         </View>
         {selectedBuziness ? (
@@ -216,13 +227,8 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
         ) : (
           <Button
             mode="contained-tonal"
-            style={{
-              alignSelf: "center",
-              shadowOffset: { width: 0, height: 3 },
-              shadowRadius: 4,
-              shadowOpacity: 0.2,
-            }}
             loading={loading}
+            style={{ alignSelf: "center" }}
             onPress={() => load()}
           >
             Keress ezen a környéken

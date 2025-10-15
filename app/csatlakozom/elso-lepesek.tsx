@@ -5,10 +5,11 @@ import { setName, login as sliceLogin } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { User } from "@supabase/auth-js";
+import { Image } from "expo-image";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
-import { ActivityIndicator, Button, Icon } from "react-native-paper";
+import { ActivityIndicator, Button, Card, Icon, Text } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 AppState.addEventListener("change", (state) => {
@@ -71,7 +72,6 @@ export default function Index() {
       style={{
         flex: 1,
         alignItems: "center",
-        justifyContent: "center",
         gap: 32,
       }}
     >
@@ -88,17 +88,31 @@ export default function Index() {
       )}
       {!error && uid && (
         <>
-          <Icon source="check-circle" size={100} />
-          <ThemedText type="title" style={{ textAlign: "center" }}>
-            Gratulálok!
-          </ThemedText>
-          <View style={{ alignItems: "center" }}>
-            <ThemedText>Most már te is FiFe vagy!</ThemedText>
-            <ThemedText>Első lépésként állítsd be az adataidat</ThemedText>
+          <View>
+            <ThemedText type="title" style={{ textAlign: "center" }}>
+              Gratulálok!
+            </ThemedText>
+            <ThemedText style={{ textAlign: "center" }}>Most már te is FiFe vagy!</ThemedText>
+            <ThemedText style={{ textAlign: "center" }}>Mivel szeretnél kezdeni?</ThemedText>
           </View>
-          <Link asChild href="/user/edit">
-            <Button mode="contained">Profilom szerkesztése</Button>
-          </Link>
+          <View style={{ paddingHorizontal: 20, gap: 16 }}>
+            <Link asChild href="/user/edit">
+              <Card style={{ width: "100%", padding: 4, alignItems: "center", gap: 8 }}>
+                <Image source={require("@/assets/images/Phone.png")} contentFit="contain"
+                  style={{ width: "100%", height: 150, borderRadius: 8 }} />
+                <Text style={{ textAlign: "center" }} variant="titleMedium">Profilod</Text>
+                <Text style={{ textAlign: "center" }} variant="bodyMedium">Végy fel bizniszeket a profilodhoz, hogy megtaláljanak mások.</Text>
+              </Card>
+            </Link>
+            <Link asChild href="/biznisz">
+              <Card style={{ width: "100%", padding: 4, alignItems: "center", gap: 8 }}>
+                <Image source={require("@/assets/images/Map guy.png")} contentFit="contain"
+                  style={{ width: "100%", height: 150, borderRadius: 8 }} />
+                <Text style={{ textAlign: "center" }} variant="titleMedium">Keress</Text>
+                <Text style={{ textAlign: "center" }} variant="bodyMedium">Végy fel bizniszeket a profilodhoz, hogy megtaláljanak mások.</Text>
+              </Card>
+            </Link>
+          </View>
         </>
       )}
     </ThemedView>

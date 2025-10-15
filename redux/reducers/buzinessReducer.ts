@@ -1,24 +1,18 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import {
   BuzinessSearchItemInterface,
-  BuzinessSearchParams,
+  SearchParams,
   BuzinessState,
 } from "../store.type";
 
 const initialState: BuzinessState = {
   buzinesses: [],
-  buzinessSearchParams: {
+  searchParams: {
     skip: 0,
     text: "",
     loading: false,
-    searchCircle: {
-      location: {
-        latitude: 0,
-        longitude: 0,
-      },
-      radius: 0,
-    },
-    searchType: "map",
+    searchCircle: undefined,
+    searchType: "list",
   },
 };
 
@@ -40,23 +34,23 @@ const buzinessReducer = createSlice({
     },
     storeBuzinessSearchParams: (
       state,
-      action: PayloadAction<Partial<BuzinessSearchParams>>,
+      action: PayloadAction<Partial<SearchParams>>,
     ) => {
-      state.buzinessSearchParams = {
-        ...state.buzinessSearchParams,
+      state.searchParams = {
+        ...state.searchParams,
         ...action.payload,
       };
     },
     storeBuzinessLoading: (state, action: PayloadAction<boolean>) => {
-      if (state.buzinessSearchParams)
-        state.buzinessSearchParams.loading = action.payload;
+      if (state.searchParams)
+        state.searchParams.loading = action.payload;
     },
     storeBuzinessSearchType: (state, action: PayloadAction<"map" | "list">) => {
-      if (state.buzinessSearchParams)
-        state.buzinessSearchParams.searchType = action.payload;
+      if (state.searchParams)
+        state.searchParams.searchType = action.payload;
     },
     clearBuzinessSearchParams: (state) => {
-      state.buzinessSearchParams = {};
+      state.searchParams = {};
     },
     editBuziness: (
       state,

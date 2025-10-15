@@ -133,7 +133,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   const closeMenu = () => setMenuAnchor(null);
 
   const pickImage = async () => {
-    let result = await ExpoImagePicker.launchImageLibraryAsync({
+    const result = await ExpoImagePicker.launchImageLibraryAsync({
       mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
