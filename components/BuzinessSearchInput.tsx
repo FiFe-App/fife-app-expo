@@ -7,7 +7,7 @@ import { RootState } from "@/redux/store";
 import { TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
-const BuzinessSearchInput = ({ onSearch }: { onSearch: () => void }) => {
+const BuzinessSearchInput = ({ onSearch }: { onSearch: (query: string) => void }) => {
   const dispatch = useDispatch();
 
   const canSearch = true;
@@ -25,14 +25,14 @@ const BuzinessSearchInput = ({ onSearch }: { onSearch: () => void }) => {
       if (!text.includes("$"))
         dispatch(storeBuzinessSearchParams({ text }));
     }}
-    onSubmitEditing={onSearch}
+    onSubmitEditing={() => onSearch(searchText)}
     enterKeyHint="search"
     placeholderTextColor={theme.colors.onSurfaceVariant}
     placeholder="Mire van szükséged?"
     right={
       <TextInput.Icon
         icon="magnify"
-        onPress={onSearch}
+        onPress={() => onSearch(searchText)}
         disabled={!canSearch}
       />
     }

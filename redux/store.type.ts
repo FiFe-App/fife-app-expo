@@ -40,7 +40,7 @@ export interface BuzinessSearchItemInterface {
   author: string;
   recommendations: number;
   radius: number;
-  location: string;
+  location?: string;
   authorName?: string;
   distance?: number;
   buzinessRecommendations: { author: string }[];

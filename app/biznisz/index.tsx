@@ -5,17 +5,13 @@ import MapSelector from "@/components/MapSelector/MapSelector";
 import { containerStyle } from "@/components/styles";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useMyLocation } from "@/hooks/useMyLocation";
-import { supabase } from "@/lib/supabase/supabase";
 import {
-  loadBuzinesses,
-  storeBuzinessLoading,
-  storeBuzinessSearchParams, storeBuzinessSearchType, storeBuzinesses
+  storeBuzinessSearchParams, storeBuzinessSearchType
 } from "@/redux/reducers/buzinessReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
 import { useFocusEffect, useNavigation } from "expo-router";
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import {
   FAB,
@@ -26,109 +22,31 @@ import { useDispatch, useSelector } from "react-redux";
 import { MyAppbar } from "../_layout";
 import BuzinessSearchInput from "@/components/BuzinessSearchInput";
 import { Button } from "@/components/Button";
+import { useBuzinessSearch } from "@/hooks/useBuzinessSearch";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
-  const { buzinesses, searchParams } = useSelector(
+  const { searchParams } = useSelector(
     (state: RootState) => state.buziness,
   );
   const searchType = searchParams?.searchType;
-  const skip = searchParams?.skip || 0;
-  const take = 10;
   const searchCircle = searchParams?.searchCircle;
-  const searchText = searchParams?.text || "";
-  const searchTextRef = useRef(searchText);
   const dispatch = useDispatch();
 
-  // Update ref when searchText changes
-  useEffect(() => {
-    searchTextRef.current = searchText;
-  }, [searchText]);
-
-  const { myLocation } = useMyLocation();
+  const { canLoadMore, search, loadNext } = useBuzinessSearch();
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
-  const canSearch = true; //!!searchCircle || !!myLocation;
-  const [canLoadMore, setCanLoadMore] = useState(true);
-  const [lastSearch, setLastSearch] = useState(searchText);
 
   useEffect(() => {
     console.log(searchParams?.searchCircle);
   }, [searchParams?.searchCircle]);
 
-  const load = useCallback(async (paramSkip: number = 0) => {
-    dispatch(storeBuzinessLoading(true));
-    const mySkip = paramSkip || skip;
-    console.log("load from ", mySkip, " to ", mySkip + take);
-
-    const searchLocation = searchCircle
-      ? {
-        lat: searchCircle?.location.latitude,
-        long: searchCircle?.location.longitude,
-        maxdistance: searchCircle?.radius,
-      }
-      : myLocation
-        ? {
-          lat: myLocation?.coords.latitude,
-          long: myLocation?.coords.longitude,
-          maxdistance: 100000,
-        }
-        : {
-          lat: 47.4979,
-          long: 19.0402,
-          maxdistance: 100000,
-        };
-    if (searchLocation)
-      supabase.functions
-        .invoke("business-search", {
-          body: {
-            query: searchTextRef.current || "akármi",
-            take:
-              searchParams?.searchType === "map"
-                ? -1
-                : mySkip + take - 1,
-            skip: searchParams?.searchType === "map" ? -1 : mySkip,
-            ...searchLocation,
-          },
-        })
-        .then((res) => {
-          dispatch(storeBuzinessLoading(false));
-          if (res.data) {
-            dispatch(loadBuzinesses(res.data));
-            setCanLoadMore(
-              searchParams?.searchType !== "map" &&
-              !(res.data.length < take),
-            );
-            console.log(res.data);
-          }
-          if (res.error) {
-            console.log(res.error);
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-  }, [dispatch, myLocation, searchCircle, searchParams?.searchType, skip]);
-
-  const search = useCallback(() => {
-    console.log("search", searchText);
-
-    if (!canSearch) return;
-
-    setLastSearch(searchTextRef.current);
-    dispatch(storeBuzinessSearchParams({ skip: 0 }));
-    dispatch(storeBuzinesses([]));
-    load();
-  }, [canSearch, dispatch, load, searchText]);
   useFocusEffect(
     useCallback(() => {
-      console.log("skip changed", skip);
-      if (searchText)
-        load();
       if (uid) dispatch(viewFunction({ key: "buzinessPage", uid }));
       navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={search} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [skip]),
+    }, []),
   );
 
   if (uid)
@@ -136,11 +54,11 @@ export default function Index() {
       <ThemedView style={{ flex: 1 }} type="default">
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
 
-          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Találatok {lastSearch ? "erre: " + lastSearch : ""}</ThemedText>
+          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Találatok</ThemedText>
           <Button icon='filter' mode="text" onPress={() => setLocationMenuVisible(true)}>Finomítás</Button>
         </View>
         {searchType === "list" || !searchType ? (
-          <BuzinessList load={load} canLoadMore={canLoadMore} />
+          <BuzinessList load={loadNext} canLoadMore={canLoadMore} />
         ) : (
           <BuzinessMap load={search} />
         )}
