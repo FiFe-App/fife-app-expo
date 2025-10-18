@@ -81,26 +81,11 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
               </View>
             </View>
           </View>
-          <View
-            style={{
-              marginRight: 8,
-              flexDirection: "row",
-              gap: 16
-            }}
-          >
-            <View style={{}}>
-              {!showOptions && !!distance !== null && (
-                <Text style={{}}>
-                  <Icon size={16} source="earth" /> <Text>{distanceText}</Text>
-                </Text>
-              )}
-            </View>
-            <View style={{ flexDirection: "row" }}>
-              <Text>
-                <Icon size={16} source="account-group" />{" "}
-                <Text>{data.recommendations} ember ajánlja</Text>
-              </Text>
-            </View>
+          <View style={{ flexDirection: "row" }}>
+            <Text>
+              <Icon size={16} source="account-group" />{" "}
+              <Text>{data?.recommendations} ember ajánlja</Text>
+            </Text>
           </View>
           <Text numberOfLines={4} ellipsizeMode="tail" style={{ flex: 1 }}>
             {description}
