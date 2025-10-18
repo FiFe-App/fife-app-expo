@@ -190,9 +190,11 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
         onPress={panToMyLocation}
       />
       <View
+        pointerEvents="none"
         style={{
           position: "absolute",
           bottom: 8,
+          userSelect: "none",
           width: "100%",
           alignItems: "flex-end",
           flexDirection: "column",
