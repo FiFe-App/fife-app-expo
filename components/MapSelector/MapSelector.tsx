@@ -1,12 +1,34 @@
+import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 import { useMyLocation } from "@/hooks/useMyLocation";
-import React, { useRef, useState } from "react";
-import { Text, View } from "react-native";
-import { Button, FAB, Icon, IconButton } from "react-native-paper";
+import React, { useMemo, useRef, useState } from "react";
+import { FlatList, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Button,
+  Card,
+  FAB,
+  Icon,
+  IconButton,
+  List,
+  Switch,
+  TextInput,
+} from "react-native-paper";
+import {
+  Autocomplete,
+  AutocompleteScrollView,
+} from "react-native-paper-autocomplete";
 import MyLocationIcon from "../../assets/images/myLocationIcon";
-import { Camera, Details, MapView, Marker, Region } from "../mapView/mapView";
+import {
+  Camera,
+  Details,
+  LatLng,
+  MapView,
+  Marker,
+  Region,
+} from "../mapView/mapView";
 import styles from "../mapView/style";
 import { ThemedText } from "../ThemedText";
-import { MapCircleType, MapSelectorProps } from "./MapSelector.types";
+import { MapLocationType, MapSelectorProps } from "./MapSelector.types";
+import { ThemedView } from "../ThemedView";
 
 const MapSelector = ({
   style,
@@ -18,14 +40,21 @@ const MapSelector = ({
   setOpen,
 }: MapSelectorProps) => {
   const [mapHeight, setMapHeight] = useState<number>(0);
+  const [step, setStep] = useState(0);
   const circleSize = mapHeight / 3;
-  const [circle, setCircle] = useState<MapCircleType>(
+  const [location, setLocation] = useState<MapLocationType>(
     data || {
       location: { latitude: 47.4979, longitude: 19.0402 },
-      radius: 300,
     },
   );
-  const [circleRadiusText, setCircleRadiusText] = useState("0 km");
+  const [search, setSearch] = useState("");
+  const [addressList, setAddressList] = useState<google.maps.GeocoderResult[]>(
+    [],
+  );
+  const [selectedAddress, setSelectedAddress] =
+    useState<google.maps.GeocoderResult | null>(null);
+  const showList = addressList && selectedAddress?.formatted_address !== search;
+  const [approxLocation, setApproxLocation] = useState(false);
   const mapRef = useRef<MapView>(null);
 
   const { myLocation, locationError } = useMyLocation();
@@ -69,140 +98,283 @@ const MapSelector = ({
       mapRef?.current?.animateCamera(cam);
     });
   };
-
   const onSubmit = () => {
-    if (setData && circle) {
-      console.log("map submit", circle, setOpen);
-      setData(circle);
+    if (setData && location) {
+      console.log("map submit", location, setOpen);
+      setData(location);
       if (setOpen) setOpen(false);
     }
   };
   const removeSumbit = () => {
     if (setData) {
       setData(undefined);
-      console.log("map submit", circle, setOpen);
+      console.log("map submit", location, setOpen);
       if (setOpen) setOpen(false);
     }
   };
 
-  return (
-    <View style={[{ flex: 1 }, style]}>
-      <View
-        style={{ width: "100%", height: "100%" }}
-        onLayout={(e) => {
-          setMapHeight(e.nativeEvent.layout.height);
-        }}
-      >
-        <ThemedText type="title">{title}</ThemedText>
-        <ThemedText>{text}</ThemedText>
-        <MapView
-          ref={mapRef}
-          // @ts-expect-error options type are colliding in different mapViews
-          options={{
-            mapTypeControl: false,
-            fullscreenControl: false,
-            streetViewControl: false,
-            zoomControl: false,
-          }}
+  const turnToAddress = async (address: string) => {
+    if (address.length < 4) return;
+    const geocoder = new google.maps.Geocoder();
+    const coded = await geocoder.geocode({
+      address,
+      componentRestrictions: { country: "HU" },
+    });
+
+    return coded;
+  };
+  const reverseAddress = async (location: LatLng) => {
+    const geocoder = new google.maps.Geocoder();
+    const coded = await geocoder.geocode({
+      location: {
+        lat: location.latitude,
+        lng: location.longitude,
+      },
+    });
+
+    return coded;
+  };
+  const debounce = <T,>(func: (param: T) => void, wait: number) => {
+    let timeout: NodeJS.Timeout;
+    return (args: T) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(args), wait);
+    };
+  };
+
+  // Inside the MapSelector component, add this before the searchPlaces function
+  const debouncedSearch = useMemo(
+    () =>
+      debounce((searchTerm: string) => {
+        if (!searchTerm) return;
+        console.log("Searching... ", searchTerm);
+
+        turnToAddress(searchTerm).then((res) => {
+          console.log(res);
+          if (res) setAddressList(res.results);
+        });
+      }, 500),
+    [],
+  );
+  const debouncedReverseSearch = useMemo(
+    () =>
+      debounce((location: LatLng) => {
+        if (!location) return;
+        console.log("Reverse Searching... ", location);
+
+        reverseAddress(location).then((res) => {
+          console.log(res);
+          if (res) setAddressList(res.results);
+        });
+      }, 500),
+    [],
+  );
+  const toggleApproxLocation = () => {
+    setApproxLocation(!approxLocation);
+  };
+
+  if (step === 0)
+    return (
+      <View style={[{ flex: 1 }, style]}>
+        <View
           style={{ width: "100%", height: "100%" }}
-          initialCamera={{
-            altitude: 10,
-            center: {
-              latitude: circle.location.latitude,
-              longitude: circle.location.longitude,
-            },
-            heading: 0,
-            pitch: 0,
-            zoom: 12,
+          onLayout={(e) => {
+            setMapHeight(e.nativeEvent.layout.height);
           }}
-          provider="google"
-          googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
-          pitchEnabled={false}
-          rotateEnabled={false}
-          toolbarEnabled={false}
-          onRegionChangeComplete={onRegionChange}
         >
-          {myLocation && (
-            <Marker
-              centerOffset={{ x: 10, y: 10 }}
-              coordinate={myLocation?.coords}
-              style={{ justifyContent: "center", alignItems: "center" }}
-            >
-              <MyLocationIcon style={{ width: 20, height: 20 }} />
-            </Marker>
-          )}
-          <View style={styles.submit}>
-            <Button mode="contained" onPress={onSubmit} disabled={!circle}>
-              <Text>Helyzet mentése</Text>
-            </Button>
-          </View>
-          <View style={styles.zoom}>
-            <IconButton
-              icon="plus"
-              style={{
-                borderBottomLeftRadius: 0,
-                borderBottomRightRadius: 0,
-                margin: 0,
+          <ThemedText type="title">{title}</ThemedText>
+          <ThemedText>{text}</ThemedText>
+          <View>
+            <TextInput
+              placeholder="Keress címre..."
+              onChangeText={(text) => {
+                setSearch(text);
+                debouncedSearch(text);
               }}
-              onPress={() => zoom(1)}
-              mode="contained-tonal"
+              value={search}
+              right={
+                <TextInput.Icon
+                  icon={showList ? "chevron-up" : "chevron-down"}
+                />
+              }
             />
-            <IconButton
-              icon="minus"
-              style={{
-                borderTopLeftRadius: 0,
-                borderTopRightRadius: 0,
-                margin: 0,
-              }}
-              onPress={() => zoom(-1)}
-              mode="contained-tonal"
-            />
+            {showList && (
+              <FlatList
+                style={styles.addressList}
+                data={addressList}
+                renderScrollComponent={(props) => (
+                  <Card mode="elevated" style={styles.addressList}>
+                    {props.children}
+                  </Card>
+                )}
+                renderItem={(props) => (
+                  <List.Item
+                    title={props.item.formatted_address}
+                    onPress={(e) => {
+                      const address = props.item;
+                      console.log("address", address);
+                      if (address && mapRef.current) {
+                        setSelectedAddress(address);
+                        setSearch(address.formatted_address);
+                        const region = {
+                          latitude: address.geometry.location.lat(),
+                          longitude: address.geometry.location.lng(),
+                          latitudeDelta: 0.0043,
+                          longitudeDelta: 0.0034,
+                        };
+                        mapRef.current.animateToRegion(region, 1000);
+                      }
+                    }}
+                  />
+                )}
+              />
+            )}
           </View>
-        </MapView>
-        <View style={{ padding: 8 }}>
-          {!!locationError && (
-            <ThemedText>
-              <Icon source="map-marker-alert" size={16} />
-              {locationError}
-            </ThemedText>
-          )}
-          <Button
-            style={{ alignSelf: "flex-end" }}
-            mode="elevated"
-            onPress={removeSumbit}
-            icon="delete"
+          <View
+            style={{ width: "100%", height: 300, maxHeight: 300, zIndex: 0 }}
           >
-            Helyzet törlése
-          </Button>
+            <MapView
+              ref={mapRef}
+              options={{
+                mapTypeControl: false,
+                fullscreenControl: false,
+                streetViewControl: false,
+                zoomControl: false,
+              }}
+              style={{ width: "100%", height: "100%", maxHeight: 200 }}
+              initialCamera={{
+                altitude: 10,
+                center: {
+                  latitude: location.location.latitude,
+                  longitude: location.location.longitude,
+                },
+                heading: 0,
+                pitch: 0,
+                zoom: 12,
+              }}
+              provider="google"
+              googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
+              pitchEnabled={false}
+              rotateEnabled={false}
+              toolbarEnabled={false}
+              onRegionChangeComplete={onRegionChange}
+            >
+              {myLocation && (
+                <Marker
+                  coordinate={myLocation?.coords}
+                  anchor={{ x: 0.5, y: 0.5 }}
+                >
+                  <MyLocationIcon style={{ width: 20, height: 20 }} />
+                </Marker>
+              )}
+
+              {selectedAddress?.geometry && (
+                <Marker
+                  coordinate={{
+                    latitude: selectedAddress.geometry.location.lat(),
+                    longitude: selectedAddress.geometry.location.lng(),
+                  }}
+                  anchor={{ x: 0.5, y: 0.5 }}
+                >
+                  <NewMarkerIcon
+                    style={[
+                      {
+                        width: 24,
+                        height: 24,
+                      },
+                    ]}
+                  />
+                </Marker>
+              )}
+            </MapView>
+            <View style={styles.zoom}>
+              <IconButton
+                icon="plus"
+                style={{
+                  borderBottomLeftRadius: 0,
+                  borderBottomRightRadius: 0,
+                  margin: 0,
+                }}
+                onPress={() => zoom(1)}
+                mode="contained-tonal"
+              />
+              <IconButton
+                icon="minus"
+                style={{
+                  borderTopLeftRadius: 0,
+                  borderTopRightRadius: 0,
+                  margin: 0,
+                }}
+                onPress={() => zoom(-1)}
+                mode="contained-tonal"
+              />
+            </View>
+            {!!myLocation && (
+              <FAB
+                style={styles.myLocationButton}
+                icon={myLocation ? "map-marker" : "map-marker-question"}
+                onPress={panToMyLocation}
+              />
+            )}
+          </View>
+          <View style={{ padding: 8 }}>
+            {!!locationError && (
+              <ThemedText>
+                <Icon source="map-marker-alert" size={16} />
+                {locationError}
+              </ThemedText>
+            )}
+            <View
+              style={{ alignSelf: "flex-end", flexDirection: "row", gap: 8 }}
+            >
+              <Button
+                mode="contained"
+                onPress={() => setStep(1)}
+                disabled={!location}
+              >
+                <Text>Kiválasztás</Text>
+              </Button>
+              <Button
+                style={{ alignSelf: "flex-end" }}
+                mode="elevated"
+                onPress={removeSumbit}
+                icon="delete"
+              >
+                Helyzet törlése
+              </Button>
+            </View>
+          </View>
         </View>
       </View>
-
-      {!!myLocation && (
-        <FAB
-          style={styles.myLocationButton}
-          icon={myLocation ? "map-marker" : "map-marker-question"}
-          onPress={panToMyLocation}
-        />
-      )}
-
-      {!!circleSize && (
+    );
+  if (step === 1)
+    return (
+      <View>
         <View
-          style={[
-            styles.circleFixed,
-            {
-              width: circleSize,
-              height: circleSize,
-              marginLeft: -circleSize / 2,
-              marginTop: -circleSize / 2,
-              borderRadius: circleSize,
-            },
-          ]}
+          style={{
+            flexDirection: "row",
+            gap: 4,
+            alignItems: "center",
+          }}
         >
-          <Text style={styles.circleText}>Átmérő: {circleRadiusText}</Text>
+          <Button mode="text" icon="arrow-left" onPress={() => setStep(0)}>
+            Módosítás
+          </Button>
         </View>
-      )}
-    </View>
-  );
+        <ThemedText>
+          Kiválasztva: {selectedAddress?.formatted_address}
+        </ThemedText>
+        <View style={{ flexDirection: "row", gap: 4, padding: 8 }}>
+          <Switch value={approxLocation} onValueChange={toggleApproxLocation} />
+          <Pressable onPress={toggleApproxLocation}>
+            <Text>Szeretnéd, hogy pontos cím legyen látható?</Text>
+          </Pressable>
+        </View>
+        <Button mode="contained" onPress={onSubmit} disabled={!location}>
+          <Text>Helyzet mentése</Text>
+        </Button>
+      </View>
+    );
 };
 
 export default MapSelector;

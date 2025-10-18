@@ -57,7 +57,7 @@ export interface BuzinessItemInterface {
   authorName?: string;
   avatarUrl?: string | null;
   images?: string[] | null;
-  buzinessRecommendations: { author: string }[];
+  recommendations: number;
 }
 export interface EventItemInterface extends Tables<"events"> {
   lat: number | null;

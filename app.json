@@ -7,6 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "com.fife.app",
     "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
@@ -19,12 +20,12 @@
     "android": {
       "versionCode": 2,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyDqjygaNZxE3FU0aJbQ9v6EOzOdV2waxSo"
+          "apiKey": "AIzaSyDtxKGHmZsnpg2R7CKdkLl8oNSag9lHykI"
         }
       },
       "package": "com.fife.app",
@@ -39,7 +40,6 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router",
       [
         "expo-location",
         {

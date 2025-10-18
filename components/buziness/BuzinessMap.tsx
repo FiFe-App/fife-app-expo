@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Pressable, Alert } from "react-native";
 import BuzinessItem from "./BuzinessItem";
 import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
@@ -12,6 +12,7 @@ import {
   Region,
 } from "../mapView/mapView";
 import MyLocationIcon from "@/assets/images/myLocationIcon";
+import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
@@ -109,6 +110,9 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
           zoomControl: false,
         }}
         style={{ width: "100%", height: "100%" }}
+        onMapLoaded={(e) => {
+          //Alert.alert(JSON.stringify(e));
+        }}
         initialCamera={{
           altitude: 10,
           center: {
@@ -138,11 +142,17 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
               coordinate={{ latitude: cords[1], longitude: cords[0] }}
               title={buziness.title}
               key={buziness.id}
-              onPress={() => {
-                setSelectedBuzinessId(buziness.id);
-                //panToCoords(Number(cords[1]), Number(cords[0]));
-              }}
-            />
+              anchor={{ x: 0.5, y: 0.5 }}
+            >
+              <Pressable
+                onPress={() => {
+                  setSelectedBuzinessId(buziness.id);
+                  //panToCoords(Number(cords[1]), Number(cords[0]));
+                }}
+              >
+                <NewMarkerIcon />
+              </Pressable>
+            </Marker>
           );
         })}
 
@@ -162,15 +172,29 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
             centerOffset={{ x: 10, y: 10 }}
             coordinate={myLocation?.coords}
             style={{ justifyContent: "center", alignItems: "center" }}
+            anchor={{ x: 0.5, y: 0.5 }}
           >
             <MyLocationIcon style={{ width: 20, height: 20 }} />
           </Marker>
         )}
       </MapView>
+      <FAB
+        style={mapStyles.myLocationButton}
+        icon={
+          myLocation
+            ? "map-marker"
+            : locationError
+              ? "map-marker-alert"
+              : "map-marker-question"
+        }
+        onPress={panToMyLocation}
+      />
       <View
+        pointerEvents="none"
         style={{
           position: "absolute",
           bottom: 8,
+          userSelect: "none",
           width: "100%",
           alignItems: "flex-end",
           flexDirection: "column",

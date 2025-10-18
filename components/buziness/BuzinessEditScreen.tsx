@@ -1,5 +1,5 @@
 import MapSelector from "@/components/MapSelector/MapSelector";
-import { MapCircleType } from "@/components/MapSelector/MapSelector.types";
+import { MapLocationType } from "@/components/MapSelector/MapSelector.types";
 import { containerStyle } from "@/components/styles";
 import TagInput from "@/components/TagInput";
 import { useMyLocation } from "@/hooks/useMyLocation";
@@ -46,6 +46,7 @@ import BuzinessImageUpload, {
 } from "./BuzinessImageUpload";
 import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
 import { Image } from "expo-image";
+import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 
 interface NewBuzinessInterface {
   title: string;
@@ -71,9 +72,9 @@ export default function BuzinessEditScreen({
   const [images, setImages] = useState<ImageDataType[]>([]);
   const imagesUploadRef = useRef<BuzinessImageUploadHandle | null>(null);
   const { myLocation, locationError } = useMyLocation();
-  const [circle, setCircle] = useState<MapCircleType | undefined>(undefined);
+  const [circle, setCircle] = useState<MapLocationType | undefined>(undefined);
   const selectedLocation = circle?.location || myLocation?.coords;
-  const selectedRadius = circle?.radius || 10;
+  const selectedAddress = "";
   const [loading, setLoading] = useState(false);
 
   const [mapModalVisible, setMapModalVisible] = useState(false);
@@ -215,7 +216,6 @@ export default function BuzinessEditScreen({
 
                 setCircle({
                   location: { latitude: cords[1], longitude: cords[0] },
-                  radius: editingBuziness.radius || 200,
                 });
               }
             }
@@ -377,7 +377,7 @@ export default function BuzinessEditScreen({
           <View style={{ minHeight: circle ? 300 : 100 }}>
             {circle ? (
               <MapView
-                // @ts-ignore
+                // @ts-expect-error options error
                 options={{
                   mapTypeControl: false,
                   fullscreenControl: false,
@@ -403,18 +403,18 @@ export default function BuzinessEditScreen({
                 toolbarEnabled={false}
               >
                 {(!!selectedLocation || !!myLocation) && (
-                  <Circle
-                    fillColor="rgba(253, 207, 153,1)"
-                    strokeColor="rgba(253, 207, 153,1)"
-                    center={
+                  <Marker
+                    coordinate={
                       selectedLocation ||
                       myLocation?.coords || {
                         latitude: 47.4979,
                         longitude: 19.0402,
                       }
                     }
-                    radius={selectedRadius}
-                  />
+                    anchor={{ x: 0.5, y: 0.5 }}
+                  >
+                    <NewMarkerIcon width={24} height={24} />
+                  </Marker>
                 )}
               </MapView>
             ) : (
@@ -442,7 +442,7 @@ export default function BuzinessEditScreen({
             onDismiss={() => {
               setMapModalVisible(false);
             }}
-            contentContainerStyle={{ height: 500 }}
+            contentContainerStyle={{}}
             dismissableBackButton
           >
             <ThemedView style={[{ flex: 1, padding: 16 }]}>

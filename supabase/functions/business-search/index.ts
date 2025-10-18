@@ -38,9 +38,8 @@ Deno.serve(async (req) => {
     console.log("embedding input", completion.choices[0].message.content);
 
     const embeddingResponse = await openai.embeddings.create({
-      model: "text-embedding-3-large",
+      model: "text-embedding-ada-002",
       input: completion.choices[0].message.content,
-      dimensions: 512,
     });
     embedding = embeddingResponse.data[0].embedding;
   }
@@ -55,7 +54,7 @@ Deno.serve(async (req) => {
     take,
     lat,
     long,
-    query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),
+    query_embedding: embedding || Array.from({ length: 1536 }, (_, i) => i),
     query_text: query,
   });
 

@@ -79,7 +79,6 @@ export default function Index() {
             contentContainerStyle={[
               {
                 height: "auto",
-                borderRadius: 16,
               },
             ]}
           >

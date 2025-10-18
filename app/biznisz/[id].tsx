@@ -54,7 +54,7 @@ export default function Index() {
   const { width } = useWindowDimensions();
   const dispatch = useDispatch();
   const { uid: myUid }: UserState = useSelector(
-    (state: RootState) => state.user,
+    (state: RootState) => state.user
   );
   const id: number = Number(paramId);
   const [data, setData] = useState<BuzinessItemInterface | undefined>();
@@ -86,7 +86,7 @@ export default function Index() {
         supabase
           .from("buziness")
           .select(
-            "*, contacts(*), profiles ( full_name, avatar_url ), buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(author)",
+            "*, contacts(*), profiles ( full_name, avatar_url ), buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(author)"
           )
           .eq("id", id)
           .maybeSingle()
@@ -122,7 +122,7 @@ export default function Index() {
               }
 
               setRecommendations(
-                data?.buzinessRecommendations?.map((pr) => pr.author),
+                data?.buzinessRecommendations?.map((pr) => pr.author)
               );
             } else
               setError({
@@ -146,7 +146,7 @@ export default function Index() {
         setShowRecommendsModal(false);
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]),
+    }, [id])
   );
 
   const onPimary = () => {
@@ -277,7 +277,7 @@ export default function Index() {
                         setRecommendations([...recommendations, myUid]);
                       else
                         setRecommendations(
-                          recommendations.filter((uid) => uid !== myUid),
+                          recommendations.filter((uid) => uid !== myUid)
                         );
                     }
                   }}
