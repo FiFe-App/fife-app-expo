@@ -91,7 +91,7 @@ export default function Index() {
   };
 
   useEffect(() => {
-    if (edit) setEmail("");
+    //if (edit) setEmail("");
   }, [edit]);
 
   useEffect(() => {
@@ -110,12 +110,14 @@ export default function Index() {
           gap: 8,
           flex: 3,
           justifyContent: "center",
+          alignSelf:"center",
+          alignItems:"center"
         }}
       >
         <ThemedText type="title">
           Kérlek igazold vissza az email-címedet
         </ThemedText>
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: 16, width:"100%" }}>
           <ThemedText>Küldtünk egy email-t erre a címre:</ThemedText>
           {!edit ? (
             <ThemedText style={{ textAlign: "center" }}>{email}</ThemedText>
@@ -140,10 +142,11 @@ export default function Index() {
             disabled={!email}
             mode={edit ? "contained" : "contained-tonal"}
           >
-            Email újra-küldése
+            Email újraküldése
           </Button>
           {res && <ThemedText type="subtitle">{res}</ThemedText>}
-          <Button onPress={() => setEdit(true)}>Elírtad az email-címed?</Button>
+          {edit ? <Button onPress={()=>setEdit(false)}>Mégsem</Button> :
+            <Button onPress={() => setEdit(true)}>Elírtad az email-címed?</Button>}
         </View>
       </View>
     </ThemedView>
