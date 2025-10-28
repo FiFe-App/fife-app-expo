@@ -18,6 +18,7 @@ import RedHatText from "@/assets/fonts/RedHatText.ttf";
 import PiazzollaExtraBold from "@/assets/fonts/Piazzolla-ExtraBold.ttf";
 import { Image } from "expo-image";
 import Smiley from "@/components/Smiley";
+import TutorialOverlay from "@/components/tutorial/TutorialOverlay";
 
 export default function RootLayout() {
   const pathname = usePathname();
@@ -34,52 +35,54 @@ export default function RootLayout() {
           <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
               <PaperProvider theme={theme}>
-                <InfoLayer />
-                <Stack
-                  screenOptions={{ header: () => <MyAppbar  /> }}
-                >
-                  <Stack.Screen name="index" />
-                  <Stack.Screen
-                    name="login/index"
-                    options={{ title: "Bejelentkezés" }}
-                  />
-                  <Stack.Screen
-                    name="biznisz/index"
-                    options={{ title: "Biznisz" }}
-                  />
-                  <Stack.Screen
-                    name="csatlakozom"
-                    options={{ headerShown: false, animation: "slide_from_right" }}
-                  />
-                  <Stack.Screen
-                    name="biznisz/new"
-                    options={{ title: "Új Biznisz" }}
-                  />
-                  <Stack.Screen
-                    name="biznisz/[id]"
-                    options={{ title: "FiFe Biznisz" }}
-                  />
-                  <Stack.Screen
-                    name="biznisz/edit/[id]"
-                    options={{ title: "FiFe Biznisz" }}
-                  />
-                  <Stack.Screen
-                    name="user/[uid]"
-                    options={{ title: "FiFe Profil" }}
-                  />
-                  <Stack.Screen
-                    name="user/edit"
-                    options={{ title: "Profil Szerkesztése" }}
-                  />
-                  <Stack.Screen
-                    name="user/password-reset"
-                    options={{ title: "Jelszó visszaállítás" }}
-                  />
-                </Stack>
-                {pathname !== "/" && !pathname.includes("projekt") &&
-                  !pathname.includes("login") && 
-                  !pathname.includes("password") && 
-                  !pathname.includes("csatlakozom") && <BottomNavigation />}
+                <TutorialOverlay >
+                  <InfoLayer />
+                  <Stack
+                    screenOptions={{ header: () => <MyAppbar  /> }}
+                  >
+                    <Stack.Screen name="index" />
+                    <Stack.Screen
+                      name="login/index"
+                      options={{ title: "Bejelentkezés" }}
+                    />
+                    <Stack.Screen
+                      name="biznisz/index"
+                      options={{ title: "Biznisz" }}
+                    />
+                    <Stack.Screen
+                      name="csatlakozom"
+                      options={{ headerShown: false, animation: "slide_from_right" }}
+                    />
+                    <Stack.Screen
+                      name="biznisz/new"
+                      options={{ title: "Új Biznisz" }}
+                    />
+                    <Stack.Screen
+                      name="biznisz/[id]"
+                      options={{ title: "FiFe Biznisz" }}
+                    />
+                    <Stack.Screen
+                      name="biznisz/edit/[id]"
+                      options={{ title: "FiFe Biznisz" }}
+                    />
+                    <Stack.Screen
+                      name="user/[uid]"
+                      options={{ title: "FiFe Profil" }}
+                    />
+                    <Stack.Screen
+                      name="user/edit"
+                      options={{ title: "Profil Szerkesztése" }}
+                    />
+                    <Stack.Screen
+                      name="user/password-reset"
+                      options={{ title: "Jelszó visszaállítás" }}
+                    />
+                  </Stack>
+                  {pathname !== "/" && !pathname.includes("projekt") &&
+                    !pathname.includes("login") && 
+                    !pathname.includes("password") && 
+                    !pathname.includes("csatlakozom") && <BottomNavigation />}
+                </TutorialOverlay>
               </PaperProvider>
             </PersistGate>
           </Provider>

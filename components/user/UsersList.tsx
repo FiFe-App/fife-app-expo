@@ -5,6 +5,7 @@ import { ThemedText } from "../ThemedText";
 import UserItem from "./UserItem";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
+import Measure from "../tutorial/Measure";
 
 
 interface UsersListProps {
@@ -40,14 +41,18 @@ export const UsersList: React.FC<UsersListProps> = ({
         }}
         scrollEventThrottle={100}
       >
-        {users.map((userItem) =>
+        {users.map((userItem,ind) =>
           userItem.id === "-1" ? (
             <Divider
               key={Math.random() * 100000 + 100000 + "div"}
               style={{ marginVertical: 16 }}
             />
           ) : (
-            <UserItem data={userItem} key={userItem.id} />
+            <Measure key={userItem.id}  name={ind==0 ? "first-user": ""}>
+              <View>
+                <UserItem data={userItem} />
+              </View>
+            </Measure>
           ),
         )}
         <View style={{ padding: 16 }}>
