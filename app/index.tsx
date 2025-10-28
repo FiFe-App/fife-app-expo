@@ -397,7 +397,7 @@ const AboutMe = () => {
                 Beszállnál a projektbe?
               </Button>
             </Link>
-            <Link href="https://www.patreon.com/c/fifeapp">
+            <Link href="https://www.patreon.com/c/fifeapp" asChild>
               <Button mode="contained" big>
                 Patreon
               </Button>

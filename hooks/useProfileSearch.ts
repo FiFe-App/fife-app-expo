@@ -20,9 +20,10 @@ export function useProfileSearch() {
   const dispatch = useDispatch();
   const request = useMemo(() => supabase
     .from("profiles")
-    .select("*, profileRecommendations!profileRecommendations_profile_id_fkey(count), buzinesses:buziness(title)")
-    .not("full_name", "is", null), [])
+    .select("*, profileRecommendations!profileRecommendations_profile_id_fkey(count), buzinesses:buziness(title)"),
+  [])
     .order("created_at", { ascending: false });
+    
   // Store users in Redux whenever results change
   useEffect(() => {
     dispatch(storeUsers(results));
