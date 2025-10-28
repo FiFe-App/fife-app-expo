@@ -115,8 +115,18 @@ export interface InfoState {
   notificationToken: null | undefined | string;
 }
 
+export interface LayoutRectangle {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface TutorialState {
   functions: string[];
+    isTutorialActive: boolean;
+    tutorialStep: number;
+    tutorialLayouts: { [key: string]: LayoutRectangle };
 }
 
 export interface ImageDataType extends ImagePickerAsset {
