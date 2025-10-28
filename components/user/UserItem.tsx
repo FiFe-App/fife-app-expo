@@ -27,7 +27,7 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
             style={{ width: 80, height: 80 }}
           />
           <View style={{ flex: 1, gap: 4 }}>
-            <Text variant="titleLarge">{full_name}</Text>
+            <Text variant="titleLarge">{full_name || "Nincs név"}</Text>
             <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4 }}>
               {buzinesses?.map((buziness, i) => {
                 return (
