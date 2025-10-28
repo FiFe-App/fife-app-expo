@@ -24,7 +24,7 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
             uid={id}
             size={50}
             avatar_url={avatar_url}
-            style={{ width: 80, height: 80 }}
+            style={{ width: 80, height: 80, borderRadius: 6 }}
           />
           <View style={{ flex: 1, gap: 4 }}>
             <Text variant="titleLarge">{full_name || "Nincs név"}</Text>
