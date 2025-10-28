@@ -155,6 +155,9 @@ export default function Index() {
       })
       .then(async ({ data, error }) => {
         console.log("upload", data);
+        if (error)
+          console.log(error);
+        
         if (data?.path && myUid)
           supabase
             .from("profiles")
@@ -202,7 +205,7 @@ export default function Index() {
             </View>
           </View>
           <TextInput
-            label="Teljes név"
+            label="Teljes név* (kötelező)"
             value={profile?.full_name || ""}
             disabled={loading}
             onChangeText={(t) => setProfile({ ...profile, full_name: t })}
