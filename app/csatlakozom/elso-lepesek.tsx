@@ -1,3 +1,4 @@
+import { theme } from "@/assets/theme";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { supabase } from "@/lib/supabase/supabase";
@@ -97,18 +98,18 @@ export default function Index() {
           </View>
           <View style={{ paddingHorizontal: 20, gap: 16 }}>
             <Link asChild href="/user/edit">
-              <Card style={{ width: "100%", padding: 4, alignItems: "center", gap: 8 }}>
+              <Card style={{ width: "100%", padding: 4, alignItems: "center", gap: 8, backgroundColor:theme.colors.onTertiary }}>
                 <Image source={require("@/assets/images/Phone.png")} contentFit="contain"
                   style={{ width: "100%", height: 150, borderRadius: 8 }} />
-                <Text style={{ textAlign: "center" }} variant="titleMedium">Profilod</Text>
+                <Text style={{ textAlign: "center" }} variant="titleLarge">Profilod</Text>
                 <Text style={{ textAlign: "center" }} variant="bodyMedium">Végy fel bizniszeket a profilodhoz, hogy megtaláljanak mások.</Text>
               </Card>
             </Link>
             <Link asChild href="/biznisz">
-              <Card style={{ width: "100%", padding: 4, alignItems: "center", gap: 8 }}>
+              <Card style={{ width: "100%", padding: 4, alignItems: "center", gap: 8, backgroundColor:theme.colors.onTertiary }}>
                 <Image source={require("@/assets/images/Map guy.png")} contentFit="contain"
                   style={{ width: "100%", height: 150, borderRadius: 8 }} />
-                <Text style={{ textAlign: "center" }} variant="titleMedium">Keress</Text>
+                <Text style={{ textAlign: "center" }} variant="titleLarge">Keress</Text>
                 <Text style={{ textAlign: "center" }} variant="bodyMedium">Végy fel bizniszeket a profilodhoz, hogy megtaláljanak mások.</Text>
               </Card>
             </Link>
