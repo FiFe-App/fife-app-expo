@@ -34,6 +34,7 @@ export default function Index() {
   const theme = useTheme();
   const dispatch = useDispatch();
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordAgain, setPasswordAgain] = useState("");
@@ -54,6 +55,9 @@ export default function Index() {
       email,
       password,
       options: {
+        data: {
+          full_name: name,
+        },
         emailRedirectTo: redirectTo,
       },
     });
@@ -118,13 +122,18 @@ export default function Index() {
           Juhé!
         </ThemedText>
         <ThemedText>Már csak a fiókodat kell létrehozni:</ThemedText>
-        <TextInput
-          mode="outlined" onChangeText={setEmail} value={email} label="Email" />
+        <View>
+          <TextInput
+            mode="outlined" onChangeText={setName} value={name} label="Neved*" />
+          <HelperText type="info">A neved látható lesz mindenki számára aki tag.</HelperText>
+          
+        </View><TextInput
+          mode="outlined" onChangeText={setEmail} value={email} label="Email*" />
         <TextInput
           mode="outlined"
           onChangeText={setPassword}
           value={password}
-          label="Jelszó"
+          label="Jelszó*"
           secureTextEntry={!showPassword}
           right={
             <TextInput.Icon
@@ -151,7 +160,7 @@ export default function Index() {
           value={passwordAgain}
           secureTextEntry
           disabled={isPasswordWeak}
-          label="Jelszó még egyszer"
+          label="Jelszó még egyszer*"
           right={
             <TextInput.Icon
               icon={
@@ -180,7 +189,7 @@ export default function Index() {
           loading={loading}
           onPress={createUser}
           disabled={
-            isPasswordWeak || password !== passwordAgain || !acceptConditions
+            isPasswordWeak || !name || password !== passwordAgain || !acceptConditions
           }
         >
           Regisztrálok
