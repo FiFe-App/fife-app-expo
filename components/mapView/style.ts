@@ -47,10 +47,8 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   addressList: {
-    position: "absolute",
     width: "100%",
-    top: 50,
-    zIndex: 10,
+    zIndex: 10000,
   },
 });
 

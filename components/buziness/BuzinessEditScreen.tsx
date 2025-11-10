@@ -1,6 +1,5 @@
 import MapSelector from "@/components/MapSelector/MapSelector";
-import { MapLocationType } from "@/components/MapSelector/MapSelector.types";
-import { containerStyle } from "@/components/styles";
+import containerStyle from "@/components/styles";
 import TagInput from "@/components/TagInput";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
@@ -26,6 +25,7 @@ import {
   MD3DarkTheme,
   Modal,
   Portal,
+  SegmentedButtons,
   Text,
   TextInput,
   TouchableRipple,
@@ -359,7 +359,7 @@ export default function BuzinessEditScreen({
             buzinessId={editId}
             ref={imagesUploadRef}
           />
-          {!!circle && (
+          {(
             <View
               style={{
                 flexDirection: "row",
@@ -369,9 +369,29 @@ export default function BuzinessEditScreen({
               }}
             >
               <ThemedText>A bizniszed helyzete</ThemedText>
-              <Button onPress={() => setMapModalVisible(true)} mode="contained">
-                Környék módosítása
-              </Button>
+
+              <SegmentedButtons
+                value={!circle ? "net" : "map"}
+                style={{width:300}}
+                onValueChange={
+                  (v)=>{
+                    v=="net" ? 
+                      setCircle(undefined) : 
+                      !circle ? setMapModalVisible(true) : null;
+                  }}
+                buttons={[
+                  {
+                    value: "net",
+                    label: "Bárhol",
+                    icon:"wifi"
+                  },
+                  {
+                    value: "map",
+                    label: "Térképen",
+                    icon: "map-marker"
+                  },
+                ]}
+              />
             </View>
           )}
           <View style={{ minHeight: circle ? 300 : 100 }}>
@@ -401,6 +421,7 @@ export default function BuzinessEditScreen({
                 pitchEnabled={false}
                 rotateEnabled={false}
                 toolbarEnabled={false}
+                moveOnMarkerPress
               >
                 {(!!selectedLocation || !!myLocation) && (
                   <Marker
@@ -436,28 +457,34 @@ export default function BuzinessEditScreen({
             )}
           </View>
         </View>
-        <Portal>
-          <Modal
-            visible={mapModalVisible}
-            onDismiss={() => {
-              setMapModalVisible(false);
-            }}
-            contentContainerStyle={{}}
-            dismissableBackButton
-          >
-            <ThemedView style={[{ flex: 1, padding: 16 }]}>
-              <MapSelector
-                data={circle}
-                setData={setCircle}
-                setOpen={setMapModalVisible}
-                searchEnabled
-                title="Találjanak meg a helyiek!"
-                text="Ha fontos a földrajzi helyzete a bizniszednek, itt megadhatod tetszőleges pontossággal."
-              />
-            </ThemedView>
-          </Modal>
-        </Portal>
       </ScrollView>
+      <Portal>
+          
+        <Modal
+
+          visible={mapModalVisible}
+          onDismiss={() => {
+            setMapModalVisible(false);
+          }}
+          style={{alignItems:"center"}}
+          contentContainerStyle={[
+            {
+              width:"90%",
+              height: "90%",
+            }]}
+          dismissableBackButton
+        >
+          <ThemedView style={containerStyle.containerStyle}>
+            <MapSelector
+              data={circle}
+              setData={setCircle}
+              setOpen={setMapModalVisible}
+              searchEnabled
+              markerOnly
+            />
+          </ThemedView>
+        </Modal>
+      </Portal>
     </ThemedView>
   );
 }
