@@ -66,15 +66,17 @@ export interface EventItemInterface extends Tables<"events"> {
   avatarUrl?: string | null;
   eventResponses: Tables<"eventResponses">[];
 }
-export interface SearchParams {
-  text?: string;
-  searchCircle?: {
+
+export interface CircleType {
     location: {
       latitude: number;
       longitude: number;
     };
     radius: number;
-  };
+  }
+export interface SearchParams {
+  text?: string;
+  searchCircle?: CircleType;
   loading?: boolean;
   searchType?: string;
   skip?: number;

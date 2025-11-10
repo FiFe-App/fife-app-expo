@@ -2,7 +2,7 @@ import { theme } from "@/assets/theme";
 import { BuzinessList } from "@/components/buziness/BuzinessList";
 import { BuzinessMap } from "@/components/buziness/BuzinessMap";
 import MapSelector from "@/components/MapSelector/MapSelector";
-import { containerStyle } from "@/components/styles";
+import style from "@/components/styles";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import {
@@ -83,18 +83,18 @@ export default function Index() {
             onDismiss={() => {
               setLocationMenuVisible(false);
             }}
+            style={{alignItems:"center"}}
             contentContainerStyle={[
               {
-                height: "auto",
+                width:"90%",
+                height: "90%",
               },
             ]}
           >
-            <ThemedView style={containerStyle}>
+            <ThemedView style={style.containerStyle}>
               <MapSelector
                 data={searchCircle}
                 setData={(sC) => {
-                  console.log("set", sC);
-
                   if (
                     (sC && "location" in sC && "radius" in sC) ||
                     sC == undefined

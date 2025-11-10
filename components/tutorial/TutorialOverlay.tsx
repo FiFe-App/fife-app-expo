@@ -53,7 +53,7 @@ const tutorialSteps: { message?: string; description?: string; key?: string; pag
   },
   {
     key: "filter",
-    message: "A keresésed finomíthatod ezzel a gombbal.",
+    message: "Ha egy külön helyen keresnél, az kiválaszthatod ezzel a gombbal.",
     page: "/biznisz"
   },
   {
