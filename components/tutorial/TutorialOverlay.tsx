@@ -13,6 +13,7 @@ import { RootState } from "@/redux/store";
 import { Button } from "../Button";
 import { theme } from "@/assets/theme";
 import Smiley from "../Smiley";
+import { Text } from "react-native-paper";
 
 const dimensions = Dimensions.get("screen");
 
@@ -29,9 +30,9 @@ const tutorialSteps: { message?: string; description?: string; key?: string; pag
     message: "Üdvözöllek a FiFe Appban!",
     description: "Ez egy bemutató a funkciókról, átugorhatod ha akarod.",
     page: "/home"
-  },    
+  },
   {
-    key:"first-user",
+    key: "first-user",
     message: "Ez a főoldal, itt láthatod az újonan regisztrált tagokat, és hogy mihez értenek",
     page: "/home"
   },
@@ -42,13 +43,13 @@ const tutorialSteps: { message?: string; description?: string; key?: string; pag
   },
   {
     message: "Ez a biznisz kereső oldal",
-    description:"Itt kereshetsz a környékeden segítséget.",
+    description: "Itt kereshetsz a környékeden segítséget.",
     page: "/biznisz"
   },
   {
-    key:"first-biznisz",
+    key: "first-biznisz",
     message: "Ez egy biznisz",
-    description:"Láthatod, hogy az adott emberhez milyen témákban fordulhatsz.",
+    description: "Láthatod, hogy az adott emberhez milyen témákban fordulhatsz.",
     page: "/biznisz"
   },
   {
@@ -58,7 +59,7 @@ const tutorialSteps: { message?: string; description?: string; key?: string; pag
   },
   {
     key: "map-switch",
-    message:"Térkép",
+    message: "Térkép",
     description: "Ezeket a találatokat láthatod térképen is, ha erre a gombra nyomsz.",
     page: "/biznisz"
   },
@@ -68,20 +69,20 @@ const tutorialSteps: { message?: string; description?: string; key?: string; pag
     page: "/biznisz"
   },
   {
-    key:"edit-profile",
+    key: "edit-profile",
     message:
-        "Itt szerkesztheted a elérhetőségeid, adataid.",
+      "Itt szerkesztheted a elérhetőségeid, adataid.",
     page: "/user"
   },
   {
-    key:"user-biznisz-tabs",
+    key: "user-biznisz-tabs",
     message:
-        "Itt láthatod a bizniszeidet.",
+      "Itt láthatod majd a bizniszeidet ha az Új biznisz hozzáadására nyomsz.",
     page: "/user"
   },
   {
     message:
-        "Ennyi volt a bemutató, nézz körül!",
+      "Ennyi volt a bemutató, nézz körül!",
     page: "/user"
   },
 ];
@@ -89,7 +90,7 @@ const tutorialSteps: { message?: string; description?: string; key?: string; pag
 const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
   const dispatch = useDispatch();
   const insets = useSafeAreaInsets();
-  
+
   const user = useSelector(
     (state: RootState) => state.user,
   );
@@ -105,6 +106,8 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
   //dispatch(setTutorialStep(0));
 
   const currentStep = tutorialSteps[tutorialStep];
+  const prevStep = tutorialSteps?.[tutorialStep - 1];
+  const nextStep = tutorialSteps[tutorialStep + 1];
   const highlight = tutorialLayouts?.[currentStep.key as string] || {
     x: 0,
     y: 0,
@@ -114,7 +117,6 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
   const radius = 8;
 
   const handlePrev = useCallback(() => {
-    const prevStep = tutorialSteps?.[tutorialStep - 1];
     if (tutorialStep > 0) {
       if (currentStep.page != prevStep.page) {
         router.navigate(prevStep.page);
@@ -131,7 +133,6 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
   }, [dispatch, tutorialStep, tutorialSteps]);
 
   const handleNext = useCallback(() => {
-    const nextStep = tutorialSteps[tutorialStep + 1];
     if (tutorialStep < tutorialSteps.length - 1) {
       dispatch(setTutorialStep(tutorialStep + 1));
       if (currentStep.page != nextStep.page)
@@ -139,16 +140,17 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
     } else {
       dispatch(setTutorialActive(false)); // End tutorial
     }
-  },[dispatch, tutorialStep, tutorialSteps.length]);
+  }, [dispatch, tutorialStep, tutorialSteps.length]);
 
   useEffect(() => {
-    if (pathname == "/"+currentStep?.key) {
+    if (pathname == "/" + currentStep?.key) {
       handleNext();
     }
   }, [currentStep?.key, handleNext, pathname]);
 
   console.log(isTutorialActive, pathname);
-  
+  const showNext = !!(currentStep.page === nextStep.page);
+
   if (isTutorialActive && user && pathname != "/" && pathname != "/login" && pathname != "/csatlakozom")
     return (
       <TutorialContext.Provider value={{ handleNextTutorialStep: handleNext }}>
@@ -238,13 +240,15 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
               borderWidth: 4,
               zIndex: 100,
               borderRadius: radius,
-              borderColor: "white",
+              borderColor: theme.colors.secondary,
             }}
           />}
           <View
             pointerEvents="auto"
             style={{
               alignItems: "center",
+              backgroundColor: "#000000Cf",
+              padding: 16,
               position: "absolute",
               // Place text below highlight if highlight is in top half, otherwise above
               top:
@@ -257,10 +261,10 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
                   : undefined,
             }}
           >
-            <Smiley style={{marginBottom:8}} />
+            <Smiley style={{ marginBottom: 8 }} />
             {/* Tutorial message */}
-            <ThemedText style={[styles.message,{color:theme.colors.onSecondary}]} type="defaultSemiBold" variant="headlineMedium">{currentStep.message}</ThemedText>
-            {currentStep.description && <ThemedText style={[styles.message,{color:theme.colors.onSecondary}]} variant="headlineSmall">{currentStep.description}</ThemedText>
+            <ThemedText style={[styles.message, { color: theme.colors.onSecondary }]} type="defaultSemiBold" variant="headlineMedium">{currentStep.message}</ThemedText>
+            {currentStep.description && <ThemedText style={[styles.message, { color: theme.colors.onSecondary }]} variant="headlineSmall">{currentStep.description}</ThemedText>
             }
             {/* Next button */}
             <View style={{ flexDirection: "row", gap: 24 }}>
@@ -269,13 +273,14 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
                 onPress={handlePrev}>
                 {tutorialStep > 0 ? "Vissza" : "Átugrom"}
               </Button>
-              <Button
+              {showNext ? <Button
                 mode="contained"
                 onPress={handleNext}>
                 {tutorialStep < tutorialSteps.length - 1
                   ? "Következő"
                   : "Gyerünk fifézni!"}
-              </Button>
+
+              </Button> : <Text style={{ color: "white" }}>Kattints a kiemelt részre</Text>}
             </View>
           </View>
         </Animated.View>
@@ -297,10 +302,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1000,
-    overflow:"hidden"
+    overflow: "hidden"
   },
   dimmed: {
-    backgroundColor: "#000000de",
+    backgroundColor: "#00000015",
   },
   absolute: {
     position: "absolute",
