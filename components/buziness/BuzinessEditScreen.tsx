@@ -5,6 +5,7 @@ import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import {
   addDialog,
+  clearOptions,
   hideLoading,
   setOptions,
   showLoading,
@@ -178,6 +179,9 @@ export default function BuzinessEditScreen({
         },
       ]),
     );
+    return () => {
+      dispatch(clearOptions());
+    }
   }, [canSubmit, dispatch, save, loading]);
 
   useFocusEffect(
@@ -372,18 +376,18 @@ export default function BuzinessEditScreen({
 
               <SegmentedButtons
                 value={!circle ? "net" : "map"}
-                style={{width:300}}
+                style={{ width: 300 }}
                 onValueChange={
-                  (v)=>{
-                    v=="net" ? 
-                      setCircle(undefined) : 
-                      !circle ? setMapModalVisible(true) : null;
+                  (v) => {
+                    v == "net" ?
+                      setCircle(undefined) :
+                      setMapModalVisible(true);
                   }}
                 buttons={[
                   {
                     value: "net",
                     label: "Bárhol",
-                    icon:"wifi"
+                    icon: "wifi"
                   },
                   {
                     value: "map",
@@ -459,17 +463,17 @@ export default function BuzinessEditScreen({
         </View>
       </ScrollView>
       <Portal>
-          
+
         <Modal
 
           visible={mapModalVisible}
           onDismiss={() => {
             setMapModalVisible(false);
           }}
-          style={{alignItems:"center"}}
+          style={{ alignItems: "center" }}
           contentContainerStyle={[
             {
-              width:"90%",
+              width: "90%",
               height: "90%",
             }]}
           dismissableBackButton

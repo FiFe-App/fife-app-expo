@@ -25,7 +25,7 @@ export type TutorialContextType = {
 // Context
 export const TutorialContext = createContext<TutorialContextType | undefined>(undefined);
 
-const tutorialSteps: { message?: string; description?: string; key?: string; page: string }[] = [
+const tutorialSteps: { message?: string; description?: string; key?: string; page?: string }[] = [
   {
     message: "Üdvözöllek a FiFe Appban!",
     description: "Ez egy bemutató a funkciókról, átugorhatod ha akarod.",
@@ -49,7 +49,7 @@ const tutorialSteps: { message?: string; description?: string; key?: string; pag
   {
     key: "first-biznisz",
     message: "Ez egy biznisz",
-    description: "Láthatod, hogy az adott emberhez milyen témákban fordulhatsz.",
+    description: "Láthatod, hogy az adott emberhez milyen témákban fordulhatsz. ",
     page: "/biznisz"
   },
   {
@@ -82,7 +82,7 @@ const tutorialSteps: { message?: string; description?: string; key?: string; pag
   },
   {
     message:
-      "Ennyi volt a bemutató, nézz körül!",
+      "Ennyi volt a bemutató, gyerünk fifézni!",
     page: "/user"
   },
 ];
@@ -107,7 +107,7 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
 
   const currentStep = tutorialSteps[tutorialStep];
   const prevStep = tutorialSteps?.[tutorialStep - 1];
-  const nextStep = tutorialSteps[tutorialStep + 1];
+  const nextStep = tutorialSteps?.[tutorialStep + 1];
   const highlight = tutorialLayouts?.[currentStep.key as string] || {
     x: 0,
     y: 0,
@@ -118,8 +118,8 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
 
   const handlePrev = useCallback(() => {
     if (tutorialStep > 0) {
-      if (currentStep.page != prevStep.page) {
-        router.navigate(prevStep.page);
+      if (currentStep.page != prevStep.page && prevStep.page) {
+        router.navigate(prevStep?.page);
         // Optionally, you may want to delay the step change until after navigation
         setTimeout(() => {
           dispatch(setTutorialStep(tutorialStep - 1));
@@ -135,8 +135,6 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
   const handleNext = useCallback(() => {
     if (tutorialStep < tutorialSteps.length - 1) {
       dispatch(setTutorialStep(tutorialStep + 1));
-      if (currentStep.page != nextStep.page)
-        router.navigate(nextStep.page);
     } else {
       dispatch(setTutorialActive(false)); // End tutorial
     }
@@ -148,10 +146,11 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
     }
   }, [currentStep?.key, handleNext, pathname]);
 
-  console.log(isTutorialActive, pathname);
-  const showNext = !!(currentStep.page === nextStep.page);
+  console.log("pathname", pathname);
+  const canShow = !!(pathname.includes(currentStep?.page)) || !currentStep?.page;
+  const showNext = !!(currentStep?.page === nextStep?.page) || !nextStep?.page;
 
-  if (isTutorialActive && user && pathname != "/" && pathname != "/login" && pathname != "/csatlakozom")
+  if (isTutorialActive && user && pathname != "/" && pathname != "/login" && !pathname.includes("/csatlakozom"))
     return (
       <TutorialContext.Provider value={{ handleNextTutorialStep: handleNext }}>
         <Animated.View
@@ -168,12 +167,11 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
               {
                 top: -insets.top,
                 height: highlight.y + insets.top,
-                width: "100%",
+                width: "100%"
               },
             ]}
           />
 
-          {/* Transparent "hole" */}
           {!!highlight.height && (
             <View
               pointerEvents="none"
@@ -193,10 +191,12 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
                   styles.dimmed,
                   {
                     width: highlight.x,
+
                   },
                 ]}
               />}
-              <View
+              {/* Transparent "hole" */}
+              {<View
                 pointerEvents="none"
                 style={[
                   {
@@ -204,8 +204,9 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
                     height: highlight.height,
                     zIndex: 100,
                   },
+                  !canShow ? styles.dimmed : {},
                 ]}
-              />
+              />}
               <View
                 pointerEvents="auto"
                 style={[
@@ -229,7 +230,7 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
               },
             ]}
           />
-          {currentStep.key && <View
+          {currentStep.key && canShow && <View
             pointerEvents="none"
             style={{
               position: "absolute",
@@ -243,7 +244,7 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
               borderColor: theme.colors.secondary,
             }}
           />}
-          <View
+          {canShow && <View
             pointerEvents="auto"
             style={{
               alignItems: "center",
@@ -257,7 +258,7 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
                   : undefined,
               bottom:
                 layout.height / 2 <= highlight.y + highlight.height / 2
-                  ? layout.height - highlight.y + 20
+                  ? layout.height - highlight.y - 50
                   : undefined,
             }}
           >
@@ -278,11 +279,11 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
                 onPress={handleNext}>
                 {tutorialStep < tutorialSteps.length - 1
                   ? "Következő"
-                  : "Gyerünk fifézni!"}
+                  : "Kész!"}
 
               </Button> : <Text style={{ color: "white" }}>Kattints a kiemelt részre</Text>}
             </View>
-          </View>
+          </View>}
         </Animated.View>
         {children}
       </TutorialContext.Provider>
