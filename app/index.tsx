@@ -310,7 +310,7 @@ const Banner = () => {
           Csatlakozz egy innovatív közösséghez!
         </Text>
       </View>
-      <Link href="/csatlakozom">
+      <Link href="/csatlakozom" asChild>
         <Button mode="contained">Regisztrálok</Button>
       </Link>
     </ThemedView>

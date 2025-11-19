@@ -1,10 +1,11 @@
 import { specifyTutorialStepLayout } from "@/redux/reducers/tutorialReducer";
 import { useEffect, useRef, useState } from "react";
-import { View } from "react-native";
-import { useDispatch } from "react-redux";
+import { Dimensions, View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import type { ViewProps } from "react-native";
 import React, { useContext } from "react";
 import { TutorialContext } from "./TutorialOverlay";
+import { RootState } from "@/redux/store";
 
 interface MeasureProps extends ViewProps {
   children: React.ReactElement;
@@ -13,44 +14,46 @@ interface MeasureProps extends ViewProps {
 }
 
 const Measure = ({ children, name, ...viewProps }: MeasureProps) => {
+  const dimensions = Dimensions.get("window");
   const childRef = useRef<View>(null);
   const dispatch = useDispatch();
   const tutorialContext = useContext(TutorialContext);
   const handleNext = tutorialContext?.handleNextTutorialStep;
+  const { isTutorialActive } = useSelector(
+    (state: RootState) => state.tutorial
+  );
   const [layout, setLayout] = useState(null);
 
+  const side = dimensions.width > 600 ? (dimensions.width - 600) / 2 : 0;
   useEffect(() => {
-    if (name) {
+    if (name && isTutorialActive) {
       childRef?.current?.measure((x, y, width, height, pageX, pageY) => {
+        console.log("measured", name, x, y, width, height);
+
         dispatch(
           specifyTutorialStepLayout({
             key: name,
-            layout: { x: pageX, y: pageY, width, height },
+            layout: { x: pageX - side, y: pageY, width, height },
           })
         );
       });
     }
+  }, [name, layout, dispatch, dimensions, isTutorialActive]);
 
-  }, [name, layout, dispatch]);
+
+  if (name == null || !isTutorialActive) return children;
 
   const handleOnLayout = (e) => {
     setLayout(e);
     console.log("layout change");
-    
+
   };
-
-  if (name == null) return children;
-
   // Only call handleNextTutorialStep from context if available
   const handlePress = (...args: unknown[]) => {
     console.log("pressed");
-    
+
     if (handleNext) {
       handleNext();
-    }
-    // Call child's onPress if it exists
-    if (childRef.current && typeof childRef.current.props?.onPress === "function") {
-      childRef.current.props.onPress(...args);
     }
   };
 

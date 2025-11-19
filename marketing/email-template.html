@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FiFe App – Találj megbízható embereket a környékeden!</title>
+    <style>
+        body {
+            background: #f2f2f2;
+            font-family: 'Piazzolla', 'RedHatText', Arial, sans-serif;
+            color: #1e1b16;
+            margin: 0;
+            padding: 0;
+        }
+
+        .outer {
+            background: rgba(54, 48, 36, 0.40);
+            width: 100%;
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fffdf5;
+            box-shadow: 0 2px 8px rgba(54, 48, 36, 0.08);
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .header-bar {
+            background: #ffffcf;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .header-bar img {
+            height: 30px;
+            margin: 0 8px;
+            vertical-align: middle;
+        }
+
+        .main-content {
+            background: #fffdf5;
+            padding: 32px 24px;
+        }
+
+        .title {
+            font-family: 'Piazzolla-ExtraBold', 'Piazzolla', Arial, sans-serif;
+            font-size: 36px;
+            font-weight: bold;
+            color: #1e1b16;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-family: 'Piazzolla', Arial, sans-serif;
+            font-size: 22px;
+            color: #1e1b16;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            flex-direction: row;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .cta-btn {
+            background: #df442e;
+            color: #fff !important;
+            font-family: 'Piazzolla-ExtraBold', 'Piazzolla', Arial, sans-serif;
+            font-size: 20px;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 12px;
+            padding: 14px 32px;
+            box-shadow: 0 2px 4px rgba(54, 48, 36, 0.08);
+            border: none;
+            display: inline-block;
+        }
+
+        .cta-btn.secondary {
+            background: #000;
+            color: #fff !important;
+        }
+
+        .hero-img {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 12px;
+            margin: 32px auto;
+            display: block;
+        }
+
+        .section-title {
+            font-family: 'Piazzolla-ExtraBold', 'Piazzolla', Arial, sans-serif;
+            font-size: 30px;
+            font-weight: bold;
+            color: #1e1b16;
+            margin: 32px 0 16px 0;
+            text-align: center;
+        }
+
+        .features {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .feature {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(54, 48, 36, 0.06);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .feature img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .feature-text {
+            font-family: 'Piazzolla', Arial, sans-serif;
+            font-size: 20px;
+            color: #1e1b16;
+            font-weight: 400;
+            line-height: 1.4;
+        }
+
+        .feature-sub {
+            font-family: 'RedHatText', Arial, sans-serif;
+            font-size: 16px;
+            color: #1e1b16;
+            font-weight: 300;
+            margin-top: 6px;
+        }
+
+        .info-section {
+            background: #fffdf5;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 32px 0;
+            text-align: center;
+        }
+
+        .info-title {
+            font-family: 'Piazzolla-ExtraBold', 'Piazzolla', Arial, sans-serif;
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e1b16;
+            margin-bottom: 12px;
+        }
+
+        .info-text {
+            font-family: 'RedHatText', Arial, sans-serif;
+            font-size: 18px;
+            color: #1e1b16;
+            font-weight: 300;
+            margin-bottom: 16px;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 14px;
+            color: #a1a1a1;
+            margin: 32px 0 0 0;
+            padding-bottom: 24px;
+        }
+
+        .footer img {
+            height: 32px;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                border-radius: 0;
+            }
+
+            .main-content {
+                padding: 16px 4px;
+            }
+
+            .feature {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .feature img {
+                margin-bottom: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="outer">
+        <div class="container">
+            <div class="header-bar">
+                <img src="https://fifeapp.hu/assets/assets/smiley.ec294625349fa120ceb0817a5315f76b.gif"
+                    alt="FiFe Smiley" style="height:40px;border-radius:6px;" />
+                <img src="https://fifeapp.hu/assets/assets/Logo.ea4a6ed5a7dfa3155fffdbfc5a6f1cae.png"
+                    alt="FiFe App logo" style="height:30px;" />
+            </div>
+            <div class="main-content">
+                <div class="features">Szia! Azért kapod ezt az emailt, mert valamikor a múltban jelezted, hogy érdekelne
+                    a FiFe App.
+                    Most eljött az idő, hogy tesztelésre megnyitom az oldalt, szóval nézd meg, hová fejlőtött a dolog!
+                </div>
+                <div class="title">Találj megbízható embereket a környékeden!</div>
+                <div class="subtitle">Fedezz fel egy segítői hálózatot ebben az új, közösségi alkalmazásban.</div>
+                <div class="cta-buttons">
+                    <a href="https://fifeapp.hu/csatlakozom" class="cta-btn">Regisztrálok</a>
+                    <a href="https://fifeapp.hu/login" class="cta-btn secondary">Bejelentkezem</a>
+                </div>
+                <img src="https://fifeapp.hu/assets/assets/images/HeroImage.cc05351cce70b978192c6c29c43a2397.png"
+                    alt="FiFe App Hero" class="hero-img" />
+                <div class="section-title">Hogyan működik?</div>
+                <div class="features">
+                    <div class="feature">
+                        <img src="https://fifeapp.hu/assets/assets/images/Funkcio1.a60d3b08cdb4650e9e33512cc8386f42.png"
+                            alt="Csatlakozz hozzánk!" />
+                        <div>
+                            <div class="feature-text">Csatlakozz hozzánk!</div>
+                            <div class="feature-sub">Hozd létre a profilod, és oszd meg az erőforrásaidat.</div>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <img src="https://fifeapp.hu/assets/assets/images/Funkcio%202.ac6aaced54c007feb8df4c51f9dfb4e3.png"
+                            alt="Keress segítséget!" />
+                        <div>
+                            <div class="feature-text">Keress segítséget!</div>
+                            <div class="feature-sub">Találj a környékeden tevékenykedő fiféket.</div>
+                        </div>
+                    </div>
+                    <div class="feature">
+                        <img src="https://fifeapp.hu/assets/assets/images/Funkcio1.a60d3b08cdb4650e9e33512cc8386f42.png"
+                            alt="Építs kapcsolatokat!" />
+                        <div>
+                            <div class="feature-text">Építs kapcsolatokat!</div>
+                            <div class="feature-sub">Jelöld meg kiket tartasz megbízhatónak.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="info-section">
+                    <div class="info-title">Miért a FiFe App?</div>
+                    <div class="info-text">
+                        A FiFe App bizalmi láncot épít fel. Ha valakiben megbíznak a barátaid, te is bízhatsz benne. Így
+                        épül
+                        fel a közösség, amelyre számíthatsz.<br>
+                        Célunk, hogy a nagyvárosokban is megteremtse a kisközösségek biztonságát, közelségét. Egy
+                        levegőt
+                        szívunk, tartsunk össze! Legyen újra normális, hogy számíthatunk egymásra!
+                    </div>
+                    <img src="https://fifeapp.hu/assets/assets/images/trust-connections.46d427d134a50c689f9fc3e6e95f54f1.png"
+                        alt="Bizalmi kapcsolatok" class="hero-img" style="max-width:350px;" />
+                </div>
+                <div class="info-section">
+                    <img src="https://fifeapp.hu/assets/assets/images/Community.42df58afdf9c5310b32fbe89213b4339.png"
+                        alt="Közösség" class="hero-img" style="max-width:350px;" />
+                    <div class="info-title">Kérjünk egymástól segítséget!</div>
+                    <div class="info-text">
+                        A FiFe App célja, hogy a nagyvárosokban is megteremtse a kisközösségek biztonságát, közelségét.
+                        Egy
+                        levegőt szívunk, tartsunk össze! Legyen újra normális, hogy számíthatunk egymásra!
+                    </div>
+                </div>
+                <div class="info-section" style="gap:32px;">
+                    <img src="https://fifeapp.hu/assets/assets/images/Slimey.2f71ddfd23964797a281f3c0686d5d37.png"
+                        alt="Slimey" style="width:40px;height:40px;vertical-align:middle;" />
+                    <div class="info-title">Csatlakozz egy innovatív közösséghez!</div>
+                    <a href="https://fifeapp.hu/csatlakozom" class="cta-btn secondary"
+                        style="margin-top:12px;">Regisztrálok
+                    </a>
+                </div>
+                <div class="info-section" style="gap:16px;">
+                    <div class="info-title">A FiFe App mögött</div>
+                    <div class="info-text">
+                        Szia, én Kristóf Ákos vagyok, néhány éve lett egy elképzelésem, hogy létrehozok egy valóban
+                        hasznos
+                        és biztonságos közösségi oldalt. Azóta sok idő eltelt, de a lelkesedésem nem tűnt el! Én a
+                        magyar
+                        közösségért és egy szebb jövőért dolgozom. Ha neked is fontosak ezek, kérlek támogasd a FiFe
+                        Appot!
+                    </div>
+                    <div class="cta-buttons" style="justify-content: flex-start;">
+                        <a href="https://fifeapp.hu/projekt" class="cta-btn">Beszállnál a projektbe?</a>
+                        <a href="https://www.patreon.com/c/fifeapp" class="cta-btn secondary">Patreon támogatás</a>
+                    </div>
+                    <img src="https://fifeapp.hu/assets/assets/images/Trust.a52ad64fb10051dcfb84d08f5887d60d.png"
+                        alt="Trust" class="hero-img" style="max-width:350px;" />
+                </div>
+            </div>
+            <div class="footer">
+                Készítette: Kristóf Ákos<br>
+                <img src="https://fifeapp.hu/assets/assets/smiley.ec294625349fa120ceb0817a5315f76b.gif"
+                    alt="FiFe Smiley" />
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
