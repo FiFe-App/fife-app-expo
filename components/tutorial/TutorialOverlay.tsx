@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, createContext, ReactNode } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setTutorialStep, setTutorialActive } from "@/redux/reducers/tutorialReducer";
+import { setTutorialStep, setTutorialActive, startTutorial } from "@/redux/reducers/tutorialReducer";
 import {
   View,
   StyleSheet, Dimensions
@@ -99,7 +99,7 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
     height: dimensions.height - insets.top - insets.bottom,
   };
   const pathname = usePathname();
-  const { tutorialStep, isTutorialActive, tutorialLayouts } = useSelector(
+  const { tutorialStep, isTutorialActive, isTutorialStarted, tutorialLayouts } = useSelector(
     (state: RootState) => state.tutorial
   );
   //dispatch(setTutorialActive(true));
@@ -129,28 +129,36 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
       }
     } else {
       dispatch(setTutorialActive(false)); // End tutorial
+      dispatch(startTutorial(false)); // End tutorial
     }
   }, [dispatch, tutorialStep, tutorialSteps]);
 
   const handleNext = useCallback(() => {
+    if (tutorialStep === 0 && !isTutorialStarted) {
+      dispatch(startTutorial(true));
+    }
     if (tutorialStep < tutorialSteps.length - 1) {
       dispatch(setTutorialStep(tutorialStep + 1));
     } else {
       dispatch(setTutorialActive(false)); // End tutorial
     }
-  }, [dispatch, tutorialStep, tutorialSteps.length]);
-
-  useEffect(() => {
-    if (pathname == "/" + currentStep?.key) {
-      handleNext();
-    }
-  }, [currentStep?.key, handleNext, pathname]);
+  }, [dispatch, isTutorialStarted, tutorialStep]);
 
   console.log("pathname", pathname);
   const canShow = !!(pathname.includes(currentStep?.page)) || !currentStep?.page;
   const showNext = !!(currentStep?.page === nextStep?.page) || !nextStep?.page;
+  const shouldAbortTutorial = isTutorialActive && pathname !== currentStep.page && currentStep.page !== undefined;
+  console.log("ABORT", shouldAbortTutorial);
+  useEffect(() => {
+    if (shouldAbortTutorial && pathname !== "/csatlakozom/elso-lepesek") {
+      dispatch(setTutorialActive(false));
+      dispatch(startTutorial(false));
+    }
 
-  if (isTutorialActive && user && pathname != "/" && pathname != "/login" && !pathname.includes("/csatlakozom"))
+  }, [dispatch, pathname, shouldAbortTutorial]);
+
+
+  if (isTutorialStarted && isTutorialActive && highlight && user && pathname != "/" && pathname != "/login" && !pathname.includes("/csatlakozom"))
     return (
       <TutorialContext.Provider value={{ handleNextTutorialStep: handleNext }}>
         <Animated.View
@@ -289,6 +297,50 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
       </TutorialContext.Provider>
     );
 
+  if (pathname == "/" && !isTutorialStarted && isTutorialActive)
+    return <TutorialContext.Provider value={{ handleNextTutorialStep: handleNext }}>
+      <View
+        pointerEvents="auto"
+        style={{
+          alignItems: "center",
+          backgroundColor: "#000000Cf",
+          padding: 16,
+          position: "absolute",
+          // Place text below highlight if highlight is in top half, otherwise above
+          top:
+            layout.height / 2 > highlight.y + highlight.height / 2
+              ? highlight.y + highlight.height + 20
+              : undefined,
+          bottom:
+            layout.height / 2 <= highlight.y + highlight.height / 2
+              ? layout.height - highlight.y - 50
+              : undefined,
+        }}
+      >
+        <Smiley style={{ marginBottom: 8 }} />
+        {/* Tutorial message */}
+        <ThemedText style={[styles.message, { color: theme.colors.onSecondary }]} type="defaultSemiBold" variant="headlineMedium">{currentStep.message}</ThemedText>
+        {currentStep.description && <ThemedText style={[styles.message, { color: theme.colors.onSecondary }]} variant="headlineSmall">{currentStep.description}</ThemedText>
+        }
+        {/* Next button */}
+        <View style={{ flexDirection: "row", gap: 24 }}>
+          <Button
+            mode="elevated"
+            onPress={handlePrev}>
+            {tutorialStep > 0 ? "Vissza" : "Átugrom"}
+          </Button>
+          {showNext ? <Button
+            mode="contained"
+            onPress={handleNext}>
+            {tutorialStep < tutorialSteps.length - 1
+              ? "Következő"
+              : "Kész!"}
+
+          </Button> : <Text style={{ color: "white" }}>Kattints a kiemelt részre</Text>}
+        </View>
+      </View>
+      {children}
+    </TutorialContext.Provider>;
   // Render children if overlay is not active
   return <TutorialContext.Provider value={{ handleNextTutorialStep: handleNext }}>{children}</TutorialContext.Provider>;
 };
