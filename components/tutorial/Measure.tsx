@@ -14,6 +14,8 @@ interface MeasureProps extends ViewProps {
 }
 
 const Measure = ({ children, name, ...viewProps }: MeasureProps) => {
+  return children;
+  
   const dimensions = Dimensions.get("window");
   const childRef = useRef<View>(null);
   const dispatch = useDispatch();

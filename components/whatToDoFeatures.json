@@ -1,0 +1,37 @@
+[
+ {
+    "title": "Hirdesd a bizniszed!",
+    "description": "Hozz létre bizniszt a profil oldalon, az **Új biznisz** gombra kattintva, Így létrehozhatsz egy ingyenes és örök hirdetést. Feltölthetsz **képeket** és megjelölheted a **helyét** is.",
+    "links": [
+      { "title": "Új biznisz létrehozása", "url": "/biznisz/new" }
+    ]
+  },
+ {
+    "title": "Adj meg elérhetőségeket!",
+    "description": "Ahhoz, hogy elérjenek az emberek, meg kell adnod elérhetőségeket: Telefon, email, insta vagy saját weboldal is lehet.",
+    "links": [
+      { "title": "Profil szerkesztése", "url": "/user/edit" }
+    ]
+  },
+   {
+    "title": "Keresés bizniszek közt",
+    "description": "A Biznisz oldalon kereshetsz a környékeden tevékenykedő fifék bizniszei közt. Lista és Térkép nézetben is keresgélhetsz. ",
+    "links": [
+      { "title": "Bizniszek oldal", "url": "/biznisz" }
+    ]
+  },
+  {
+    "title": "Ajánlj bizniszeket",
+    "description": "Egy biznisz oldalán kattints az **Ajánlom** gombra, hogy mások is tudják hogy hasznos! Ha több mondanivalód van **véleményt** is írhatsz",
+    "links": [
+      { "title": "Egy Biznisz oldala", "url": "/biznisz/44" }
+    ]
+  },
+  {
+    "title": "Jelölj valakit megbízhatónak",
+    "description": "Egy fife profil oldalán meg tudod jelölni, hogy őt megbízhatónak tartod, hogy mások is tudják hogy biztonsággal fordulhatnak hozzá. Így kiéphetünk megbízhatóság alapú biztonságot.",
+    "links": [
+      { "title": "Egy fife oldala", "url": "/user/e53e948e-debe-44c1-852b-e94c29ffcb9b" }
+    ]
+  }
+]
