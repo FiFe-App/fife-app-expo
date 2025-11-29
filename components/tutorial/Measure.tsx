@@ -19,7 +19,7 @@ const Measure = ({ children, name, ...viewProps }: MeasureProps) => {
   const dispatch = useDispatch();
   const tutorialContext = useContext(TutorialContext);
   const handleNext = tutorialContext?.handleNextTutorialStep;
-  const { isTutorialActive } = useSelector(
+  const { isTutorialActive, isTutorialStarted } = useSelector(
     (state: RootState) => state.tutorial
   );
   const [layout, setLayout] = useState(null);
@@ -52,7 +52,7 @@ const Measure = ({ children, name, ...viewProps }: MeasureProps) => {
   const handlePress = (...args: unknown[]) => {
     console.log("pressed");
 
-    if (handleNext) {
+    if (handleNext && isTutorialStarted) {
       handleNext();
     }
   };

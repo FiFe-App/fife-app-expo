@@ -1,7 +1,7 @@
-import { theme } from "@/assets/theme";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { supabase } from "@/lib/supabase/supabase";
+import { setTutorialActive, startTutorial } from "@/redux/reducers/tutorialReducer";
 import { setName, login as sliceLogin } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
@@ -10,7 +10,7 @@ import { Image } from "expo-image";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
-import { ActivityIndicator, Button, Card, Icon, Text } from "react-native-paper";
+import { ActivityIndicator, Button, Icon } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 AppState.addEventListener("change", (state) => {
@@ -66,6 +66,8 @@ export default function Index() {
           if (data.user) getUserData(data.user);
         });
     }
+    dispatch(startTutorial(true))
+    dispatch(setTutorialActive(true))
   }, [dispatch, token_data]);
 
   return (
@@ -89,30 +91,13 @@ export default function Index() {
       )}
       {!error && uid && (
         <>
-          <View>
+          <View style={{ justifyContent: "center", flex: 1, gap: 16, width: "100%" }}>
             <ThemedText type="title" style={{ textAlign: "center" }}>
               Gratulálok!
             </ThemedText>
             <ThemedText style={{ textAlign: "center" }}>Most már te is FiFe vagy!</ThemedText>
-            <ThemedText style={{ textAlign: "center" }}>Mivel szeretnél kezdeni?</ThemedText>
-          </View>
-          <View style={{ paddingHorizontal: 20, gap: 16 }}>
-            <Link asChild href="/user/edit">
-              <Card style={{ width: "100%", padding: 4, alignItems: "center", gap: 8, backgroundColor:theme.colors.onTertiary }}>
-                <Image source={require("@/assets/images/Phone.png")} contentFit="contain"
-                  style={{ width: "100%", height: 150, borderRadius: 8 }} />
-                <Text style={{ textAlign: "center" }} variant="titleLarge">Profilod</Text>
-                <Text style={{ textAlign: "center" }} variant="bodyMedium">Végy fel bizniszeket a profilodhoz, hogy megtaláljanak mások.</Text>
-              </Card>
-            </Link>
-            <Link asChild href="/biznisz">
-              <Card style={{ width: "100%", padding: 4, alignItems: "center", gap: 8, backgroundColor:theme.colors.onTertiary }}>
-                <Image source={require("@/assets/images/Map guy.png")} contentFit="contain"
-                  style={{ width: "100%", height: 150, borderRadius: 8 }} />
-                <Text style={{ textAlign: "center" }} variant="titleLarge">Keress</Text>
-                <Text style={{ textAlign: "center" }} variant="bodyMedium">Végy fel bizniszeket a profilodhoz, hogy megtaláljanak mások.</Text>
-              </Card>
-            </Link>
+            <Image source={require("@/assets/images/Connected.png")} contentFit="contain" style={{ width: "100%", height: 400, alignSelf: "center" }} />
+
           </View>
         </>
       )}
