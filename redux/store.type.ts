@@ -126,9 +126,10 @@ export interface LayoutRectangle {
 
 export interface TutorialState {
   functions: string[];
-    isTutorialActive: boolean;
-    tutorialStep: number;
-    tutorialLayouts: { [key: string]: LayoutRectangle };
+  isTutorialActive: boolean;
+  isTutorialStarted?: boolean;
+  tutorialStep: number;
+  tutorialLayouts: { [key: string]: LayoutRectangle };
 }
 
 export interface ImageDataType extends ImagePickerAsset {

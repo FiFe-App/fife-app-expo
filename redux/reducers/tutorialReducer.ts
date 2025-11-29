@@ -12,6 +12,7 @@ const initialState: TutorialState = {
   ],
   tutorialStep: 0,
   isTutorialActive: true,
+  isTutorialStarted: false,
   tutorialLayouts: {},
 };
 
@@ -53,6 +54,9 @@ const tutorialReducer = createSlice({
     setTutorialActive(state, action: PayloadAction<boolean>) {
       state.isTutorialActive = action.payload;
     },
+    startTutorial(state, action: PayloadAction<boolean>) {
+      state.isTutorialStarted = action.payload;
+    },
     setTutorialStep(state, action: PayloadAction<number>) {
       state.tutorialStep = action.payload;
     },
@@ -62,7 +66,7 @@ const tutorialReducer = createSlice({
   },
 });
 
-export const { viewFunction, loadViewedFunctions, clearTutorialState, setTutorialActive, setTutorialStep, specifyTutorialStepLayout } =
+export const { viewFunction, loadViewedFunctions, clearTutorialState, setTutorialActive, startTutorial, setTutorialStep, specifyTutorialStepLayout } =
   tutorialReducer.actions;
 
 export default tutorialReducer;

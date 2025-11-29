@@ -38,6 +38,7 @@ import {
   clearTutorialState,
   setTutorialActive,
   setTutorialStep,
+  startTutorial,
   viewFunction,
 } from "@/redux/reducers/tutorialReducer";
 import { theme } from "@/assets/theme";
@@ -177,7 +178,7 @@ export default function Index() {
               </View>
               <View style={{ flexDirection: "row", gap: 4, margin: 4 }}>
                 {myProfile ? (
-                  <View style={{flexDirection:"column", width:"100%", gap:4}}>
+                  <View style={{ flexDirection: "column", width: "100%", gap: 4 }}>
                     <Measure name="edit-profile">
                       <Link
                         asChild
@@ -231,7 +232,7 @@ export default function Index() {
                   icon="briefcase"
                 >
                   <Measure name="user-biznisz-tabs">
-                    <View style={{flex:1}}>
+                    <View style={{ flex: 1 }}>
                       <MyBuzinesses uid={uid} myProfile={myProfile} />
                     </View>
                   </Measure>
