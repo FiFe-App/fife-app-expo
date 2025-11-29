@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+    <meta charset="UTF-8">
+    <title>FiFe Hírlevél</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Base */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f7f5f2;
+        }
+
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background: #f7f5f2;
+        }
+
+        .main {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fffcf5;
+        }
+
+        /* Header */
+        .header {
+            background: #000000;
+            color: #ffffff;
+            text-align: center;
+            padding: 28px 20px 22px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font: 700 30px Arial, Helvetica, sans-serif;
+            letter-spacing: .5px;
+            color: #ffffff;
+        }
+
+        .brand-bar {
+            height: 4px;
+            background: #DF442E;
+            line-height: 0;
+            font-size: 0;
+        }
+
+        /* Footer */
+        .footer {
+            background: #FFFDF5;
+            color: #4f5665;
+            text-align: center;
+            padding: 24px 20px;
+            font: 14px Arial, Helvetica, sans-serif;
+            border-top: 1px solid #e2e2e2;
+        }
+
+        .footer a {
+            color: #DF442E;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Mobile */
+        @media only screen and (max-width:620px) {
+
+            .header,
+            .footer {
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+            }
+        }
+
+        /* Fallback for some clients (litmus friendly) */
+        @media screen yahoo {
+            .main {
+                width: 600px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <center class="wrapper">
+        <table class="main" role="presentation" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+                <td class="header">
+                    <h1>FiFe Hírlevél</h1>
+                </td>
+            </tr>
+            <tr>
+                <td class="brand-bar">&nbsp;</td>
+            </tr>
+            <!-- ...existing code (no inner content per requirement)... -->
+            <tr>
+                <td class="footer">
+                    <p style="margin:0 0 8px;">
+                        <a href="https://fife.hu">Főoldal</a> |
+                        <a href="https://fife.hu/rolunk">Rólunk</a> |
+                        <a href="https://fife.hu/kapcsolat">Kapcsolat</a> |
+                        <a href="*|UNSUB|*">Leiratkozás</a>
+                    </p>
+                    <p style="margin:0;">&copy; 2024 FiFe. Minden jog fenntartva.</p>
+                </td>
+            </tr>
+        </table>
+    </center>
+</body>
+
+</html>

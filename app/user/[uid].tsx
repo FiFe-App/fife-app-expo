@@ -188,18 +188,6 @@ export default function Index() {
                         <Button mode="contained-tonal">Profilom szerkesztése</Button>
                       </Link>
                     </Measure>
-                    {/* Tutorial Start Button */}
-                    <Button
-                      mode="outlined"
-                      style={{ flex: 1 }}
-                      onPress={() => {
-                        dispatch(setTutorialStep(0));
-                        dispatch(setTutorialActive(true));
-                        router.navigate("/home");
-                      }}
-                    >
-                      Bemutató újraindítása
-                    </Button>
                   </View>
                 ) : (
                   <>
