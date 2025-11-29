@@ -57,7 +57,8 @@ const tutorialReducer = createSlice({
       state.tutorialStep = action.payload;
     },
     specifyTutorialStepLayout(state, action: PayloadAction<{layout:LayoutRectangle,key:string}>) {
-      state.tutorialLayouts[action.payload.key] = action.payload.layout;
+      if (state.tutorialLayouts)
+        state.tutorialLayouts[action.payload.key] = action.payload.layout;
     },
   },
 });

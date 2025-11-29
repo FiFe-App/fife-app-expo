@@ -9,6 +9,7 @@ import { ActivityIndicator, FAB, Text } from "react-native-paper";
 import { useDispatch } from "react-redux";
 import BuzinessItem from "../buziness/BuzinessItem";
 import { ThemedText } from "../ThemedText";
+import { ThemedView } from "../ThemedView";
 
 interface MyBuzinessesProps {
   uid: string;
@@ -65,13 +66,24 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
           ))
         ) : (
           <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
-            <Image
-              source={require("../../assets/images/img-prof.png")}
-              style={{ height: 200, width: 200 }}
-            />
-            <ThemedText type="subtitle">
-              Itt fognak megjelenni a bizniszeid.
-            </ThemedText>
+
+            <ThemedView responsive={400} style={{flexDirection:"row",padding:10, alignItems:"center"}}>
+              <Image
+                source={require("../../assets/images/img-prof.png")}
+                style={{ height: 200, width: 200 }}
+              />
+              <View style={{alignItems:"center",justifyContent:"center" ,flex:1,gap:16}}>
+                <ThemedText type="subtitle">
+                  Itt fognak megjelenni a saját bizniszeid.
+                </ThemedText>
+                <FAB
+                  icon={"plus"}
+                  label={"Új biznisz"}
+                  visible={myProfile}
+                  onPress={() => router.push("/biznisz/new")}
+                />
+              </View>
+            </ThemedView>
             <Text>
               A te bizniszeid azon hobbijaid, képességeid vagy szakmáid listája,
               amelyeket meg szeretnél osztani másokkal is. {"\n"}Ha te mondjuk
@@ -81,13 +93,13 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
           </View>
         )}
       </ScrollView>
-      <FAB
+      {!!buzinesses.length && <FAB
         icon={"plus"}
         label={"Új biznisz"}
         style={[styles.fabStyle]}
         visible={myProfile}
         onPress={() => router.push("/biznisz/new")}
-      />
+      />}
     </SafeAreaView>
   );
 };
