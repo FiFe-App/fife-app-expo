@@ -141,6 +141,7 @@ export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewSt
               >
                 {options.map((option, ind) => (
                   <Menu.Item
+                    theme={{ colors: { onSurface: "green" } }} 
                     key={"option" + ind}
                     onPress={option.onPress}
                     title={option.title}
