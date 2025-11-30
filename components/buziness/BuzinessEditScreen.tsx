@@ -4,20 +4,18 @@ import TagInput from "@/components/TagInput";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import {
-  addDialog,
   clearOptions,
   hideLoading,
   setOptions,
-  showLoading,
+  showLoading
 } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { ImageDataType, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import {
-  Button,
   Card,
   Divider,
   Headline,
@@ -32,9 +30,8 @@ import {
   TouchableRipple,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { Circle, MapView, Marker } from "../mapView/mapView";
+import { MapView, Marker } from "../mapView/mapView";
 import { ThemedView } from "../ThemedView";
-import { setLocationError } from "@/redux/reducers/userReducer";
 import {
   Dropdown,
   DropdownInputProps,
@@ -48,6 +45,8 @@ import BuzinessImageUpload, {
 import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
 import { Image } from "expo-image";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
+import BuzinessItem from "./BuzinessItem";
+import { Button } from "../Button";
 
 interface NewBuzinessInterface {
   title: string;
@@ -176,12 +175,15 @@ export default function BuzinessEditScreen({
             await save();
             dispatch(hideLoading());
           },
+          theme: {
+            colors: {primary:"red"}
+          }
         },
       ]),
     );
     return () => {
       dispatch(clearOptions());
-    }
+    };
   }, [canSubmit, dispatch, save, loading]);
 
   useFocusEffect(
@@ -271,7 +273,7 @@ export default function BuzinessEditScreen({
                   Ezen az oldalon fel tudsz venni egy új bizniszt a profilodba.
                   {"\n"}A te bizniszeid azon hobbijaid, képességeid vagy
                   szakmáid listája, amelyeket meg szeretnél osztani másokkal is.{" "}
-                  {"\n"}Ha te mondjuk úgy gyártod a sütiket, mint egy gép, és
+                  {"\n"}Ha, mondjuk, futószalagon gyártod a sütiket, és
                   ezt felveszed a bizniszeid közé, a Biznisz oldalon
                   megtalálható leszel a süti kulcsszóval.
                 </Text>
@@ -367,6 +369,7 @@ export default function BuzinessEditScreen({
             <View
               style={{
                 flexDirection: "row",
+                flexWrap:"wrap",
                 justifyContent: "space-between",
                 alignItems: "center",
                 padding: 8,
@@ -453,7 +456,7 @@ export default function BuzinessEditScreen({
                 </ThemedText>
                 <Button
                   onPress={() => setMapModalVisible(true)}
-                  mode={"contained"}
+                  mode={"contained-tonal"}
                 >
                   Válassz környéket
                 </Button>
@@ -461,6 +464,53 @@ export default function BuzinessEditScreen({
             )}
           </View>
         </View>
+        <ThemedView
+          type="default"
+          style={{
+            padding: 8,
+            bottom: 0,
+            width: "100%",
+            gap:16
+          }}
+        >
+          <ThemedText>Így fog megjelenni a bizniszed:</ThemedText>
+          <BuzinessItem
+            data={{
+              title: ((newBuziness.title||"A biznisz címe") + (categories ? " $ " + categories : " $ Egy kategória $ Egy másik kategória")),
+              description: newBuziness.description || "Hosszabb leírás hogy miről szól a bizniszed.",
+              images: images,
+              location: circle
+                ? `POINT(${circle.location.longitude} ${circle.location.latitude})`
+                : null,
+              defaultContact,
+              recommendations: 0,
+            }}
+          />
+          <View style={{alignItems:"flex-end"}}>
+            <Button mode="contained" onPress={save}>Mentés</Button>
+          </View>
+        </ThemedView>
+        <Portal>
+          <Modal
+            visible={mapModalVisible}
+            onDismiss={() => {
+              setMapModalVisible(false);
+            }}
+            contentContainerStyle={{}}
+            dismissableBackButton
+          >
+            <ThemedView style={[{ flex: 1, padding: 16 }]}>
+              <MapSelector
+                data={circle}
+                setData={setCircle}
+                setOpen={setMapModalVisible}
+                searchEnabled
+                title="Találjanak meg a helyiek!"
+                text="Ha fontos a földrajzi helyzete a bizniszednek, itt megadhatod tetszőleges pontossággal."
+              />
+            </ThemedView>
+          </Modal>
+        </Portal>
       </ScrollView>
       <Portal>
 
