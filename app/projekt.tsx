@@ -36,7 +36,7 @@ const AboutMe = () => {
             <Text variant="bodyLarge">• Pályázatra</Text>
           </View>
           <Text variant="bodyLarge">
-            Ha beszállnál, írj egy emailt ide: <Text variant="bodyLarge" style={{color:theme.colors.tertiary}}><Link href="mailto:kristofakos1229@gmail.com">kristofakos1229@gmail.com</Link></Text>
+            Ha beszállnál, írj egy e-mailt ide: <Text variant="bodyLarge" style={{color:theme.colors.tertiary}}><Link href="mailto:kristofakos1229@gmail.com">kristofakos1229@gmail.com</Link></Text>
           </Text>
           <ThemedView responsive={1000} style={{ gap: 16, zIndex: 10 }}>
             <Link href="https://github.com/FiFe-App/fife-app-expo">
