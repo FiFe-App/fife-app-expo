@@ -66,7 +66,7 @@ export default function Index() {
         </Button>
         <Divider style={{ marginVertical: 16 }} />{" "}
         <Link href="/csatlakozom/email-regisztracio" asChild>
-          <Button mode="contained">Email és Jelszó regisztráció</Button>
+          <Button mode="contained">E-mail és Jelszó regisztráció</Button>
         </Link>
       </View>
     </ThemedView>

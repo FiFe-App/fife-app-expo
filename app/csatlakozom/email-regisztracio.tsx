@@ -125,10 +125,10 @@ export default function Index() {
         <View>
           <TextInput
             mode="outlined" onChangeText={setName} value={name} label="Neved*" />
-          <HelperText type="info">A neved látható lesz mindenki számára aki tag.</HelperText>
+          <HelperText type="info">A neved látható lesz mindenki számára, aki tag.</HelperText>
           
         </View><TextInput
-          mode="outlined" onChangeText={setEmail} value={email} label="Email*" />
+          mode="outlined" onChangeText={setEmail} value={email} label="E-mail*" />
         <TextInput
           mode="outlined"
           onChangeText={setPassword}
@@ -151,7 +151,7 @@ export default function Index() {
             />
           </View>
           <ThemedText type="label">
-            Tartalmazzon kis- és nagybetűt valamint számot is.
+            Tartalmazzon kis- és nagybetűt, valamint számot is.
           </ThemedText>
         </View>
         <TextInput
