@@ -169,7 +169,7 @@ export default function Index() {
             mode="outlined"
             onChangeText={setEmail}
             value={email}
-            label="Email"
+            label="E-mail"
           />
           <TextInput
             mode="outlined"

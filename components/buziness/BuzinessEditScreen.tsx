@@ -267,7 +267,7 @@ export default function BuzinessEditScreen({
                   Ezen az oldalon fel tudsz venni egy új bizniszt a profilodba.
                   {"\n"}A te bizniszeid azon hobbijaid, képességeid vagy
                   szakmáid listája, amelyeket meg szeretnél osztani másokkal is.{" "}
-                  {"\n"}Ha te mondjuk úgy gyártod a sütiket, mint egy gép, és
+                  {"\n"}Ha, mondjuk, futószalagon gyártod a sütiket, és
                   ezt felveszed a bizniszeid közé, a Biznisz oldalon
                   megtalálható leszel a süti kulcsszóval.
                 </Text>

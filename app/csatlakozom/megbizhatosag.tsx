@@ -62,9 +62,9 @@ const Megbizhatosag = () => {
           Ezen a közösségi oldalon nagy eséllyel ismeretlen emberekkel fog
           összefújni a szél. Mivel sokan okkal nem bíznak meg másokban, ezen a
           platformon figyelünk arra, hogy legyen alapja a bizalomnak. {"\n\n"}Ha
-          találkozol itt valakivel, akiben megbízol és tudod hogy nem vágna át
-          másokat, megbízhatónak jelölheted őt, a profilján, hogy így támogasd
-          és a bizalom által építsük fel a közösségünket.
+          találkozol itt valakivel, akiben megbízol, és tudod, hogy nem vágna át
+          másokat, megbízhatónak jelölheted a profilján, így támogatva és a
+          bizalom által építve a közösségünket.
         </ThemedText>
         <View style={{ alignItems: "center", paddingTop: 32 }}>
           <Button
