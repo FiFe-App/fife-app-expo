@@ -52,7 +52,7 @@ const Hero = () => {
           ]}
         >
           <Text variant="headlineMedium">
-            Fedezz fel egy segítői hálózatot, ebben az új, közösségi
+            Építs magad köré segítői hálózatot ebben az új, közösségi
             alkalmazásban.
           </Text>
           <Link asChild href="/csatlakozom">
@@ -164,7 +164,7 @@ const HowItWorks = () => {
           <StepItem
             image={require("../assets/images/Funkcio1.png")}
             title="Építs kapcsolatokat!"
-            description="Jelöld meg kiket tartasz megbízhatónak."
+            description="Jelöld meg, kiket tartasz megbízhatónak."
           />
         </View>
       </View>
@@ -349,7 +349,7 @@ const Newsletter = () => {
           ]}
         >
           <View style={{ width: "100%", padding: 24, gap: 16 }}>
-            <Text variant="labelLarge">Email címed</Text>
+            <Text variant="labelLarge">E-mail címed</Text>
             <TextInput mode="outlined" placeholder="email@fifeapp.hu" />
             <Text variant="labelLarge">Üzenet (opcionális)</Text>
             <TextInput
@@ -389,7 +389,7 @@ const AboutMe = () => {
             létrehozok egy valóban hasznos és biztonságos közösségi oldalt.
             Azóta sok idő eltelt, de a lelkesedésem nem tűnt el! Én a magyar
             közösségért és egy szebb jövőért dolgozom. Ha neked is fontosak
-            ezek, kérlek támogasd a FiFe Appot!
+            ezek, kérlek, támogasd a FiFe Appot!
           </Text>
           <ThemedView responsive={1000} style={{ gap: 16, zIndex: 10 }}>
             <Link href="/projekt" asChild>
