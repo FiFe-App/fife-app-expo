@@ -66,15 +66,17 @@ export interface EventItemInterface extends Tables<"events"> {
   avatarUrl?: string | null;
   eventResponses: Tables<"eventResponses">[];
 }
-export interface SearchParams {
-  text?: string;
-  searchCircle?: {
+
+export interface CircleType {
     location: {
       latitude: number;
       longitude: number;
     };
     radius: number;
-  };
+  }
+export interface SearchParams {
+  text?: string;
+  searchCircle?: CircleType;
   loading?: boolean;
   searchType?: string;
   skip?: number;
@@ -115,8 +117,19 @@ export interface InfoState {
   notificationToken: null | undefined | string;
 }
 
+export interface LayoutRectangle {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface TutorialState {
   functions: string[];
+  isTutorialActive: boolean;
+  isTutorialStarted?: boolean;
+  tutorialStep: number;
+  tutorialLayouts: { [key: string]: LayoutRectangle };
 }
 
 export interface ImageDataType extends ImagePickerAsset {

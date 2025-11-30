@@ -41,22 +41,23 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
               style={{
                 marginRight: 8,
                 flexDirection: "row",
+                flexWrap:"wrap",
                 gap: 16
               }}
             >
               <View style={{}}>
                 {!showOptions && !!created_at && (
-                  <Text style={{}}>
+                  <Text>
                     <Icon size={16} source="calendar" /> <Text>{elapsedTime(created_at)} fife</Text>
                   </Text>
                 )}
               </View>
-              <View style={{ flexDirection: "row" }}>
+              {recommendations > 0 && <View style={{ flexDirection: "row" }}>
                 <Text>
                   <Icon size={16} source="account-group" />{" "}
                   <Text>{recommendations ? <Text>{recommendations} ember ajánlja</Text> : <Text>Még senki sem ajánlotta</Text>}</Text>
                 </Text>
-              </View>
+              </View>}
             </View>
           </View>
         </View>

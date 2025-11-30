@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase/supabase";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { TutorialState } from "../store.type";
+import { LayoutRectangle, TutorialState } from "../store.type";
 
 const initialState: TutorialState = {
   functions: [
@@ -10,6 +10,10 @@ const initialState: TutorialState = {
     "contactsProfile",
     "friendsProfile",
   ],
+  tutorialStep: 0,
+  isTutorialActive: true,
+  isTutorialStarted: false,
+  tutorialLayouts: {},
 };
 
 const tutorialReducer = createSlice({
@@ -47,10 +51,23 @@ const tutorialReducer = createSlice({
       console.log("state", tutorialReducer.getInitialState());
       state.functions = tutorialReducer.getInitialState().functions;
     },
+    setTutorialActive(state, action: PayloadAction<boolean>) {
+      state.isTutorialActive = action.payload;
+    },
+    startTutorial(state, action: PayloadAction<boolean>) {
+      state.isTutorialStarted = action.payload;
+    },
+    setTutorialStep(state, action: PayloadAction<number>) {
+      state.tutorialStep = action.payload;
+    },
+    specifyTutorialStepLayout(state, action: PayloadAction<{layout:LayoutRectangle,key:string}>) {
+      if (state.tutorialLayouts)
+        state.tutorialLayouts[action.payload.key] = action.payload.layout;
+    },
   },
 });
 
-export const { viewFunction, loadViewedFunctions, clearTutorialState } =
+export const { viewFunction, loadViewedFunctions, clearTutorialState, setTutorialActive, startTutorial, setTutorialStep, specifyTutorialStepLayout } =
   tutorialReducer.actions;
 
 export default tutorialReducer;

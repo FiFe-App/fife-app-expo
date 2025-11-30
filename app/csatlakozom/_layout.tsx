@@ -65,12 +65,7 @@ export default function RootLayout() {
         </Stack>
       </ScrollView>
       <ThemedView style={{ alignItems: "center", width: "100%", position: "absolute", bottom: 0, backgroundColor: "transparent" }}>
-        <Dots
-          length={pages.length}
-          active={current}
-          passiveColor={theme.colors.backdrop}
-          activeColor={theme.colors.onBackground}
-        />
+
         <View
           style={{
             alignItems: "flex-end",
@@ -90,11 +85,21 @@ export default function RootLayout() {
               Vissza
             </Button>
           </Link>
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", height: 48 }}>
+            <Dots
+              length={pages.length}
+              active={current}
+
+              passiveColor={theme.colors.backdrop}
+              activeColor={theme.colors.onBackground}
+            />
+          </View>
           {!(
             path === "/csatlakozom/regisztracio" ||
             path === "/csatlakozom/email-regisztracio" ||
             path === "/csatlakozom/email-ellenorzes"
-          ) && (
+          ) &&
+            (
               <Link href={next} asChild
                 disabled={path === "/csatlakozom/megbizhatosag" && !canGoNext}>
                 <Button mode="contained">Tovább</Button>

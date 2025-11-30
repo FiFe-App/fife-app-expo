@@ -20,6 +20,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { MyAppbar } from "./_layout";
 import Smiley from "@/components/Smiley";
 import BuzinessSearchInput from "@/components/BuzinessSearchInput";
+import WhatToDo from "@/components/WhatToDo";
+import { Button } from "@/components/Button";
 import { useProfileSearch } from "@/hooks/useProfileSearch";
 import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 
@@ -34,6 +36,7 @@ export default function Index() {
   const dispatch = useDispatch();
 
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
+  const [whatVisible, setWhatVisible] = useState(false);
   const { search, loadNext, hasMore } = useProfileSearch();
 
   const handleSearch = () => {
@@ -61,7 +64,9 @@ export default function Index() {
             <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
             <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, flex: 1 }}>
               <Text variant="titleMedium">Üdvözöllek a FiFe Appban!</Text>
-              <Text variant="bodyMedium">Fedezd fel az új fiféket a környékeden.</Text>
+              <Button icon="help-circle" onPress={() => setWhatVisible(true)} style={{padding:0}}>
+                <Text variant="labelMedium">Mit lehet itt csinálni?</Text>
+              </Button>
             </View>
           </View>
         </View>
@@ -69,6 +74,7 @@ export default function Index() {
           <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Új fifék Budapesten</ThemedText>
         </View>
         <UsersList load={loadNext} canLoadMore={hasMore} />
+        <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />
         <Portal>
           <Modal
             visible={locationMenuVisible}

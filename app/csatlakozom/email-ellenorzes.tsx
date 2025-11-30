@@ -91,10 +91,6 @@ export default function Index() {
   };
 
   useEffect(() => {
-    //if (edit) setEmail("");
-  }, [edit]);
-
-  useEffect(() => {
     AsyncStorage.getItem("email").then((res) => {
       if (res) setEmail(res);
     });

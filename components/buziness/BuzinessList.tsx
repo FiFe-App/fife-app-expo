@@ -10,6 +10,7 @@ import {
   storeBuzinessSearchParams,
 } from "@/redux/reducers/buzinessReducer";
 import { useMyLocation } from "@/hooks/useMyLocation";
+import Measure from "../tutorial/Measure";
 
 interface BuzinessListProps {
   load: (arg0: number) => void;
@@ -56,14 +57,18 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
           marginVertical: 8,
         }}
       >
-        {buzinesses.map((buzinessItem) =>
+        {buzinesses.map((buzinessItem,ind) =>
           buzinessItem.id === -1 ? (
             <Divider
               key={Math.random() * 100000 + 100000 + "div"}
               style={{ marginVertical: 16 }}
             />
           ) : (
-            <BuzinessItem data={buzinessItem} key={buzinessItem.id} />
+            <Measure key={buzinessItem.id} name={ind==0 ? "first-biznisz" : null }>
+              <View>
+                <BuzinessItem data={buzinessItem} />
+              </View>
+            </Measure>
           ),
         )}
         {!searchParams?.searchCircle &&

@@ -3,7 +3,7 @@ import InfoLayer from "@/components/InfoLayer";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { clearOptions } from "@/redux/reducers/infoReducer";
 import { persistor, RootState, store } from "@/redux/store";
-import { Link, Stack, useNavigation, usePathname, useSegments } from "expo-router";
+import { Link, Stack, useGlobalSearchParams, useNavigation, usePathname, useSegments } from "expo-router";
 import React, { ReactNode } from "react";
 import { useFonts } from "expo-font";
 import { useEffect, useState } from "react";
@@ -18,6 +18,7 @@ import RedHatText from "@/assets/fonts/RedHatText.ttf";
 import PiazzollaExtraBold from "@/assets/fonts/Piazzolla-ExtraBold.ttf";
 import { Image } from "expo-image";
 import Smiley from "@/components/Smiley";
+import TutorialOverlay from "@/components/tutorial/TutorialOverlay";
 
 export default function RootLayout() {
   const pathname = usePathname();
@@ -29,14 +30,14 @@ export default function RootLayout() {
 
   if (loaded)
     return (
-      <ThemedView type="card" style={{width:"100%",flex:1,alignContent:"center",backgroundColor:theme.colors.backdrop}}>
-        <View style={pathname=="/" ? {flex:1} : {maxWidth:600,width:"100%",flex:1,alignSelf:"center"}}>
+      <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.backdrop }}>
+        <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
           <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
               <PaperProvider theme={theme}>
                 <InfoLayer />
                 <Stack
-                  screenOptions={{ header: () => <MyAppbar  /> }}
+                  screenOptions={{ header: () => <MyAppbar /> }}
                 >
                   <Stack.Screen name="index" />
                   <Stack.Screen
@@ -77,9 +78,9 @@ export default function RootLayout() {
                   />
                 </Stack>
                 {pathname !== "/" && !pathname.includes("projekt") &&
-                  !pathname.includes("login") && 
-                  !pathname.includes("password") && 
-                  !pathname.includes("csatlakozom") && <BottomNavigation />}
+                    !pathname.includes("login") &&
+                    !pathname.includes("password") &&
+                    !pathname.includes("csatlakozom") && <BottomNavigation />}
               </PaperProvider>
             </PersistGate>
           </Provider>
@@ -96,10 +97,13 @@ export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewSt
   const dispatch = useDispatch();
   const segments = useSegments();
   const pathname = usePathname();
+  const { searchParams } = useGlobalSearchParams();
 
   useEffect(() => {
+    console.log("cleared");
+
     dispatch(clearOptions());
-  }, [dispatch, segments]);
+  }, [dispatch, segments, searchParams]);
 
   return (
     <Appbar.Header

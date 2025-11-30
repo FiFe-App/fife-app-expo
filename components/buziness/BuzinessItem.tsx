@@ -14,6 +14,7 @@ import {
 import { Chip, Icon, IconButton, Surface, Text } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
+import { ThemedText } from "../ThemedText";
 
 interface BuzinessItemProps {
   data: BuzinessItemInterface;
@@ -68,8 +69,8 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
         <Surface style={styles.container} elevation={2} mode="flat">
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1 }}>
-              <Text style={{}}>{categories?.[0]}</Text>
-              <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4 }}>
+              <ThemedText variant="titleMedium" type="title" style={{}}>{categories?.[0]}</ThemedText>
+              <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4, marginTop:4 }}>
                 {categories?.slice(1).map((e, i) => {
                   if (e.trim())
                     return (
