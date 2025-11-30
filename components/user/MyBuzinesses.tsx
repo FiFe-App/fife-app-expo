@@ -74,8 +74,8 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
             </ThemedText>
             <Text>
               A te bizniszeid azon hobbijaid, képességeid vagy szakmáid listája,
-              amelyeket meg szeretnél osztani másokkal is. {"\n"}Ha te mondjuk
-              úgy gyártod a sütiket, mint egy gép, és ezt felveszed a bizniszeid
+              amelyeket meg szeretnél osztani másokkal is. {"\n"}Ha, mondjuk,
+              futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid
               közé, mások által megtalálható leszel a süti kulcsszóval.
             </Text>
           </View>
