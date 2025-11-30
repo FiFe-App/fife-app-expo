@@ -5,7 +5,7 @@ import * as ExpoImagePicker from "expo-image-picker";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import ImageModal from "react-native-image-modal";
-import { IconButton, ProgressBar, Text, TextInput } from "react-native-paper";
+import { IconButton, TextInput } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { ThemedText } from "../ThemedText";
 
@@ -189,7 +189,7 @@ const BuzinessImageUpload = forwardRef<
             </View>
           );
         })}
-        <IconButton icon="plus" onPress={pickImage} mode="contained-tonal" />
+        <IconButton icon="plus" onPress={pickImage} mode="contained" iconColor="black" />
       </ScrollView>
     </View>
   );

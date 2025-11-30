@@ -6,6 +6,7 @@ import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import {
   addDialog,
+  clearOptions,
   hideLoading,
   setOptions,
   showLoading,
@@ -17,7 +18,6 @@ import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import {
-  Button,
   Card,
   Divider,
   Headline,
@@ -47,6 +47,8 @@ import BuzinessImageUpload, {
 import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
 import { Image } from "expo-image";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
+import BuzinessItem from "./BuzinessItem";
+import { Button } from "../Button";
 
 interface NewBuzinessInterface {
   title: string;
@@ -175,9 +177,15 @@ export default function BuzinessEditScreen({
             await save();
             dispatch(hideLoading());
           },
+          theme: {
+            colors: {primary:"red"}
+          }
         },
       ]),
     );
+    return () => {
+      dispatch(clearOptions());
+    };
   }, [canSubmit, dispatch, save, loading]);
 
   useFocusEffect(
@@ -363,6 +371,7 @@ export default function BuzinessEditScreen({
             <View
               style={{
                 flexDirection: "row",
+                flexWrap:"wrap",
                 justifyContent: "space-between",
                 alignItems: "center",
                 padding: 8,
@@ -428,7 +437,7 @@ export default function BuzinessEditScreen({
                 </ThemedText>
                 <Button
                   onPress={() => setMapModalVisible(true)}
-                  mode={"contained"}
+                  mode={"contained-tonal"}
                 >
                   Válassz környéket
                 </Button>
@@ -436,6 +445,32 @@ export default function BuzinessEditScreen({
             )}
           </View>
         </View>
+        <ThemedView
+          type="default"
+          style={{
+            padding: 8,
+            bottom: 0,
+            width: "100%",
+            gap:16
+          }}
+        >
+          <ThemedText>Így fog megjelenni a bizniszed:</ThemedText>
+          <BuzinessItem
+            data={{
+              title: ((newBuziness.title||"A biznisz címe") + (categories ? " $ " + categories : " $ Egy kategória $ Egy másik kategória")),
+              description: newBuziness.description || "Hosszabb leírás hogy miről szól a bizniszed.",
+              images: images,
+              location: circle
+                ? `POINT(${circle.location.longitude} ${circle.location.latitude})`
+                : null,
+              defaultContact,
+              recommendations: 0,
+            }}
+          />
+          <View style={{alignItems:"flex-end"}}>
+            <Button mode="contained" onPress={save}>Mentés</Button>
+          </View>
+        </ThemedView>
         <Portal>
           <Modal
             visible={mapModalVisible}

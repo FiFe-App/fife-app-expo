@@ -56,7 +56,7 @@ export interface BuzinessItemInterface {
   author: string;
   authorName?: string;
   avatarUrl?: string | null;
-  images?: string[] | null;
+  images?: ImageDataType[];
   recommendations: number;
 }
 export interface EventItemInterface extends Tables<"events"> {
