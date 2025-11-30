@@ -55,7 +55,7 @@ export default function PasswordResetScreen() {
     if (error) setError(error.message);
     else {
       setSent(true);
-      setMessage("Ha létezik ilyen fiók, küldtünk emailt a jelszó visszaállításához.");
+      setMessage("Ha létezik ilyen fiók, küldtünk e-mailt a jelszó visszaállításához.");
     }
     setLoading(false);
   };
@@ -90,10 +90,10 @@ export default function PasswordResetScreen() {
         {stage === "request" && (
           <>
             <Text variant="headlineSmall">Elfelejtett jelszó</Text>
-            <Text >Add meg azt email-t, amivel regisztráltál korábban!</Text>
+            <Text >Add meg azt e-mail-t, amivel regisztráltál korábban!</Text>
             <TextInput
               mode="outlined"
-              label="Email"
+              label="E-mail"
               autoCapitalize="none"
               keyboardType="email-address"
               value={email}
