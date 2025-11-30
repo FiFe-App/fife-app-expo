@@ -82,11 +82,25 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
               </View>
             </View>
           </View>
-          <View style={{ flexDirection: "row" }}>
-            <Text>
-              <Icon size={16} source="account-group" />{" "}
-              <Text>{data?.recommendations} ember ajánlja</Text>
-            </Text>
+          <View style={{flexWrap:"wrap",flexDirection:"row",gap:4}}>
+            <View style={{ flexDirection: "row" }}>
+              <Text>
+                <Icon size={16} source="account-group" />{" "}
+                <Text>{data?.recommendations} ember ajánlja</Text>
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row" }}>
+              <Text>
+                <Icon size={16} source="image" />{" "}
+                <Text>{data?.images?.length || 0} kép</Text>
+              </Text>
+            </View>
+            {distanceText && <View style={{ flexDirection: "row" }}>
+              <Text>
+                <Icon size={16} source="map-marker" />{" "}
+                <Text>{distanceText}</Text>
+              </Text>
+            </View>}
           </View>
           <Text numberOfLines={4} ellipsizeMode="tail" style={{ flex: 1 }}>
             {description}
@@ -122,5 +136,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: 4,
     padding: 8,
+    gap:4,
   },
 });
