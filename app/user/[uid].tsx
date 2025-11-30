@@ -36,9 +36,13 @@ import { useDispatch, useSelector } from "react-redux";
 import globStyles from "@/constants/Styles";
 import {
   clearTutorialState,
+  setTutorialActive,
+  setTutorialStep,
+  startTutorial,
   viewFunction,
 } from "@/redux/reducers/tutorialReducer";
 import { theme } from "@/assets/theme";
+import Measure from "@/components/tutorial/Measure";
 
 type UserInfo = Tables<"profiles">;
 
@@ -174,13 +178,17 @@ export default function Index() {
               </View>
               <View style={{ flexDirection: "row", gap: 4, margin: 4 }}>
                 {myProfile ? (
-                  <Link
-                    asChild
-                    style={{ flex: 1 }}
-                    href={{ pathname: "/user/edit" }}
-                  >
-                    <Button mode="contained-tonal">Profilom szerkesztése</Button>
-                  </Link>
+                  <View style={{ flexDirection: "column", width: "100%", gap: 4 }}>
+                    <Measure name="edit-profile">
+                      <Link
+                        asChild
+                        style={{ flex: 1 }}
+                        href={{ pathname: "/user/edit" }}
+                      >
+                        <Button mode="contained-tonal">Profilom szerkesztése</Button>
+                      </Link>
+                    </Measure>
+                  </View>
                 ) : (
                   <>
                     <RecommendProfileButton
@@ -211,7 +219,11 @@ export default function Index() {
                   }
                   icon="briefcase"
                 >
-                  <MyBuzinesses uid={uid} myProfile={myProfile} />
+                  <Measure name="user-biznisz-tabs">
+                    <View style={{ flex: 1 }}>
+                      <MyBuzinesses uid={uid} myProfile={myProfile} />
+                    </View>
+                  </Measure>
                 </TabScreen>
                 <TabScreen
                   label="Elérhetőségek"
