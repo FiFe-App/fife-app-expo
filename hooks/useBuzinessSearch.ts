@@ -89,7 +89,7 @@ export function useBuzinessSearch() {
       dispatch(storeBuzinesses([]));
       dispatch(storeBuzinessLoading(false));
     }
-  }, [dispatch, searchCircle, myLocation, searchParams?.searchType, PAGE_SIZE]);
+  }, [dispatch, searchCircle, myLocation, searchParams, PAGE_SIZE]);
 
   const loadNext = useCallback(async () => {
     if (!canLoadMore || loading || searchParams?.searchType === "map") return;
