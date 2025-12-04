@@ -1,8 +1,10 @@
 import ContactEditScreen from "@/components/buziness/ContactEditScreen";
+import MapSelector from "@/components/MapSelector/MapSelector";
 import ProfileImage from "@/components/ProfileImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Tables } from "@/database.types";
+import style from "@/components/styles";
 import { supabase } from "@/lib/supabase/supabase";
 import { setOptions } from "@/redux/reducers/infoReducer";
 import { setName, setUserData } from "@/redux/reducers/userReducer";
@@ -18,10 +20,14 @@ import {
   HelperText,
   Icon,
   IconButton,
+  Modal,
+  Portal,
+  Text,
   TextInput,
   useTheme,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { Button } from "@/components/Button";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
@@ -33,6 +39,7 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [profile, setProfile] = useState<UserInfo>({});
+  const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -214,6 +221,8 @@ export default function Index() {
             <ThemedText type="label">Email, amivel regisztráltál:</ThemedText>
             <ThemedText>{userData?.email}</ThemedText>
           </View>
+          <Text>Merrefelé laksz?</Text>
+          <Button onPress={()=>setLocationMenuVisible(true)}>Add meg</Button>
           <Divider />
           <View style={{ gap: 8, paddingTop: 8 }}>
             <ThemedText type="subtitle">Elérhetőségeid</ThemedText>
@@ -227,6 +236,29 @@ export default function Index() {
             <ContactEditScreen ref={contactEditRef} />
           </View>
         </ScrollView>
+        <Portal>
+          <Modal
+            visible={locationMenuVisible}
+            onDismiss={() => {
+              setLocationMenuVisible(false);
+            }}
+            contentContainerStyle={[
+              {
+                width:"90%",
+                height: "90%",
+                alignItems:"center"
+              },
+            ]}
+          >
+            <ThemedView style={[style.containerStyle,{width:"100%"}]}>
+              <MapSelector 
+                searchEnabled
+                setOpen={setLocationMenuVisible}
+                data={profile.location} setData={(l)=>setProfile({...profile,location:
+            l ? `POINT(${l?.longitude} ${l?.latitude})`:null})} />
+            </ThemedView>
+          </Modal>
+        </Portal>
       </ThemedView>
     );
 }
