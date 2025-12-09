@@ -70,7 +70,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1 }}>
               <ThemedText variant="titleMedium" type="title" style={{}}>{categories?.[0]}</ThemedText>
-              <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4, marginTop:4 }}>
+              <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4, marginTop: 4 }}>
                 {categories?.slice(1).map((e, i) => {
                   if (e.trim())
                     return (
@@ -82,22 +82,22 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
               </View>
             </View>
           </View>
-          <View style={{flexWrap:"wrap",flexDirection:"row",gap:4}}>
+          <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4 }}>
             <View style={{ flexDirection: "row" }}>
               <Text>
-                <Icon size={16} source="account-group" />{" "}
+                <Icon size={16} source="account-group" />
                 <Text>{data?.recommendations} ember ajánlja</Text>
               </Text>
             </View>
             <View style={{ flexDirection: "row" }}>
               <Text>
-                <Icon size={16} source="image" />{" "}
+                <Icon size={16} source="image" />
                 <Text>{data?.images?.length || 0} kép</Text>
               </Text>
             </View>
             {distanceText && <View style={{ flexDirection: "row" }}>
               <Text>
-                <Icon size={16} source="map-marker" />{" "}
+                <Icon size={16} source="map-marker" />
                 <Text>{distanceText}</Text>
               </Text>
             </View>}
@@ -136,6 +136,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: 4,
     padding: 8,
-    gap:4,
+    gap: 4,
   },
 });
