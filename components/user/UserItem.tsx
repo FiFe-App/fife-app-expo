@@ -41,7 +41,7 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
               style={{
                 marginRight: 8,
                 flexDirection: "row",
-                flexWrap:"wrap",
+                flexWrap: "wrap",
                 gap: 16
               }}
             >
@@ -54,7 +54,7 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
               </View>
               {recommendations > 0 && <View style={{ flexDirection: "row" }}>
                 <Text>
-                  <Icon size={16} source="account-group" />{" "}
+                  <Icon size={16} source="account-group" />
                   <Text>{recommendations ? <Text>{recommendations} ember ajánlja</Text> : <Text>Még senki sem ajánlotta</Text>}</Text>
                 </Text>
               </View>}

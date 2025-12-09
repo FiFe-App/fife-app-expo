@@ -26,6 +26,7 @@ export function useProfileSearch() {
     
   // Store users in Redux whenever results change
   useEffect(() => {
+    if (results.length === 0) return;
     dispatch(storeUsers(results));
   }, [results, dispatch]);
   useEffect(() => {
@@ -69,10 +70,11 @@ export function useProfileSearch() {
       return;
     }
     setResults(prev => [...prev, ...(data || [])]);
+    dispatch(storeUserSearchParams({ skip: nextPage * PAGE_SIZE }));
     setHasMore((data?.length || 0) === PAGE_SIZE);
     pageRef.current = nextPage;
     setLoading(false);
-  }, [hasMore, loading, request, PAGE_SIZE]);
+  }, [hasMore, loading, request, PAGE_SIZE, dispatch]);
 
   return { results, loading, error, hasMore, search, loadNext };
 }

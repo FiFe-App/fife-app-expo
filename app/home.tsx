@@ -28,7 +28,7 @@ import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
-  const { userSearchParams } = useSelector(
+  const { userSearchParams, users } = useSelector(
     (state: RootState) => state.users,
   );
   const skip = userSearchParams?.skip || 0;
@@ -48,8 +48,8 @@ export default function Index() {
   useFocusEffect(
     useCallback(() => {
       console.log("skip changed", skip);
-      dispatch(storeUsers([]));
-      search();
+      //dispatch(storeUsers([]));
+      if (users.length === 0) search();
       if (uid) dispatch(viewFunction({ key: "homePage", uid }));
       navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={handleSearch} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -64,7 +64,7 @@ export default function Index() {
             <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
             <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, flex: 1 }}>
               <Text variant="titleMedium">Üdvözöllek a FiFe Appban!</Text>
-              <Button icon="help-circle" onPress={() => setWhatVisible(true)} style={{padding:0}}>
+              <Button icon="help-circle" onPress={() => setWhatVisible(true)} style={{ padding: 0 }}>
                 <Text variant="labelMedium">Mit lehet itt csinálni?</Text>
               </Button>
             </View>
