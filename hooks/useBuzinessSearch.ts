@@ -22,6 +22,9 @@ export function useBuzinessSearch() {
     }),
   );
 
+  console.log("searchParams",searchParams);
+  
+
   const [error, setError] = useState<string | null>(null);
   const [canLoadMore, setCanLoadMore] = useState(true);
   const lastQuery = useRef<string | undefined>("");

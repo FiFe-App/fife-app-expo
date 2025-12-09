@@ -12,7 +12,7 @@ interface UserItemProps {
 
 const UserItem = ({ data, showOptions }: UserItemProps) => {
   const { id, full_name, avatar_url, created_at } = data;
-  const recommendations = data?.profileRecommendations?.[0].count || 0;
+  const recommendations = data?.profileRecommendations?.[0]?.count || 0;
   const buzinesses = data?.buzinesses?.map(b => b.title.split(" $ ")[0]) || [];
 
   return (
@@ -41,7 +41,7 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
               style={{
                 marginRight: 8,
                 flexDirection: "row",
-                flexWrap:"wrap",
+                flexWrap: "wrap",
                 gap: 16
               }}
             >
@@ -54,7 +54,7 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
               </View>
               {recommendations > 0 && <View style={{ flexDirection: "row" }}>
                 <Text>
-                  <Icon size={16} source="account-group" />{" "}
+                  <Icon size={16} source="account-group" />
                   <Text>{recommendations ? <Text>{recommendations} ember ajánlja</Text> : <Text>Még senki sem ajánlotta</Text>}</Text>
                 </Text>
               </View>}

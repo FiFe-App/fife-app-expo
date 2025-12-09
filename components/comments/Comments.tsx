@@ -197,10 +197,10 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             if (error) {
               console.log(
                 "DB update with image error, on " +
-                  storagePath +
-                  "/" +
-                  key +
-                  "/image",
+                storagePath +
+                "/" +
+                key +
+                "/image",
                 error,
               );
               return error;
@@ -300,7 +300,6 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                             </ThemedText>
                           </Pressable>
                           <ThemedText>
-                            {" "}
                             {elapsedTime(comment.created_at)}
                           </ThemedText>
                         </View>
@@ -407,7 +406,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                 leadingIcon="account"
               />
               <Menu.Item
-                onPress={() => {}}
+                onPress={() => { }}
                 title="Problémám van ezzel a kommenttel."
                 leadingIcon="alert"
                 disabled
