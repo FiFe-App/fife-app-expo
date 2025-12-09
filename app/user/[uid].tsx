@@ -22,7 +22,7 @@ import {
   useGlobalSearchParams,
 } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import {
   Badge,
   Button,
@@ -43,6 +43,7 @@ import {
 } from "@/redux/reducers/tutorialReducer";
 import { theme } from "@/assets/theme";
 import Measure from "@/components/tutorial/Measure";
+import { SavedProfiles } from "@/components/buziness/SavedProfiles";
 
 type UserInfo = Tables<"profiles">;
 
@@ -57,6 +58,7 @@ export default function Index() {
   );
 
   const dispatch = useDispatch();
+  const { width } = useWindowDimensions();
   const myProfile = myUid === uid;
   const [data, setData] = useState<UserInfo | null>(null);
   const [recommendations, setRecommendations] = useState<string[]>([]);
@@ -211,7 +213,7 @@ export default function Index() {
               </View>
             </ThemedView>
             <TabsProvider defaultIndex={0}>
-              <Tabs theme={theme} style={{ backgroundColor: theme.colors.background }}>
+              <Tabs showTextLabel={width > 400} theme={theme} style={{ backgroundColor: theme.colors.background }}>
                 <TabScreen
                   label="Bizniszek"
                   badge={
@@ -233,6 +235,12 @@ export default function Index() {
                   icon="email-multiple"
                 >
                   <ContactList uid={uid} edit={myProfile} />
+                </TabScreen>
+                <TabScreen
+                  label="Kapcsolatok"
+                  icon="account-group"
+                >
+                  <SavedProfiles uid={uid} />
                 </TabScreen>
               </Tabs>
             </TabsProvider>
