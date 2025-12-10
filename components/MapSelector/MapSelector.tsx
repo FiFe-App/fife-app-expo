@@ -23,7 +23,9 @@ import {
 import styles from "../mapView/style";
 import { ThemedText } from "../ThemedText";
 import { MapSelectorProps } from "./MapSelector.types";
+import { useEffect } from "react";
 import { CircleType } from "@/redux/store.type";
+import { getRegionNameForCircle } from "./computeRegion";
 
 const defaultMapLocation = {
   location: {
@@ -41,7 +43,9 @@ const MapSelector = ({
   setData,
   setOpen,
   markerOnly,
-}: MapSelectorProps) => {
+  isGetAddress,
+}: MapSelectorProps & { isGetAddress?: boolean; }) => {
+
   const [mapHeight, setMapHeight] = useState<number>(0);
   const circleSize = mapHeight / 3;
   const [circleRadiusText, setCircleRadiusText] = useState("");
@@ -58,7 +62,27 @@ const MapSelector = ({
   const mapRef = useRef<MapView>(null);
 
   const { myLocation, locationError } = useMyLocation();
+  // Reverse geocode when location changes if isGetAddress
+  useEffect(() => {
+    if (!isGetAddress || !circle?.location || !google.maps.Geocoder) return;
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({
+      location: {
+        lat: circle.location.latitude,
+        lng: circle.location.longitude,
+      },
+    }, (results, status) => {
+      if (status === "OK" && results && results.length > 0) {
+        // Find the first result that is not just "Hungary"
 
+        const region = getRegionNameForCircle(results, {lat: circle.location.latitude, lng: circle.location.longitude},circle.radius);
+        console.log(region,circle.radius);
+        
+        setSearch(region || "");
+      }
+    });
+  }, [isGetAddress, circle]);
+  
   const onRegionChange:
     | ((region: Region, details: Details) => void)
     | undefined = async (e) => {
@@ -316,7 +340,7 @@ const MapSelector = ({
               {locationError}
             </ThemedText>
           )}
-          <View
+          {!!setOpen && <View
             style={{ alignSelf: "flex-end", flexDirection: "row", gap: 8 }}
           >
             <Button
@@ -333,7 +357,7 @@ const MapSelector = ({
             >
               <Text>Kiválasztás</Text>
             </Button>
-          </View>
+          </View>}
         </View>
       </View>
     </View>

@@ -21,6 +21,7 @@ export default function RootLayout() {
   const pages: Href<string>[] = [
     "/csatlakozom/",
     "/csatlakozom/megbizhatosag",
+    "/csatlakozom/lokacio",
     "/csatlakozom/email-regisztracio",
     "/csatlakozom/email-ellenorzes",
     "/csatlakozom/elso-lepesek",

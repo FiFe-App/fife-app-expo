@@ -8,6 +8,6 @@ export interface MapSelectorProps {
   title?: string;
   text?: string;
   setData?: React.Dispatch<React.SetStateAction<Circle | undefined>>;
-  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   markerOnly?: boolean
 }

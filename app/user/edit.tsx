@@ -72,6 +72,8 @@ export default function Index() {
         }
       });
   };
+  console.log(profile);
+  
   useFocusEffect(
     useCallback(() => {
       const save = async () => {
@@ -254,8 +256,11 @@ export default function Index() {
               <MapSelector 
                 searchEnabled
                 setOpen={setLocationMenuVisible}
-                data={profile.location} setData={(l)=>setProfile({...profile,location:
-            l ? `POINT(${l?.longitude} ${l?.latitude})`:null})} />
+                data={profile.location} setData={(l)=>{
+                  console.log("l",l);
+                  
+                  setProfile({...profile,location:
+            l ? `POINT(${l?.location.longitude} ${l?.location.latitude})`:null});}} />
             </ThemedView>
           </Modal>
         </Portal>
