@@ -5,26 +5,27 @@ import { containerStyle } from "@/components/styles";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import {
-  storeUserSearchParams, storeUsers
+  storeUserSearchParams
 } from "@/redux/reducers/usersReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
 import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useState } from "react";
-import { View } from "react-native";
+import { Dimensions, View } from "react-native";
 import {
   Modal,
   Portal, Text
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { MyAppbar } from "./_layout";
+import { MyAppbar } from "@/components/MyAppBar";
 import Smiley from "@/components/Smiley";
 import BuzinessSearchInput from "@/components/BuzinessSearchInput";
 import WhatToDo from "@/components/WhatToDo";
 import { Button } from "@/components/Button";
-import { useProfileSearch } from "@/hooks/useProfileSearch";
 import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
+import { useInfiniteQuery } from "@/hooks/useInfiniteQuery";
 
+const PAGE_SIZE = Math.floor(Dimensions.get("window").height / 100);
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
@@ -37,7 +38,14 @@ export default function Index() {
 
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [whatVisible, setWhatVisible] = useState(false);
-  const { search, loadNext, hasMore } = useProfileSearch();
+  const { fetch, data, fetchNextPage, hasMore } = useInfiniteQuery({
+    tableName: "profiles",
+    pageSize: PAGE_SIZE,
+    columns: "*, profileRecommendations!profileRecommendations_profile_id_fkey(count), buzinesses:buziness(title)",
+    trailingQuery: (query) => {
+      return query.order("created_at", { ascending: false });
+    }
+  });
 
   const handleSearch = () => {
     dispatch(storeBuzinesses([]));
@@ -47,12 +55,12 @@ export default function Index() {
 
   useFocusEffect(
     useCallback(() => {
+      if (data.length === 0) {
+        fetch();
+      }
       console.log("skip changed", skip);
-      dispatch(storeUsers([]));
-      search();
       if (uid) dispatch(viewFunction({ key: "homePage", uid }));
       navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={handleSearch} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [skip]),
   );
 
@@ -64,7 +72,7 @@ export default function Index() {
             <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
             <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, flex: 1 }}>
               <Text variant="titleMedium">Üdvözöllek a FiFe Appban!</Text>
-              <Button icon="help-circle" onPress={() => setWhatVisible(true)} style={{padding:0}}>
+              <Button icon="help-circle" onPress={() => setWhatVisible(true)} style={{ padding: 0 }}>
                 <Text variant="labelMedium">Mit lehet itt csinálni?</Text>
               </Button>
             </View>
@@ -73,7 +81,7 @@ export default function Index() {
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
           <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Új fifék Budapesten</ThemedText>
         </View>
-        <UsersList load={loadNext} canLoadMore={hasMore} />
+        <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} />
         <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />
         <Portal>
           <Modal

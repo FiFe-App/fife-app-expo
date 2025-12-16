@@ -176,7 +176,7 @@ export default function BuzinessEditScreen({
             dispatch(hideLoading());
           },
           theme: {
-            colors: {primary:"red"}
+            colors: { primary: "red" }
           }
         },
       ]),
@@ -369,7 +369,7 @@ export default function BuzinessEditScreen({
             <View
               style={{
                 flexDirection: "row",
-                flexWrap:"wrap",
+                flexWrap: "wrap",
                 justifyContent: "space-between",
                 alignItems: "center",
                 padding: 8,
@@ -470,13 +470,13 @@ export default function BuzinessEditScreen({
             padding: 8,
             bottom: 0,
             width: "100%",
-            gap:16
+            gap: 16
           }}
         >
           <ThemedText>Így fog megjelenni a bizniszed:</ThemedText>
           <BuzinessItem
             data={{
-              title: ((newBuziness.title||"A biznisz címe") + (categories ? " $ " + categories : " $ Egy kategória $ Egy másik kategória")),
+              title: ((newBuziness.title || "A biznisz címe") + (categories ? " $ " + categories : " $ Egy kategória $ Egy másik kategória")),
               description: newBuziness.description || "Hosszabb leírás hogy miről szól a bizniszed.",
               images: images,
               location: circle
@@ -486,8 +486,9 @@ export default function BuzinessEditScreen({
               recommendations: 0,
             }}
           />
-          <View style={{alignItems:"flex-end"}}>
-            <Button mode="contained" onPress={save}>Mentés</Button>
+          <View style={{ alignItems: "flex-end" }}>
+            <Button mode="contained" onPress={save}
+              disabled={!canSubmit || loading}>Mentés</Button>
           </View>
         </ThemedView>
         <Portal>

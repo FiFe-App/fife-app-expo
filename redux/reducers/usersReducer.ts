@@ -5,7 +5,7 @@ import {
   UsersState,
 } from "../store.type";
 
-const initialState: UsersState = {
+const initialState: UsersWState = {
   users: [],
   userSearchParams: {
     skip: 0,
