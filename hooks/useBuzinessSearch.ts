@@ -22,6 +22,9 @@ export function useBuzinessSearch() {
     }),
   );
 
+  console.log("searchParams",searchParams);
+  
+
   const [error, setError] = useState<string | null>(null);
   const hasMore = useSelector((state: RootState) => state.buziness.hasMore ?? true);
   const lastQuery = useRef<string | undefined>("");

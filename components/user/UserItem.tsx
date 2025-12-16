@@ -12,7 +12,7 @@ interface UserItemProps {
 
 const UserItem = ({ data, showOptions }: UserItemProps) => {
   const { id, full_name, avatar_url, created_at } = data;
-  const recommendations = data?.profileRecommendations?.[0].count || 0;
+  const recommendations = data?.profileRecommendations?.[0]?.count || 0;
   const buzinesses = data?.buzinesses?.map(b => b.title.split(" $ ")[0]) || [];
 
   return (
