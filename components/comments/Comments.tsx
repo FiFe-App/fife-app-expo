@@ -300,7 +300,6 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                             </ThemedText>
                           </Pressable>
                           <ThemedText>
-
                             {elapsedTime(comment.created_at)}
                           </ThemedText>
                         </View>

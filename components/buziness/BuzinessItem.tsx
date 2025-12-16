@@ -98,7 +98,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
                 <Text style={{ marginLeft: 4 }}>{data?.images?.length || 0} kép</Text>
               </Text>
             </View>
-            {distanceText && <View style={{ flexDirection: "row" }}>
+            {!!distanceText && <View style={{ flexDirection: "row" }}>
               <Text>
                 <Icon size={16} source="map-marker" />
                 <Text style={{ marginLeft: 4 }}>{distanceText}</Text>
