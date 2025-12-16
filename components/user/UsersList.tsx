@@ -5,16 +5,18 @@ import { ThemedText } from "../ThemedText";
 import UserItem from "./UserItem";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
-import Measure from "../tutorial/Measure";
+import { Tables } from "@/database.types";
 
 
 interface UsersListProps {
   load: () => void;
+  data: Tables<"profiles">[];
   canLoadMore: boolean;
 }
 
 export const UsersList: React.FC<UsersListProps> = ({
   load,
+  data,
   canLoadMore,
 }) => {
   const { users, userSearchParams } = useSelector(
@@ -25,7 +27,7 @@ export const UsersList: React.FC<UsersListProps> = ({
   return (
     <View style={styles.container}>
       <FlatList
-        data={users}
+        data={data}
         keyExtractor={(item, index) => item.id === "-1" ? `divider-${index}` : item.id}
         renderItem={({ item }) =>
           item.id === "-1" ? (

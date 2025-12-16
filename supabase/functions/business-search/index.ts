@@ -1,8 +1,15 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import OpenAI from "npm:openai";
 
-const supabaseUrl = Deno.env.get("URL")!;
-const supabaseServiceRoleKey = Deno.env.get("SERVICE_ROLE_KEY")!;
+// Prefer standard env names (set by Supabase CLI in container); fallback to kong host
+const supabaseUrl =
+  Deno.env.get("SUPABASE_URL") ||
+  Deno.env.get("URL") ||
+  "http://supabase-kong:8000";
+const supabaseServiceRoleKey =
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ||
+  Deno.env.get("SERVICE_ROLE_KEY") ||
+  "";
 const openaiApiKey = Deno.env.get("OPENAI_API_KEY")!;
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,7 +30,7 @@ Deno.serve(async (req) => {
 
   // Generate a one-time embedding for the user's query
   let embedding = null;
-  if (query) {
+  if (query && query.length > 0) {
     console.log("query", query);
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
@@ -38,8 +45,9 @@ Deno.serve(async (req) => {
     console.log("embedding input", completion.choices[0].message.content);
 
     const embeddingResponse = await openai.embeddings.create({
-      model: "text-embedding-ada-002",
+      model: "text-embedding-3-large",
       input: completion.choices[0].message.content,
+      dimensions: 512,
     });
     embedding = embeddingResponse.data[0].embedding;
   }
@@ -58,16 +66,38 @@ Deno.serve(async (req) => {
     query_text: query,
   });
 
+  let res;
+  console.log("query", query && query.length > 0);
+  
+  if (!supabaseServiceRoleKey) {
+    console.error("Missing SUPABASE_SERVICE_ROLE_KEY; cannot upsert buziness");
+    return new Response(JSON.stringify({ error: "Missing Supabase credentials" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
+  if (query && query.length > 0) {
   // Call hybrid_search Postgres function via RPC
-  const res = await supabase.rpc("hybrid_buziness_search", {
-    distance: maxdistance,
-    skip,
-    take,
-    lat,
-    long,
-    query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),
-    query_text: query,
-  });
+    res = await supabase.rpc("hybrid_buziness_search", {
+      distance: maxdistance,
+      skip,
+      take,
+      lat,
+      long,
+      query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),
+      query_text: query,
+    });
+  } else {
+    console.log("no query, normal search");
+    
+    res = await supabase
+      .from("buziness")
+      .select("*")
+      .range(skip || 0, (skip || 0) + (take || 20) - 1)
+      .order("created_at", { ascending: false });
+  }
+  console.log("res", res);
+  
 
   return new Response(JSON.stringify(res.data), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },

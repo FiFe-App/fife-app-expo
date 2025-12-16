@@ -5,13 +5,13 @@ import { containerStyle } from "@/components/styles";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import {
-  storeUserSearchParams, storeUsers
+  storeUserSearchParams
 } from "@/redux/reducers/usersReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
 import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useState } from "react";
-import { View } from "react-native";
+import { Dimensions, View } from "react-native";
 import {
   Modal,
   Portal, Text
@@ -22,13 +22,14 @@ import Smiley from "@/components/Smiley";
 import BuzinessSearchInput from "@/components/BuzinessSearchInput";
 import WhatToDo from "@/components/WhatToDo";
 import { Button } from "@/components/Button";
-import { useProfileSearch } from "@/hooks/useProfileSearch";
 import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
+import { useInfiniteQuery } from "@/hooks/useInfiniteQuery";
 
+const PAGE_SIZE = Math.floor(Dimensions.get("window").height / 100);
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
-  const { userSearchParams, users } = useSelector(
+  const { userSearchParams } = useSelector(
     (state: RootState) => state.users,
   );
   const skip = userSearchParams?.skip || 0;
@@ -37,7 +38,14 @@ export default function Index() {
 
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [whatVisible, setWhatVisible] = useState(false);
-  const { search, loadNext, hasMore } = useProfileSearch();
+  const { fetch, data, fetchNextPage, hasMore } = useInfiniteQuery({
+    tableName: "profiles",
+    pageSize: PAGE_SIZE,
+    columns: "*, profileRecommendations!profileRecommendations_profile_id_fkey(count), buzinesses:buziness(title)",
+    trailingQuery: (query) => {
+      return query.order("created_at", { ascending: false });
+    }
+  });
 
   const handleSearch = () => {
     dispatch(storeBuzinesses([]));
@@ -47,12 +55,12 @@ export default function Index() {
 
   useFocusEffect(
     useCallback(() => {
+      if (data.length === 0) {
+        fetch();
+      }
       console.log("skip changed", skip);
-      //dispatch(storeUsers([]));
-      if (users.length === 0) search();
       if (uid) dispatch(viewFunction({ key: "homePage", uid }));
       navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={handleSearch} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [skip]),
   );
 
@@ -73,7 +81,7 @@ export default function Index() {
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
           <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Új fifék Budapesten</ThemedText>
         </View>
-        <UsersList load={loadNext} canLoadMore={hasMore} />
+        <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} />
         <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />
         <Portal>
           <Modal
