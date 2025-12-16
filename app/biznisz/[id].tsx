@@ -191,7 +191,9 @@ export default function Index() {
                   );
               })}
             </View>
-            <CollapsibleText><UrlText text={data.description} /> </CollapsibleText>
+            <CollapsibleText>
+              <UrlText text={data.description} />
+            </CollapsibleText>
             <View style={{ width: "100%", flexDirection: "row", alignItems: "flex-start" }}>
               <Link
                 asChild
@@ -357,7 +359,7 @@ export default function Index() {
                   <View key={"image-" + ind} style={{ width: "100%" }}>
                     <ImageModal
                       source={{ uri: image.url }}
-                      resizeMode="cover"
+                      resizeMode="contain"
                       modalImageResizeMode="contain"
                       overlayBackgroundColor="#00000096"
                       style={{ width: width, height: 200 }}
