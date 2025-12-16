@@ -14,6 +14,7 @@ const initialState: BuzinessState = {
     searchCircle: undefined,
     searchType: "list",
   },
+  hasMore: true,
 };
 
 const buzinessReducer = createSlice({
@@ -25,6 +26,9 @@ const buzinessReducer = createSlice({
       action: PayloadAction<BuzinessSearchItemInterface[]>,
     ) => {
       state.buzinesses = action.payload;
+    },
+    storeBuzinessHasMore: (state, { payload }: PayloadAction<boolean>) => {
+      state.hasMore = payload;
     },
     loadBuzinesses: (
       state,
@@ -73,6 +77,7 @@ const buzinessReducer = createSlice({
 
 export const {
   storeBuzinesses,
+  storeBuzinessHasMore,
   loadBuzinesses,
   clearBuziness,
   storeBuzinessSearchParams,
