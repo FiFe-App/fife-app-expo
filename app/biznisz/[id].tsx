@@ -48,6 +48,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { MyAppbar } from "@/components/MyAppBar";
 import typeToIcon from "@/lib/functions/typeToIcon";
+import UrlText from "@/components/comments/UrlText";
 
 export default function Index() {
   const { id: paramId } = useGlobalSearchParams();
@@ -190,7 +191,7 @@ export default function Index() {
                   );
               })}
             </View>
-            <CollapsibleText>{data.description}</CollapsibleText>
+            <CollapsibleText><UrlText text={data.description} /> </CollapsibleText>
             <View style={{ width: "100%", flexDirection: "row", alignItems: "flex-start" }}>
               <Link
                 asChild

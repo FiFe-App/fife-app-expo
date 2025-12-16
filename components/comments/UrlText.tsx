@@ -4,8 +4,9 @@ import { Linking, Pressable, Text } from "react-native";
 import { ThemedText } from "../ThemedText";
 
 const UrlText = ({ text = "" }: { text: string }) => {
+  // Matches URLs (http/https, with/without www), emails, and phone numbers
   const regex =
-    /(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?/g;
+    /((https?:\/\/)?(www\.)?[a-zA-Z0-9\-._~%]+(\.[a-zA-Z]{2,})+([\/?#][^\s]*)?)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})|(\+?\d{1,3}[\s.-]?\(?\d{1,4}\)?[\s.-]?\d{1,4}[\s.-]?\d{1,9})/g;
   const arr = text.match(regex);
 
   const [result, setResult] = useState<any[] | null>(null);
@@ -25,7 +26,7 @@ const UrlText = ({ text = "" }: { text: string }) => {
                 Linking.openURL(text.slice(start, end));
               }}
             >
-              <Text style={{ color: "blue" }}>{text.slice(start, end)}</Text>
+              <Text style={{ color: "red" }}>{text.slice(start, end)}</Text>
             </Pressable>
           </Text>,
         );
@@ -37,7 +38,7 @@ const UrlText = ({ text = "" }: { text: string }) => {
 
   useEffect(() => {
     makeText();
-  }, [makeText, text]);
+  }, [text]);
 
   return <ThemedText>{result}</ThemedText>;
 };
