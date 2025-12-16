@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { loadBuzinesses, storeBuzinesses, storeBuzinessLoading, storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { loadBuzinesses, storeBuzinesses, storeBuzinessLoading, storeBuzinessSearchParams, storeBuzinessHasMore } from "@/redux/reducers/buzinessReducer";
 import { supabase } from "@/lib/supabase/supabase";
 import { Dimensions } from "react-native";
 import { RootState } from "@/redux/store";
@@ -26,7 +26,7 @@ export function useBuzinessSearch() {
   
 
   const [error, setError] = useState<string | null>(null);
-  const [canLoadMore, setCanLoadMore] = useState(true);
+  const hasMore = useSelector((state: RootState) => state.buziness.hasMore ?? true);
   const lastQuery = useRef<string | undefined>("");
   const dispatch = useDispatch();
 
@@ -47,7 +47,7 @@ export function useBuzinessSearch() {
     setError(null);
     dispatch(storeBuzinessSearchParams({ skip: 0 }));
     lastQuery.current = query;
-    setCanLoadMore(true);
+    dispatch(storeBuzinessHasMore(true));
 
     const searchLocation = searchCircle
       ? {
@@ -85,7 +85,7 @@ export function useBuzinessSearch() {
       }
 
       dispatch(storeBuzinesses(data || []));
-      setCanLoadMore(searchParams?.searchType !== "map" && (data?.length || 0) === PAGE_SIZE);
+      dispatch(storeBuzinessHasMore(searchParams?.searchType !== "map" && (data?.length || 0) === PAGE_SIZE));
       dispatch(storeBuzinessLoading(false));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -95,7 +95,7 @@ export function useBuzinessSearch() {
   }, [dispatch, searchCircle, myLocation, searchParams, PAGE_SIZE]);
 
   const loadNext = useCallback(async () => {
-    if (!canLoadMore || loading || searchParams?.searchType === "map") return;
+    if (!hasMore || loading || searchParams?.searchType === "map") return;
     
     dispatch(storeBuzinessLoading(true));
     setError(null);
@@ -137,14 +137,14 @@ export function useBuzinessSearch() {
       }
 
       dispatch(loadBuzinesses((data || [])));
-      setCanLoadMore((data?.length || 0) === PAGE_SIZE);
+      dispatch(storeBuzinessHasMore((data?.length || 0) === PAGE_SIZE));
       dispatch(storeBuzinessSearchParams({ skip: nextSkip }));
       dispatch(storeBuzinessLoading(false));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
       dispatch(storeBuzinessLoading(false));
     }
-  }, [canLoadMore, loading, searchParams?.searchType, searchParams?.skip, dispatch, PAGE_SIZE, searchCircle, myLocation]);
+  }, [hasMore, loading, searchParams?.searchType, searchParams?.skip, dispatch, PAGE_SIZE, searchCircle, myLocation]);
 
-  return { error, canLoadMore, search, loadNext };
+  return { error, canLoadMore: hasMore, search, loadNext };
 }

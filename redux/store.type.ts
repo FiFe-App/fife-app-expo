@@ -57,7 +57,7 @@ export interface BuzinessItemInterface {
   authorName?: string;
   avatarUrl?: string | null;
   images?: ImageDataType[];
-  recommendations: number;
+  recommendations: number | { count: number }[];
 }
 export interface EventItemInterface extends Tables<"events"> {
   lat: number | null;
@@ -84,6 +84,7 @@ export interface SearchParams {
 export interface BuzinessState {
   buzinesses: BuzinessSearchItemInterface[];
   searchParams?: SearchParams;
+  hasMore?: boolean;
 }
 
 export interface DialogProps {
