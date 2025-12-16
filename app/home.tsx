@@ -17,7 +17,7 @@ import {
   Portal, Text
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { MyAppbar } from "./_layout";
+import { MyAppbar } from "@/components/MyAppBar";
 import Smiley from "@/components/Smiley";
 import BuzinessSearchInput from "@/components/BuzinessSearchInput";
 import WhatToDo from "@/components/WhatToDo";

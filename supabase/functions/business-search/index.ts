@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
     
     res = await supabase
       .from("buziness")
-      .select("*")
+      .select("*, recommendations: buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(count)")
       .range(skip || 0, (skip || 0) + (take || 20) - 1)
       .order("created_at", { ascending: false });
   }

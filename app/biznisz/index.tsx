@@ -19,16 +19,16 @@ import {
   Portal
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { MyAppbar } from "../_layout";
 import BuzinessSearchInput from "@/components/BuzinessSearchInput";
 import { Button } from "@/components/Button";
 import { useBuzinessSearch } from "@/hooks/useBuzinessSearch";
 import Measure from "@/components/tutorial/Measure";
+import { MyAppbar } from "@/components/MyAppBar";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
-  const { searchParams } = useSelector(
+  const { searchParams, buzinesses } = useSelector(
     (state: RootState) => state.buziness,
   );
   const searchType = searchParams?.searchType;
@@ -44,7 +44,8 @@ export default function Index() {
 
   useFocusEffect(
     useCallback(() => {
-      search();
+      if (buzinesses.length === 0)
+        search();
       if (uid) dispatch(viewFunction({ key: "buzinessPage", uid }));
       navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={search} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,10 +84,10 @@ export default function Index() {
             onDismiss={() => {
               setLocationMenuVisible(false);
             }}
-            style={{alignItems:"center"}}
+            style={{ alignItems: "center" }}
             contentContainerStyle={[
               {
-                width:"90%",
+                width: "90%",
                 height: "90%",
               },
             ]}

@@ -46,7 +46,7 @@ import {
 } from "react-native-paper";
 import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 import { useDispatch, useSelector } from "react-redux";
-import { MyAppbar } from "../_layout";
+import { MyAppbar } from "@/components/MyAppBar";
 
 export default function Index() {
   const { id: paramId } = useGlobalSearchParams();
