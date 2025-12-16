@@ -299,7 +299,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                               {comment?.profiles?.full_name}
                             </ThemedText>
                           </Pressable>
-                          <ThemedText>
+                          <ThemedText style={{ marginLeft: 8 }}>
                             {elapsedTime(comment.created_at)}
                           </ThemedText>
                         </View>
