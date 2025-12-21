@@ -207,6 +207,122 @@
     "editProfile": "Itt szerkesztheted a elérhetőségeid, adataid."
   },
   "mapSelector": {
+    "cancel": "Mégsem",
+    "searchPlaceholder": "Keress címre...",
+    "select": "Kiválasztás"
+  },
+  "search": {
+    "placeholder": "Mire van szükséged?",
+    "bizniszPlaceholder": "Keress a bizniszek közt..."
+  },
+  "contactEdit": {
+    "contactLabel": "elérhetőséged",
+    "notePlaceholder": "Munkanapokon keress / csak hétvégén"
+  },
+  "bizniszRecommendations": {
+    "title": "biznisz ajánlói:",
+    "recommendedAgo": "ajánlotta"
+  },
+  "bizniszItem": {
+    "nearYou": "közel hozzád",
+    "deleteTitle": "Törlése?",
+    "deleteButton": "Törlés",
+    "peopleRecommend": "ember ajánlja"
+  },
+  "bizniszMap": {
+    "locationUnavailable": "Nem elérhető a pozíciód.",
+    "locationHelp": "Ha szeretnéd, hogy a hozzád közel található bizniszeket látsd, kapcsold be.",
+    "gotIt": "Vettem",
+    "searchInArea": "Keress ezen a környéken",
+    "onMap": "Térképen"
+  },
+  "bizniszEdit": {
+    "title": "Biznisz szerkesztése",
+    "saveTitle": "Mentés",
+    "uploadingTitle": "Kérlek várj, amíg a bizniszed feltöltődik",
+    "intro": "Ezen az oldalon fel tudsz venni egy új bizniszt a profilodba.",
+    "description": "A te bizniszeid azon hobbijaid, képességeid vagy szakmáid listája, amelyeket meg szeretnél osztani másokkal is.",
+    "example": "Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid közé, a Biznisz oldalon mások által megtalálható leszel a süti kulcsszóval.",
+    "titlePlaceholder": "Bizniszem neve",
+    "descriptionPlaceholder": "Hosszabb leírás hogy miről szól a bizniszed.",
+    "categoryPlaceholder": "Kategóriák, nyomj entert a hozzáadásukhoz",
+    "featuredContact": "Kiemelt elérhetőséged",
+    "locationTitle": "A bizniszed helyzete",
+    "locationHelp": "Ha fontos a földrajzi helyzete a bizniszednek, itt megadhatod tetszőleges pontossággal.",
+    "selectArea": "Válassz környéket",
+    "preview": "Így fog megjelenni a bizniszed:",
+    "previewTitle": "A biznisz címe",
+    "previewDescription": "Hosszabb leírás hogy miről szól a bizniszed.",
+    "previewCategory": "Egy kategória",
+    "previewCategory2": "Egy másik kategória",
+    "save": "Mentés"
+  },
+  "whatToDo": {
+    "title": "Mit tudsz itt csinálni?"
+  },
+  "tutorialMessages": {
+    "homePage": "Ez a főoldal, itt láthatod az újonan regisztrált tagokat, és hogy mihez értenek",
+    "bizniszTab": "A bizniszeket itt, alul találod.",
+    "bizniszPage": "Ez a biznisz kereső oldal",
+    "bizniszPageDesc": "Itt kereshetsz a környékeden segítséget.",
+    "firstBiznisz": "Ez egy biznisz",
+    "firstBizniszDesc": "Láthatod, hogy az adott emberhez milyen témákban fordulhatsz.",
+    "locationSelector": "Ha egy külön helyen keresnél, az kiválaszthatod ezzel a gombbal.",
+    "mapView": "Ezeket a találatokat láthatod térképen is, ha erre a gombra nyomsz.",
+    "profilePage": "A profil oldalon a saját adataidat láthatod",
+    "userBizniszTabs": "Itt láthatod majd a bizniszeidet ha az Új biznisz hozzáadására nyomsz.",
+    "clickHighlighted": "Kattints a kiemelt részre"
+  },
+  "comments": {
+    "noComments": "Még nem érkezett komment",
+    "yourComment": "Kommented",
+    "loginToComment": "Jelentkezz be a hozzászóláshoz.",
+    "reportProblem": "Problémám van ezzel a kommenttel.",
+    "deleted": "Törölted a kommented!"
+  },
+  "userItem": {
+    "noName": "Nincs név",
+    "fifeAgo": "fife",
+    "peopleRecommend": "ember ajánlja",
+    "noRecommendations": "Még senki sem ajánlotta"
+  },
+  "recommendationsModal": {
+    "trustersTitle": "ban megbíznak ők:",
+    "emptyMessage": "Itt azok az emberek fognak megjelenni, akik megbízhatónak jelöltek"
+  },
+  "myBuzinesses": {
+    "empty": "Itt fognak megjelenni a saját bizniszeid.",
+    "newBiznisz": "Új biznisz",
+    "description": "A te bizniszeid azon hobbijaid, képességeid vagy szakmáid listája, amelyeket meg szeretnél osztani másokkal is. \nHa, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid közé, mások által megtalálható leszel a süti kulcsszóval."
+  },
+  "location": {
+    "blocked": "Letiltottad a helyzeted."
+  },
+  "csatlakozom": {
+    "intro": "A FiFe Budapesten indul – a szomszédaid lehetnek a legjobb segítőtársaid. Nincs szükség távoli ügyfélszolgálatokra és multikra. Elég, ha itt vagyunk egymásnak.",
+    "mapView": "Éppen ezért ezen a felületen térképen láthatod, ki, hol, miben tud segíteni neked.",
+    "chooseMethod": "Válaszd ki hogy akarsz csatlakozni:",
+    "nameHelper": "A neved látható lesz mindenki számára, aki tag.",
+    "emailSent": "Küldtünk egy email-t erre a címre:",
+    "verifyEmail": "Kérlek igazold vissza az email-címedet",
+    "waitBeforeResend": "Kérlek várj még egy kicsit mielőtt újabb email-t kérsz.",
     "cancel": "Mégsem"
+  },
+  "projekt": {
+    "title": "Csatlakozz a FiFe App csapatához!",
+    "description": "Ez egy nonprofit, open source projekt, így mindig elkél a segítség.",
+    "needs": "Szükségünk van:",
+    "reactDeveloper": "• React Native fejlesztőre",
+    "legalAdvisor": "• Jogi tanácsadóra",
+    "funding": "• Pályázatra",
+    "contact": "Ha beszállnál, írj egy e-mailt ide:"
+  },
+  "passwordReset": {
+    "save": "Jelszó mentése",
+    "updated": "Jelszó frissítve. Jelentkezz be az új jelszóval."
+  },
+  "userProfile": {
+    "contactsLabel": "Elérhetőségek",
+    "requestContact": "Kérd el a kontaktját"
   }
 }

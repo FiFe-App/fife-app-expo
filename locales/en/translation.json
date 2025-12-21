@@ -207,6 +207,122 @@
     "editProfile": "Here you can edit your contacts and data."
   },
   "mapSelector": {
+    "cancel": "Cancel",
+    "searchPlaceholder": "Search for address...",
+    "select": "Select"
+  },
+  "search": {
+    "placeholder": "What do you need?",
+    "bizniszPlaceholder": "Search bizniszek..."
+  },
+  "contactEdit": {
+    "contactLabel": "contact",
+    "notePlaceholder": "Call on weekdays / weekends only"
+  },
+  "bizniszRecommendations": {
+    "title": "biznisz recommenders:",
+    "recommendedAgo": "recommended"
+  },
+  "bizniszItem": {
+    "nearYou": "near you",
+    "deleteTitle": "Delete?",
+    "deleteButton": "Delete",
+    "peopleRecommend": "people recommend"
+  },
+  "bizniszMap": {
+    "locationUnavailable": "Your location is not available.",
+    "locationHelp": "If you want to see bizniszek near you, turn it on.",
+    "gotIt": "Got it",
+    "searchInArea": "Search in this area",
+    "onMap": "On map"
+  },
+  "bizniszEdit": {
+    "title": "Edit Biznisz",
+    "saveTitle": "Save",
+    "uploadingTitle": "Please wait while your biznisz is uploading",
+    "intro": "On this page you can add a new biznisz to your profile.",
+    "description": "Your bizniszek are a list of your hobbies, skills or professions that you want to share with others.",
+    "example": "If, for example, you make cookies on an assembly line and add this to your bizniszek, others will be able to find you on the Biznisz page using the cookie keyword.",
+    "titlePlaceholder": "My biznisz name",
+    "descriptionPlaceholder": "Longer description of what your biznisz is about.",
+    "categoryPlaceholder": "Categories, press enter to add them",
+    "featuredContact": "Featured contact",
+    "locationTitle": "Your biznisz location",
+    "locationHelp": "If the geographic location of your biznisz is important, you can specify it here with any accuracy.",
+    "selectArea": "Select area",
+    "preview": "This is how your biznisz will appear:",
+    "previewTitle": "Biznisz title",
+    "previewDescription": "Longer description of what your biznisz is about.",
+    "previewCategory": "A category",
+    "previewCategory2": "Another category",
+    "save": "Save"
+  },
+  "whatToDo": {
+    "title": "What can you do here?"
+  },
+  "tutorialMessages": {
+    "homePage": "This is the home page, here you can see newly registered members and what they are good at",
+    "bizniszTab": "You can find bizniszek here, at the bottom.",
+    "bizniszPage": "This is the biznisz search page",
+    "bizniszPageDesc": "Here you can search for help in your area.",
+    "firstBiznisz": "This is a biznisz",
+    "firstBizniszDesc": "You can see what topics you can turn to this person for.",
+    "locationSelector": "If you want to search in a different location, you can select it with this button.",
+    "mapView": "You can also see these results on the map if you press this button.",
+    "profilePage": "On the profile page you can see your own data",
+    "userBizniszTabs": "Here you will see your bizniszek if you press Add new biznisz.",
+    "clickHighlighted": "Click on the highlighted area"
+  },
+  "comments": {
+    "noComments": "No comments yet",
+    "yourComment": "Your comment",
+    "loginToComment": "Sign in to comment.",
+    "reportProblem": "I have a problem with this comment.",
+    "deleted": "You deleted your comment!"
+  },
+  "userItem": {
+    "noName": "No name",
+    "fifeAgo": "fife",
+    "peopleRecommend": "people recommend",
+    "noRecommendations": "No one has recommended yet"
+  },
+  "recommendationsModal": {
+    "trustersTitle": "trust them:",
+    "emptyMessage": "Here will appear the people who marked you as trustworthy"
+  },
+  "myBuzinesses": {
+    "empty": "Your own bizniszek will appear here.",
+    "newBiznisz": "New biznisz",
+    "description": "Your bizniszek are a list of your hobbies, skills or professions that you want to share with others. \nIf, for example, you make cookies on an assembly line and add this to your bizniszek, others will be able to find you using the cookie keyword."
+  },
+  "location": {
+    "blocked": "You blocked your location."
+  },
+  "csatlakozom": {
+    "intro": "FiFe starts in Budapest – your neighbors can be your best helpers. No need for distant customer service and multinational companies. It's enough if we are here for each other.",
+    "mapView": "That's why you can see on the map who, where, and how can help you.",
+    "chooseMethod": "Choose how you want to join:",
+    "nameHelper": "Your name will be visible to everyone who is a member.",
+    "emailSent": "We sent an email to this address:",
+    "verifyEmail": "Please verify your email address",
+    "waitBeforeResend": "Please wait a bit before requesting another email.",
     "cancel": "Cancel"
+  },
+  "projekt": {
+    "title": "Join the FiFe App team!",
+    "description": "This is a nonprofit, open source project, so help is always welcome.",
+    "needs": "We need:",
+    "reactDeveloper": "• React Native developer",
+    "legalAdvisor": "• Legal advisor",
+    "funding": "• Grant application",
+    "contact": "If you want to join, write an email to:"
+  },
+  "passwordReset": {
+    "save": "Save password",
+    "updated": "Password updated. Sign in with your new password."
+  },
+  "userProfile": {
+    "contactsLabel": "Contacts",
+    "requestContact": "Request contact"
   }
 }
