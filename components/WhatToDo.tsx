@@ -6,6 +6,7 @@ import { ThemedText } from "./ThemedText";
 import features from "./whatToDoFeatures.json";
 import style from "./styles";
 import { Link } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 interface FeatureItem {
   title: string;
@@ -80,7 +81,7 @@ export const WhatToDo: React.FC<WhatToDoProps> = ({ visible, onDismiss }) => {
             {selected && (
               <Appbar.BackAction onPress={() => setSelected(null)} />
             )}
-            <Appbar.Content title={selected ? selected.title : "Mit tudsz itt csinálni?"} />
+            <Appbar.Content title={selected ? selected.title : t("whatToDo.title")} />
             <Appbar.Action icon="close" onPress={() => { setSelected(null); onDismiss(); }} />
           </Appbar.Header>
           <Divider />
