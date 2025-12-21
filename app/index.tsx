@@ -452,6 +452,7 @@ export default function App() {
   if (uid) return <Redirect href="/home" />;
   return (
     <ScrollView style={{ flex: 1 }}>
+      <Header />
       <ThemedView type="default" style={{ flex: 1, alignItems: "center" }}>
         <View style={{ flex: 1, gap: 16, maxWidth: 1000 }}>
           <Hero />

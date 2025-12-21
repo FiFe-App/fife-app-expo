@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { setLanguage } from "@/redux/reducers/languageReducer";
 import { RootState } from "@/redux/store";
+import { supabase } from "@/lib/supabase/supabase";
 
 interface LanguageSwitcherProps {
   variant?: "button" | "icon";
@@ -13,18 +14,33 @@ export default function LanguageSwitcher({ variant = "button" }: LanguageSwitche
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const currentLanguage = useSelector((state: RootState) => state.language.language);
+  const uid = useSelector((state: RootState) => state.user.uid);
   const [visible, setVisible] = React.useState(false);
 
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
 
-  const changeLanguage = (lng: "en" | "hu") => {
+  const changeLanguage = async (lng: "en" | "hu") => {
     dispatch(setLanguage(lng));
-    i18n.changeLanguage(lng);
+    await i18n.changeLanguage(lng);
+    
+    // Store language preference in Supabase profile if user is logged in
+    if (uid) {
+      try {
+        await supabase
+          .from("profiles")
+          .update({ language: lng })
+          .eq("id", uid);
+      } catch (error) {
+        console.error("Failed to update language in profile:", error);
+      }
+    }
+    
     closeMenu();
   };
 
-  const languageLabel = currentLanguage === "hu" ? "Magyar" : "English";
+  const languageLabel = currentLanguage === "hu" ? "🇭🇺 Magyar" : "🇬🇧 English";
+  const languageIcon = currentLanguage === "hu" ? "🇭🇺" : "🇬🇧";
 
   return (
     <Menu
@@ -36,7 +52,7 @@ export default function LanguageSwitcher({ variant = "button" }: LanguageSwitche
             <Icon source="translate" size={24} />
           </Button>
         ) : (
-          <Button onPress={openMenu} mode="outlined">
+          <Button onPress={openMenu} mode="outlined" icon="translate">
             {languageLabel}
           </Button>
         )
@@ -44,12 +60,12 @@ export default function LanguageSwitcher({ variant = "button" }: LanguageSwitche
     >
       <Menu.Item
         onPress={() => changeLanguage("hu")}
-        title="Magyar"
+        title="🇭🇺 Magyar"
         leadingIcon={currentLanguage === "hu" ? "check" : undefined}
       />
       <Menu.Item
         onPress={() => changeLanguage("en")}
-        title="English"
+        title="🇬🇧 English"
         leadingIcon={currentLanguage === "en" ? "check" : undefined}
       />
     </Menu>

@@ -7,12 +7,13 @@ import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
 import { setOptions } from "@/redux/reducers/infoReducer";
 import { setName, setUserData } from "@/redux/reducers/userReducer";
+import { setLanguage } from "@/redux/reducers/languageReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { ScrollView, View } from "react-native";
 import {
   Divider,
@@ -30,7 +31,7 @@ type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { uid: myUid, userData }: UserState = useSelector(
     (state: RootState) => state.user,
   );
@@ -63,9 +64,17 @@ export default function Index() {
           console.log("err", error.message);
           return;
         }
-        if (data) {
+        if (data && data[0]) {
           setProfile(data[0]);
           console.log(data);
+          
+          // Load language preference from profile if available
+          const profileLanguage = (data[0] as any).language;
+          if (profileLanguage && (profileLanguage === "en" || profileLanguage === "hu")) {
+            dispatch(setLanguage(profileLanguage));
+            i18n.changeLanguage(profileLanguage);
+          }
+          
           setLoading(false);
         }
       });
@@ -235,6 +244,13 @@ export default function Index() {
             <ThemedText>{userData?.email}</ThemedText>
           </View>
           <Divider />
+          <View style={{ gap: 8, paddingTop: 8, paddingBottom: 8 }}>
+            <ThemedText type="subtitle">{t("settings.language")}</ThemedText>
+            <View style={{ paddingHorizontal: 16 }}>
+              <LanguageSwitcher />
+            </View>
+          </View>
+          <Divider />
           <View style={{ gap: 8, paddingTop: 8 }}>
             <ThemedText type="subtitle">{t("profile.edit.contactsTitle")}</ThemedText>
             <View style={{ alignItems: "center" }}>
@@ -244,13 +260,6 @@ export default function Index() {
               </HelperText>
             </View>
             <ContactEditScreen ref={contactEditRef} />
-          </View>
-          <Divider style={{ marginVertical: 16 }} />
-          <View style={{ gap: 8, paddingVertical: 8 }}>
-            <ThemedText type="subtitle">{t("settings.language")}</ThemedText>
-            <View style={{ paddingHorizontal: 16 }}>
-              <LanguageSwitcher />
-            </View>
           </View>
         </ScrollView>
       </ThemedView>
