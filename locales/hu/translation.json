@@ -50,7 +50,9 @@
       "username": "Felhasználónév",
       "emailLabel": "Email, amivel regisztráltál:",
       "contactsTitle": "Elérhetőségeid",
-      "contactsWarning": "Figyelem! Az alább megadott adatok láthatóak minden felhasználónak."
+      "contactsWarning": "Figyelem! Az alább megadott adatok láthatóak minden felhasználónak.",
+      "usernameExists": "A megadott felhasználónév már létezik",
+      "usernameHelp": "Ha megadsz egy felhasználónevet, elérhető lesz a profilod egyedi URL-címe."
     }
   },
   "navigation": {
@@ -63,7 +65,8 @@
     "fifeBiznisz": "FiFe Biznisz",
     "fifeProfile": "FiFe Profil",
     "editProfile": "Profil Szerkesztése",
-    "passwordReset": "Jelszó visszaállítás"
+    "passwordReset": "Jelszó visszaállítás",
+    "home_bottom": "Otthon"
   },
   "settings": {
     "language": "Nyelv",
@@ -76,6 +79,109 @@
     "cancel": "Mégse",
     "ok": "OK",
     "error": "Hiba",
-    "success": "Sikeres"
+    "success": "Sikeres",
+    "done": "Kész",
+    "back": "Vissza",
+    "next": "Következő",
+    "skip": "Átugrom",
+    "delete": "Törlés",
+    "new": "ÚJ",
+    "pleaseWait": "Kérlek várj...",
+    "backToHome": "Vissza a főoldalra"
+  },
+  "biznisz": {
+    "list": {
+      "loadMore": "További bizniszek",
+      "noMore": "Nem található több biznisz",
+      "selectArea": "Válassz környéket a kereséshez",
+      "firstBiznisz": "Első biznisz"
+    },
+    "edit": {
+      "title": "Biznisz szerkesztése",
+      "uploading": "Kérlek várj, amíg a bizniszed feltöltődik",
+      "intro": "Ezen az oldalon fel tudsz venni egy új bizniszt a profilodba.",
+      "description": "A te bizniszeid azon hobbijaid, képességeid vagy erőforrásaid amelyeket szívesen megosztanál a környezeteddel.",
+      "example": "Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid közé, mások által megtalálható leszel a süti kulcsszóval.",
+      "locationTitle": "A bizniszed helyzete",
+      "preview": "Így fog megjelenni a bizniszed:",
+      "titlePlaceholder": "A biznisz címe",
+      "descriptionPlaceholder": "Hosszabb leírás hogy miről szól a bizniszed.",
+      "categoryExample": "Egy kategória",
+      "categoryExample2": "Egy másik kategória",
+      "save": "Mentés",
+      "locationHelp": "Ha fontos a földrajzi helyzete a bizniszednek, itt megadhatod tetszőleges pontossággal.",
+      "selectArea": "Válassz környéket",
+      "featuredContact": "Kiemelt elérhetőséged"
+    },
+    "item": {
+      "deleteTitle": "Törlése?",
+      "deleteButton": "Törlés",
+      "markedForDeletion": "Törlésre kijelölve"
+    },
+    "map": {
+      "locationUnavailable": "Nem elérhető a pozíciód.",
+      "locationHelp": "Ha szeretnéd, hogy a hozzád közel található bizniszeket látsd, kapcsold be."
+    },
+    "recommendations": {
+      "title": "biznisz ajánlói:"
+    },
+    "savedProfiles": {
+      "empty": "Itt fognak megjelenni a mentett profiljaid.",
+      "trustedLabel": "Őket jelölted megbízhatónak"
+    }
+  },
+  "contacts": {
+    "title": "Elérhetőségeid",
+    "empty": "Itt fognak megjelenni az elérhetőségeid, hogy könnyebben",
+    "label": "elérhetőséged"
+  },
+  "users": {
+    "noMore": "Nem található több fife",
+    "recommendations": {
+      "empty": "Itt azok az emberek fognak megjelenni, akik megbízhatónak jelöltek"
+    },
+    "myBuzinesses": {
+      "empty": "Itt fognak megjelenni a saját bizniszeid.",
+      "example": "futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid közé, mások által megtalálható leszel a süti kulcsszóval."
+    }
+  },
+  "dialogs": {
+    "recommendBizinessRemove": {
+      "title": "Mégsem ajánlod?",
+      "text": "Visszavonhatod az ajánlásod, ha meggondoltad magad.",
+      "submit": "Törlés"
+    },
+    "recommendBizinessAdd": {
+      "title": "Bizotsan ajánlod?",
+      "text": "Csak akkor jelöld a bizniszt ajánlottnak, ha tudod, hogy valós és hasznos.",
+      "submit": "Ajánlom"
+    },
+    "recommendBizinessButton": {
+      "recommended": "Már ajánlottam.",
+      "recommend": "Ajánlom"
+    },
+    "recommendProfileRemove": {
+      "title": "Mégsem bízol benne?",
+      "text": "Visszavonhatod a támogatásod, ha meggondoltad magad.",
+      "submit": "Nem támogatom"
+    },
+    "recommendProfileAdd": {
+      "title": "Bizotsan megbízol benne?",
+      "text": "Csak akkor jelöld őt megbízhatónak, ha úgy gondolod, hogy nem fog mást átverni.",
+      "submit": "Igen!"
+    },
+    "comments": {
+      "delete": "Törlés"
+    }
+  },
+  "tutorial": {
+    "back": "Vissza",
+    "skip": "Átugrom",
+    "next": "Következő",
+    "done": "Kezdés",
+    "editProfile": "Itt szerkesztheted a elérhetőségeid, adataid."
+  },
+  "mapSelector": {
+    "cancel": "Mégsem"
   }
 }

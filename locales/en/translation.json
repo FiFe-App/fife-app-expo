@@ -50,7 +50,9 @@
       "username": "Username",
       "emailLabel": "Email you registered with:",
       "contactsTitle": "Your contacts",
-      "contactsWarning": "Attention! The data provided below is visible to all users."
+      "contactsWarning": "Attention! The data provided below is visible to all users.",
+      "usernameExists": "This username is already taken",
+      "usernameHelp": "If you provide a username, your profile will have a unique URL."
     }
   },
   "navigation": {
@@ -63,7 +65,8 @@
     "fifeBiznisz": "FiFe Biznisz",
     "fifeProfile": "FiFe Profile",
     "editProfile": "Edit Profile",
-    "passwordReset": "Password Reset"
+    "passwordReset": "Password Reset",
+    "home_bottom": "Home"
   },
   "settings": {
     "language": "Language",
@@ -76,6 +79,109 @@
     "cancel": "Cancel",
     "ok": "OK",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "done": "Done",
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "delete": "Delete",
+    "new": "NEW",
+    "pleaseWait": "Please wait...",
+    "backToHome": "Back to home"
+  },
+  "biznisz": {
+    "list": {
+      "loadMore": "Load more bizniszek",
+      "noMore": "No more biznisz found",
+      "selectArea": "Select area to search",
+      "firstBiznisz": "First biznisz"
+    },
+    "edit": {
+      "title": "Edit Biznisz",
+      "uploading": "Please wait while your biznisz is uploading",
+      "intro": "On this page you can add a new biznisz to your profile.",
+      "description": "Your bizniszek are your hobbies, skills or resources that you would like to share with your surroundings.",
+      "example": "If, for example, you make cookies on an assembly line and add this to your bizniszek, others will be able to find you using the cookie keyword.",
+      "locationTitle": "Your biznisz location",
+      "preview": "This is how your biznisz will appear:",
+      "titlePlaceholder": "Biznisz title",
+      "descriptionPlaceholder": "Longer description of what your biznisz is about.",
+      "categoryExample": "A category",
+      "categoryExample2": "Another category",
+      "save": "Save",
+      "locationHelp": "If the geographic location of your biznisz is important, you can specify it here with any accuracy.",
+      "selectArea": "Select area",
+      "featuredContact": "Featured contact"
+    },
+    "item": {
+      "deleteTitle": "Delete?",
+      "deleteButton": "Delete",
+      "markedForDeletion": "Marked for deletion"
+    },
+    "map": {
+      "locationUnavailable": "Your location is not available.",
+      "locationHelp": "If you want to see bizniszek near you, turn it on."
+    },
+    "recommendations": {
+      "title": "biznisz recommenders:"
+    },
+    "savedProfiles": {
+      "empty": "Your saved profiles will appear here.",
+      "trustedLabel": "You marked them as trustworthy"
+    }
+  },
+  "contacts": {
+    "title": "Your contacts",
+    "empty": "Your contacts will appear here to make it easier",
+    "label": "contact"
+  },
+  "users": {
+    "noMore": "No more fifes found",
+    "recommendations": {
+      "empty": "Here will appear the people who marked you as trustworthy"
+    },
+    "myBuzinesses": {
+      "empty": "Your own bizniszek will appear here.",
+      "example": "you make cookies on an assembly line and add this to your bizniszek, others will be able to find you using the cookie keyword."
+    }
+  },
+  "dialogs": {
+    "recommendBizinessRemove": {
+      "title": "Don't recommend it anymore?",
+      "text": "You can withdraw your recommendation if you change your mind.",
+      "submit": "Delete"
+    },
+    "recommendBizinessAdd": {
+      "title": "Are you sure you recommend it?",
+      "text": "Only mark the biznisz as recommended if you know it's real and useful.",
+      "submit": "I recommend it"
+    },
+    "recommendBizinessButton": {
+      "recommended": "Already recommended.",
+      "recommend": "I recommend it"
+    },
+    "recommendProfileRemove": {
+      "title": "Don't trust them anymore?",
+      "text": "You can withdraw your support if you change your mind.",
+      "submit": "I don't support"
+    },
+    "recommendProfileAdd": {
+      "title": "Are you sure you trust them?",
+      "text": "Only mark them as trustworthy if you think they won't scam others.",
+      "submit": "Yes!"
+    },
+    "comments": {
+      "delete": "Delete"
+    }
+  },
+  "tutorial": {
+    "back": "Back",
+    "skip": "Skip",
+    "next": "Next",
+    "done": "Start",
+    "editProfile": "Here you can edit your contacts and data."
+  },
+  "mapSelector": {
+    "cancel": "Cancel"
   }
 }
