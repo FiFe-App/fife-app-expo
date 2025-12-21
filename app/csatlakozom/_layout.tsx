@@ -15,8 +15,10 @@ import { ScrollView, View } from "react-native";
 import Dots from "react-native-dots-pagination";
 import { Button, MD3DarkTheme } from "react-native-paper";
 import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 export default function RootLayout() {
+  const { t } = useTranslation();
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   const pages: Href<string>[] = [
     "/csatlakozom/",
@@ -82,7 +84,7 @@ export default function RootLayout() {
               }
               mode="contained"
             >
-              Vissza
+              {t('csatlakozom.back')}
             </Button>
           </Link>
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", height: 48 }}>
@@ -102,7 +104,7 @@ export default function RootLayout() {
             (
               <Link href={next} asChild
                 disabled={path === "/csatlakozom/megbizhatosag" && !canGoNext}>
-                <Button mode="contained">Tovább</Button>
+                <Button mode="contained">{t('csatlakozom.next')}</Button>
               </Link>
             )}
         </View>

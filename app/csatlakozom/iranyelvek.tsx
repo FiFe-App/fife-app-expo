@@ -10,11 +10,20 @@ import {
   View,
 } from "react-native";
 import { Icon, Text, TextInput } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 const Register = () => {
+  const { t } = useTranslation();
   const textInput = useRef<TIRN>(null);
   const [text, setText] = useState("");
-  const textToType = "Nem leszek rosszindulatú";
+  const textToType = t('csatlakozom.guidelineText');
+  
+  const iranyelvekList = [
+    { key: t('csatlakozom.guideline1') },
+    { key: t('csatlakozom.guideline2') },
+    { key: t('csatlakozom.guideline3') },
+  ];
+  
   const handleTextInput = (input: string) => {
     if (
       textToType.slice(0, input.length).toLowerCase().replaceAll(" ", "") ===
@@ -45,17 +54,10 @@ const Register = () => {
     <ThemedView style={{ flex: 1, padding: 8 }}>
       <View style={{ flex: 1, justifyContent: "center" }}>
         <ThemedText type="title" style={{ marginBottom: 16 }}>
-          Ha szeretnél csatlakozni ehhez a közösséghez, be kell tartanod az
-          irányelveinket:
+          {t('csatlakozom.joinCommunity')}
         </ThemedText>
         <FlatList
-          data={[
-            { key: "Nem leszek rosszindulatú senkivel!" },
-            { key: "Saját és mások érdekeit is figyelembe veszem!" },
-            {
-              key: "Ha valaki valaki bántóan viselkedik velem vagy mással, jelentem!",
-            },
-          ]}
+          data={iranyelvekList}
           style={[styles.text, { flex: undefined }]}
           renderItem={({ item, index }) => (
             <Text style={styles.listItem} key={"item" + index}>
@@ -69,7 +71,7 @@ const Register = () => {
       </View>
       <View style={{ marginVertical: 20 }}>
         <ThemedText>
-          Ha be fogod tartani ezeket, gépeld be a következő szöveget:
+          {t('csatlakozom.guidelinePrompt')}
         </ThemedText>
         <Pressable
           style={styles.inputView}

@@ -7,20 +7,22 @@ import { Icon, Text } from "react-native-paper";
 import { Button } from "@/components/Button";
 import { useFocusEffect, router } from "expo-router";
 import { ThemedInput } from "@/components/ThemedInput";
-
-const iranyelvekList = [
-  "Nem leszek rosszindulatú senkivel!",
-  "Saját és mások érdekeit is figyelembe veszem!",
-  "Ha valaki bántóan viselkedik velem vagy mással, jelentem!",
-];
-
-const textToType = "Nem leszek rosszindulatú";
+import { useTranslation } from "react-i18next";
 
 const Megbizhatosag = () => {
+  const { t } = useTranslation();
   const [modalVisible, setModalVisible] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [typed, setTyped] = useState("");
   const textInput = useRef<TextInput>(null);
+  
+  const iranyelvekList = [
+    t('csatlakozom.guideline1'),
+    t('csatlakozom.guideline2'),
+    t('csatlakozom.guideline3'),
+  ];
+  
+  const textToType = t('csatlakozom.guidelineText');
 
   const handleTextInput = (input: string) => {
     if (
@@ -97,7 +99,7 @@ const Megbizhatosag = () => {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <ThemedText type="title" style={{ marginBottom: 16 }}>
-                Irányelveink:
+                {t('csatlakozom.ourGuidelines')}
               </ThemedText>
               <View style={{ alignItems: "flex-start" }}>
                 {iranyelvekList.map((item, idx) => (
@@ -108,7 +110,7 @@ const Megbizhatosag = () => {
               </View>
               <View style={{ marginVertical: 20 }}>
                 <ThemedText style={{ fontWeight: "bold" }}>
-                  Ha be fogod tartani ezeket, gépeld be a következő szöveget:
+                  {t('csatlakozom.guidelinePrompt')}
                 </ThemedText>
                 <Pressable
                   style={styles.inputView}
@@ -147,7 +149,7 @@ const Megbizhatosag = () => {
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", width: "100%", gap: 16 }}>
 
                 <Button mode="text" onPress={() => setModalVisible(false)}>
-                  Mégsem
+                  {t('csatlakozom.cancel')}
                 </Button>
                 <Button
                   mode="contained"
@@ -156,7 +158,7 @@ const Megbizhatosag = () => {
                     setModalVisible(false);
                   }}
                   disabled={!canAccept}
-                >Elfogadom</Button>
+                >{t('csatlakozom.accept')}</Button>
               </View>
             </View>
           </View>

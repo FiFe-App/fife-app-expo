@@ -9,6 +9,7 @@ import * as WebBrowser from "expo-web-browser";
 import { AppState, View } from "react-native";
 import { Button, Divider } from "react-native-paper";
 import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -19,6 +20,7 @@ AppState.addEventListener("change", (state) => {
 });
 
 export default function Index() {
+  const { t } = useTranslation();
   const { uid }: UserState = useSelector((state: RootState) => state.user);
 
   WebBrowser.maybeCompleteAuthSession(); // required for web only
@@ -40,9 +42,9 @@ export default function Index() {
     <ThemedView style={{ flex: 1, padding: 16 }}>
       <View style={{ justifyContent: "center", marginBottom: 16 }}>
         <ThemedText type="title" style={{ textAlign: "left" }}>
-          Szuper vagy!
+          {t('csatlakozom.greatYouAre')}
         </ThemedText>
-        <ThemedText>Válaszd ki hogy akarsz csatlakozni:</ThemedText>
+        <ThemedText>{t('csatlakozom.chooseMethod')}</ThemedText>
       </View>
       <View
         style={{
@@ -59,14 +61,14 @@ export default function Index() {
           disabled
           onPress={signInWithFacebook}
         >
-          Csatlakozom Facebook-al
+          {t('csatlakozom.facebookJoin')}
         </Button>
         <Button mode="contained" icon="google" disabled>
-          Csatlakozom Google-lel
+          {t('csatlakozom.googleJoin')}
         </Button>
         <Divider style={{ marginVertical: 16 }} />
         <Link href="/csatlakozom/email-regisztracio" asChild>
-          <Button mode="contained">E-mail és Jelszó regisztráció</Button>
+          <Button mode="contained">{t('csatlakozom.emailRegister')}</Button>
         </Link>
       </View>
     </ThemedView>

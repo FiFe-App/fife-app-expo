@@ -2,8 +2,11 @@ import { ThemedView } from "@/components/ThemedView";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import { ThemedText } from "@/components/ThemedText";
+import { useTranslation } from "react-i18next";
 
 const Register = () => {
+  const { t } = useTranslation();
+  
   return (
     <ThemedView style={{ flex: 1, paddingTop: 36, alignItems: "center" }}>
       <View style={{ flex: 1, zIndex: 2, overflow: "hidden" }}>
@@ -17,11 +20,11 @@ const Register = () => {
           type="subtitle"
           style={{ textAlign: "left", marginBottom: 16 }}
         >
-          Az utca túloldalán lehet a segítség
+          {t('csatlakozom.subtitle')}
         </ThemedText>
         <ThemedText>
-          A FiFe Budapesten indul – a szomszédaid lehetnek a legjobb segítőtársaid. Nincs szükség távoli ügyfélszolgálatokra és multikra. Elég, ha itt vagyunk egymásnak.
-          Éppen ezért ezen a felületen térképen láthatod, ki, hol, miben tud segíteni neked.
+          {t('csatlakozom.intro')}
+          {t('csatlakozom.mapView')}
         </ThemedText>
         <View
           style={{

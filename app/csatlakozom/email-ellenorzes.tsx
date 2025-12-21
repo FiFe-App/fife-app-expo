@@ -8,8 +8,10 @@ import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import { useDispatch } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 export default function Index() {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [edit, setEdit] = useState(false);
@@ -46,21 +48,19 @@ export default function Index() {
               const err = res.error;
               console.log(err);
               if (err.code === "over_email_send_rate_limit")
-                setRes(
-                  "Kérlek várj még egy kicsit mielőtt újabb email-t kérsz.",
-                );
+                setRes(t('csatlakozom.waitBeforeResend'));
               else if (err.code === "validation_failed")
-                setRes("Nem megfelelő email-cím");
+                setRes(t('csatlakozom.invalidEmail'));
               else setRes(err.message);
               return;
             }
 
             if (res.data)
-              setRes("Email elküldve! Nézd meg a spam mappában is!");
+              setRes(t('csatlakozom.emailResent'));
           })
           .catch((err) => {
             console.error("asd", err);
-            setRes("A túróba. Valami hiba történt, próbáld meg újra!");
+            setRes(t('csatlakozom.errorOccurred'));
           });
       })
       .catch((err) => {
@@ -82,7 +82,7 @@ export default function Index() {
 
           if (res.error) {
             if (res.error?.code === "user_not_found")
-              setRes("Nem létezik ez a felhasználó");
+              setRes(t('csatlakozom.userNotFound'));
             throw new Error(res.error.message);
           }
         });
@@ -111,10 +111,10 @@ export default function Index() {
         }}
       >
         <ThemedText type="title">
-          Kérlek igazold vissza az email-címedet
+          {t('csatlakozom.verifyEmail')}
         </ThemedText>
         <View style={{ gap: 16, width:"100%" }}>
-          <ThemedText>Küldtünk egy email-t erre a címre:</ThemedText>
+          <ThemedText>{t('csatlakozom.emailSent')}</ThemedText>
           {!edit ? (
             <ThemedText style={{ textAlign: "center" }}>{email}</ThemedText>
           ) : (
@@ -126,7 +126,7 @@ export default function Index() {
                   padding: 0,
                   marginBottom: 16
                 }}
-                placeholder="Az új email-címed"
+                placeholder={t('csatlakozom.newEmailPlaceholder')}
                 value={email}
                 onChangeText={setEmail}
               />
@@ -138,11 +138,11 @@ export default function Index() {
             disabled={!email}
             mode={edit ? "contained" : "contained-tonal"}
           >
-            Email újraküldése
+            {t('csatlakozom.resendEmail')}
           </Button>
           {res && <ThemedText type="subtitle">{res}</ThemedText>}
-          {edit ? <Button onPress={()=>setEdit(false)}>Mégsem</Button> :
-            <Button onPress={() => setEdit(true)}>Elírtad az email-címed?</Button>}
+          {edit ? <Button onPress={()=>setEdit(false)}>{t('csatlakozom.cancel')}</Button> :
+            <Button onPress={() => setEdit(true)}>{t('csatlakozom.wrongEmail')}</Button>}
         </View>
       </View>
     </ThemedView>
