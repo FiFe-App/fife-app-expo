@@ -19,6 +19,7 @@ import * as WebBrowser from "expo-web-browser";
 import { loadViewedFunctions } from "@/redux/reducers/tutorialReducer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "@/components/Button";
+import { useTranslation } from "react-i18next";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -29,6 +30,7 @@ AppState.addEventListener("change", (state) => {
 });
 
 export default function Index() {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -146,7 +148,7 @@ export default function Index() {
       <ThemedView style={{ flex: 1 }} type="default">
         <View style={{ maxWidth: 300, width: "100%", gap: 8, margin: "auto" }}>
           <Button onPress={autoLogin} mode="contained">
-            Próba felhasználó
+            {t("login.testUser")}
           </Button>
           <Button
             mode="contained"
@@ -154,7 +156,7 @@ export default function Index() {
             disabled
             onPress={startFacebookLogin}
           >
-            Facebook bejelentkezés
+            {t("login.facebookLogin")}
           </Button>
           <Button
             mode="contained"
@@ -162,14 +164,14 @@ export default function Index() {
             disabled
             onPress={signInWithGoogle}
           >
-            Google bejelentkezés
+            {t("login.googleLogin")}
           </Button>
           <Divider style={{ marginVertical: 16 }} />
           <TextInput
             mode="outlined"
             onChangeText={setEmail}
             value={email}
-            label="E-mail"
+            label={t("login.email")}
             autoComplete="email"
             textContentType="emailAddress"
             inputMode="email"
@@ -181,7 +183,7 @@ export default function Index() {
             mode="outlined"
             onChangeText={setPassword}
             value={password}
-            label="Jelszó"
+            label={t("login.password")}
             secureTextEntry={!showPassword}
             autoComplete="current-password"
             textContentType="password"
@@ -198,11 +200,11 @@ export default function Index() {
             mode="contained"
             type="secondary"
           >
-            Bejelentkezés
+            {t("login.login")}
           </Button>
           <View style={{ flexDirection: "row", justifyContent: "center" }}>
             <Link href="/csatlakozom" asChild>
-              <Button>Még nincs fiókom</Button>
+              <Button>{t("login.noAccount")}</Button>
             </Link>
             <Link href="/user/password-reset" asChild>
               <Button>Elfelejtettem a jelszavam</Button>

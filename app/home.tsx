@@ -24,9 +24,11 @@ import WhatToDo from "@/components/WhatToDo";
 import { Button } from "@/components/Button";
 import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 import { useInfiniteQuery } from "@/hooks/useInfiniteQuery";
+import { useTranslation } from "react-i18next";
 
 const PAGE_SIZE = Math.floor(Dimensions.get("window").height / 100);
 export default function Index() {
+  const { t } = useTranslation();
   const { uid } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
   const { userSearchParams } = useSelector(
@@ -71,15 +73,15 @@ export default function Index() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
             <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
             <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, flex: 1 }}>
-              <Text variant="titleMedium">Üdvözöllek a FiFe Appban!</Text>
+              <Text variant="titleMedium">{t("home.welcome")}</Text>
               <Button icon="help-circle" onPress={() => setWhatVisible(true)} style={{ padding: 0 }}>
-                <Text variant="labelMedium">Mit lehet itt csinálni?</Text>
+                <Text variant="labelMedium">{t("home.whatToDo")}</Text>
               </Button>
             </View>
           </View>
         </View>
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
-          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Új fifék Budapesten</ThemedText>
+          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>{t("home.newFifes")}</ThemedText>
         </View>
         <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} />
         <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />

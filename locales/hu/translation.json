@@ -87,7 +87,8 @@
     "delete": "Törlés",
     "new": "ÚJ",
     "pleaseWait": "Kérlek várj...",
-    "backToHome": "Vissza a főoldalra"
+    "backToHome": "Vissza a főoldalra",
+    "loadingEllipsis": "Betöltés…"
   },
   "biznisz": {
     "list": {
@@ -95,6 +96,12 @@
       "noMore": "Nem található több biznisz",
       "selectArea": "Válassz környéket a kereséshez",
       "firstBiznisz": "Első biznisz"
+    },
+    "detail": {
+      "notFound": "Ez a biznisz nem található",
+      "authorsBiznisz": "biznisze",
+      "noRecommendations": "Még senki sem ajánlja",
+      "commentPlaceholder": "Mondd el a véleményed"
     },
     "edit": {
       "title": "Biznisz szerkesztése",
@@ -144,6 +151,24 @@
       "empty": "Itt fognak megjelenni a saját bizniszeid.",
       "example": "futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid közé, mások által megtalálható leszel a süti kulcsszóval."
     }
+  },
+  "home": {
+    "welcome": "Üdvözöllek a FiFe Appban!",
+    "whatToDo": "Mit lehet itt csinálni?",
+    "newFifes": "Új fifék Budapesten"
+  },
+  "login": {
+    "testUser": "Próba felhasználó",
+    "facebookLogin": "Facebook bejelentkezés",
+    "googleLogin": "Google bejelentkezés",
+    "email": "E-mail",
+    "password": "Jelszó",
+    "login": "Bejelentkezés",
+    "noAccount": "Még nincs fiókom"
+  },
+  "username": {
+    "notFound": "Nincs ilyen felhasználónév.",
+    "loading": "Betöltés…"
   },
   "dialogs": {
     "recommendBizinessRemove": {

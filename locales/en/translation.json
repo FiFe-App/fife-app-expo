@@ -87,7 +87,8 @@
     "delete": "Delete",
     "new": "NEW",
     "pleaseWait": "Please wait...",
-    "backToHome": "Back to home"
+    "backToHome": "Back to home",
+    "loadingEllipsis": "Loading…"
   },
   "biznisz": {
     "list": {
@@ -95,6 +96,12 @@
       "noMore": "No more biznisz found",
       "selectArea": "Select area to search",
       "firstBiznisz": "First biznisz"
+    },
+    "detail": {
+      "notFound": "This biznisz was not found",
+      "authorsBiznisz": "'s biznisz",
+      "noRecommendations": "No one recommends it yet",
+      "commentPlaceholder": "Share your opinion"
     },
     "edit": {
       "title": "Edit Biznisz",
@@ -144,6 +151,24 @@
       "empty": "Your own bizniszek will appear here.",
       "example": "you make cookies on an assembly line and add this to your bizniszek, others will be able to find you using the cookie keyword."
     }
+  },
+  "home": {
+    "welcome": "Welcome to FiFe App!",
+    "whatToDo": "What can you do here?",
+    "newFifes": "New fifes in Budapest"
+  },
+  "login": {
+    "testUser": "Test user",
+    "facebookLogin": "Facebook login",
+    "googleLogin": "Google login",
+    "email": "E-mail",
+    "password": "Password",
+    "login": "Login",
+    "noAccount": "I don't have an account yet"
+  },
+  "username": {
+    "notFound": "No such username.",
+    "loading": "Loading…"
   },
   "dialogs": {
     "recommendBizinessRemove": {

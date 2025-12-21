@@ -49,8 +49,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { MyAppbar } from "@/components/MyAppBar";
 import typeToIcon from "@/lib/functions/typeToIcon";
 import UrlText from "@/components/comments/UrlText";
+import { useTranslation } from "react-i18next";
 
 export default function Index() {
+  const { t } = useTranslation();
   const { id: paramId } = useGlobalSearchParams();
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
@@ -129,7 +131,7 @@ export default function Index() {
             } else
               setError({
                 code: "jaj basszus",
-                message: "Ez a biznisz nem található",
+                message: t("biznisz.detail.notFound"),
               });
           });
         supabase
@@ -220,7 +222,7 @@ export default function Index() {
                       avatar_url={data.avatarUrl}
                     />
                     <Text style={{ textAlign: "center" }}>
-                      {data.authorName} biznisze
+                      {data.authorName} {t("biznisz.detail.authorsBiznisz")}
                     </Text>
                   </View>
                 </TouchableRipple>
@@ -242,7 +244,7 @@ export default function Index() {
                 <Text style={{ textAlign: "center" }}>
                   {recommendations?.length
                     ? recommendations?.length + " ajánlás"
-                    : "Még senki sem ajánlja"}
+                    : t("biznisz.detail.noRecommendations")}
                 </Text>
               </TouchableRipple>
             </View>
@@ -388,7 +390,7 @@ export default function Index() {
 
             <View style={{ marginTop: 16 }}>
               <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Vélemények</Text>
-              <Comments path={"buziness/" + id} placeholder="Mondd el a véleményed" />
+              <Comments path={"buziness/" + id} placeholder={t("biznisz.detail.commentPlaceholder")} />
             </View>
           </>
         )}
