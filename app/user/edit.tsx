@@ -23,11 +23,14 @@ import {
   useTheme,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { uid: myUid, userData }: UserState = useSelector(
     (state: RootState) => state.user,
   );
@@ -105,7 +108,7 @@ export default function Index() {
       dispatch(
         setOptions([
           {
-            title: "Mentés",
+            title: t("profile.edit.save"),
             icon: "check",
             onPress: save,
             disabled:
@@ -209,7 +212,7 @@ export default function Index() {
             </View>
           </View>
           <TextInput
-            label="Teljes név* (kötelező)"
+            label={t("profile.edit.fullName")}
             value={profile?.full_name || ""}
             disabled={loading}
             autoComplete="name"
@@ -219,7 +222,7 @@ export default function Index() {
             onChangeText={(t) => setProfile({ ...profile, full_name: t })}
           />
           <UsernameInput
-            label="Felhasználónév"
+            label={t("profile.edit.username")}
             value={profile?.username || ""}
             disabled={loading}
             excludeUid={myUid}
@@ -228,20 +231,26 @@ export default function Index() {
             style={{ marginTop: 8 }}
           />
           <View style={{ padding: 16 }}>
-            <ThemedText type="label">Email, amivel regisztráltál:</ThemedText>
+            <ThemedText type="label">{t("profile.edit.emailLabel")}</ThemedText>
             <ThemedText>{userData?.email}</ThemedText>
           </View>
           <Divider />
           <View style={{ gap: 8, paddingTop: 8 }}>
-            <ThemedText type="subtitle">Elérhetőségeid</ThemedText>
+            <ThemedText type="subtitle">{t("profile.edit.contactsTitle")}</ThemedText>
             <View style={{ alignItems: "center" }}>
               <Icon source="alert" size={24} color={theme.colors.error} />
               <HelperText type="error" style={{ textAlign: "center" }}>
-                Figyelem! Az alább megadott adatok láthatóak minden
-                felhasználónak.
+                {t("profile.edit.contactsWarning")}
               </HelperText>
             </View>
             <ContactEditScreen ref={contactEditRef} />
+          </View>
+          <Divider style={{ marginVertical: 16 }} />
+          <View style={{ gap: 8, paddingVertical: 8 }}>
+            <ThemedText type="subtitle">{t("settings.language")}</ThemedText>
+            <View style={{ paddingHorizontal: 16 }}>
+              <LanguageSwitcher />
+            </View>
           </View>
         </ScrollView>
       </ThemedView>

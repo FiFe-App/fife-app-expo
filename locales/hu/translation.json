@@ -1,0 +1,74 @@
+{
+  "landing": {
+    "hero": {
+      "title": "Találj megbízható embereket a környékeden!",
+      "subtitle": "Építs magad köré segítői hálózatot ebben az új, közösségi alkalmazásban.",
+      "register": "Regisztrálok",
+      "login": "Bejelentkezem"
+    },
+    "howItWorks": {
+      "title": "Hogyan működik?",
+      "step1Title": "Csatlakozz hozzánk!",
+      "step1Description": "Hozd létre a profilod, és oszd meg az erőforrásaidat.",
+      "step2Title": "Keress segítséget!",
+      "step2Description": "Találj a környékeden tevékenykedő fiféket.",
+      "step3Title": "Építs kapcsolatokat!",
+      "step3Description": "Jelöld meg, kiket tartasz megbízhatónak."
+    },
+    "trust": {
+      "title": "Találj megbízható embereket a környékeden!",
+      "description": "A FiFe App bizalmi láncot épít fel. Ha valakiben megbíznak a barátaid, te is bízhatsz benne. Így épül fel a közösség, amelyre számíthatsz."
+    },
+    "about": {
+      "title": "Kérjünk egymástól segítséget!",
+      "description": "A FiFe App célja, hogy a nagyvárosokban is megteremtse a kisközösségek biztonságát, közelségét. Egy levegőt szívunk, tartsunk össze! Legyen újra normális, hogy számíthatunk egymásra!"
+    },
+    "banner": {
+      "title": "Csatlakozz egy innovatív közösséghez!",
+      "register": "Regisztrálok"
+    },
+    "newsletter": {
+      "title": "Ne maradj le, iratkozz fel a hírlevélre!",
+      "emailLabel": "E-mail címed",
+      "emailPlaceholder": "email@fifeapp.hu",
+      "messageLabel": "Üzenet (opcionális)",
+      "messagePlaceholder": "Mit gondolsz?",
+      "send": "Küldés"
+    },
+    "aboutMe": {
+      "title": "A FiFe App mögött",
+      "description": "Szia, én Kristóf Ákos vagyok, néhány éve lett egy elképzelésem, hogy létrehozok egy valóban hasznos és biztonságos közösségi oldalt. Azóta sok idő eltelt, de a lelkesedésem nem tűnt el! Én a magyar közösségért és egy szebb jövőért dolgozom. Ha neked is fontosak ezek, kérlek, támogasd a FiFe Appot!",
+      "joinProject": "Beszállnál a projektbe?",
+      "patreon": "Patreon"
+    }
+  },
+  "profile": {
+    "edit": {
+      "title": "Profil Szerkesztése",
+      "save": "Mentés",
+      "fullName": "Teljes név* (kötelező)",
+      "username": "Felhasználónév",
+      "emailLabel": "Email, amivel regisztráltál:",
+      "contactsTitle": "Elérhetőségeid",
+      "contactsWarning": "Figyelem! Az alább megadott adatok láthatóak minden felhasználónak."
+    }
+  },
+  "navigation": {
+    "home": "Főoldal",
+    "search": "Keresés",
+    "profile": "Profil"
+  },
+  "settings": {
+    "language": "Nyelv",
+    "languageSelection": "Nyelv kiválasztása"
+  },
+  "common": {
+    "login": "Bejelentkezés",
+    "loading": "Betöltés...",
+    "save": "Mentés",
+    "cancel": "Mégse",
+    "ok": "OK",
+    "error": "Hiba",
+    "success": "Sikeres"
+  }
+}

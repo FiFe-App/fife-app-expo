@@ -1,0 +1,74 @@
+{
+  "landing": {
+    "hero": {
+      "title": "Find reliable people in your area!",
+      "subtitle": "Build a support network around you in this new social application.",
+      "register": "Register",
+      "login": "Sign In"
+    },
+    "howItWorks": {
+      "title": "How does it work?",
+      "step1Title": "Join us!",
+      "step1Description": "Create your profile and share your resources.",
+      "step2Title": "Get help!",
+      "step2Description": "Find fifes operating in your area.",
+      "step3Title": "Build connections!",
+      "step3Description": "Mark who you trust."
+    },
+    "trust": {
+      "title": "Find reliable people in your area!",
+      "description": "FiFe App builds a chain of trust. If your friends trust someone, you can trust them too. This is how the community you can count on is built."
+    },
+    "about": {
+      "title": "Let's ask each other for help!",
+      "description": "The goal of FiFe App is to create the safety and closeness of small communities even in big cities. We breathe the same air, let's stick together! Let it be normal again that we can count on each other!"
+    },
+    "banner": {
+      "title": "Join an innovative community!",
+      "register": "Register"
+    },
+    "newsletter": {
+      "title": "Don't miss out, subscribe to the newsletter!",
+      "emailLabel": "Your email",
+      "emailPlaceholder": "email@fifeapp.hu",
+      "messageLabel": "Message (optional)",
+      "messagePlaceholder": "What do you think?",
+      "send": "Send"
+    },
+    "aboutMe": {
+      "title": "Behind FiFe App",
+      "description": "Hi, I'm Kristóf Ákos, a few years ago I had an idea to create a truly useful and safe social platform. A lot of time has passed since then, but my enthusiasm hasn't faded! I work for the Hungarian community and a better future. If these are important to you too, please support FiFe App!",
+      "joinProject": "Would you join the project?",
+      "patreon": "Patreon"
+    }
+  },
+  "profile": {
+    "edit": {
+      "title": "Edit Profile",
+      "save": "Save",
+      "fullName": "Full name* (required)",
+      "username": "Username",
+      "emailLabel": "Email you registered with:",
+      "contactsTitle": "Your contacts",
+      "contactsWarning": "Attention! The data provided below is visible to all users."
+    }
+  },
+  "navigation": {
+    "home": "Home",
+    "search": "Search",
+    "profile": "Profile"
+  },
+  "settings": {
+    "language": "Language",
+    "languageSelection": "Select Language"
+  },
+  "common": {
+    "login": "Login",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "error": "Error",
+    "success": "Success"
+  }
+}

@@ -11,11 +11,15 @@ import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { useSelector } from "react-redux";
 import Smiley from "@/components/Smiley";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export const Header = () => {
   return (
     <ThemedView style={styles.headerRow} type="default">
-      <View style={styles.flex1} />
+      <View style={styles.flex1}>
+        <LanguageSwitcher variant="icon" />
+      </View>
 
       <View style={styles.centerRow}>
         <View style={styles.titleRow}>
@@ -33,10 +37,11 @@ export const Header = () => {
 
 const Hero = () => {
   const { isDesktop, screenPadding } = useBreakpoint();
+  const { t } = useTranslation();
   return (
     <View style={{ paddingTop: 32, marginHorizontal: screenPadding }}>
       <Text variant="displayMedium">
-        Találj megbízható embereket a környékeden!
+        {t("landing.hero.title")}
       </Text>
       <ThemedView
         style={[{ paddingVertical: 16, alignItems: "center" }]}
@@ -52,17 +57,16 @@ const Hero = () => {
           ]}
         >
           <Text variant="headlineMedium">
-            Építs magad köré segítői hálózatot ebben az új, közösségi
-            alkalmazásban.
+            {t("landing.hero.subtitle")}
           </Text>
           <Link asChild href="/csatlakozom">
             <Button style={styles.loginButton} type="secondary" big>
-              Regisztrálok
+              {t("landing.hero.register")}
             </Button>
           </Link>
           <Link asChild href="/login">
             <Button style={styles.loginButton} mode="contained" big>
-              Bejelentkezem
+              {t("landing.hero.login")}
             </Button>
           </Link>
         </View>
@@ -144,27 +148,28 @@ const StepItem = ({
 
 const HowItWorks = () => {
   const { isDesktop, screenPadding } = useBreakpoint();
+  const { t } = useTranslation();
   return (
     <View style={{ marginHorizontal: screenPadding }}>
-      <Text variant="displayMedium">Hogyan működik?</Text>
+      <Text variant="displayMedium">{t("landing.howItWorks.title")}</Text>
       <View style={{ paddingHorizontal: isDesktop ? 64 : 4 }}>
         <View
           style={[{ gap: 16 }, isDesktop ? styles.rowWrap : styles.colStack]}
         >
           <StepItem
             image={require("../assets/images/Funkcio1.png")}
-            title="Csatlakozz hozzánk!"
-            description="Hozd létre a profilod, és oszd meg az erőforrásaidat."
+            title={t("landing.howItWorks.step1Title")}
+            description={t("landing.howItWorks.step1Description")}
           />
           <StepItem
             image={require("../assets/images/Funkcio 2.png")}
-            title="Keress segítséget!"
-            description="Találj a környékeden tevékenykedő fiféket."
+            title={t("landing.howItWorks.step2Title")}
+            description={t("landing.howItWorks.step2Description")}
           />
           <StepItem
             image={require("../assets/images/Funkcio1.png")}
-            title="Építs kapcsolatokat!"
-            description="Jelöld meg, kiket tartasz megbízhatónak."
+            title={t("landing.howItWorks.step3Title")}
+            description={t("landing.howItWorks.step3Description")}
           />
         </View>
       </View>
@@ -174,6 +179,7 @@ const HowItWorks = () => {
 
 const Trust = () => {
   const { isDesktop, screenPadding } = useBreakpoint();
+  const { t } = useTranslation();
   return (
     <View style={{ marginHorizontal: screenPadding }}>
       <ThemedView
@@ -187,12 +193,10 @@ const Trust = () => {
           ]}
         >
           <Text variant="displayMedium">
-            Találj megbízható embereket a környékeden!
+            {t("landing.trust.title")}
           </Text>
           <Text variant="bodyLarge">
-            A FiFe App bizalmi láncot épít fel. Ha valakiben megbíznak a
-            barátaid, te is bízhatsz benne. Így épül fel a közösség, amelyre
-            számíthatsz.
+            {t("landing.trust.description")}
           </Text>
         </View>
         <View
@@ -218,6 +222,7 @@ const Trust = () => {
 };
 const About = () => {
   const { isDesktop, screenPadding } = useBreakpoint();
+  const { t } = useTranslation();
   return (
     <View style={{ marginHorizontal: screenPadding }}>
       <ThemedView
@@ -247,11 +252,9 @@ const About = () => {
             { gap: 16, width: "100%", alignItems: "center" },
           ]}
         >
-          <Text variant="displayMedium">Kérjünk egymástól segítséget!</Text>
+          <Text variant="displayMedium">{t("landing.about.title")}</Text>
           <Text variant="bodyLarge">
-            A FiFe App célja, hogy a nagyvárosokban is megteremtse a
-            kisközösségek biztonságát, közelségét. Egy levegőt szívunk, tartsunk
-            össze! Legyen újra normális, hogy számíthatunk egymásra!
+            {t("landing.about.description")}
           </Text>
         </View>
       </ThemedView>
@@ -261,6 +264,7 @@ const About = () => {
 
 const Banner = () => {
   const { isDesktop } = useBreakpoint();
+  const { t } = useTranslation();
   const [height, setHeight] = useState(100);
 
   return (
@@ -307,11 +311,11 @@ const Banner = () => {
             textAlign: isDesktop ? "center" : "left",
           }}
         >
-          Csatlakozz egy innovatív közösséghez!
+          {t("landing.banner.title")}
         </Text>
       </View>
       <Link href="/csatlakozom" asChild>
-        <Button mode="contained">Regisztrálok</Button>
+        <Button mode="contained">{t("landing.banner.register")}</Button>
       </Link>
     </ThemedView>
   );
@@ -371,6 +375,7 @@ const Newsletter = () => {
 };
 const AboutMe = () => {
   const { isDesktop } = useBreakpoint();
+  const { t } = useTranslation();
   return (
     <View style={{ marginHorizontal: 32 }}>
       <ThemedView
@@ -383,23 +388,19 @@ const AboutMe = () => {
             { gap: 16, width: "100%", alignItems: "flex-start", zIndex: 10 },
           ]}
         >
-          <Text variant="displayMedium">A FiFe App mögött</Text>
+          <Text variant="displayMedium">{t("landing.aboutMe.title")}</Text>
           <Text variant="bodyLarge">
-            Szia, én Kristóf Ákos vagyok, néhány éve lett egy elképzelésem, hogy
-            létrehozok egy valóban hasznos és biztonságos közösségi oldalt.
-            Azóta sok idő eltelt, de a lelkesedésem nem tűnt el! Én a magyar
-            közösségért és egy szebb jövőért dolgozom. Ha neked is fontosak
-            ezek, kérlek, támogasd a FiFe Appot!
+            {t("landing.aboutMe.description")}
           </Text>
           <ThemedView responsive={1000} style={{ gap: 16, zIndex: 10 }}>
             <Link href="/projekt" asChild>
               <Button type="secondary" big>
-                Beszállnál a projektbe?
+                {t("landing.aboutMe.joinProject")}
               </Button>
             </Link>
             <Link href="https://www.patreon.com/c/fifeapp" asChild>
               <Button mode="contained" big>
-                Patreon
+                {t("landing.aboutMe.patreon")}
               </Button>
             </Link>
           </ThemedView>
