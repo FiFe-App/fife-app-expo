@@ -56,7 +56,14 @@
   "navigation": {
     "home": "Home",
     "search": "Search",
-    "profile": "Profile"
+    "profile": "Profile",
+    "login": "Login",
+    "biznisz": "Biznisz",
+    "newBiznisz": "New Biznisz",
+    "fifeBiznisz": "FiFe Biznisz",
+    "fifeProfile": "FiFe Profile",
+    "editProfile": "Edit Profile",
+    "passwordReset": "Password Reset"
   },
   "settings": {
     "language": "Language",

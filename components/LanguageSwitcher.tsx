@@ -11,7 +11,7 @@ interface LanguageSwitcherProps {
 }
 
 export default function LanguageSwitcher({ variant = "button" }: LanguageSwitcherProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const currentLanguage = useSelector((state: RootState) => state.language.language);
   const [visible, setVisible] = React.useState(false);
@@ -21,6 +21,7 @@ export default function LanguageSwitcher({ variant = "button" }: LanguageSwitche
 
   const changeLanguage = (lng: "en" | "hu") => {
     dispatch(setLanguage(lng));
+    i18n.changeLanguage(lng);
     closeMenu();
   };
 

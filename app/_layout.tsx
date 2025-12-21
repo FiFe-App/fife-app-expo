@@ -21,7 +21,7 @@ import { RootState } from "@/redux/store";
 
 function AppContent() {
   const pathname = usePathname();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const language = useSelector((state: RootState) => state.language.language);
 
   useEffect(() => {
@@ -38,11 +38,11 @@ function AppContent() {
           <Stack.Screen name="index" />
           <Stack.Screen
             name="login/index"
-            options={{ title: "Bejelentkezés" }}
+            options={{ title: t("navigation.login") }}
           />
           <Stack.Screen
             name="biznisz/index"
-            options={{ title: "Biznisz" }}
+            options={{ title: t("navigation.biznisz") }}
           />
           <Stack.Screen
             name="csatlakozom"
@@ -50,27 +50,27 @@ function AppContent() {
           />
           <Stack.Screen
             name="biznisz/new"
-            options={{ title: "Új Biznisz" }}
+            options={{ title: t("navigation.newBiznisz") }}
           />
           <Stack.Screen
             name="biznisz/[id]"
-            options={{ title: "FiFe Biznisz" }}
+            options={{ title: t("navigation.fifeBiznisz") }}
           />
           <Stack.Screen
             name="biznisz/edit/[id]"
-            options={{ title: "FiFe Biznisz" }}
+            options={{ title: t("navigation.fifeBiznisz") }}
           />
           <Stack.Screen
             name="user/[uid]"
-            options={{ title: "FiFe Profil" }}
+            options={{ title: t("navigation.fifeProfile") }}
           />
           <Stack.Screen
             name="user/edit"
-            options={{ title: "Profil Szerkesztése" }}
+            options={{ title: t("navigation.editProfile") }}
           />
           <Stack.Screen
             name="user/password-reset"
-            options={{ title: "Jelszó visszaállítás" }}
+            options={{ title: t("navigation.passwordReset") }}
           />
         </Stack>
         {pathname !== "/" && !pathname.includes("projekt") &&

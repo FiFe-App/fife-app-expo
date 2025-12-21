@@ -56,7 +56,14 @@
   "navigation": {
     "home": "Főoldal",
     "search": "Keresés",
-    "profile": "Profil"
+    "profile": "Profil",
+    "login": "Bejelentkezés",
+    "biznisz": "Biznisz",
+    "newBiznisz": "Új Biznisz",
+    "fifeBiznisz": "FiFe Biznisz",
+    "fifeProfile": "FiFe Profil",
+    "editProfile": "Profil Szerkesztése",
+    "passwordReset": "Jelszó visszaállítás"
   },
   "settings": {
     "language": "Nyelv",
