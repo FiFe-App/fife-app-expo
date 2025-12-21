@@ -95,7 +95,8 @@
     "backToHome": "Vissza a főoldalra",
     "loadingEllipsis": "Betöltés…",
     "copiedToClipboard": "Vágólapra másolva!",
-    "deleteWarning": "Nem fogod tudni visszavonni!"
+    "deleteWarning": "Nem fogod tudni visszavonni!",
+    "cannotUndo": "Nem fogod tudni visszavonni!"
   },
   "biznisz": {
     "list": {
@@ -245,7 +246,8 @@
     "nearYou": "közel hozzád",
     "deleteTitle": "Törlése?",
     "deleteButton": "Törlés",
-    "peopleRecommend": "ember ajánlja"
+    "peopleRecommend": "ember ajánlja",
+    "distanceAway": "távolságra"
   },
   "bizniszMap": {
     "locationUnavailable": "Nem elérhető a pozíciód.",

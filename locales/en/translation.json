@@ -95,7 +95,8 @@
     "backToHome": "Back to home",
     "loadingEllipsis": "Loading…",
     "copiedToClipboard": "Copied to clipboard!",
-    "deleteWarning": "You won't be able to undo this!"
+    "deleteWarning": "You won't be able to undo this!",
+    "cannotUndo": "You won't be able to undo this!"
   },
   "biznisz": {
     "list": {
@@ -245,7 +246,8 @@
     "nearYou": "near you",
     "deleteTitle": "Delete?",
     "deleteButton": "Delete",
-    "peopleRecommend": "people recommend"
+    "peopleRecommend": "people recommend",
+    "distanceAway": "away"
   },
   "bizniszMap": {
     "locationUnavailable": "Your location is not available.",

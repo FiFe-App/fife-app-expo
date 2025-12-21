@@ -15,6 +15,7 @@ import { Chip, Icon, IconButton, Surface, Text } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "../ThemedText";
+import { useTranslation } from "react-i18next";
 
 interface BuzinessItemProps {
   data: BuzinessItemInterface;
@@ -22,6 +23,7 @@ interface BuzinessItemProps {
 }
 
 const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
+  const { t } = useTranslation();
   const { author, title, description, id } = data;
   console.log(data?.recommendations?.[0]?.count, data.recommendations);
 
@@ -34,8 +36,8 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
   const distanceText =
     distance !== null
       ? distance !== 0
-        ? toDistanceText(distance / 1000) + " távolságra"
-        : "közel hozzád"
+        ? toDistanceText(distance / 1000) + " " + t("bizniszItem.distanceAway")
+        : t("bizniszItem.nearYou")
       : "";
 
   const categories = title?.split(" $ ");
@@ -45,8 +47,8 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
     e.preventDefault();
     dispatch(
       addDialog({
-        title: categories?.[0] + " Törlése?",
-        text: "Nem fogod tudni visszavonni!",
+        title: categories?.[0] + " " + t("bizniszItem.deleteTitle"),
+        text: t("common.cannotUndo"),
         onSubmit: () => {
           trackPromise(
             wrapper<null, any>(
@@ -61,7 +63,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
             "dialog"
           );
         },
-        submitText: "Törlés",
+        submitText: t("bizniszItem.deleteButton"),
       })
     );
   };
