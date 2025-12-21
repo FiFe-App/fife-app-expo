@@ -122,13 +122,13 @@ export default function Index() {
   };
 
   const getUserData = async (userData: User) => {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select()
       .eq("id", userData.id)
       .maybeSingle();
-    if (error) {
-      console.log(error);
+    if (profileError) {
+      console.log(profileError);
     }
     if (profile) {
       console.log("profile", profile);
