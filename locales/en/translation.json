@@ -66,7 +66,12 @@
     "fifeProfile": "FiFe Profile",
     "editProfile": "Edit Profile",
     "passwordReset": "Password Reset",
-    "home_bottom": "Home"
+    "home_bottom": "Home",
+    "notFound": "Oops!",
+    "logout": "Logout",
+    "contacts": "Contacts",
+    "connections": "Connections",
+    "buzinesses": "Buzinesses"
   },
   "settings": {
     "language": "Language",
@@ -88,7 +93,9 @@
     "new": "NEW",
     "pleaseWait": "Please wait...",
     "backToHome": "Back to home",
-    "loadingEllipsis": "Loading…"
+    "loadingEllipsis": "Loading…",
+    "copiedToClipboard": "Copied to clipboard!",
+    "deleteWarning": "You won't be able to undo this!"
   },
   "biznisz": {
     "list": {
@@ -217,7 +224,18 @@
   },
   "contactEdit": {
     "contactLabel": "contact",
-    "notePlaceholder": "Call on weekdays / weekends only"
+    "notePlaceholder": "Call on weekdays / weekends only",
+    "fillField": "Please fill in this field.",
+    "otherInfo": "Other information",
+    "types": {
+      "phone": "Phone number",
+      "email": "Email address",
+      "web": "Website",
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "place": "Address/Location",
+      "other": "Other"
+    }
   },
   "bizniszRecommendations": {
     "title": "biznisz recommenders:",
@@ -255,7 +273,11 @@
     "previewDescription": "Longer description of what your biznisz is about.",
     "previewCategory": "A category",
     "previewCategory2": "Another category",
-    "save": "Save"
+    "save": "Save",
+    "whatDoYouDo": "What do you do?",
+    "anywhere": "Anywhere",
+    "onMap": "On map",
+    "findLocals": "Let locals find you!"
   },
   "whatToDo": {
     "title": "What can you do here?"
@@ -358,7 +380,13 @@
   },
   "passwordReset": {
     "save": "Save password",
-    "updated": "Password updated. Sign in with your new password."
+    "updated": "Password updated. Sign in with your new password.",
+    "emailSent": "If an account with this email exists, we sent an email to reset the password.",
+    "passwordTooShort": "Password must be at least 6 characters.",
+    "passwordsDontMatch": "Passwords do not match.",
+    "emailLabel": "E-mail",
+    "newPasswordLabel": "New password",
+    "confirmPasswordLabel": "Confirm password"
   },
   "userProfile": {
     "contactsLabel": "Contacts",

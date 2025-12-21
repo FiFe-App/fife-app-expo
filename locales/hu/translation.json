@@ -66,7 +66,12 @@
     "fifeProfile": "FiFe Profil",
     "editProfile": "Profil Szerkesztése",
     "passwordReset": "Jelszó visszaállítás",
-    "home_bottom": "Otthon"
+    "home_bottom": "Otthon",
+    "notFound": "A kutyafáját!",
+    "logout": "Kijelentkezés",
+    "contacts": "Elérhetőségek",
+    "connections": "Kapcsolatok",
+    "buzinesses": "Bizniszek"
   },
   "settings": {
     "language": "Nyelv",
@@ -88,7 +93,9 @@
     "new": "ÚJ",
     "pleaseWait": "Kérlek várj...",
     "backToHome": "Vissza a főoldalra",
-    "loadingEllipsis": "Betöltés…"
+    "loadingEllipsis": "Betöltés…",
+    "copiedToClipboard": "Vágólapra másolva!",
+    "deleteWarning": "Nem fogod tudni visszavonni!"
   },
   "biznisz": {
     "list": {
@@ -217,7 +224,18 @@
   },
   "contactEdit": {
     "contactLabel": "elérhetőséged",
-    "notePlaceholder": "Munkanapokon keress / csak hétvégén"
+    "notePlaceholder": "Munkanapokon keress / csak hétvégén",
+    "fillField": "Töltsd ki ezt a mezőt.",
+    "otherInfo": "Egyéb információ",
+    "types": {
+      "phone": "Telefonszám",
+      "email": "Email-cím",
+      "web": "Webhely",
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "place": "Cím/Hely",
+      "other": "Más"
+    }
   },
   "bizniszRecommendations": {
     "title": "biznisz ajánlói:",
@@ -255,7 +273,11 @@
     "previewDescription": "Hosszabb leírás hogy miről szól a bizniszed.",
     "previewCategory": "Egy kategória",
     "previewCategory2": "Egy másik kategória",
-    "save": "Mentés"
+    "save": "Mentés",
+    "whatDoYouDo": "Mihez értesz?",
+    "anywhere": "Bárhol",
+    "onMap": "Térképen",
+    "findLocals": "Találjanak meg a helyiek!"
   },
   "whatToDo": {
     "title": "Mit tudsz itt csinálni?"
@@ -358,7 +380,13 @@
   },
   "passwordReset": {
     "save": "Jelszó mentése",
-    "updated": "Jelszó frissítve. Jelentkezz be az új jelszóval."
+    "updated": "Jelszó frissítve. Jelentkezz be az új jelszóval.",
+    "emailSent": "Ha létezik ilyen fiók, küldtünk e-mailt a jelszó visszaállításához.",
+    "passwordTooShort": "A jelszó legyen legalább 6 karakter.",
+    "passwordsDontMatch": "A jelszavak nem egyeznek.",
+    "emailLabel": "E-mail",
+    "newPasswordLabel": "Új jelszó",
+    "confirmPasswordLabel": "Jelszó megerősítése"
   },
   "userProfile": {
     "contactsLabel": "Elérhetőségek",
