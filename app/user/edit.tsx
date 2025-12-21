@@ -69,8 +69,9 @@ export default function Index() {
           console.log(data);
           
           // Load language preference from profile if available
-          const profileLanguage = (data[0] as any).language;
-          if (profileLanguage && (profileLanguage === "en" || profileLanguage === "hu")) {
+          const profileData = data[0] as any;
+          const profileLanguage = profileData.language;
+          if (profileLanguage === "en" || profileLanguage === "hu") {
             dispatch(setLanguage(profileLanguage));
             i18n.changeLanguage(profileLanguage);
           }

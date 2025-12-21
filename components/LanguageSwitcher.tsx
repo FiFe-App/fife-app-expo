@@ -27,10 +27,14 @@ export default function LanguageSwitcher({ variant = "button" }: LanguageSwitche
     // Store language preference in Supabase profile if user is logged in
     if (uid) {
       try {
-        await supabase
+        const { error } = await supabase
           .from("profiles")
           .update({ language: lng })
           .eq("id", uid);
+        
+        if (error) {
+          console.error("Failed to update language in profile:", error);
+        }
       } catch (error) {
         console.error("Failed to update language in profile:", error);
       }
@@ -40,7 +44,6 @@ export default function LanguageSwitcher({ variant = "button" }: LanguageSwitche
   };
 
   const languageLabel = currentLanguage === "hu" ? "🇭🇺 Magyar" : "🇬🇧 English";
-  const languageIcon = currentLanguage === "hu" ? "🇭🇺" : "🇬🇧";
 
   return (
     <Menu
