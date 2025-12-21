@@ -386,10 +386,19 @@
     "passwordsDontMatch": "A jelszavak nem egyeznek.",
     "emailLabel": "E-mail",
     "newPasswordLabel": "Új jelszó",
-    "confirmPasswordLabel": "Jelszó megerősítése"
+    "confirmPasswordLabel": "Jelszó megerősítése",
+    "title": "Elfelejtett jelszó",
+    "subtitle": "Add meg azt e-mail-t, amivel regisztráltál korábban!",
+    "sendEmail": "Visszaállító email küldése",
+    "setNewPassword": "Új jelszó beállítása",
+    "login": "Bejelentkezés"
   },
   "userProfile": {
     "contactsLabel": "Elérhetőségek",
     "requestContact": "Kérd el a kontaktját"
+  },
+  "notFound": {
+    "lostInBits": "Eltévedtünk a bitrengetegben.",
+    "backToHome": "Vissza a főképernyőre"
   }
 }

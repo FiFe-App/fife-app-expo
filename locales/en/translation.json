@@ -386,10 +386,19 @@
     "passwordsDontMatch": "Passwords do not match.",
     "emailLabel": "E-mail",
     "newPasswordLabel": "New password",
-    "confirmPasswordLabel": "Confirm password"
+    "confirmPasswordLabel": "Confirm password",
+    "title": "Forgot password",
+    "subtitle": "Enter the email you registered with!",
+    "sendEmail": "Send reset email",
+    "setNewPassword": "Set new password",
+    "login": "Sign in"
   },
   "userProfile": {
     "contactsLabel": "Contacts",
     "requestContact": "Request contact"
+  },
+  "notFound": {
+    "lostInBits": "We got lost in the bit jungle.",
+    "backToHome": "Back to home"
   }
 }
