@@ -44,10 +44,12 @@ import {
 import { theme } from "@/assets/theme";
 import Measure from "@/components/tutorial/Measure";
 import { SavedProfiles } from "@/components/buziness/SavedProfiles";
+import { useTranslation } from "react-i18next";
 
 type UserInfo = Tables<"profiles">;
 
 export default function Index() {
+  const { t } = useTranslation();
   const { uid: paramUid } = useGlobalSearchParams();
   const uid: string = String(paramUid);
   const { uid: myUid }: UserState = useSelector(
@@ -106,7 +108,7 @@ export default function Index() {
                 dispatch(clearBuzinessSearchParams());
                 router.navigate("/");
               },
-              title: "Kijelentkezés",
+              title: t("navigation.logout"),
             },
           ]),
         );
@@ -143,7 +145,7 @@ export default function Index() {
                       <TouchableRipple
                         onPress={() => {
                           Clipboard.setStringAsync(`www.fifeapp.hu/@${data.username}`).then(() => {
-                            dispatch(addSnack({ title: "Vágólapra másolva!" }));
+                            dispatch(addSnack({ title: t("common.copiedToClipboard") }));
                           });
                         }}
                         style={{ borderRadius: 4, alignSelf: "flex-start" }}
@@ -174,9 +176,9 @@ export default function Index() {
                           justifyContent: "center",
                         }}
                       >
-                        <Text> Támogatók: {recommendations.length}</Text>
+                        <Text> {t("userProfile.supporters")} {recommendations.length}</Text>
                         {functions.includes("friendsProfile") && (
-                          <Badge style={globStyles.badge}>ÚJ</Badge>
+                          <Badge style={globStyles.badge}>{t("common.new")}</Badge>
                         )}
                       </View>
                     </TouchableRipple>
@@ -189,7 +191,7 @@ export default function Index() {
                         }}
                       >
                         <Text>
-                          {elapsedTime(Date.parse(data.created_at.toString()))} Fife
+                          {elapsedTime(Date.parse(data.created_at.toString()))} {t("userProfile.fife")}
                         </Text>
                       </View>
                     )}
@@ -205,7 +207,7 @@ export default function Index() {
                         style={{ flex: 1 }}
                         href={{ pathname: "/user/edit" }}
                       >
-                        <Button mode="contained-tonal">Profilom szerkesztése</Button>
+                        <Button mode="contained-tonal">{t("navigation.editProfile")}</Button>
                       </Link>
                     </Measure>
                   </View>
@@ -233,9 +235,9 @@ export default function Index() {
             <TabsProvider defaultIndex={0}>
               <Tabs showTextLabel={width > 400} theme={theme} style={{ backgroundColor: theme.colors.background }}>
                 <TabScreen
-                  label="Bizniszek"
+                  label={t("navigation.buzinesses")}
                   badge={
-                    functions.includes("buzinessProfile") ? "ÚJ" : undefined
+                    functions.includes("buzinessProfile") ? t("common.new") : undefined
                   }
                   icon="briefcase"
                 >
@@ -246,16 +248,16 @@ export default function Index() {
                   </Measure>
                 </TabScreen>
                 <TabScreen
-                  label="Elérhetőségek"
+                  label={t("navigation.contacts")}
                   badge={
-                    functions.includes("contactsProfile") ? "ÚJ" : undefined
+                    functions.includes("contactsProfile") ? t("common.new") : undefined
                   }
                   icon="email-multiple"
                 >
                   <ContactList uid={uid} edit={myProfile} />
                 </TabScreen>
                 <TabScreen
-                  label="Kapcsolatok"
+                  label={t("navigation.connections")}
                   icon="account-group"
                 >
                   <SavedProfiles uid={uid} />

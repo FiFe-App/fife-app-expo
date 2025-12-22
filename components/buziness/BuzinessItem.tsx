@@ -25,9 +25,10 @@ interface BuzinessItemProps {
 const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
   const { t } = useTranslation();
   const { author, title, description, id } = data;
-  console.log(data?.recommendations?.[0]?.count, data.recommendations);
-
-  const recommendations = typeof data?.recommendations?.[0]?.count === "number" ? data?.recommendations?.[0]?.count : data.recommendations;
+  const rec = data.recommendations as number | { count: number }[] | undefined;
+  const recommendations = Array.isArray(rec)
+    ? (typeof rec[0]?.count === "number" ? rec[0].count : 0)
+    : (typeof rec === "number" ? rec : 0);
   const { uid } = useSelector((state: RootState) => state.user);
   const myBuziness = author === uid;
   const dispatch = useDispatch();
@@ -91,13 +92,13 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
             <View style={{ flexDirection: "row" }}>
               <Text>
                 <Icon size={16} source="account-group" />
-                <Text style={{ marginLeft: 4 }}>{recommendations} ember ajánlja</Text>
+                <Text style={{ marginLeft: 4 }}>{recommendations} {t("bizniszItem.peopleRecommend")}</Text>
               </Text>
             </View>
             <View style={{ flexDirection: "row" }}>
               <Text>
                 <Icon size={16} source="image" />
-                <Text style={{ marginLeft: 4 }}>{data?.images?.length || 0} kép</Text>
+                <Text style={{ marginLeft: 4 }}>{data?.images?.length || 0} {t("bizniszItemExtra.images")}</Text>
               </Text>
             </View>
             {!!distanceText && <View style={{ flexDirection: "row" }}>

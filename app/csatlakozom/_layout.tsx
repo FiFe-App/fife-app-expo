@@ -13,14 +13,14 @@ import {
 } from "expo-router";
 import { ScrollView, View } from "react-native";
 import Dots from "react-native-dots-pagination";
-import { Button, MD3DarkTheme } from "react-native-paper";
+import { Button } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 
 export default function RootLayout() {
   const { t } = useTranslation();
   const { uid }: UserState = useSelector((state: RootState) => state.user);
-  const pages: Href<string>[] = [
+  const pages: Href[] = [
     "/csatlakozom/",
     "/csatlakozom/megbizhatosag",
     "/csatlakozom/email-regisztracio",
@@ -39,8 +39,8 @@ export default function RootLayout() {
 
   const current = index < 0 ? 0 : index;
 
-  const prev: Href<string> = pages[current - 1 || 0] || "";
-  const next: Href<string> = pages[current + 1 || 0] || "";
+  const prev: Href = pages[current - 1 || 0] || "";
+  const next: Href = pages[current + 1 || 0] || "";
   console.log(path == "/csatlakozom/megbizhatosag" && canGoNext);
 
 
@@ -54,15 +54,15 @@ export default function RootLayout() {
           <Stack.Screen name="iranyelvek" options={{ headerShown: false }} />
           <Stack.Screen
             name="regisztracio"
-            options={{ title: "Regisztráció" }}
+            options={{ title: t("registration.title") }}
           />
           <Stack.Screen
             name="email-regisztracio"
-            options={{ title: "Regisztráció" }}
+            options={{ title: t("registration.title") }}
           />
           <Stack.Screen
             name="elso-lepesek"
-            options={{ title: "Regisztráció" }}
+            options={{ title: t("registration.title") }}
           />
         </Stack>
       </ScrollView>
@@ -84,7 +84,7 @@ export default function RootLayout() {
               }
               mode="contained"
             >
-              {t('csatlakozom.back')}
+              {t("csatlakozom.back")}
             </Button>
           </Link>
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", height: 48 }}>
@@ -104,7 +104,7 @@ export default function RootLayout() {
             (
               <Link href={next} asChild
                 disabled={path === "/csatlakozom/megbizhatosag" && !canGoNext}>
-                <Button mode="contained">{t('csatlakozom.next')}</Button>
+                <Button mode="contained">{t("csatlakozom.next")}</Button>
               </Link>
             )}
         </View>

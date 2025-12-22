@@ -109,7 +109,13 @@
       "notFound": "This biznisz was not found",
       "authorsBiznisz": "'s biznisz",
       "noRecommendations": "No one recommends it yet",
-      "commentPlaceholder": "Share your opinion"
+      "commentPlaceholder": "Share your opinion",
+      "locationTitle": "Location",
+      "imagesTitle": "Images",
+      "contactsTitle": "Contacts",
+      "commentsTitle": "Comments",
+      "edit": "Edit",
+      "recommendationsLabel": "recommendations"
     },
     "edit": {
       "title": "Edit Biznisz",
@@ -203,9 +209,22 @@
       "text": "Only mark them as trustworthy if you think they won't scam others.",
       "submit": "Yes!"
     },
+    "recommendProfileButton": {
+      "recommended": "I trust them.",
+      "recommend": "Mark as trustworthy"
+    },
     "comments": {
       "delete": "Delete"
     }
+  },
+  "elapsed": {
+    "seconds": "seconds ago",
+    "minutes": "minutes ago",
+    "hours": "hours ago",
+    "days": "days ago",
+    "weeks": "weeks ago",
+    "months": "months ago",
+    "years": "years ago"
   },
   "tutorial": {
     "back": "Back",
@@ -221,10 +240,13 @@
   },
   "search": {
     "placeholder": "What do you need?",
-    "bizniszPlaceholder": "Search bizniszek..."
+    "bizniszPlaceholder": "Search bizniszek...",
+    "results": "Results",
+    "refine": "Refine"
   },
   "contactEdit": {
     "contactLabel": "contact",
+    "selectType": "Select a type.",
     "notePlaceholder": "Call on weekdays / weekends only",
     "fillField": "Please fill in this field.",
     "otherInfo": "Other information",
@@ -282,7 +304,44 @@
     "findLocals": "Let locals find you!"
   },
   "whatToDo": {
-    "title": "What can you do here?"
+    "title": "What can you do here?",
+    "features": [
+      {
+        "title": "Promote your biznisz!",
+        "description": "Create a biznisz on your profile by tapping the **New Biznisz** button. This creates a free, permanent listing. You can upload **images** and add its **location** as well.",
+        "links": [
+          { "title": "Create new biznisz", "url": "/biznisz/new" }
+        ]
+      },
+      {
+        "title": "Add your contacts!",
+        "description": "To let people reach you, add contacts: phone, email, Instagram, or your own website.",
+        "links": [
+          { "title": "Edit profile", "url": "/user/edit" }
+        ]
+      },
+      {
+        "title": "Search among bizniszek",
+        "description": "On the Biznisz page you can search for fifes operating near you. Browse in List or Map view.",
+        "links": [
+          { "title": "Biznisz page", "url": "/biznisz" }
+        ]
+      },
+      {
+        "title": "Recommend bizniszek",
+        "description": "On a biznisz page, tap the **Recommend** button to let others know it's useful! If you have more to say, you can also write a **review**.",
+        "links": [
+          { "title": "A biznisz example page", "url": "/biznisz/44" }
+        ]
+      },
+      {
+        "title": "Mark someone as trustworthy",
+        "description": "On a fife's profile you can mark them as trustworthy, so others know they can approach them safely. This helps us build trust-based safety.",
+        "links": [
+          { "title": "A fife's profile", "url": "/user/e53e948e-debe-44c1-852b-e94c29ffcb9b" }
+        ]
+      }
+    ]
   },
   "tutorialMessages": {
     "homePage": "This is the home page, here you can see newly registered members and what they are good at",
@@ -371,6 +430,20 @@
     "back": "Back",
     "next": "Next"
   },
+  "registration": {
+    "title": "Registration",
+    "failed": "Registration failed.",
+    "tryAgain": "Try again",
+    "congrats": "Congratulations!",
+    "nowMember": "You are now a FiFe!"
+  },
+  "bizniszEdit": {
+    "uploadImagesTitle": "Upload images",
+    "imageDescriptionPlaceholder": "Tell about this image"
+  },
+  "bizniszItemExtra": {
+    "images": "image(s)"
+  },
   "projekt": {
     "title": "Join the FiFe App team!",
     "description": "This is a nonprofit, open source project, so help is always welcome.",
@@ -397,7 +470,9 @@
   },
   "userProfile": {
     "contactsLabel": "Contacts",
-    "requestContact": "Request contact"
+    "requestContact": "Request contact",
+    "supporters": "Supporters:",
+    "fife": "Fife"
   },
   "notFound": {
     "lostInBits": "We got lost in the bit jungle.",

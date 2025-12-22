@@ -79,7 +79,7 @@ export default function Index() {
           );
           console.log(signInResponse.error.code);
           if (signInResponse.error.code === "invalid_credentials") {
-            setError(t('csatlakozom.emailAlreadyTaken'));
+            setError(t("csatlakozom.emailAlreadyTaken"));
           } else {
             setError(signInResponse.error.message);
           }
@@ -87,7 +87,7 @@ export default function Index() {
           console.log("Successfully signed in existing user!");
           dispatch(login(signInResponse.data.user.id));
           dispatch(setUserData(signInResponse.data.user));
-          dispatch(addSnack({ title: t('csatlakozom.loggedIn') }));
+          dispatch(addSnack({ title: t("csatlakozom.loggedIn") }));
           router.navigate("/home");
         }
       }
@@ -118,34 +118,34 @@ export default function Index() {
         }}
       >
         <ThemedText type="title" style={{ textAlign: "left" }}>
-          {t('csatlakozom.yay')}
+          {t("csatlakozom.yay")}
         </ThemedText>
-        <ThemedText>{t('csatlakozom.createAccountPrompt')}</ThemedText>
+        <ThemedText>{t("csatlakozom.createAccountPrompt")}</ThemedText>
         <View>
           <TextInput
             mode="outlined"
             onChangeText={setName}
             value={name}
-            label={t('csatlakozom.nameLabel')}
+            label={t("csatlakozom.nameLabel")}
             autoComplete="name"
             textContentType="name"
             autoCapitalize="words"
             autoCorrect={false}
           />
-          <HelperText type="info">{t('csatlakozom.nameHelper')}</HelperText>
+          <HelperText type="info">{t("csatlakozom.nameHelper")}</HelperText>
         </View>
         <UsernameInput
           value={username}
           onChangeText={setUsername}
           onAvailabilityChange={setUsernameAvailable}
-          label={t('csatlakozom.usernameLabel')}
+          label={t("csatlakozom.usernameLabel")}
           style={{ marginTop: 8 }}
         />
         <TextInput
           mode="outlined"
           onChangeText={setEmail}
           value={email}
-          label={t('csatlakozom.emailLabel')}
+          label={t("csatlakozom.emailLabel")}
           autoComplete="email"
           textContentType="emailAddress"
           inputMode="email"
@@ -157,7 +157,7 @@ export default function Index() {
           mode="outlined"
           onChangeText={setPassword}
           value={password}
-          label={t('csatlakozom.passwordLabel')}
+          label={t("csatlakozom.passwordLabel")}
           secureTextEntry={!showPassword}
           autoComplete="new-password"
           textContentType="newPassword"
@@ -177,7 +177,7 @@ export default function Index() {
             />
           </View>
           <ThemedText type="label">
-            {t('csatlakozom.passwordRequirement')}
+            {t("csatlakozom.passwordRequirement")}
           </ThemedText>
         </View>
         <TextInput
@@ -186,7 +186,7 @@ export default function Index() {
           value={passwordAgain}
           secureTextEntry
           disabled={isPasswordWeak}
-          label={t('csatlakozom.passwordAgainLabel')}
+          label={t("csatlakozom.passwordAgainLabel")}
           autoComplete="new-password"
           textContentType="newPassword"
           right={
@@ -205,9 +205,9 @@ export default function Index() {
             status={acceptConditions ? "checked" : "unchecked"}
           />
           <ThemedText variant="labelLarge" onPress={() => setAcceptConditions(!acceptConditions)}>
-            {t('csatlakozom.acceptTerms')}
+            {t("csatlakozom.acceptTerms")}
             <ThemedText variant="labelLarge" type="link">
-              <Link href="/csatlakozom/iranyelvek">{t('csatlakozom.terms')}</Link>
+              <Link href="/csatlakozom/iranyelvek">{t("csatlakozom.terms")}</Link>
             </ThemedText>
             .
           </ThemedText>
@@ -221,7 +221,7 @@ export default function Index() {
             (username.trim().length > 0 && usernameAvailable === false)
           }
         >
-          {t('csatlakozom.register')}
+          {t("csatlakozom.register")}
         </Button>
         <HelperText type="error" visible={!!error}>
           {error}

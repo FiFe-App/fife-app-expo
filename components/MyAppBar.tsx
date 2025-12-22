@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { theme } from "@/assets/theme";
 import { Image } from "expo-image";
 import Smiley from "@/components/Smiley";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewStyle }) => {
   const navigation = useNavigation();
@@ -44,6 +45,8 @@ export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewSt
       }, style]}
     >
       {navigation.canGoBack() && pathname !== "/home" && pathname !== "/" ? <Appbar.BackAction onPress={navigation.goBack} /> : <View style={{ width: 48 }} />}
+      {pathname == "/" && 
+      <LanguageSwitcher />}
       {center || <Link href="/" style={{ flex: 1 }} asChild>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}><Smiley />
           <Image

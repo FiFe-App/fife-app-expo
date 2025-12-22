@@ -16,12 +16,12 @@ const Register = () => {
   const { t } = useTranslation();
   const textInput = useRef<TIRN>(null);
   const [text, setText] = useState("");
-  const textToType = t('csatlakozom.guidelineText');
+  const textToType = t("csatlakozom.guidelineText");
   
   const iranyelvekList = [
-    { key: t('csatlakozom.guideline1') },
-    { key: t('csatlakozom.guideline2') },
-    { key: t('csatlakozom.guideline3') },
+    { key: t("csatlakozom.guideline1") },
+    { key: t("csatlakozom.guideline2") },
+    { key: t("csatlakozom.guideline3") },
   ];
   
   const handleTextInput = (input: string) => {
@@ -54,7 +54,7 @@ const Register = () => {
     <ThemedView style={{ flex: 1, padding: 8 }}>
       <View style={{ flex: 1, justifyContent: "center" }}>
         <ThemedText type="title" style={{ marginBottom: 16 }}>
-          {t('csatlakozom.joinCommunity')}
+          {t("csatlakozom.joinCommunity")}
         </ThemedText>
         <FlatList
           data={iranyelvekList}
@@ -71,7 +71,7 @@ const Register = () => {
       </View>
       <View style={{ marginVertical: 20 }}>
         <ThemedText>
-          {t('csatlakozom.guidelinePrompt')}
+          {t("csatlakozom.guidelinePrompt")}
         </ThemedText>
         <Pressable
           style={styles.inputView}

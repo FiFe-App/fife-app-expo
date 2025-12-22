@@ -20,11 +20,11 @@ const Register = () => {
           type="subtitle"
           style={{ textAlign: "left", marginBottom: 16 }}
         >
-          {t('csatlakozom.subtitle')}
+          {t("csatlakozom.subtitle")}
         </ThemedText>
         <ThemedText>
-          {t('csatlakozom.intro')}
-          {t('csatlakozom.mapView')}
+          {t("csatlakozom.intro")}
+          {t("csatlakozom.mapView")}
         </ThemedText>
         <View
           style={{

@@ -207,7 +207,7 @@ export default function Index() {
               <Button>{t("login.noAccount")}</Button>
             </Link>
             <Link href="/user/password-reset" asChild>
-              <Button>Elfelejtettem a jelszavam</Button>
+              <Button>{t("passwordReset.title")}</Button>
             </Link>
           </View>
           <Text style={{ color: "red" }}>{error}</Text>

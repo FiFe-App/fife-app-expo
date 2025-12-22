@@ -42,9 +42,9 @@ export default function Index() {
     <ThemedView style={{ flex: 1, padding: 16 }}>
       <View style={{ justifyContent: "center", marginBottom: 16 }}>
         <ThemedText type="title" style={{ textAlign: "left" }}>
-          {t('csatlakozom.greatYouAre')}
+          {t("csatlakozom.greatYouAre")}
         </ThemedText>
-        <ThemedText>{t('csatlakozom.chooseMethod')}</ThemedText>
+        <ThemedText>{t("csatlakozom.chooseMethod")}</ThemedText>
       </View>
       <View
         style={{
@@ -61,14 +61,14 @@ export default function Index() {
           disabled
           onPress={signInWithFacebook}
         >
-          {t('csatlakozom.facebookJoin')}
+          {t("csatlakozom.facebookJoin")}
         </Button>
         <Button mode="contained" icon="google" disabled>
-          {t('csatlakozom.googleJoin')}
+          {t("csatlakozom.googleJoin")}
         </Button>
         <Divider style={{ marginVertical: 16 }} />
         <Link href="/csatlakozom/email-regisztracio" asChild>
-          <Button mode="contained">{t('csatlakozom.emailRegister')}</Button>
+          <Button mode="contained">{t("csatlakozom.emailRegister")}</Button>
         </Link>
       </View>
     </ThemedView>

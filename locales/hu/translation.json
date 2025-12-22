@@ -109,7 +109,13 @@
       "notFound": "Ez a biznisz nem található",
       "authorsBiznisz": "biznisze",
       "noRecommendations": "Még senki sem ajánlja",
-      "commentPlaceholder": "Mondd el a véleményed"
+      "commentPlaceholder": "Mondd el a véleményed",
+      "locationTitle": "Helyzete",
+      "imagesTitle": "Képek",
+      "contactsTitle": "Elérhetőségek",
+      "commentsTitle": "Vélemények",
+      "edit": "Szerkesztés",
+      "recommendationsLabel": "ajánlás"
     },
     "edit": {
       "title": "Biznisz szerkesztése",
@@ -203,9 +209,22 @@
       "text": "Csak akkor jelöld őt megbízhatónak, ha úgy gondolod, hogy nem fog mást átverni.",
       "submit": "Igen!"
     },
+    "recommendProfileButton": {
+      "recommended": "Megbízom benne.",
+      "recommend": "Megbízhatónak jelölöm!"
+    },
     "comments": {
       "delete": "Törlés"
     }
+  },
+  "elapsed": {
+    "seconds": "másodperce",
+    "minutes": "perce",
+    "hours": "órája",
+    "days": "napja",
+    "weeks": "hete",
+    "months": "hónapja",
+    "years": "éve"
   },
   "tutorial": {
     "back": "Vissza",
@@ -221,10 +240,13 @@
   },
   "search": {
     "placeholder": "Mire van szükséged?",
-    "bizniszPlaceholder": "Keress a bizniszek közt..."
+    "bizniszPlaceholder": "Keress a bizniszek közt...",
+    "results": "Találatok",
+    "refine": "Finomítás"
   },
   "contactEdit": {
     "contactLabel": "elérhetőséged",
+    "selectType": "Válassz típust.",
     "notePlaceholder": "Munkanapokon keress / csak hétvégén",
     "fillField": "Töltsd ki ezt a mezőt.",
     "otherInfo": "Egyéb információ",
@@ -282,7 +304,44 @@
     "findLocals": "Találjanak meg a helyiek!"
   },
   "whatToDo": {
-    "title": "Mit tudsz itt csinálni?"
+    "title": "Mit tudsz itt csinálni?",
+    "features": [
+      {
+        "title": "Hirdesd a bizniszed!",
+        "description": "Hozz létre bizniszt a profil oldalon, az **Új biznisz** gombra kattintva. Így létrehozhatsz egy ingyenes és örök hirdetést. Feltölthetsz **képeket** és megjelölheted a **helyét** is.",
+        "links": [
+          { "title": "Új biznisz létrehozása", "url": "/biznisz/new" }
+        ]
+      },
+      {
+        "title": "Adj meg elérhetőségeket!",
+        "description": "Ahhoz, hogy elérjenek az emberek, meg kell adnod elérhetőségeket: Telefon, email, insta vagy saját weboldal is lehet.",
+        "links": [
+          { "title": "Profil szerkesztése", "url": "/user/edit" }
+        ]
+      },
+      {
+        "title": "Keresés bizniszek közt",
+        "description": "A Biznisz oldalon kereshetsz a környékeden tevékenykedő fifék bizniszei közt. Lista és Térkép nézetben is keresgélhetsz.",
+        "links": [
+          { "title": "Bizniszek oldal", "url": "/biznisz" }
+        ]
+      },
+      {
+        "title": "Ajánlj bizniszeket",
+        "description": "Egy biznisz oldalán kattints az **Ajánlom** gombra, hogy mások is tudják hogy hasznos! Ha több mondanivalód van **véleményt** is írhatsz",
+        "links": [
+          { "title": "Egy Biznisz oldala", "url": "/biznisz/44" }
+        ]
+      },
+      {
+        "title": "Jelölj valakit megbízhatónak",
+        "description": "Egy fife profil oldalán meg tudod jelölni, hogy őt megbízhatónak tartod, hogy mások is tudják hogy biztonsággal fordulhatnak hozzá. Így kiéphetünk megbízhatóság alapú biztonságot.",
+        "links": [
+          { "title": "Egy fife oldala", "url": "/user/e53e948e-debe-44c1-852b-e94c29ffcb9b" }
+        ]
+      }
+    ]
   },
   "tutorialMessages": {
     "homePage": "Ez a főoldal, itt láthatod az újonan regisztrált tagokat, és hogy mihez értenek",
@@ -371,6 +430,20 @@
     "back": "Vissza",
     "next": "Tovább"
   },
+  "registration": {
+    "title": "Regisztráció",
+    "failed": "A regisztráció nem sikerült.",
+    "tryAgain": "Megpróbálom újra",
+    "congrats": "Gratulálok!",
+    "nowMember": "Most már te is FiFe vagy!"
+  },
+  "bizniszEdit": {
+    "uploadImagesTitle": "Képek feltöltése",
+    "imageDescriptionPlaceholder": "Mesélj erről a képről"
+  },
+  "bizniszItemExtra": {
+    "images": "kép"
+  },
   "projekt": {
     "title": "Csatlakozz a FiFe App csapatához!",
     "description": "Ez egy nonprofit, open source projekt, így mindig elkél a segítség.",
@@ -397,7 +470,9 @@
   },
   "userProfile": {
     "contactsLabel": "Elérhetőségek",
-    "requestContact": "Kérd el a kontaktját"
+    "requestContact": "Kérd el a kontaktját",
+    "supporters": "Támogatók:",
+    "fife": "Fife"
   },
   "notFound": {
     "lostInBits": "Eltévedtünk a bitrengetegben.",

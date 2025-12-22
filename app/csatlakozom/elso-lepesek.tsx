@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
 import { ActivityIndicator, Button, Icon } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -23,6 +24,7 @@ AppState.addEventListener("change", (state) => {
 
 export default function Index() {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   const { "#": hash } = useLocalSearchParams<{ "#": string }>();
   console.log(hash);
@@ -31,7 +33,7 @@ export default function Index() {
     ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
     : null;
   const [error, setError] = useState<string | null>(
-    uid || token_data ? null : "A regisztráció nem sikerült.",
+    uid || token_data ? null : t("registration.failed"),
   );
 
   useEffect(() => {
@@ -82,10 +84,10 @@ export default function Index() {
       {error && (
         <>
           <Icon source="emoticon-sad" size={100} />
-          <ThemedText type="title">Valami hiba történt!</ThemedText>
+          <ThemedText type="title">{t("csatlakozom.errorOccurred")}</ThemedText>
           <ThemedText>{error}</ThemedText>
           <Link asChild href="/csatlakozom/regisztracio">
-            <Button mode="contained">Megpróbálom újra</Button>
+            <Button mode="contained">{t("registration.tryAgain")}</Button>
           </Link>
         </>
       )}
@@ -93,9 +95,9 @@ export default function Index() {
         <>
           <View style={{ justifyContent: "center", flex: 1, gap: 16, width: "100%" }}>
             <ThemedText type="title" style={{ textAlign: "center" }}>
-              Gratulálok!
+              {t("registration.congrats")}
             </ThemedText>
-            <ThemedText style={{ textAlign: "center" }}>Most már te is FiFe vagy!</ThemedText>
+            <ThemedText style={{ textAlign: "center" }}>{t("registration.nowMember")}</ThemedText>
             <Image source={require("@/assets/images/Connected.png")} contentFit="contain" style={{ width: "100%", height: 400, alignSelf: "center" }} />
 
           </View>

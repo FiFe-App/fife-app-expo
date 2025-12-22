@@ -43,7 +43,7 @@ export default function LanguageSwitcher({ variant = "button" }: LanguageSwitche
     closeMenu();
   };
 
-  const languageLabel = currentLanguage === "hu" ? "🇭🇺 Magyar" : "🇬🇧 English";
+  const languageLabel = currentLanguage === "hu" ? "🇭🇺" : "🇬🇧";
 
   return (
     <Menu
@@ -55,7 +55,7 @@ export default function LanguageSwitcher({ variant = "button" }: LanguageSwitche
             <Icon source="translate" size={24} />
           </Button>
         ) : (
-          <Button onPress={openMenu} mode="outlined" icon="translate">
+          <Button onPress={openMenu} mode="outlined">
             {languageLabel}
           </Button>
         )
@@ -63,12 +63,12 @@ export default function LanguageSwitcher({ variant = "button" }: LanguageSwitche
     >
       <Menu.Item
         onPress={() => changeLanguage("hu")}
-        title="🇭🇺 Magyar"
+        title="🇭🇺"
         leadingIcon={currentLanguage === "hu" ? "check" : undefined}
       />
       <Menu.Item
         onPress={() => changeLanguage("en")}
-        title="🇬🇧 English"
+        title="🇬🇧"
         leadingIcon={currentLanguage === "en" ? "check" : undefined}
       />
     </Menu>

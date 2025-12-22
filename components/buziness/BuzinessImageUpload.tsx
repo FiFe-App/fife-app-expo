@@ -8,6 +8,7 @@ import ImageModal from "react-native-image-modal";
 import { IconButton, TextInput } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { ThemedText } from "../ThemedText";
+import { useTranslation } from "react-i18next";
 
 export interface BuzinessImageUploadHandle {
   uploadImages: (buziessId: number) => Promise<ImageDataType[]>;
@@ -22,6 +23,7 @@ const BuzinessImageUpload = forwardRef<
   BuzinessImageUploadHandle,
   BuzinessImageUploadProps
 >(({ images, setImages, buzinessId }, ref) => {
+  const { t } = useTranslation();
   useImperativeHandle(ref, () => ({
     uploadImages: async (buzinessId: number) => {
       const uploadPromises = images.map(async (i) => {
@@ -116,7 +118,7 @@ const BuzinessImageUpload = forwardRef<
   };
   return (
     <View>
-      <ThemedText style={{ padding: 8 }}>Képek feltöltése</ThemedText>
+      <ThemedText style={{ padding: 8 }}>{t("bizniszEdit.uploadImagesTitle")}</ThemedText>
       <ScrollView
         horizontal
         contentContainerStyle={{ alignItems: "center", gap: 4 }}
@@ -143,7 +145,7 @@ const BuzinessImageUpload = forwardRef<
                       color: "white",
                     }}
                   >
-                    Törlésre kijelölve
+                    {t("bizniszItem.markedForDeletion")}
                   </ThemedText>
                   <View
                     style={{
@@ -169,7 +171,7 @@ const BuzinessImageUpload = forwardRef<
                 style={{ width: width }}
                 value={images[ind]?.description || ""}
                 multiline
-                placeholder="Mesélj erről a képről"
+                placeholder={t("bizniszEdit.imageDescriptionPlaceholder")}
                 onChangeText={(text) => {
                   setImages(
                     images.map((i, ind2) => {

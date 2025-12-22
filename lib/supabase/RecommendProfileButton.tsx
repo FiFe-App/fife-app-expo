@@ -92,7 +92,9 @@ export const RecommendProfileButton = ({
       mode={!recommended ? "contained" : "contained-tonal"}
       loading={loading}
     >
-      {recommended ? "Megbízom benne." : "Megbízhatónak jelölöm!"}
+      {recommended
+        ? t("dialogs.recommendProfileButton.recommended")
+        : t("dialogs.recommendProfileButton.recommend")}
     </Button>
   );
 };

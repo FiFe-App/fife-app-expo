@@ -48,19 +48,19 @@ export default function Index() {
               const err = res.error;
               console.log(err);
               if (err.code === "over_email_send_rate_limit")
-                setRes(t('csatlakozom.waitBeforeResend'));
+                setRes(t("csatlakozom.waitBeforeResend"));
               else if (err.code === "validation_failed")
-                setRes(t('csatlakozom.invalidEmail'));
+                setRes(t("csatlakozom.invalidEmail"));
               else setRes(err.message);
               return;
             }
 
             if (res.data)
-              setRes(t('csatlakozom.emailResent'));
+              setRes(t("csatlakozom.emailResent"));
           })
           .catch((err) => {
             console.error("asd", err);
-            setRes(t('csatlakozom.errorOccurred'));
+            setRes(t("csatlakozom.errorOccurred"));
           });
       })
       .catch((err) => {
@@ -82,7 +82,7 @@ export default function Index() {
 
           if (res.error) {
             if (res.error?.code === "user_not_found")
-              setRes(t('csatlakozom.userNotFound'));
+              setRes(t("csatlakozom.userNotFound"));
             throw new Error(res.error.message);
           }
         });
@@ -111,10 +111,10 @@ export default function Index() {
         }}
       >
         <ThemedText type="title">
-          {t('csatlakozom.verifyEmail')}
+          {t("csatlakozom.verifyEmail")}
         </ThemedText>
         <View style={{ gap: 16, width:"100%" }}>
-          <ThemedText>{t('csatlakozom.emailSent')}</ThemedText>
+          <ThemedText>{t("csatlakozom.emailSent")}</ThemedText>
           {!edit ? (
             <ThemedText style={{ textAlign: "center" }}>{email}</ThemedText>
           ) : (
@@ -126,7 +126,7 @@ export default function Index() {
                   padding: 0,
                   marginBottom: 16
                 }}
-                placeholder={t('csatlakozom.newEmailPlaceholder')}
+                placeholder={t("csatlakozom.newEmailPlaceholder")}
                 value={email}
                 onChangeText={setEmail}
               />
@@ -138,11 +138,11 @@ export default function Index() {
             disabled={!email}
             mode={edit ? "contained" : "contained-tonal"}
           >
-            {t('csatlakozom.resendEmail')}
+            {t("csatlakozom.resendEmail")}
           </Button>
           {res && <ThemedText type="subtitle">{res}</ThemedText>}
-          {edit ? <Button onPress={()=>setEdit(false)}>{t('csatlakozom.cancel')}</Button> :
-            <Button onPress={() => setEdit(true)}>{t('csatlakozom.wrongEmail')}</Button>}
+          {edit ? <Button onPress={()=>setEdit(false)}>{t("csatlakozom.cancel")}</Button> :
+            <Button onPress={() => setEdit(true)}>{t("csatlakozom.wrongEmail")}</Button>}
         </View>
       </View>
     </ThemedView>

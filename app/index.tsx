@@ -17,9 +17,6 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 export const Header = () => {
   return (
     <ThemedView style={styles.headerRow} type="default">
-      <View style={styles.flex1}>
-        <LanguageSwitcher variant="icon" />
-      </View>
 
       <View style={styles.centerRow}>
         <View style={styles.titleRow}>
@@ -452,7 +449,6 @@ export default function App() {
   if (uid) return <Redirect href="/home" />;
   return (
     <ScrollView style={{ flex: 1 }}>
-      <Header />
       <ThemedView type="default" style={{ flex: 1, alignItems: "center" }}>
         <View style={{ flex: 1, gap: 16, maxWidth: 1000 }}>
           <Hero />

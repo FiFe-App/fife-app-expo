@@ -34,9 +34,11 @@ import UrlText from "./UrlText";
 import { Comment, CommentsProps } from "./comments.types";
 import { ThemedText } from "../ThemedText";
 import { addSnack } from "@/redux/reducers/infoReducer";
+import { useTranslation } from "react-i18next";
 
 const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   const dispatch = useDispatch();
+  const {t} = useTranslation();
   const navigation = router;
 
   const { uid, name }: UserState = useSelector(
@@ -340,7 +342,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
       ) : (
         !comments?.length && (
           <ThemedText style={{ padding: 20 }}>
-            Még nem érkezett komment
+            {t("comments.noComments")}
           </ThemedText>
         )
       )}
