@@ -80,7 +80,7 @@ const ProfileImage = ({
         />
       )}
       {error && !source && (
-        <Image source={require('@/assets/images/Slimey.png')} style={style} />
+        <Image source={require("@/assets/images/Slimey.png")} style={style} />
       )}
     </View>
   );

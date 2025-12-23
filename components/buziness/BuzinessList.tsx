@@ -11,6 +11,7 @@ import {
 } from "@/redux/reducers/buzinessReducer";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import Measure from "../tutorial/Measure";
+import { useTranslation } from "react-i18next";
 
 interface BuzinessListProps {
   load: (arg0: number) => void;
@@ -21,6 +22,7 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
   load,
   canLoadMore,
 }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { buzinesses, searchParams } = useSelector(
     (state: RootState) => state.buziness,
@@ -75,17 +77,17 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
           !myLocation &&
           !buzinesses.length &&
           (<ThemedText style={{ alignSelf: "center" }}>
-            Válassz környéket a kereséshez
+            {t("biznisz.list.selectArea")}
           </ThemedText>)}
         <View style={{ padding: 16 }}>
           {!loading &&
             (!!buzinesses.length && canLoadMore ? (
               <Button onPress={loadNext} style={{ alignSelf: "center" }}>
-                További bizniszek
+                {t("biznisz.list.loadMore")}
               </Button>
             ) : (
               <ThemedText style={{ alignSelf: "center" }}>
-                Nem található több biznisz
+                {t("biznisz.list.noMore")}
               </ThemedText>
             ))}
         </View>

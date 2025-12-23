@@ -49,8 +49,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { MyAppbar } from "@/components/MyAppBar";
 import typeToIcon from "@/lib/functions/typeToIcon";
 import UrlText from "@/components/comments/UrlText";
+import { useTranslation } from "react-i18next";
 
 export default function Index() {
+  const { t } = useTranslation();
   const { id: paramId } = useGlobalSearchParams();
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
@@ -129,7 +131,7 @@ export default function Index() {
             } else
               setError({
                 code: "jaj basszus",
-                message: "Ez a biznisz nem található",
+                message: t("biznisz.detail.notFound"),
               });
           });
         supabase
@@ -220,7 +222,7 @@ export default function Index() {
                       avatar_url={data.avatarUrl}
                     />
                     <Text style={{ textAlign: "center" }}>
-                      {data.authorName} biznisze
+                      {data.authorName} {t("biznisz.detail.authorsBiznisz")}
                     </Text>
                   </View>
                 </TouchableRipple>
@@ -241,8 +243,8 @@ export default function Index() {
               >
                 <Text style={{ textAlign: "center" }}>
                   {recommendations?.length
-                    ? recommendations?.length + " ajánlás"
-                    : "Még senki sem ajánlja"}
+                    ? `${recommendations.length} ${t("biznisz.detail.recommendationsLabel")}`
+                    : t("biznisz.detail.noRecommendations")}
                 </Text>
               </TouchableRipple>
             </View>
@@ -254,7 +256,7 @@ export default function Index() {
                   onPress={onPimary}
                   disabled={!myBuziness}
                 >
-                  Szerkesztés
+                  {t("biznisz.detail.edit")}
                 </Button>
               )}
               {defaultContact && (
@@ -266,7 +268,7 @@ export default function Index() {
               )}
               {requestContanct && (
                 <Button style={{ flex: 1 }} mode="contained">
-                  Kérd el a kontaktját
+                  {t("userProfile.requestContact")}
                 </Button>
               )}
 
@@ -291,7 +293,7 @@ export default function Index() {
             {/* Vertical sections instead of tabs */}
             {data.location && (
               <View style={{ marginTop: 8 }}>
-                <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Helyzete</Text>
+                <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>{t("biznisz.detail.locationTitle")}</Text>
                 <View style={{ minHeight: 200, flex: 1 }}>
                   <MapView
                     // @ts-expect-error options type are colliding in different mapViews
@@ -354,7 +356,7 @@ export default function Index() {
 
             {images.length > 0 && (
               <View style={{ marginTop: 16 }}>
-                <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Képek</Text>
+                <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>{t("biznisz.detail.imagesTitle")}</Text>
                 {images.map((image, ind) => (
                   <View key={"image-" + ind} style={{ width: "100%" }}>
                     <ImageModal
@@ -382,13 +384,13 @@ export default function Index() {
             )}
 
             <View style={{ marginTop: 16 }}>
-              <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Elérhetőségek</Text>
+              <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>{t("biznisz.detail.contactsTitle")}</Text>
               <ContactList uid={data.author} />
             </View>
 
             <View style={{ marginTop: 16 }}>
-              <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Vélemények</Text>
-              <Comments path={"buziness/" + id} placeholder="Mondd el a véleményed" />
+              <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>{t("biznisz.detail.commentsTitle")}</Text>
+              <Comments path={"buziness/" + id} placeholder={t("biznisz.detail.commentPlaceholder")} />
             </View>
           </>
         )}

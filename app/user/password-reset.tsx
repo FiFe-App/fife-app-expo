@@ -7,6 +7,7 @@ import { TextInput, Text, Card } from "react-native-paper";
 import { Link, useLocalSearchParams } from "expo-router";
 import { theme } from "@/assets/theme";
 import { Image } from "expo-image";
+import { useTranslation } from "react-i18next";
 
 // Flow:
 // 1. User enters email -> send reset link (supabase.auth.resetPasswordForEmail)
@@ -15,6 +16,7 @@ import { Image } from "expo-image";
 // 4. Submit new password -> supabase.auth.updateUser({ password })
 
 export default function PasswordResetScreen() {
+  const { t } = useTranslation();
   const { "#": hash } = useLocalSearchParams<{ "#"?: string }>();
   const tokenParams = hash
     ? Object.fromEntries(hash.split("&").map((p) => p.split("=")))
@@ -55,25 +57,25 @@ export default function PasswordResetScreen() {
     if (error) setError(error.message);
     else {
       setSent(true);
-      setMessage("Ha létezik ilyen fiók, küldtünk e-mailt a jelszó visszaállításához.");
+      setMessage(t("passwordReset.emailSent"));
     }
     setLoading(false);
   };
 
   const updatePassword = async () => {
     if (password.length < 6) {
-      setError("A jelszó legyen legalább 6 karakter.");
+      setError(t("passwordReset.passwordTooShort"));
       return;
     }
     if (password !== confirm) {
-      setError("A jelszavak nem egyeznek.");
+      setError(t("passwordReset.passwordsDontMatch"));
       return;
     }
     setLoading(true);
     setError(null);
     const { error } = await supabase.auth.updateUser({ password });
     if (error) setError(error.message);
-    else setMessage("Jelszó frissítve. Jelentkezz be az új jelszóval.");
+    else setMessage(t("passwordReset.updated"));
     setLoading(false);
   };
 
@@ -89,11 +91,11 @@ export default function PasswordResetScreen() {
       >
         {stage === "request" && (
           <>
-            <Text variant="headlineSmall">Elfelejtett jelszó</Text>
-            <Text >Add meg azt e-mail-t, amivel regisztráltál korábban!</Text>
+            <Text variant="headlineSmall">{t("passwordReset.title")}</Text>
+            <Text>{t("passwordReset.subtitle")}</Text>
             <TextInput
               mode="outlined"
-              label="E-mail"
+              label={t("passwordReset.emailLabel")}
               autoCapitalize="none"
               keyboardType="email-address"
               value={email}
@@ -105,16 +107,16 @@ export default function PasswordResetScreen() {
               loading={loading}
               disabled={!email}
             >
-              Visszaállító email küldése
+              {t("passwordReset.sendEmail")}
             </Button>
           </>
         )}
         {stage === "reset" && (
           <>
-            <Text variant="headlineSmall">Új jelszó beállítása</Text>
+            <Text variant="headlineSmall">{t("passwordReset.setNewPassword")}</Text>
             <TextInput
               mode="outlined"
-              label="Új jelszó"
+              label={t("passwordReset.newPasswordLabel")}
               secureTextEntry={!showPw}
               value={password}
               onChangeText={setPassword}
@@ -127,7 +129,7 @@ export default function PasswordResetScreen() {
             />
             <TextInput
               mode="outlined"
-              label="Jelszó megerősítése"
+              label={t("passwordReset.confirmPasswordLabel")}
               secureTextEntry={!showPw}
               value={confirm}
               onChangeText={setConfirm}
@@ -138,7 +140,7 @@ export default function PasswordResetScreen() {
               loading={loading}
               disabled={!password || !confirm || !!(message && stage == "reset")}
             >
-              Jelszó mentése
+              {t("passwordReset.save")}
             </Button>
           </>
         )}
@@ -152,7 +154,7 @@ export default function PasswordResetScreen() {
             )}
             {stage === "reset" && message && !error && (
               <Link href="/login" asChild>
-                <Button mode="contained">Bejelentkezés</Button>
+                <Button mode="contained">{t("passwordReset.login")}</Button>
               </Link>
             )}
           </Card>

@@ -6,8 +6,10 @@ import {
 import { RootState } from "@/redux/store";
 import { TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 const BuzinessSearchInput = ({ onSearch }: { onSearch: (query: string) => void }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
 
   const canSearch = true;
@@ -28,7 +30,7 @@ const BuzinessSearchInput = ({ onSearch }: { onSearch: (query: string) => void }
     onSubmitEditing={() => onSearch(searchText)}
     enterKeyHint="search"
     placeholderTextColor={theme.colors.onSurfaceVariant}
-    placeholder="Mire van szükséged?"
+    placeholder={t("search.placeholder")}
     right={
       <TextInput.Icon
         icon="magnify"
@@ -36,7 +38,7 @@ const BuzinessSearchInput = ({ onSearch }: { onSearch: (query: string) => void }
         disabled={!canSearch}
       />
     }
-  />)
+  />);
 };
 
 export default BuzinessSearchInput;

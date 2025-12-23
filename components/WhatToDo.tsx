@@ -1,11 +1,12 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { View, FlatList, Pressable, TextStyle } from "react-native";
 import { Portal, Modal, Appbar, Divider, Text, Button } from "react-native-paper";
 import { ThemedView } from "./ThemedView";
 import { ThemedText } from "./ThemedText";
-import features from "./whatToDoFeatures.json";
 import style from "./styles";
 import { Link } from "expo-router";
+import type { Href } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 interface FeatureItem {
   title: string;
@@ -58,8 +59,9 @@ function renderMarkdown(md: string) {
 
 export const WhatToDo: React.FC<WhatToDoProps> = ({ visible, onDismiss }) => {
   const [selected, setSelected] = useState<FeatureItem | null>(null);
+  const { t } = useTranslation();
 
-  const data: FeatureItem[] = useMemo(() => features as FeatureItem[], []);
+  const data = (t("whatToDo.features", { returnObjects: true }) as unknown as FeatureItem[]) || [];
   useEffect(() => {
     if (!visible) setSelected(null);
   }, [visible]);
@@ -80,7 +82,7 @@ export const WhatToDo: React.FC<WhatToDoProps> = ({ visible, onDismiss }) => {
             {selected && (
               <Appbar.BackAction onPress={() => setSelected(null)} />
             )}
-            <Appbar.Content title={selected ? selected.title : "Mit tudsz itt csinálni?"} />
+            <Appbar.Content title={selected ? selected.title : t("whatToDo.title")} />
             <Appbar.Action icon="close" onPress={() => { setSelected(null); onDismiss(); }} />
           </Appbar.Header>
           <Divider />
@@ -110,7 +112,7 @@ export const WhatToDo: React.FC<WhatToDoProps> = ({ visible, onDismiss }) => {
               {selected.links && selected.links.length > 0 && (
                 <View style={{ marginBottom: 16, flexWrap:"wrap" }}>
                   {selected.links.map((l) => 
-                    (<Link asChild key={l.url} href={l.url} style={{ marginBottom: 6 }}>
+                    (<Link asChild key={l.url} href={l.url as unknown as Href} style={{ marginBottom: 6 }}>
                       <Button onPress={()=>onDismiss()}
                         mode="contained">{l.title}</Button>
                     </Link>

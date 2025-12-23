@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, StyleProp, ViewStyle, TextStyle } from "react-native";
 import { HelperText, TextInput } from "react-native-paper";
 import { supabase } from "@/lib/supabase/supabase";
+import { useTranslation } from "react-i18next";
 
 export interface UsernameInputProps {
   label?: string;
@@ -14,7 +15,7 @@ export interface UsernameInputProps {
 }
 
 export const UsernameInput: React.FC<UsernameInputProps> = ({
-  label = "Felhasználónév",
+  label,
   value,
   onChangeText,
   disabled,
@@ -22,6 +23,7 @@ export const UsernameInput: React.FC<UsernameInputProps> = ({
   excludeUid,
   onAvailabilityChange,
 }) => {
+  const { t } = useTranslation();
   const [available, setAvailable] = useState<boolean | undefined>(undefined);
   const [checking, setChecking] = useState(false);
   const debounceRef = useRef<number | undefined>(undefined);
@@ -84,7 +86,7 @@ export const UsernameInput: React.FC<UsernameInputProps> = ({
   return (
     <View style={style as ViewStyle}>
       <TextInput
-        label={label}
+        label={label || t("profile.edit.username")}
         value={value}
         disabled={disabled}
         autoCapitalize="none"
@@ -107,8 +109,8 @@ export const UsernameInput: React.FC<UsernameInputProps> = ({
         visible={available === false || true}
       >
         {available === false
-          ? "A megadott felhasználónév már létezik"
-          : "Ha megadsz egy felhasználónevet, elérhető lesz a profilod egyedi URL-címe."}
+          ? t("profile.edit.usernameExists")
+          : t("profile.edit.usernameHelp")}
       </HelperText>
     </View>
   );

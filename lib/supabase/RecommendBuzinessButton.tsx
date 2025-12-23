@@ -7,6 +7,7 @@ import { supabase } from "./supabase";
 import { addDialog } from "@/redux/reducers/infoReducer";
 import { trackPromise } from "react-promise-tracker";
 import wrapper from "../functions/wrapper";
+import { useTranslation } from "react-i18next";
 
 interface RecommendBuzinessButtonProps {
   buzinessId: number;
@@ -21,6 +22,7 @@ export const RecommendBuzinessButton = ({
   setRecommended,
   style,
 }: RecommendBuzinessButtonProps) => {
+  const { t } = useTranslation();
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
@@ -32,8 +34,8 @@ export const RecommendBuzinessButton = ({
     if (recommended) {
       dispatch(
         addDialog({
-          title: "Mégsem ajánlod?",
-          text: "Visszavonhatod az ajánlásod, ha meggondoltad magad.",
+          title: t("dialogs.recommendBizinessRemove.title"),
+          text: t("dialogs.recommendBizinessRemove.text"),
           onSubmit: () => {
             setLoading(true);
             trackPromise(
@@ -51,14 +53,14 @@ export const RecommendBuzinessButton = ({
               "deleteRecommendation",
             );
           },
-          submitText: "Törlés",
+          submitText: t("dialogs.recommendBizinessRemove.submit"),
         }),
       );
     } else {
       dispatch(
         addDialog({
-          title: "Bizotsan ajánlod?",
-          text: "Csak akkor jelöld a bizniszt ajánlottnak, ha tudod, hogy valós és hasznos.",
+          title: t("dialogs.recommendBizinessAdd.title"),
+          text: t("dialogs.recommendBizinessAdd.text"),
           onSubmit: () => {
             setLoading(true);
             trackPromise(
@@ -77,7 +79,7 @@ export const RecommendBuzinessButton = ({
               "deleteRecommendation",
             );
           },
-          submitText: "Ajánlom",
+          submitText: t("dialogs.recommendBizinessAdd.submit"),
         }),
       );
     }
@@ -90,7 +92,7 @@ export const RecommendBuzinessButton = ({
       mode={!recommended ? "contained" : "contained-tonal"}
       loading={loading}
     >
-      {recommended ? "Már ajánlottam." : "Ajánlom"}
+      {recommended ? t("dialogs.recommendBizinessButton.recommended") : t("dialogs.recommendBizinessButton.recommend")}
     </Button>
   );
 };

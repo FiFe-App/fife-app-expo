@@ -14,6 +14,7 @@ import {
 import SupabaseImage from "../SupabaseImage";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
+import { useTranslation } from "react-i18next";
 
 interface RMP {
   show: boolean;
@@ -31,6 +32,7 @@ interface RecommendElement extends Tables<"buzinessRecommendations"> {
 
 const BuzinessRecommendationsModal = ({ show, setShow, id, name }: RMP) => {
   const [list, setList] = useState<RecommendElement[]>([]);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (show) {
@@ -61,7 +63,7 @@ const BuzinessRecommendationsModal = ({ show, setShow, id, name }: RMP) => {
           margin: 30,
         }}
       >
-        <ThemedText>{name} biznisz ajánlói:</ThemedText>
+        <ThemedText>{name} {t("bizniszRecommendations.title")}</ThemedText>
         {list.map((rec, ind) => (
           <>
             <Link
@@ -86,7 +88,7 @@ const BuzinessRecommendationsModal = ({ show, setShow, id, name }: RMP) => {
                   />
                   <View style={{ flex: 1, justifyContent: "center" }}>
                     <Text>{rec.profiles?.full_name}</Text>
-                    <Text>{elapsedTime(rec.created_at)} ajánlotta</Text>
+                    <Text>{elapsedTime(rec.created_at)} {t("bizniszRecommendations.recommendedAgo")}</Text>
                   </View>
                   <IconButton icon="account" />
                 </View>

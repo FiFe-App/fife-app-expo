@@ -4,8 +4,7 @@ import * as Location from "expo-location";
 
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
-const blockedMessage = "Letiltottad a helyzeted.";
+import i18n from "@/i18n";
 
 export function useMyLocation() {
   const dispatch = useDispatch();
@@ -31,7 +30,7 @@ export function useMyLocation() {
       const { status } = res;
 
       if (status !== "denied") getLocation();
-      if (status === "denied") dispatch(setLocationError(blockedMessage));
+      if (status === "denied") dispatch(setLocationError(i18n.t("location.blocked")));
     });
   }, [dialogs, dispatch]);
 

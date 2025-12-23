@@ -14,8 +14,10 @@ import {
 import { usePromiseTracker } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "./ThemedText";
+import { useTranslation } from "react-i18next";
 
 const InfoLayer = () => {
+  const { t } = useTranslation();
   const { dialogs, snacks, loading } = useSelector(
     (state: RootState) => state.info,
   );
@@ -51,14 +53,14 @@ const InfoLayer = () => {
             </Dialog.Content>
             <Dialog.Actions>
               {dialog?.dismissable && (
-                <Button onPress={cancelDialog}>Mégsem</Button>
+                <Button onPress={cancelDialog}>{t("common.cancel")}</Button>
               )}
               <Button
                 mode="contained"
                 onPress={submitDialog}
                 loading={promiseInProgress}
               >
-                {dialog?.submitText || "Kész"}
+                {dialog?.submitText || t("common.done")}
               </Button>
             </Dialog.Actions>
           </Dialog>
@@ -86,7 +88,7 @@ const InfoLayer = () => {
           >
             <Dialog.Content style={{ alignItems: "center", gap: 16 }}>
               <ActivityIndicator size="large" />
-              <ThemedText>{loading?.title || "Kérlek várj..."}</ThemedText>
+              <ThemedText>{loading?.title || t("common.pleaseWait")}</ThemedText>
             </Dialog.Content>
           </Dialog>
         )}

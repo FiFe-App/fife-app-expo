@@ -47,6 +47,9 @@ import { Image } from "expo-image";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 import BuzinessItem from "./BuzinessItem";
 import { Button } from "../Button";
+import { useTranslation } from "react-i18next";
+// Local type for map selection circle
+type MapLocationType = { location: { latitude: number; longitude: number } };
 
 interface NewBuzinessInterface {
   title: string;
@@ -59,6 +62,7 @@ interface BuzinessEditScreenProps {
 export default function BuzinessEditScreen({
   editId,
 }: BuzinessEditScreenProps) {
+  const { t } = useTranslation();
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const [categories, setCategories] = useState("");
@@ -162,22 +166,20 @@ export default function BuzinessEditScreen({
     dispatch(
       setOptions([
         {
-          title: "Mentés",
+          title: t("bizniszEdit.saveTitle"),
           icon: "content-save",
           disabled: !canSubmit || loading,
           onPress: async () => {
             dispatch(
               showLoading({
                 dismissable: false,
-                title: "Kérlek várj, amíg a bizniszed feltöltődik",
+                title: t("bizniszEdit.uploadingTitle"),
               }),
             );
             await save();
             dispatch(hideLoading());
           },
-          theme: {
-            colors: { primary: "red" }
-          }
+          
         },
       ]),
     );
@@ -189,7 +191,7 @@ export default function BuzinessEditScreen({
   useFocusEffect(
     useCallback(() => {
       if (editId && uid) {
-        navigation.setOptions({ title: "Biznisz szerkesztése" });
+        navigation.setOptions({ title: t("bizniszEdit.title") });
         supabase
           .from("buziness")
           .select("*")
@@ -283,17 +285,17 @@ export default function BuzinessEditScreen({
         )}
         <View style={{}}>
           <TextInput
-            placeholder="Bizniszem neve"
+            placeholder={t("bizniszEdit.titlePlaceholder")}
             value={newBuziness.title}
             onChangeText={(t) => setNewBuziness({ ...newBuziness, title: t })}
           />
           <TagInput
-            placeholder="Kategóriák, nyomj entert a hozzáadásukhoz"
+            placeholder={t("bizniszEdit.categoryPlaceholder")}
             onChange={setCategories}
             value={categories}
           />
           <TextInput
-            placeholder="Fejtsd ki bővebben"
+            placeholder={t("bizniszEdit.descriptionPlaceholder")}
             value={newBuziness.description}
             multiline
             onChangeText={(t) =>
@@ -301,7 +303,7 @@ export default function BuzinessEditScreen({
             }
           />
           <Dropdown
-            label="Kiemelt elérhetőséged"
+            label={t("bizniszEdit.featuredContact")}
             options={myContacts}
             value={defaultContact?.toString()}
             CustomDropdownInput={({
@@ -476,14 +478,15 @@ export default function BuzinessEditScreen({
           <ThemedText>Így fog megjelenni a bizniszed:</ThemedText>
           <BuzinessItem
             data={{
-              title: ((newBuziness.title || "A biznisz címe") + (categories ? " $ " + categories : " $ Egy kategória $ Egy másik kategória")),
-              description: newBuziness.description || "Hosszabb leírás hogy miről szól a bizniszed.",
+              title: ((newBuziness.title || t("bizniszEdit.previewTitle")) + (categories ? " $ " + categories : ` $ ${t("bizniszEdit.previewCategory")} $ ${t("bizniszEdit.previewCategory2")}`)),
+              description: newBuziness.description || t("bizniszEdit.previewDescription"),
               images: images,
               location: circle
                 ? `POINT(${circle.location.longitude} ${circle.location.latitude})`
                 : null,
-              defaultContact,
               recommendations: 0,
+              id: editId || 0,
+              author: uid || "",
             }}
           />
           <View style={{ alignItems: "flex-end" }}>
