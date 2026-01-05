@@ -5,7 +5,7 @@ import { login, setUserData } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Link, Redirect, router } from "expo-router";
+import { Link, Redirect, router, useLocalSearchParams } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
@@ -33,6 +33,9 @@ AppState.addEventListener("change", (state) => {
 export default function Index() {
   const theme = useTheme();
   const dispatch = useDispatch();
+  const { invite } = useLocalSearchParams<{ invite?: string }>();
+  const inviteUid = typeof invite === "string" ? invite : undefined;
+  const [inviterName, setInviterName] = useState<string | undefined>(undefined);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -57,6 +60,7 @@ export default function Index() {
       options: {
         data: {
           full_name: name,
+          InvitedBy: inviteUid,
         },
         emailRedirectTo: redirectTo,
       },
@@ -104,10 +108,21 @@ export default function Index() {
   useEffect(() => {
     AsyncStorage.setItem("email", email);
   }, [email]);
+  useEffect(() => {
+    if (!inviteUid) return;
+    supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", inviteUid)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.full_name) setInviterName(data.full_name);
+      });
+  }, [inviteUid]);
 
   if (uid) return <Redirect href="/" />;
   return (
-    <ThemedView style={{ flex: 1, padding: 16, alignItems:"center" }}>
+    <ThemedView style={{ flex: 1, padding: 16, alignItems: "center" }}>
       <View style={{ justifyContent: "center", marginBottom: 16 }}></View>
       <View
         style={{
@@ -122,11 +137,18 @@ export default function Index() {
           Juhé!
         </ThemedText>
         <ThemedText>Már csak a fiókodat kell létrehozni:</ThemedText>
+        {inviteUid && (
+          <View style={{ paddingVertical: 8 }}>
+            <ThemedText>
+              {inviterName ? `${inviterName} meghívott, hogy csatlakozz a FiFe Apphoz!` : "Meghívtak, hogy csatlakozz a FiFe Apphoz!"}
+            </ThemedText>
+          </View>
+        )}
         <View>
           <TextInput
             mode="outlined" onChangeText={setName} value={name} label="Neved*" />
           <HelperText type="info">A neved látható lesz mindenki számára, aki tag.</HelperText>
-          
+
         </View><TextInput
           mode="outlined" onChangeText={setEmail} value={email} label="E-mail*" />
         <TextInput

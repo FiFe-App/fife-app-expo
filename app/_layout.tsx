@@ -72,10 +72,15 @@ export default function RootLayout() {
                     name="user/password-reset"
                     options={{ title: "Jelszó visszaállítás" }}
                   />
+                  <Stack.Screen
+                    name="meghivas"
+                    options={{ title: "Meghívás", headerShown: false }}
+                  />
                 </Stack>
                 {pathname !== "/" && !pathname.includes("projekt") &&
                   !pathname.includes("login") &&
                   !pathname.includes("password") &&
+                  !pathname.includes("meghivas") &&
                   !pathname.includes("csatlakozom") && <BottomNavigation />}
               </PaperProvider>
             </PersistGate>

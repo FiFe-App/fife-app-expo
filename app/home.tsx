@@ -1,7 +1,7 @@
 import { theme } from "@/assets/theme";
 import { UsersList } from "@/components/user/UsersList";
 import MapSelector from "@/components/MapSelector/MapSelector";
-import { containerStyle } from "@/components/styles";
+import styles from "@/components/styles";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import {
@@ -24,6 +24,9 @@ import WhatToDo from "@/components/WhatToDo";
 import { Button } from "@/components/Button";
 import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 import { useInfiniteQuery } from "@/hooks/useInfiniteQuery";
+import * as Clipboard from "expo-clipboard";
+import { addSnack } from "@/redux/reducers/infoReducer";
+import * as Sharing from "expo-sharing";
 
 const PAGE_SIZE = Math.floor(Dimensions.get("window").height / 100);
 export default function Index() {
@@ -38,6 +41,7 @@ export default function Index() {
 
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [whatVisible, setWhatVisible] = useState(false);
+  const [inviteVisible, setInviteVisible] = useState(false);
   const { fetch, data, fetchNextPage, hasMore } = useInfiniteQuery({
     tableName: "profiles",
     pageSize: PAGE_SIZE,
@@ -52,6 +56,10 @@ export default function Index() {
     router.push("/biznisz");
   };
 
+  const shareLink = async () => {
+    Sharing.shareAsync(`/meghivas?invited=${uid}`);
+  };
+
 
   useFocusEffect(
     useCallback(() => {
@@ -61,6 +69,7 @@ export default function Index() {
       console.log("skip changed", skip);
       if (uid) dispatch(viewFunction({ key: "homePage", uid }));
       navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={handleSearch} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [skip]),
   );
 
@@ -82,8 +91,45 @@ export default function Index() {
           <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Új fifék Budapesten</ThemedText>
         </View>
         <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} />
+        <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+          <ThemedView style={{ padding: 12, borderRadius: 8 }} type="card">
+            <ThemedText variant="headlineSmall" style={{ marginBottom: 6, color: theme.colors.onSurface }}>
+              Hívj meg másokat is a FiFe App-ba!
+            </ThemedText>
+            <Button mode="text" icon="link" onPress={shareLink}>
+              Meghívó link megnyitása
+            </Button>
+          </ThemedView>
+        </View>
         <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />
         <Portal>
+          <Modal
+            visible={inviteVisible}
+            onDismiss={() => setInviteVisible(false)}
+            contentContainerStyle={{ marginHorizontal: 16 }}
+          >
+            <ThemedView style={[styles.containerStyle]}>
+              <ThemedText style={{ marginBottom: 12 }}>
+                Ha van ismerősöd akiben megbízol és használná a fifeappot, küldd el neki a lenti linket.
+              </ThemedText>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <ThemedText selectable style={{ flex: 1 }}>
+                  fifeapp.hu/csatlakozom?invite={uid}
+                </ThemedText>
+                <Button
+                  icon="content-copy"
+                  onPress={() => {
+                    if (!uid) return;
+                    Clipboard.setStringAsync(`fifeapp.hu/csatlakozom?invite=${uid}`).then(() =>
+                      dispatch(addSnack({ title: "Meghívó link vágólapra másolva!" }))
+                    );
+                  }}
+                >
+                  Másolás
+                </Button>
+              </View>
+            </ThemedView>
+          </Modal>
           <Modal
             visible={locationMenuVisible}
             onDismiss={() => {
@@ -96,7 +142,7 @@ export default function Index() {
               },
             ]}
           >
-            <ThemedView style={containerStyle}>
+            <ThemedView style={styles.containerStyle}>
               <MapSelector
                 data={searchCircle}
                 setData={(sC) => {

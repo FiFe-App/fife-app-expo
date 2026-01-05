@@ -51,7 +51,7 @@ export function Button({
       labelStyle={[
         big && theme.fonts.headlineSmall,
         compact && theme.fonts.labelMedium,
-        { fontFamily: "Piazzolla-ExtraBold", fontWeight: "bold" },
+        { fontFamily: "Piazzolla-ExtraBold", fontWeight: "bold", color: textColor },
       ]}
       style={[
         ButtonPStyle,

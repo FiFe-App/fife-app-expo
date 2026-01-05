@@ -85,7 +85,8 @@
     "resize-observer-polyfill": "^1.5.1",
     "util": "^0.12.5",
     "wkx": "^0.5.0",
-    "expo-build-properties": "~0.13.3"
+    "expo-build-properties": "~0.13.3",
+    "expo-sharing": "~13.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
