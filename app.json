@@ -4,7 +4,7 @@
     "slug": "fife-app-blodqy3cwbfgnkjv24has",
     "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/Slimey.png",
     "scheme": "com.fife.app",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -18,9 +18,8 @@
       "bundleIdentifier": "com.fife.app"
     },
     "android": {
-      "versionCode": 2,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
+        "foregroundImage": "./assets/images/Slimey.png",
         "backgroundColor": "#ffffff"
       },
       "config": {

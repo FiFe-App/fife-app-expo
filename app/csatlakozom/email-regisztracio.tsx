@@ -12,15 +12,9 @@ import { AppState, View } from "react-native";
 
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { makeRedirectUri } from "expo-auth-session";
-import {
-  Button,
-  Checkbox,
-  HelperText,
-  Icon,
-  TextInput,
-  useTheme,
-} from "react-native-paper";
+import { Button, Checkbox, HelperText, Icon, TextInput, useTheme } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import UsernameInput from "@/components/UsernameInput";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -36,6 +30,8 @@ export default function Index() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | undefined>(undefined);
   const [password, setPassword] = useState("");
   const [passwordAgain, setPasswordAgain] = useState("");
   const [acceptConditions, setAcceptConditions] = useState(false);
@@ -57,6 +53,7 @@ export default function Index() {
       options: {
         data: {
           full_name: name,
+          username,
         },
         emailRedirectTo: redirectTo,
       },
@@ -107,7 +104,7 @@ export default function Index() {
 
   if (uid) return <Redirect href="/" />;
   return (
-    <ThemedView style={{ flex: 1, padding: 16, alignItems:"center" }}>
+    <ThemedView style={{ flex: 1, padding: 16, alignItems: "center" }}>
       <View style={{ justifyContent: "center", marginBottom: 16 }}></View>
       <View
         style={{
@@ -124,17 +121,44 @@ export default function Index() {
         <ThemedText>Már csak a fiókodat kell létrehozni:</ThemedText>
         <View>
           <TextInput
-            mode="outlined" onChangeText={setName} value={name} label="Neved*" />
+            mode="outlined"
+            onChangeText={setName}
+            value={name}
+            label="Neved*"
+            autoComplete="name"
+            textContentType="name"
+            autoCapitalize="words"
+            autoCorrect={false}
+          />
           <HelperText type="info">A neved látható lesz mindenki számára, aki tag.</HelperText>
-          
-        </View><TextInput
-          mode="outlined" onChangeText={setEmail} value={email} label="E-mail*" />
+        </View>
+        <UsernameInput
+          value={username}
+          onChangeText={setUsername}
+          onAvailabilityChange={setUsernameAvailable}
+          label="Felhasználónév"
+          style={{ marginTop: 8 }}
+        />
+        <TextInput
+          mode="outlined"
+          onChangeText={setEmail}
+          value={email}
+          label="E-mail*"
+          autoComplete="email"
+          textContentType="emailAddress"
+          inputMode="email"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
         <TextInput
           mode="outlined"
           onChangeText={setPassword}
           value={password}
           label="Jelszó*"
           secureTextEntry={!showPassword}
+          autoComplete="new-password"
+          textContentType="newPassword"
           right={
             <TextInput.Icon
               icon={showPassword ? "eye" : "eye-off"}
@@ -161,6 +185,8 @@ export default function Index() {
           secureTextEntry
           disabled={isPasswordWeak}
           label="Jelszó még egyszer*"
+          autoComplete="new-password"
+          textContentType="newPassword"
           right={
             <TextInput.Icon
               icon={
@@ -189,7 +215,8 @@ export default function Index() {
           loading={loading}
           onPress={createUser}
           disabled={
-            isPasswordWeak || !name || password !== passwordAgain || !acceptConditions
+            isPasswordWeak || !name || password !== passwordAgain || !acceptConditions ||
+            (username.trim().length > 0 && usernameAvailable === false)
           }
         >
           Regisztrálok

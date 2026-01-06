@@ -23,6 +23,9 @@ interface BuzinessItemProps {
 
 const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
   const { author, title, description, id } = data;
+  console.log(data?.recommendations?.[0]?.count, data.recommendations);
+
+  const recommendations = typeof data?.recommendations?.[0]?.count === "number" ? data?.recommendations?.[0]?.count : data.recommendations;
   const { uid } = useSelector((state: RootState) => state.user);
   const myBuziness = author === uid;
   const dispatch = useDispatch();
@@ -70,7 +73,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1 }}>
               <ThemedText variant="titleMedium" type="title" style={{}}>{categories?.[0]}</ThemedText>
-              <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4, marginTop:4 }}>
+              <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4, marginTop: 4 }}>
                 {categories?.slice(1).map((e, i) => {
                   if (e.trim())
                     return (
@@ -82,23 +85,23 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
               </View>
             </View>
           </View>
-          <View style={{flexWrap:"wrap",flexDirection:"row",gap:4}}>
+          <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4 }}>
             <View style={{ flexDirection: "row" }}>
               <Text>
-                <Icon size={16} source="account-group" />{" "}
-                <Text>{data?.recommendations} ember ajánlja</Text>
+                <Icon size={16} source="account-group" />
+                <Text style={{ marginLeft: 4 }}>{recommendations} ember ajánlja</Text>
               </Text>
             </View>
             <View style={{ flexDirection: "row" }}>
               <Text>
-                <Icon size={16} source="image" />{" "}
-                <Text>{data?.images?.length || 0} kép</Text>
+                <Icon size={16} source="image" />
+                <Text style={{ marginLeft: 4 }}>{data?.images?.length || 0} kép</Text>
               </Text>
             </View>
-            {distanceText && <View style={{ flexDirection: "row" }}>
+            {!!distanceText && <View style={{ flexDirection: "row" }}>
               <Text>
-                <Icon size={16} source="map-marker" />{" "}
-                <Text>{distanceText}</Text>
+                <Icon size={16} source="map-marker" />
+                <Text style={{ marginLeft: 4 }}>{distanceText}</Text>
               </Text>
             </View>}
           </View>
@@ -136,6 +139,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: 4,
     padding: 8,
-    gap:4,
+    gap: 4,
   },
 });

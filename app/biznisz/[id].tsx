@@ -44,9 +44,11 @@ import {
   Text,
   TouchableRipple,
 } from "react-native-paper";
-import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
+// Removed tabs; sections will be stacked vertically
 import { useDispatch, useSelector } from "react-redux";
-import { MyAppbar } from "../_layout";
+import { MyAppbar } from "@/components/MyAppBar";
+import typeToIcon from "@/lib/functions/typeToIcon";
+import UrlText from "@/components/comments/UrlText";
 
 export default function Index() {
   const { id: paramId } = useGlobalSearchParams();
@@ -189,7 +191,9 @@ export default function Index() {
                   );
               })}
             </View>
-            <CollapsibleText>{data.description}</CollapsibleText>
+            <CollapsibleText>
+              <UrlText text={data.description} />
+            </CollapsibleText>
             <View style={{ width: "100%", flexDirection: "row", alignItems: "flex-start" }}>
               <Link
                 asChild
@@ -242,7 +246,7 @@ export default function Index() {
                 </Text>
               </TouchableRipple>
             </View>
-            <View style={{ flexDirection: "row", gap: 4, padding: 4 }}>
+            <View style={{ flexWrap: "wrap", gap: 4, padding: 4 }}>
               {myBuziness && (
                 <Button
                   style={{ flex: 1 }}
@@ -255,7 +259,7 @@ export default function Index() {
               )}
               {defaultContact && (
                 <Link asChild href={getLinkForContact(defaultContact)}>
-                  <Button style={{ flex: 1 }} mode="contained">
+                  <Button style={{ flex: 1 }} mode="contained-tonal" icon={typeToIcon(defaultContact.type)}>
                     {defaultContact.title || defaultContact?.data}
                   </Button>
                 </Link>
@@ -284,127 +288,108 @@ export default function Index() {
                 />
               )}
             </View>
-            <TabsProvider defaultIndex={0} >
-              <Tabs showTextLabel={width > 400} theme={theme} style={{ backgroundColor: theme.colors.background, height: 20 }} >
-                {data.location && (
-                  <TabScreen label="Helyzete" icon="map-marker">
-                    <View style={{ minHeight: 200, flex: 1 }}>
-                      <MapView
-                        // @ts-expect-error options type are colliding in different mapViews
-                        options={{
-                          mapTypeControl: false,
-                          fullscreenControl: false,
-                          streetViewControl: false,
-                          zoomControl: false,
-                        }}
-                        style={{ width: "100%", height: "100%" }}
-                        initialCamera={{
-                          altitude: 10,
-                          center: location || {
-                            latitude: 47.4979,
-                            longitude: 19.0402,
-                          },
-                          heading: 0,
-                          pitch: 0,
-                          zoom: 12,
-                        }}
-                        provider="google"
-                        googleMapsApiKey={
-                          process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
-                        }
-                        pitchEnabled={false}
-                        rotateEnabled={false}
-                        toolbarEnabled={false}
+            {/* Vertical sections instead of tabs */}
+            {data.location && (
+              <View style={{ marginTop: 8 }}>
+                <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Helyzete</Text>
+                <View style={{ minHeight: 200, flex: 1 }}>
+                  <MapView
+                    // @ts-expect-error options type are colliding in different mapViews
+                    options={{
+                      mapTypeControl: false,
+                      fullscreenControl: false,
+                      streetViewControl: false,
+                      zoomControl: false,
+                    }}
+                    style={{ width: "100%", height: 240 }}
+                    initialCamera={{
+                      altitude: 10,
+                      center: location || {
+                        latitude: 47.4979,
+                        longitude: 19.0402,
+                      },
+                      heading: 0,
+                      pitch: 0,
+                      zoom: 12,
+                    }}
+                    provider="google"
+                    googleMapsApiKey={
+                      process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+                    }
+                    pitchEnabled={false}
+                    rotateEnabled={false}
+                    toolbarEnabled={false}
+                  >
+                    {location && <Marker coordinate={location} />}
+                    {myLocation && (
+                      <Marker
+                        centerOffset={{ x: 10, y: 10 }}
+                        coordinate={myLocation?.coords}
+                        style={{ justifyContent: "center", alignItems: "center" }}
                       >
-                        {location && <Marker coordinate={location} />}
-                        {myLocation && (
-                          <Marker
-                            centerOffset={{ x: 10, y: 10 }}
-                            coordinate={myLocation?.coords}
-                            style={{
-                              justifyContent: "center",
-                              alignItems: "center",
-                            }}
-                          >
-                            <MyLocationIcon style={{ width: 20, height: 20 }} />
-                          </Marker>
-                        )}
-                      </MapView>
-                      {location && (
-                        <IconButton
-                          icon="directions"
-                          mode="contained"
-                          onPress={() =>
-                            openMap({
-                              latitude: location.latitude,
-                              longitude: location.longitude,
-                              navigate: true,
-                              start: "My Location",
-                              travelType: "public_transport",
-                              end: location.latitude + "," + location.longitude,
-                            })
-                          }
-                          style={{ right: 4, bottom: 17, position: "absolute" }}
-                        />
+                        <MyLocationIcon style={{ width: 20, height: 20 }} />
+                      </Marker>
+                    )}
+                  </MapView>
+                  {location && (
+                    <IconButton
+                      icon="directions"
+                      mode="contained"
+                      onPress={() =>
+                        openMap({
+                          latitude: location.latitude,
+                          longitude: location.longitude,
+                          navigate: true,
+                          start: "My Location",
+                          travelType: "public_transport",
+                          end: location.latitude + "," + location.longitude,
+                        })
+                      }
+                      style={{ right: 4, bottom: 17, position: "absolute" }}
+                    />
+                  )}
+                </View>
+              </View>
+            )}
+
+            {images.length > 0 && (
+              <View style={{ marginTop: 16 }}>
+                <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Képek</Text>
+                {images.map((image, ind) => (
+                  <View key={"image-" + ind} style={{ width: "100%" }}>
+                    <ImageModal
+                      source={{ uri: image.url }}
+                      resizeMode="contain"
+                      modalImageResizeMode="contain"
+                      overlayBackgroundColor="#00000096"
+                      style={{ width: width, height: 200 }}
+                      renderFooter={() => (
+                        <ScrollView style={{ maxHeight: 250 }}>
+                          <ThemedText style={{ color: "white", textShadowColor: "black", textShadowRadius: 3 }}>
+                            {image.description}
+                          </ThemedText>
+                        </ScrollView>
                       )}
+                    />
+                    <View style={{ padding: 4 }}>
+                      <CollapsibleText>
+                        {image.description}
+                      </CollapsibleText>
                     </View>
-                  </TabScreen>
-                )}
-                {images.length && (
-                  <TabScreen label="Képek" icon="image">
-                    <ScrollView
-                      style={{ flexGrow: 1 }}
-                      contentContainerStyle={{ width: "100%" }}
-                    >
-                      {images.map((image, ind) => {
-                        return (
-                          <View key={"image-" + ind} style={{ width: "100%" }}>
-                            <ImageModal
-                              source={{ uri: image.url }}
-                              resizeMode="cover"
-                              modalImageResizeMode="contain"
-                              overlayBackgroundColor="#00000096"
-                              style={{ width: width, height: 200 }}
-                              renderFooter={() => (
-                                <ScrollView style={{ maxHeight: 250 }}>
-                                  <ThemedText
-                                    style={{
-                                      color: "white",
-                                      textShadowColor: "black",
-                                      textShadowRadius: 3,
-                                    }}
-                                  >
-                                    {image.description}
-                                  </ThemedText>
-                                </ScrollView>
-                              )}
-                            />
-                            <View style={{ padding: 4 }}>
-                              <CollapsibleText>
-                                {image.description}
-                              </CollapsibleText>
-                            </View>
-                          </View>
-                        );
-                      })}
-                    </ScrollView>
-                  </TabScreen>
-                )}
-                <TabScreen label="Elérhetőségek" icon="contacts">
-                  <ContactList uid={data.author} />
-                </TabScreen>
-                <TabScreen
-                  label="Vélemények"
-                  icon="chat"
-                  badge={commentsCount || undefined}
-                >
-                  <Comments
-                    path={"buziness/" + id}
-                    placeholder="Mondd el a véleményed"
-                  />
-                </TabScreen>
-              </Tabs>
-            </TabsProvider>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <View style={{ marginTop: 16 }}>
+              <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Elérhetőségek</Text>
+              <ContactList uid={data.author} />
+            </View>
+
+            <View style={{ marginTop: 16 }}>
+              <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Vélemények</Text>
+              <Comments path={"buziness/" + id} placeholder="Mondd el a véleményed" />
+            </View>
           </>
         )}
         {!!title && (

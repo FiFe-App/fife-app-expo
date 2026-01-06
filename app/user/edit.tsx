@@ -3,6 +3,7 @@ import MapSelector from "@/components/MapSelector/MapSelector";
 import ProfileImage from "@/components/ProfileImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
 import style from "@/components/styles";
 import { supabase } from "@/lib/supabase/supabase";
@@ -40,13 +41,14 @@ export default function Index() {
   const [imageLoading, setImageLoading] = useState(false);
   const [profile, setProfile] = useState<UserInfo>({});
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | undefined>(undefined);
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
       | PostgrestSingleResponse<unknown>
       | {
           error: string;
-        }
+      }
       | undefined
     >;
       }>(null);
@@ -115,17 +117,19 @@ export default function Index() {
             title: "Mentés",
             icon: "check",
             onPress: save,
-            disabled: !profile?.full_name,
+            disabled:
+              !profile?.full_name ||
+              (!!profile?.username && usernameAvailable === false),
           },
         ]),
       );
-      return () => {};
-    }, [dispatch, myUid, profile]),
+      return () => { };
+    }, [dispatch, myUid, profile, usernameAvailable]),
   );
   useFocusEffect(
     useCallback(() => {
       load();
-      return () => {};
+      return () => { };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [myUid]),
   );
@@ -166,7 +170,7 @@ export default function Index() {
         console.log("upload", data);
         if (error)
           console.log(error);
-        
+
         if (data?.path && myUid)
           supabase
             .from("profiles")
@@ -217,7 +221,20 @@ export default function Index() {
             label="Teljes név* (kötelező)"
             value={profile?.full_name || ""}
             disabled={loading}
+            autoComplete="name"
+            textContentType="name"
+            autoCapitalize="words"
+            autoCorrect={false}
             onChangeText={(t) => setProfile({ ...profile, full_name: t })}
+          />
+          <UsernameInput
+            label="Felhasználónév"
+            value={profile?.username || ""}
+            disabled={loading}
+            excludeUid={myUid}
+            onAvailabilityChange={setUsernameAvailable}
+            onChangeText={(t) => setProfile({ ...profile, username: t })}
+            style={{ marginTop: 8 }}
           />
           <View style={{ padding: 16 }}>
             <ThemedText type="label">Email, amivel regisztráltál:</ThemedText>

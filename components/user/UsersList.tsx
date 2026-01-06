@@ -1,20 +1,22 @@
-import React from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import React, { useRef } from "react";
+import { View, StyleSheet, FlatList } from "react-native";
 import { Divider, ActivityIndicator } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import UserItem from "./UserItem";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
-import Measure from "../tutorial/Measure";
+import { Tables } from "@/database.types";
 
 
 interface UsersListProps {
   load: () => void;
+  data: Tables<"profiles">[];
   canLoadMore: boolean;
 }
 
 export const UsersList: React.FC<UsersListProps> = ({
   load,
+  data,
   canLoadMore,
 }) => {
   const { users, userSearchParams } = useSelector(
@@ -24,48 +26,38 @@ export const UsersList: React.FC<UsersListProps> = ({
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          gap: 8,
-          marginVertical: 8,
-        }}
-        onScroll={({ nativeEvent }) => {
-          if (!canLoadMore || loading) return;
-          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-          const isBottom =
-            layoutMeasurement.height + contentOffset.y >= contentSize.height - 24;
-          if (isBottom && canLoadMore && !loading) {
-            load();
-          }
-        }}
-        scrollEventThrottle={100}
-      >
-        {users.map((userItem,ind) =>
-          userItem.id === "-1" ? (
-            <Divider
-              key={Math.random() * 100000 + 100000 + "div"}
-              style={{ marginVertical: 16 }}
-            />
+      <FlatList
+        data={data}
+        keyExtractor={(item, index) => item.id === "-1" ? `divider-${index}` : item.id}
+        renderItem={({ item }) =>
+          item.id === "-1" ? (
+            <Divider style={{ marginVertical: 16 }} />
           ) : (
-            <Measure key={userItem.id}  name={ind==0 ? "first-user": ""}>
-              <View>
-                <UserItem data={userItem} />
-              </View>
-            </Measure>
-          ),
-        )}
-        <View style={{ padding: 16 }}>
-          {!loading &&
-            (!!users.length && canLoadMore ? (
-              loading && <ActivityIndicator />
+            <UserItem data={item} />
+          )
+        }
+        ListFooterComponent={
+          <View style={{ padding: 16 }}>
+            {(!!users.length && canLoadMore ? (
+              <ActivityIndicator />
             ) : (
               <ThemedText style={{ alignSelf: "center" }}>
                 Nem található több fife
               </ThemedText>
             ))}
-        </View>
-      </ScrollView>
+          </View>
+        }
+        onEndReached={() => {
+          if (canLoadMore && !loading) {
+            load();
+          }
+        }}
+        onEndReachedThreshold={0.7}
+        contentContainerStyle={{
+          gap: 8,
+          marginVertical: 8,
+        }}
+      />
 
       {userSearchParams?.loading && !users.length && (
         <View style={{ flex: 1 }}>

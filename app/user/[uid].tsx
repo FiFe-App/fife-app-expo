@@ -10,6 +10,7 @@ import {
   clearBuzinessSearchParams,
 } from "@/redux/reducers/buzinessReducer";
 import { setOptions } from "@/redux/reducers/infoReducer";
+import { addSnack } from "@/redux/reducers/infoReducer";
 import { logout } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { TutorialState, UserState } from "@/redux/store.type";
@@ -22,27 +23,27 @@ import {
   useGlobalSearchParams,
 } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import {
   Badge,
   Button,
+  Icon,
   Portal,
   Text,
   TouchableRipple,
 } from "react-native-paper";
+import * as Clipboard from "expo-clipboard";
 import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 
 import { useDispatch, useSelector } from "react-redux";
 import globStyles from "@/constants/Styles";
 import {
   clearTutorialState,
-  setTutorialActive,
-  setTutorialStep,
-  startTutorial,
   viewFunction,
 } from "@/redux/reducers/tutorialReducer";
 import { theme } from "@/assets/theme";
 import Measure from "@/components/tutorial/Measure";
+import { SavedProfiles } from "@/components/buziness/SavedProfiles";
 
 type UserInfo = Tables<"profiles">;
 
@@ -57,6 +58,7 @@ export default function Index() {
   );
 
   const dispatch = useDispatch();
+  const { width } = useWindowDimensions();
   const myProfile = myUid === uid;
   const [data, setData] = useState<UserInfo | null>(null);
   const [recommendations, setRecommendations] = useState<string[]>([]);
@@ -126,7 +128,7 @@ export default function Index() {
                   modal
                   uid={uid}
                   avatar_url={data.avatar_url}
-                  style={{ width: 100, height: 100 }}
+                  style={{ width: 100, height: 100, borderRadius: 8 }}
                 />
                 <View style={{ flex: 1 }}>
                   <View
@@ -137,6 +139,24 @@ export default function Index() {
                     }}
                   >
                     <Text variant="titleLarge">{data?.full_name}</Text>
+                    {!!data?.username && (
+                      <TouchableRipple
+                        onPress={() => {
+                          Clipboard.setStringAsync(`www.fifeapp.hu/@${data.username}`).then(() => {
+                            dispatch(addSnack({ title: "Vágólapra másolva!" }));
+                          });
+                        }}
+                        style={{ borderRadius: 4, alignSelf: "flex-start" }}
+                      >
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                          <Text variant="labelMedium">
+                            @{data.username}
+                          </Text>
+                          <Icon source="content-copy" size={16} />
+                        </View>
+
+                      </TouchableRipple>
+                    )}
                   </View>
                   <View style={{ flexDirection: "row", flex: 1 }}>
                     <TouchableRipple
@@ -211,7 +231,7 @@ export default function Index() {
               </View>
             </ThemedView>
             <TabsProvider defaultIndex={0}>
-              <Tabs theme={theme} style={{ backgroundColor: theme.colors.background }}>
+              <Tabs showTextLabel={width > 400} theme={theme} style={{ backgroundColor: theme.colors.background }}>
                 <TabScreen
                   label="Bizniszek"
                   badge={
@@ -233,6 +253,12 @@ export default function Index() {
                   icon="email-multiple"
                 >
                   <ContactList uid={uid} edit={myProfile} />
+                </TabScreen>
+                <TabScreen
+                  label="Kapcsolatok"
+                  icon="account-group"
+                >
+                  <SavedProfiles uid={uid} />
                 </TabScreen>
               </Tabs>
             </TabsProvider>
