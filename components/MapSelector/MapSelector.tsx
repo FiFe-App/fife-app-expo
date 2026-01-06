@@ -24,6 +24,7 @@ import styles from "../mapView/style";
 import { ThemedText } from "../ThemedText";
 import { MapSelectorProps } from "./MapSelector.types";
 import { CircleType } from "@/redux/store.type";
+import { useTranslation } from "react-i18next";
 
 const defaultMapLocation = {
   location: {
@@ -42,6 +43,7 @@ const MapSelector = ({
   setOpen,
   markerOnly,
 }: MapSelectorProps) => {
+  const { t } = useTranslation();
   const [mapHeight, setMapHeight] = useState<number>(0);
   const circleSize = mapHeight / 3;
   const [circleRadiusText, setCircleRadiusText] = useState("");
@@ -153,7 +155,7 @@ const MapSelector = ({
         <View style={{ zIndex: 10, padding: 10, position: "absolute", width: "100%" }}>
           <TextInput
             inputMode="search"
-            placeholder="Keress címre..."
+            placeholder={t("mapSelector.searchPlaceholder")}
             onChangeText={(text) => {
               setSearch(text);
               debouncedSearch(text);
@@ -324,14 +326,14 @@ const MapSelector = ({
               mode="elevated"
               onPress={() => setOpen(false)}
             >
-              Mégsem
+              {t("mapSelector.cancel")}
             </Button>
             <Button
               mode="contained"
               onPress={onSubmit}
               disabled={!circle}
             >
-              <Text>Kiválasztás</Text>
+              <Text>{t("mapSelector.select")}</Text>
             </Button>
           </View>
         </View>

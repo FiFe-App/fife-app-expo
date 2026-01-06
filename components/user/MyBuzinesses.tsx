@@ -10,6 +10,7 @@ import { useDispatch } from "react-redux";
 import BuzinessItem from "../buziness/BuzinessItem";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
+import { useTranslation } from "react-i18next";
 
 interface MyBuzinessesProps {
   uid: string;
@@ -17,6 +18,7 @@ interface MyBuzinessesProps {
 }
 
 const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>(
     [],
@@ -74,28 +76,25 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
               />
               <View style={{alignItems:"center",justifyContent:"center" ,flex:1,gap:16}}>
                 <ThemedText type="subtitle">
-                  Itt fognak megjelenni a saját bizniszeid.
+                  {t("myBuzinesses.empty")}
                 </ThemedText>
                 <FAB
                   icon={"plus"}
-                  label={"Új biznisz"}
+                  label={t("myBuzinesses.newBiznisz")}
                   visible={myProfile}
                   onPress={() => router.push("/biznisz/new")}
                 />
               </View>
             </ThemedView>
             <Text>
-              A te bizniszeid azon hobbijaid, képességeid vagy szakmáid listája,
-              amelyeket meg szeretnél osztani másokkal is. {"\n"}Ha, mondjuk,
-              futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid
-              közé, mások által megtalálható leszel a süti kulcsszóval.
+              {t("myBuzinesses.description")}
             </Text>
           </View>
         )}
       </ScrollView>
       {!!buzinesses.length && <FAB
         icon={"plus"}
-        label={"Új biznisz"}
+        label={t("myBuzinesses.newBiznisz")}
         style={[styles.fabStyle]}
         visible={myProfile}
         onPress={() => router.push("/biznisz/new")}

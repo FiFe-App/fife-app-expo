@@ -16,6 +16,7 @@ import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import typeToValueLabel from "@/lib/functions/typeToValueLabel";
 import typeToPrefix from "@/lib/functions/typeToPrefix";
 import typeToPlaceholder from "@/lib/functions/typeToPlaceholder";
+import { useTranslation } from "react-i18next";
 
 export interface ContactListProps {
   uid: string;
@@ -23,6 +24,7 @@ export interface ContactListProps {
 }
 
 export function ContactList({ uid, edit }: ContactListProps) {
+  const { t } = useTranslation();
   const [contacts, setContacts] = useState<Tables<"contacts">[]>([]);
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
@@ -69,7 +71,7 @@ export function ContactList({ uid, edit }: ContactListProps) {
                       Clipboard.setStringAsync(contact.data).then((res) => {
                         dispatch(
                           addSnack({
-                            title: "Vágólapra másolva!",
+                            title: t("common.copiedToClipboard"),
                           }),
                         );
                       });
@@ -97,8 +99,7 @@ export function ContactList({ uid, edit }: ContactListProps) {
                     style={{ height: 200, width: 200 }}
                   />
                   <ThemedText type="subtitle">
-                    Itt fognak megjelenni az elérhetőségeid, hogy könnyebben
-                    elérjenek.
+                    {t("contacts.empty")}
                   </ThemedText>
                 </View>
               ))}
@@ -109,7 +110,7 @@ export function ContactList({ uid, edit }: ContactListProps) {
       {edit && (
         <FAB
           icon={"pencil"}
-          label={"Szerkesztés"}
+          label={t("navigation.editProfile")}
           style={[styles.fabStyle]}
           onPress={() => router.push("/user/edit")}
         />

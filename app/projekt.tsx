@@ -7,10 +7,12 @@ import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 import { Link } from "expo-router";
 import { Footer } from "./index";
 import { theme } from "@/assets/theme";
+import { useTranslation } from "react-i18next";
 
 
 const AboutMe = () => {
   const { isDesktop } = useBreakpoint();
+  const { t } = useTranslation();
   return (
     <View style={{ marginHorizontal: 32 }}>
       <ThemedView
@@ -23,20 +25,20 @@ const AboutMe = () => {
             { gap: 16, width: "100%", alignItems: "flex-start", zIndex: 10 },
           ]}
         >
-          <Text variant="displayMedium">Csatlakozz a FiFe  App csapatához!</Text>
+          <Text variant="displayMedium">{t("projekt.title")}</Text>
           <Text variant="bodyLarge">
-            Ez egy nonprofit, open source projekt, így mindig elkél a segítség.
+            {t("projekt.description")}
           </Text>
           <Text variant="displaySmall">
-            Szükségünk van:
+            {t("projekt.needs")}
           </Text>
           <View style={{ gap: 4 }}>
-            <Text variant="bodyLarge">• React Native fejlesztőre</Text>
-            <Text variant="bodyLarge">• Jogi tanácsadóra</Text>
-            <Text variant="bodyLarge">• Pályázatra</Text>
+            <Text variant="bodyLarge">{t("projekt.reactDeveloper")}</Text>
+            <Text variant="bodyLarge">{t("projekt.legalAdvisor")}</Text>
+            <Text variant="bodyLarge">{t("projekt.funding")}</Text>
           </View>
           <Text variant="bodyLarge">
-            Ha beszállnál, írj egy e-mailt ide: <Text variant="bodyLarge" style={{color:theme.colors.tertiary}}><Link href="mailto:kristofakos1229@gmail.com">kristofakos1229@gmail.com</Link></Text>
+            {t("projekt.contact")} <Text variant="bodyLarge" style={{color:theme.colors.tertiary}}><Link href="mailto:kristofakos1229@gmail.com">kristofakos1229@gmail.com</Link></Text>
           </Text>
           <ThemedView responsive={1000} style={{ gap: 16, zIndex: 10 }}>
             <Link href="https://github.com/FiFe-App/fife-app-expo" asChild>

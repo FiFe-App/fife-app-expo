@@ -1,26 +1,28 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Image } from "expo-image";
-import { View, Modal, StyleSheet, Pressable, TextInput } from "react-native";
+import { View, Modal, StyleSheet, Pressable, TextInput, Text as RNText } from "react-native";
 import { useState, useRef, useCallback } from "react";
 import { Icon, Text } from "react-native-paper";
 import { Button } from "@/components/Button";
 import { useFocusEffect, router } from "expo-router";
 import { ThemedInput } from "@/components/ThemedInput";
-
-const iranyelvekList = [
-  "Nem leszek rosszindulatú senkivel!",
-  "Saját és mások érdekeit is figyelembe veszem!",
-  "Ha valaki bántóan viselkedik velem vagy mással, jelentem!",
-];
-
-const textToType = "Nem leszek rosszindulatú";
+import { useTranslation } from "react-i18next";
 
 const Megbizhatosag = () => {
+  const { t } = useTranslation();
   const [modalVisible, setModalVisible] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [typed, setTyped] = useState("");
   const textInput = useRef<TextInput>(null);
+  
+  const iranyelvekList = [
+    t("csatlakozom.guideline1"),
+    t("csatlakozom.guideline2"),
+    t("csatlakozom.guideline3"),
+  ];
+  
+  const textToType = t("csatlakozom.guidelineText");
 
   const handleTextInput = (input: string) => {
     if (
@@ -52,19 +54,11 @@ const Megbizhatosag = () => {
   return (
     <ThemedView style={{ flex: 1, paddingTop: 36, alignItems: "center" }}>
       <View style={{ flex: 1 }}>
-        <ThemedText
-          type="title"
-          style={{ textAlign: "left", marginBottom: 16 }}
-        >
-          Bizalom a platformon.
+        <ThemedText type="title" style={{ textAlign: "left", marginBottom: 16 }}>
+          {t("csatlakozom.trustOnPlatform")}
         </ThemedText>
         <ThemedText>
-          Ezen a közösségi oldalon nagy eséllyel ismeretlen emberekkel fog
-          összefújni a szél. Mivel sokan okkal nem bíznak meg másokban, ezen a
-          platformon figyelünk arra, hogy legyen alapja a bizalomnak. {"\n\n"}Ha
-          találkozol itt valakivel, akiben megbízol, és tudod, hogy nem vágna át
-          másokat, megbízhatónak jelölheted a profilján, így támogatva és a
-          bizalom által építve a közösségünket.
+          {t("csatlakozom.trustDescription")}
         </ThemedText>
         <View style={{ alignItems: "center", paddingTop: 32 }}>
           <Button
@@ -74,7 +68,7 @@ const Megbizhatosag = () => {
             disabled={accepted}
             style={{ marginBottom: 16, minWidth: 220 }}
           >
-            Irányelvek {accepted ? "elfogadva" : "elfogadása"}
+            {accepted ? t("csatlakozom.guidelinesAccepted") : t("csatlakozom.guidelinesAccept")}
           </Button>
         </View>
 
@@ -97,7 +91,7 @@ const Megbizhatosag = () => {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <ThemedText type="title" style={{ marginBottom: 16 }}>
-                Irányelveink:
+                {t("csatlakozom.ourGuidelines")}
               </ThemedText>
               <View style={{ alignItems: "flex-start" }}>
                 {iranyelvekList.map((item, idx) => (
@@ -108,7 +102,7 @@ const Megbizhatosag = () => {
               </View>
               <View style={{ marginVertical: 20 }}>
                 <ThemedText style={{ fontWeight: "bold" }}>
-                  Ha be fogod tartani ezeket, gépeld be a következő szöveget:
+                  {t("csatlakozom.guidelinePrompt")}
                 </ThemedText>
                 <Pressable
                   style={styles.inputView}
@@ -122,11 +116,11 @@ const Megbizhatosag = () => {
                   accessible={true}
                   accessibilityRole="text"
                 >
-                  <Text pointerEvents="none"
+                  <RNText
                     style={[styles.textToType, { opacity: 0.5 }]}
                   >
                     {textToType}
-                  </Text>
+                  </RNText>
                   <ThemedInput
                     mode="outlined"
                     ref={textInput}
@@ -140,14 +134,13 @@ const Megbizhatosag = () => {
                     }}
                     onChangeText={handleTextInput}
                   />
-                  <Text style={[styles.textToType, {}]}
-                    pointerEvents="none">{typed}</Text>
+                  <RNText style={[styles.textToType, {}]}>{typed}</RNText>
                 </Pressable>
               </View>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", width: "100%", gap: 16 }}>
 
                 <Button mode="text" onPress={() => setModalVisible(false)}>
-                  Mégsem
+                  {t("csatlakozom.cancel")}
                 </Button>
                 <Button
                   mode="contained"
@@ -156,7 +149,7 @@ const Megbizhatosag = () => {
                     setModalVisible(false);
                   }}
                   disabled={!canAccept}
-                >Elfogadom</Button>
+                >{t("csatlakozom.accept")}</Button>
               </View>
             </View>
           </View>

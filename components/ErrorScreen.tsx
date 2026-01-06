@@ -3,6 +3,7 @@ import { Icon, Button } from "react-native-paper";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 interface ErrorScreenProps {
   icon?: string;
@@ -12,9 +13,10 @@ interface ErrorScreenProps {
 
 const ErrorScreen = ({
   icon = "emoticon-sad",
-  title = "A manóba!",
-  text = "Valami hiba történt",
+  title,
+  text,
 }: ErrorScreenProps) => {
+  const { t } = useTranslation();
   return (
     <ThemedView
       style={{
@@ -26,13 +28,13 @@ const ErrorScreen = ({
     >
       <Icon source={icon} size={100} />
       <ThemedText type="title" style={{ textAlign: "center" }}>
-        {title}
+        {title || "A manóba!"}
       </ThemedText>
       <View style={{ alignItems: "center" }}>
-        <ThemedText>{text}</ThemedText>
+        <ThemedText>{text || "Valami hiba történt"}</ThemedText>
       </View>
       <Link asChild href="/">
-        <Button mode="contained">Vissza a főoldalra</Button>
+        <Button mode="contained">{t("common.backToHome")}</Button>
       </Link>
     </ThemedView>
   );

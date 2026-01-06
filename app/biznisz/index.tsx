@@ -24,8 +24,10 @@ import { Button } from "@/components/Button";
 import { useBuzinessSearch } from "@/hooks/useBuzinessSearch";
 import Measure from "@/components/tutorial/Measure";
 import { MyAppbar } from "@/components/MyAppBar";
+import { useTranslation } from "react-i18next";
 
 export default function Index() {
+  const { t } = useTranslation();
   const { uid } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
   const { searchParams, buzinesses } = useSelector(
@@ -57,9 +59,9 @@ export default function Index() {
       <ThemedView style={{ flex: 1 }} type="default">
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
 
-          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Találatok</ThemedText>
+          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>{t("search.results")}</ThemedText>
           <Measure name="filter">
-            <View><Button icon='filter' mode="text" onPress={() => setLocationMenuVisible(true)}>Finomítás</Button></View>
+            <View><Button icon='filter' mode="text" onPress={() => setLocationMenuVisible(true)}>{t("search.refine")}</Button></View>
           </Measure>
         </View>
         {searchType === "list" || !searchType ? (

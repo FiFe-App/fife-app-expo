@@ -15,6 +15,7 @@ import { makeRedirectUri } from "expo-auth-session";
 import { Button, Checkbox, HelperText, Icon, TextInput, useTheme } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import UsernameInput from "@/components/UsernameInput";
+import { useTranslation } from "react-i18next";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -25,6 +26,7 @@ AppState.addEventListener("change", (state) => {
 });
 
 export default function Index() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const dispatch = useDispatch();
 
@@ -77,7 +79,7 @@ export default function Index() {
           );
           console.log(signInResponse.error.code);
           if (signInResponse.error.code === "invalid_credentials") {
-            setError("Ez az email már foglalt");
+            setError(t("csatlakozom.emailAlreadyTaken"));
           } else {
             setError(signInResponse.error.message);
           }
@@ -85,7 +87,7 @@ export default function Index() {
           console.log("Successfully signed in existing user!");
           dispatch(login(signInResponse.data.user.id));
           dispatch(setUserData(signInResponse.data.user));
-          dispatch(addSnack({ title: "Bejelentkeztél!" }));
+          dispatch(addSnack({ title: t("csatlakozom.loggedIn") }));
           router.navigate("/home");
         }
       }
@@ -116,34 +118,34 @@ export default function Index() {
         }}
       >
         <ThemedText type="title" style={{ textAlign: "left" }}>
-          Juhé!
+          {t("csatlakozom.yay")}
         </ThemedText>
-        <ThemedText>Már csak a fiókodat kell létrehozni:</ThemedText>
+        <ThemedText>{t("csatlakozom.createAccountPrompt")}</ThemedText>
         <View>
           <TextInput
             mode="outlined"
             onChangeText={setName}
             value={name}
-            label="Neved*"
+            label={t("csatlakozom.nameLabel")}
             autoComplete="name"
             textContentType="name"
             autoCapitalize="words"
             autoCorrect={false}
           />
-          <HelperText type="info">A neved látható lesz mindenki számára, aki tag.</HelperText>
+          <HelperText type="info">{t("csatlakozom.nameHelper")}</HelperText>
         </View>
         <UsernameInput
           value={username}
           onChangeText={setUsername}
           onAvailabilityChange={setUsernameAvailable}
-          label="Felhasználónév"
+          label={t("csatlakozom.usernameLabel")}
           style={{ marginTop: 8 }}
         />
         <TextInput
           mode="outlined"
           onChangeText={setEmail}
           value={email}
-          label="E-mail*"
+          label={t("csatlakozom.emailLabel")}
           autoComplete="email"
           textContentType="emailAddress"
           inputMode="email"
@@ -155,7 +157,7 @@ export default function Index() {
           mode="outlined"
           onChangeText={setPassword}
           value={password}
-          label="Jelszó*"
+          label={t("csatlakozom.passwordLabel")}
           secureTextEntry={!showPassword}
           autoComplete="new-password"
           textContentType="newPassword"
@@ -175,7 +177,7 @@ export default function Index() {
             />
           </View>
           <ThemedText type="label">
-            Tartalmazzon kis- és nagybetűt, valamint számot is.
+            {t("csatlakozom.passwordRequirement")}
           </ThemedText>
         </View>
         <TextInput
@@ -184,7 +186,7 @@ export default function Index() {
           value={passwordAgain}
           secureTextEntry
           disabled={isPasswordWeak}
-          label="Jelszó még egyszer*"
+          label={t("csatlakozom.passwordAgainLabel")}
           autoComplete="new-password"
           textContentType="newPassword"
           right={
@@ -203,9 +205,9 @@ export default function Index() {
             status={acceptConditions ? "checked" : "unchecked"}
           />
           <ThemedText variant="labelLarge" onPress={() => setAcceptConditions(!acceptConditions)}>
-            Elfogadom a
+            {t("csatlakozom.acceptTerms")}
             <ThemedText variant="labelLarge" type="link">
-              <Link href="/csatlakozom/iranyelvek"> feltételeket</Link>
+              <Link href="/csatlakozom/iranyelvek">{t("csatlakozom.terms")}</Link>
             </ThemedText>
             .
           </ThemedText>
@@ -219,7 +221,7 @@ export default function Index() {
             (username.trim().length > 0 && usernameAvailable === false)
           }
         >
-          Regisztrálok
+          {t("csatlakozom.register")}
         </Button>
         <HelperText type="error" visible={!!error}>
           {error}
