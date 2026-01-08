@@ -1,7 +1,7 @@
 # Üdvözöllek a FiFe app repójában!
 Nonprofit, open-source Expo (React Native) app, Supabase backenddel.
 
-# Egy új közösségi felület
+# Egy segítői hálózat
 A FiFe app egy megbízhatóságon és helyzeten alapuló online eszköz. Megoszthatod, hogy mihez értesz, és ez alapján találhatnak meg mások téged. Így egy olyan közösséget építünk, amely biztonságos és hasznos.
 
 ## Miben lesz más a FiFe App, mint a mai közösségi alkalmazások?
