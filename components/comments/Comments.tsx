@@ -172,7 +172,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             return;
           }
 
-          if (image && data) {
+          if (image && data && data.length > 0) {
             await uploadImage(uid + "/" + path, data[0].id);
             setImage(null);
           }
