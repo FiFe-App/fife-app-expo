@@ -160,16 +160,33 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
         .then(async ({ data, error }) => {
           setLoading(false);
 
-          if (image && !error) {
-            await uploadImage(uid + "/" + path, data?.[0].id);
-
-            setImage(null);
-            setLoading(false);
-            setText("");
-          } else {
-            setLoading(false);
-            setText("");
+          if (error) {
+            console.error("Error posting comment:", error);
+            dispatch(
+              addSnack({
+                title: "Hiba a komment küldésekor",
+                message: error.message || "Próbáld újra később.",
+              }),
+            );
+            return;
           }
+
+          if (image && data) {
+            await uploadImage(uid + "/" + path, data[0].id);
+            setImage(null);
+          }
+
+          setText("");
+        })
+        .catch((error) => {
+          setLoading(false);
+          console.error("Unexpected error posting comment:", error);
+          dispatch(
+            addSnack({
+              title: "Hiba a komment küldésekor",
+              message: "Váratlan hiba történt. Próbáld újra később.",
+            }),
+          );
         });
     }
   };
