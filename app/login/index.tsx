@@ -51,7 +51,7 @@ export default function Index() {
           refresh_token: token_data.refresh_token,
           access_token: token_data?.access_token,
         })
-        .then(({ data, error }) => {
+        .then(({ data }) => {
           if (data.user) getUserData(data.user);
         });
     }
@@ -170,6 +170,12 @@ export default function Index() {
             onChangeText={setEmail}
             value={email}
             label="E-mail"
+            autoComplete="email"
+            textContentType="emailAddress"
+            inputMode="email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
           />
           <TextInput
             mode="outlined"
@@ -177,6 +183,8 @@ export default function Index() {
             value={password}
             label="Jelszó"
             secureTextEntry={!showPassword}
+            autoComplete="current-password"
+            textContentType="password"
             right={
               <TextInput.Icon
                 icon={showPassword ? "eye" : "eye-off"}
