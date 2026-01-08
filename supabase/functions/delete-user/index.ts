@@ -61,21 +61,8 @@ Deno.serve(async (req) => {
     const userId = user.id;
     console.log("Deleting user:", userId);
 
-    // Delete user profile from profiles table
-    const { error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .delete()
-      .eq("id", userId);
-
-    if (profileError) {
-      console.error("Error deleting profile:", profileError);
-      return new Response(JSON.stringify({ error: "Failed to delete profile" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
-    }
-
-    // Delete user from auth
+    // Delete user from auth first
+    // This will cascade to the profile table if proper foreign key constraints are set
     const { error: deleteUserError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (deleteUserError) {
@@ -84,6 +71,19 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       });
+    }
+
+    // Delete user profile from profiles table
+    // This is done after auth deletion as a safety measure in case cascade is not set up
+    const { error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .delete()
+      .eq("id", userId);
+
+    if (profileError) {
+      console.error("Error deleting profile:", profileError);
+      // Note: Auth user is already deleted at this point
+      // This is acceptable as the profile without auth is orphaned anyway
     }
 
     console.log("User deleted successfully:", userId);

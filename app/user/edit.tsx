@@ -5,7 +5,7 @@ import { ThemedView } from "@/components/ThemedView";
 import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
-import { addDialog, setOptions } from "@/redux/reducers/infoReducer";
+import { addDialog, addSnack, setOptions } from "@/redux/reducers/infoReducer";
 import { logout, setName, setUserData } from "@/redux/reducers/userReducer";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
@@ -218,6 +218,7 @@ export default function Index() {
             if (error) {
               console.error("Error deleting user:", error);
               setLoading(false);
+              dispatch(addSnack({ title: "Hiba történt a profil törlése során. Kérlek próbáld újra később." }));
               return;
             }
 
@@ -232,6 +233,7 @@ export default function Index() {
           } catch (error) {
             console.error("Unexpected error:", error);
             setLoading(false);
+            dispatch(addSnack({ title: "Váratlan hiba történt. Kérlek próbáld újra később." }));
           }
         },
         onCancel: () => {
