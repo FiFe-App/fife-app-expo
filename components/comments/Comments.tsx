@@ -164,8 +164,9 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             console.error("Error posting comment:", error);
             dispatch(
               addSnack({
-                title: "Hiba a komment küldésekor",
-                message: error.message || "Próbáld újra később.",
+                title: error.message
+                  ? `Hiba a komment küldésekor: ${error.message}`
+                  : "Hiba a komment küldésekor. Próbáld újra később.",
               }),
             );
             return;
@@ -183,8 +184,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
           console.error("Unexpected error posting comment:", error);
           dispatch(
             addSnack({
-              title: "Hiba a komment küldésekor",
-              message: "Váratlan hiba történt. Próbáld újra később.",
+              title: "Váratlan hiba történt. Próbáld újra később.",
             }),
           );
         });
