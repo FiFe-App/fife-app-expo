@@ -29,6 +29,15 @@ Deno.serve(async (req) => {
     });
   }
 
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!supabaseAnonKey) {
+    console.error("Missing SUPABASE_ANON_KEY");
+    return new Response(JSON.stringify({ error: "Server configuration error" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
+
   try {
     // Get the authorization header to verify the user
     const authHeader = req.headers.get("Authorization");
@@ -45,7 +54,7 @@ Deno.serve(async (req) => {
     // First, verify the user with the auth header (using regular anon key)
     const supabaseClient = createClient(
       supabaseUrl,
-      Deno.env.get("SUPABASE_ANON_KEY") || ""
+      supabaseAnonKey
     );
     
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
