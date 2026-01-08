@@ -20,6 +20,15 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Check service role key early to fail fast on misconfiguration
+  if (!supabaseServiceRoleKey) {
+    console.error("Missing SUPABASE_SERVICE_ROLE_KEY");
+    return new Response(JSON.stringify({ error: "Server configuration error" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
+
   try {
     // Get the authorization header to verify the user
     const authHeader = req.headers.get("Authorization");
@@ -27,14 +36,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Missing authorization header" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 401,
-      });
-    }
-
-    if (!supabaseServiceRoleKey) {
-      console.error("Missing SUPABASE_SERVICE_ROLE_KEY");
-      return new Response(JSON.stringify({ error: "Server configuration error" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
       });
     }
 
@@ -82,8 +83,15 @@ Deno.serve(async (req) => {
 
     if (profileError) {
       console.error("Error deleting profile:", profileError);
-      // Note: Auth user is already deleted at this point
-      // This is acceptable as the profile without auth is orphaned anyway
+      // Return partial success status to inform client
+      return new Response(JSON.stringify({ 
+        success: true, 
+        warning: "User deleted from auth but profile deletion failed",
+        message: "User account deleted with warnings" 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
     console.log("User deleted successfully:", userId);

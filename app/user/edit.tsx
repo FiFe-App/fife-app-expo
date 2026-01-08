@@ -205,6 +205,7 @@ export default function Index() {
             if (!session?.access_token) {
               console.error("No active session");
               setLoading(false);
+              dispatch(addSnack({ title: "Nincs aktív bejelentkezés. Kérlek jelentkezz be újra." }));
               return;
             }
 
