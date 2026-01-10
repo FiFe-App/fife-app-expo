@@ -5,8 +5,10 @@ import { ThemedView } from "@/components/ThemedView";
 import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
-import { setOptions } from "@/redux/reducers/infoReducer";
-import { setName, setUserData } from "@/redux/reducers/userReducer";
+import { addDialog, addSnack, setOptions } from "@/redux/reducers/infoReducer";
+import { logout, setName, setUserData } from "@/redux/reducers/userReducer";
+import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
@@ -15,6 +17,7 @@ import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
 import {
+  Button,
   Divider,
   HelperText,
   Icon,
@@ -184,6 +187,63 @@ export default function Index() {
 
     return upload;
   };
+  
+  const handleDeleteProfile = () => {
+    dispatch(
+      addDialog({
+        title: "Profil végleges törlése",
+        text: "Biztosan törölni szeretnéd a profilodat? Ez a művelet nem visszavonható. Minden adatod és bizniszed véglegesen törlődni fog.",
+        submitText: "Törlés",
+        dismissable: true,
+        onSubmit: async () => {
+          try {
+            setLoading(true);
+            
+            // Get the current session token
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session?.access_token) {
+              console.error("No active session");
+              setLoading(false);
+              dispatch(addSnack({ title: "Nincs aktív bejelentkezés. Kérlek jelentkezz be újra." }));
+              return;
+            }
+
+            // Call the edge function to delete user
+            const { data, error } = await supabase.functions.invoke("delete-user", {
+              headers: {
+                Authorization: `Bearer ${session.access_token}`,
+              },
+            });
+
+            if (error) {
+              console.error("Error deleting user:", error);
+              setLoading(false);
+              dispatch(addSnack({ title: "Hiba történt a profil törlése során. Kérlek próbáld újra később." }));
+              return;
+            }
+
+            console.log("User deleted successfully", data);
+            
+            // Logout and redirect
+            dispatch(logout());
+            dispatch(clearBuziness());
+            dispatch(clearTutorialState());
+            dispatch(clearBuzinessSearchParams());
+            router.navigate("/");
+          } catch (error) {
+            console.error("Unexpected error:", error);
+            setLoading(false);
+            dispatch(addSnack({ title: "Váratlan hiba történt. Kérlek próbáld újra később." }));
+          }
+        },
+        onCancel: () => {
+          console.log("Delete cancelled");
+        },
+      })
+    );
+  };
+  
   if (myUid)
     return (
       <ThemedView style={{ flex: 1 }}>
@@ -242,6 +302,22 @@ export default function Index() {
               </HelperText>
             </View>
             <ContactEditScreen ref={contactEditRef} />
+          </View>
+          <Divider style={{ marginTop: 16, marginBottom: 16 }} />
+          <View style={{ gap: 8, paddingBottom: 32 }}>
+            <ThemedText type="subtitle">Veszélyzóna</ThemedText>
+            <HelperText type="error">
+              A profil törlése végleges és nem visszavonható.
+            </HelperText>
+            <Button
+              mode="outlined"
+              icon="delete"
+              textColor={theme.colors.error}
+              style={{ borderColor: theme.colors.error }}
+              onPress={handleDeleteProfile}
+            >
+              Profil végleges törlése
+            </Button>
           </View>
         </ScrollView>
       </ThemedView>
