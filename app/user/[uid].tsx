@@ -3,6 +3,7 @@ import ProfileImage from "@/components/ProfileImage";
 import { ThemedView } from "@/components/ThemedView";
 import MyBuzinesses from "@/components/user/MyBuzinesses";
 import RecommendationsModal from "@/components/user/RecommendationsModal";
+import ReportProfileModal from "@/components/user/ReportProfileModal";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
 import {
@@ -28,6 +29,7 @@ import {
   Badge,
   Button,
   Icon,
+  IconButton,
   Portal,
   Text,
   TouchableRipple,
@@ -63,6 +65,7 @@ export default function Index() {
   const [data, setData] = useState<UserInfo | null>(null);
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const iRecommended = recommendations.includes(myUid || "");
 
   useFocusEffect(
@@ -123,7 +126,7 @@ export default function Index() {
         {data && uid && (
           <>
             <ThemedView style={{ padding: 16, gap: 8 }}>
-              <View style={{ flexDirection: "row", gap: 8 }}>
+              <View style={{ flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
                 <ProfileImage
                   modal
                   uid={uid}
@@ -195,6 +198,13 @@ export default function Index() {
                     )}
                   </View>
                 </View>
+                {!myProfile && (
+                  <IconButton
+                    icon="alert-octagon"
+                    size={24}
+                    onPress={() => setShowReportModal(true)}
+                  />
+                )}
               </View>
               <View style={{ flexDirection: "row", gap: 4, margin: 4 }}>
                 {myProfile ? (
@@ -272,6 +282,12 @@ export default function Index() {
             setShow={setShowRecommendsModal}
             uid={uid}
             name={data.full_name}
+          />
+          <ReportProfileModal
+            show={showReportModal}
+            setShow={setShowReportModal}
+            profileId={uid}
+            profileName={data.full_name}
           />
         </Portal>
       )}
