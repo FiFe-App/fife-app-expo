@@ -7,7 +7,10 @@ import { RootState } from "@/redux/store";
 import globStyles from "@/constants/Styles";
 import { theme } from "@/assets/theme";
 import Measure from "../tutorial/Measure";
+import { useTranslation } from "react-i18next";
+
 const BottomNavigation = () => {
+  const { t } = useTranslation();
   const segment = useSegments();
   const { functions } = useSelector((state: RootState) => state.tutorial);
   const bizniszActive = segment[0]?.includes("biznisz");
@@ -28,10 +31,10 @@ const BottomNavigation = () => {
                 color={bizniszActive ? theme.colors.secondary : undefined}
               />
               <ThemedText type={bizniszActive ? "defaultSemiBold" : "default"}>
-                Biznisz
+                {t("navigation.biznisz")}
               </ThemedText>
               {functions.includes("buzinessPage") && (
-                <Badge style={globStyles.badge}>ÚJ</Badge>
+                <Badge style={globStyles.badge}>{t("common.new")}</Badge>
               )}
             </View>
           </TouchableRipple>
@@ -47,7 +50,7 @@ const BottomNavigation = () => {
                 color={homeActive ? theme.colors.secondary : undefined}
               />
               <ThemedText type={homeActive ? "defaultSemiBold" : "default"}>
-                Otthon
+                {t("navigation.home_bottom")}
               </ThemedText>
             </View>
           </TouchableRipple>
@@ -63,7 +66,7 @@ const BottomNavigation = () => {
                 color={profilActive ? theme.colors.secondary : undefined}
               />
               <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
-                Profil
+                {t("navigation.profile")}
               </ThemedText>
             </View>
           </TouchableRipple>

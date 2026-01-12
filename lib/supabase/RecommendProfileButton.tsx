@@ -7,6 +7,7 @@ import { supabase } from "./supabase";
 import { addDialog } from "@/redux/reducers/infoReducer";
 import { trackPromise } from "react-promise-tracker";
 import wrapper from "../functions/wrapper";
+import { useTranslation } from "react-i18next";
 
 interface RecommendProfileButtonProps {
   profileId: string;
@@ -21,6 +22,7 @@ export const RecommendProfileButton = ({
   setRecommended,
   style,
 }: RecommendProfileButtonProps) => {
+  const { t } = useTranslation();
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
@@ -32,8 +34,8 @@ export const RecommendProfileButton = ({
     if (recommended) {
       dispatch(
         addDialog({
-          title: "Mégsem bízol benne?",
-          text: "Visszavonhatod a támogatásod, ha meggondoltad magad.",
+          title: t("dialogs.recommendProfileRemove.title"),
+          text: t("dialogs.recommendProfileRemove.text"),
           onSubmit: () => {
             setLoading(true);
             trackPromise(
@@ -51,14 +53,14 @@ export const RecommendProfileButton = ({
               "deleteRecommendation",
             );
           },
-          submitText: "Nem támogatom",
+          submitText: t("dialogs.recommendProfileRemove.submit"),
         }),
       );
     } else {
       dispatch(
         addDialog({
-          title: "Bizotsan megbízol benne?",
-          text: "Csak akkor jelöld őt megbízhatónak, ha úgy gondolod, hogy nem fog mást átverni.",
+          title: t("dialogs.recommendProfileAdd.title"),
+          text: t("dialogs.recommendProfileAdd.text"),
           onSubmit: () => {
             setLoading(true);
             trackPromise(
@@ -77,7 +79,7 @@ export const RecommendProfileButton = ({
               "deleteRecommendation",
             );
           },
-          submitText: "Igen!",
+          submitText: t("dialogs.recommendProfileAdd.submit"),
         }),
       );
     }
@@ -90,7 +92,9 @@ export const RecommendProfileButton = ({
       mode={!recommended ? "contained" : "contained-tonal"}
       loading={loading}
     >
-      {recommended ? "Megbízom benne." : "Megbízhatónak jelölöm!"}
+      {recommended
+        ? t("dialogs.recommendProfileButton.recommended")
+        : t("dialogs.recommendProfileButton.recommend")}
     </Button>
   );
 };

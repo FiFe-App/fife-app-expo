@@ -12,12 +12,14 @@ import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import UserItem from "../user/UserItem";
 import { RootState } from "@/redux/store";
 import { theme } from "@/assets/theme";
+import { useTranslation } from "react-i18next";
 
 export interface ContactListProps {
   uid: string;
 }
 
 export function SavedProfiles({ uid }: ContactListProps) {
+  const { t } = useTranslation();
   const [contacts, setContacts] = useState<Tables<"profiles">[]>([]);
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
@@ -45,7 +47,7 @@ export function SavedProfiles({ uid }: ContactListProps) {
   return (
     <>
       <ThemedView style={{ flex: 1 }}>
-        {contacts.length > 0 && <ThemedText variant="labelLarge" style={{ padding: 6, color: theme.colors.secondary, fontWeight: "bold" }}>Őket jelölted megbízhatónak</ThemedText>
+        {contacts.length > 0 && <ThemedText variant="labelLarge" style={{ padding: 6, color: theme.colors.secondary, fontWeight: "bold" }}>{t("biznisz.savedProfiles.trustedLabel")}</ThemedText>
         }<ScrollView contentContainerStyle={{ flex: 1 }}>
           {loading && (
             <View
@@ -64,11 +66,11 @@ export function SavedProfiles({ uid }: ContactListProps) {
                 <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
                   <Image
                     source={require("../../assets/images/HeroImage.png")}
-                    style={{ height: 200, width: '100%' }}
+                    style={{ height: 200, width: "100%" }}
                     contentFit="contain"
                   />
                   <ThemedText type="subtitle">
-                    Itt fognak megjelenni a mentett profiljaid.
+                    {t("biznisz.savedProfiles.empty")}
                   </ThemedText>
                 </View>
               ))}

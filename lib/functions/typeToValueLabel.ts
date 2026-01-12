@@ -1,12 +1,24 @@
+import i18n from "@/i18n";
+
 const typeToValueLabel = (type?: string): string => {
-  if (type === "TEL") return "Telefonszámod";
-  if (type === "EMAIL") return "Email-címed";
-  if (type === "INSTAGRAM") return "Instagram felhasználóneved";
-  if (type === "FACEBOOK") return "Facebook azonosítód";
-  if (type === "PLACE") return "Teljes címed";
-  if (type === "WEB") return "Weboldalad";
-  if (type === "OTHER") return "Bármilyen más adatod";
-  return "Válassz típust.";
+  switch (type) {
+    case "TEL":
+      return i18n.t("contactEdit.types.phone");
+    case "EMAIL":
+      return i18n.t("contactEdit.types.email");
+    case "INSTAGRAM":
+      return i18n.t("contactEdit.types.instagram");
+    case "FACEBOOK":
+      return i18n.t("contactEdit.types.facebook");
+    case "PLACE":
+      return i18n.t("contactEdit.types.place");
+    case "WEB":
+      return i18n.t("contactEdit.types.web");
+    case "OTHER":
+      return i18n.t("contactEdit.types.other");
+    default:
+      return i18n.t("contactEdit.selectType");
+  }
 };
 
 export default typeToValueLabel;
