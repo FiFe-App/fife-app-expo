@@ -1,27 +1,36 @@
+import { corsHeaders } from "./../_shared/cors.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import OpenAI from "npm:openai";
-
+ 
 // Prefer standard env names (set by Supabase CLI in container); fallback to kong host
-const supabaseUrl =
-  Deno.env.get("SUPABASE_URL") ||
-  Deno.env.get("URL") ||
-  "http://supabase-kong:8000";
+const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const supabaseServiceRoleKey =
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ||
   Deno.env.get("SERVICE_ROLE_KEY") ||
   "";
 const openaiApiKey = Deno.env.get("OPENAI_API_KEY")!;
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
 
 Deno.serve(async (req) => {
+  // Instantiate the Supabase client
+  // (replace service role key with user's JWT if using Supabase auth and RLS)
+  const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: corsHeaders,
     });
+  }
+  const authHeader = req.headers.get("Authorization")!;
+  const token = authHeader.replace("Bearer ", "");
+  const { data, error } = await supabase.auth.getClaims(token);
+  const userEmail = data?.claims?.email;
+  if (!userEmail || error) {
+    return Response.json(
+      { msg: "Invalid JWT" },
+      {
+        status: 401,
+      }
+    );
   }
   const { query, skip, take, lat, long, maxdistance } = await req.json();
 
@@ -52,9 +61,6 @@ Deno.serve(async (req) => {
     embedding = embeddingResponse.data[0].embedding;
   }
 
-  // Instantiate the Supabase client
-  // (replace service role key with user's JWT if using Supabase auth and RLS)
-  const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
   console.log("params", {
     distance: maxdistance,

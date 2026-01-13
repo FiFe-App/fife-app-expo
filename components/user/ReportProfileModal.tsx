@@ -4,7 +4,6 @@ import { ScrollView, View } from "react-native";
 import {
   Button,
   Modal,
-  Text,
   TextInput,
 } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
@@ -16,6 +15,7 @@ import {
   Dropdown,
   DropdownInputProps,
 } from "react-native-paper-dropdown";
+import { theme } from "@/assets/theme";
 
 interface ReportProfileModalProps {
   show: boolean;
@@ -26,7 +26,7 @@ interface ReportProfileModalProps {
 
 const reportReasons = [
   { label: "Megszegte a feltételeket", value: "terms_violation" },
-  { label: "Szerintem nem megbízható", value: "not_trustworthy" },
+  { label: "Nem megbízható", value: "not_trustworthy" },
   { label: "Illegális tevékenység", value: "illegal_activity" },
   { label: "Egyéb", value: "other" },
 ];
@@ -63,13 +63,6 @@ const ReportProfileModal = ({
         console.error("Error submitting report:", error);
       } else {
         setSubmitted(true);
-        // Reset form after a delay
-        setTimeout(() => {
-          setReason("");
-          setDescription("");
-          setSubmitted(false);
-          setShow(false);
-        }, 2000);
       }
     } catch (error) {
       console.error("Error submitting report:", error);
@@ -93,7 +86,6 @@ const ReportProfileModal = ({
         style={{
           padding: 20,
           margin: 30,
-          maxHeight: "80%",
         }}
       >
         {submitted ? (
@@ -101,6 +93,7 @@ const ReportProfileModal = ({
             <ThemedText type="subtitle">
               Köszönjük, hogy visszajeleztél!
             </ThemedText>
+            <ThemedText>Igyekszünk utánajárni hogy mi is történt!</ThemedText>
           </View>
         ) : (
           <ScrollView>
@@ -110,26 +103,15 @@ const ReportProfileModal = ({
 
             <View style={{ gap: 16 }}>
               <Dropdown
-                label="Jelentés oka*"
+                label="Miért jelented fel?*"
                 placeholder="Válassz okot"
                 options={reportReasons}
                 value={reason}
                 onSelect={setReason}
-                CustomDropdownInput={({
-                  placeholder,
-                  selectedLabel,
-                  label,
-                  rightIcon,
-                }: DropdownInputProps) => (
-                  <TextInput
-                    placeholder={placeholder}
-                    label={label}
-                    value={selectedLabel}
-                    right={rightIcon}
-                    editable={false}
-                    mode="outlined"
-                  />
-                )}
+                mode="outlined"
+                menuContentStyle={{
+                  backgroundColor: theme.colors.elevation.level2
+                }}
               />
 
               <TextInput
