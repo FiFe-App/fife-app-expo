@@ -5,7 +5,7 @@ import { ThemedView } from "@/components/ThemedView";
 import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
-import { addDialog, addSnack, setOptions } from "@/redux/reducers/infoReducer";
+import { addSnack, setOptions } from "@/redux/reducers/infoReducer";
 import { logout, setName, setUserData } from "@/redux/reducers/userReducer";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
@@ -22,6 +22,8 @@ import {
   HelperText,
   Icon,
   IconButton,
+  Dialog,
+  Portal,
   TextInput,
   useTheme,
 } from "react-native-paper";
@@ -38,6 +40,9 @@ export default function Index() {
   const [imageLoading, setImageLoading] = useState(false);
   const [profile, setProfile] = useState<UserInfo>({});
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | undefined>(undefined);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -189,59 +194,63 @@ export default function Index() {
   };
   
   const handleDeleteProfile = () => {
-    dispatch(
-      addDialog({
-        title: "Profil végleges törlése",
-        text: "Biztosan törölni szeretnéd a profilodat? Ez a művelet nem visszavonható. Minden adatod és bizniszed véglegesen törlődni fog.",
-        submitText: "Törlés",
-        dismissable: true,
-        onSubmit: async () => {
-          try {
-            setLoading(true);
-            
-            // Get the current session token
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (!session?.access_token) {
-              console.error("No active session");
-              setLoading(false);
-              dispatch(addSnack({ title: "Nincs aktív bejelentkezés. Kérlek jelentkezz be újra." }));
-              return;
-            }
+    setConfirmEmail("");
+    setShowDeleteDialog(true);
+  };
 
-            // Call the edge function to delete user
-            const { data, error } = await supabase.functions.invoke("delete-user", {
-              headers: {
-                Authorization: `Bearer ${session.access_token}`,
-              },
-            });
+  const confirmDelete = async () => {
+    try {
+      setDeleteLoading(true);
 
-            if (error) {
-              console.error("Error deleting user:", error);
-              setLoading(false);
-              dispatch(addSnack({ title: "Hiba történt a profil törlése során. Kérlek próbáld újra később." }));
-              return;
-            }
+      const expected = (userData?.email || "").trim().toLowerCase();
+      const entered = confirmEmail.trim().toLowerCase();
+      if (!expected || entered !== expected) {
+        setDeleteLoading(false);
+        return;
+      }
 
-            console.log("User deleted successfully", data);
-            
-            // Logout and redirect
-            dispatch(logout());
-            dispatch(clearBuziness());
-            dispatch(clearTutorialState());
-            dispatch(clearBuzinessSearchParams());
-            router.navigate("/");
-          } catch (error) {
-            console.error("Unexpected error:", error);
-            setLoading(false);
-            dispatch(addSnack({ title: "Váratlan hiba történt. Kérlek próbáld újra később." }));
-          }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        console.error("No active session");
+        setDeleteLoading(false);
+        dispatch(
+          addSnack({ title: "Nincs aktív bejelentkezés. Kérlek jelentkezz be újra." })
+        );
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("delete-user", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
         },
-        onCancel: () => {
-          console.log("Delete cancelled");
-        },
-      })
-    );
+      });
+
+      if (error) {
+        console.error("Error deleting user:", error);
+        setDeleteLoading(false);
+        dispatch(
+          addSnack({ title: "Hiba történt a profil törlése során. Kérlek próbáld újra később." })
+        );
+        return;
+      }
+
+      console.log("User deleted successfully", data);
+      setShowDeleteDialog(false);
+
+      dispatch(logout());
+      dispatch(clearBuziness());
+      dispatch(clearTutorialState());
+      dispatch(clearBuzinessSearchParams());
+      router.navigate("/user/deleted-account");
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      dispatch(addSnack({ title: "Váratlan hiba történt. Kérlek próbáld újra később." }));
+    } finally {
+      setDeleteLoading(false);
+    }
   };
   
   if (myUid)
@@ -319,6 +328,55 @@ export default function Index() {
               Profil végleges törlése
             </Button>
           </View>
+          <Portal>
+            <Dialog visible={showDeleteDialog} onDismiss={() => setShowDeleteDialog(false)}>
+              <Dialog.Title>Profil végleges törlése</Dialog.Title>
+              <Dialog.Content>
+                <ThemedText>
+                  Biztosan törölni szeretnéd a profilodat? Ez a művelet nem visszavonható.
+                </ThemedText>
+                <View style={{ height: 8 }} />
+                <ThemedText>
+                  A megerősítéshez írd be az alábbi email címet: {userData?.email}
+                </ThemedText>
+                <View style={{ height: 8 }} />
+                <TextInput
+                  label="Email"
+                  value={confirmEmail}
+                  onChangeText={setConfirmEmail}
+                  autoCapitalize="none"
+                  mode="outlined"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  disabled={deleteLoading}
+                />
+                {confirmEmail.length > 0 &&
+                  confirmEmail.trim().toLowerCase() !== (userData?.email || "").trim().toLowerCase() && (
+                  <HelperText type="error">Nem egyezik az email címmel.</HelperText>
+                )}
+              </Dialog.Content>
+              <Dialog.Actions>
+                <Button onPress={() => setShowDeleteDialog(false)} disabled={deleteLoading}>
+                  Mégse
+                </Button>
+                <Button
+                  mode="contained"
+                  buttonColor={theme.colors.error}
+                  textColor={theme.colors.onError}
+                  onPress={confirmDelete}
+                  disabled={
+                    deleteLoading ||
+                    !userData?.email ||
+                    confirmEmail.trim().toLowerCase() !== (userData?.email || "").trim().toLowerCase()
+                  }
+                  icon="delete"
+                  loading={deleteLoading}
+                >
+                  Törlés
+                </Button>
+              </Dialog.Actions>
+            </Dialog>
+          </Portal>
         </ScrollView>
       </ThemedView>
     );
