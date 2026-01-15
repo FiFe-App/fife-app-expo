@@ -15,7 +15,7 @@ import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, View, Text } from "react-native";
 import {
   Button,
   Divider,
@@ -337,7 +337,7 @@ export default function Index() {
                 </ThemedText>
                 <View style={{ height: 8 }} />
                 <ThemedText>
-                  A megerősítéshez írd be az alábbi email címet: {userData?.email}
+                  A megerősítéshez írd be az alábbi email címet: <Text style={{fontWeight:"bold"}}>{userData?.email}</Text>
                 </ThemedText>
                 <View style={{ height: 8 }} />
                 <TextInput
