@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
       messages: [
         {
           role: "system",
-          content: "Írd körül röviden azt az embert, aki ezekhez ért: " + query,
+          content: "Írd körül röviden, kulcsszavakkal, ezt a szakmát: " + query,
         },
       ],
     });
@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     console.log("embedding input", completion.choices[0].message.content);
 
     const embeddingResponse = await openai.embeddings.create({
-      model: "text-embedding-3-large",
+      model: "text-embedding-3-small",
       input: completion.choices[0].message.content,
       dimensions: 512,
     });
