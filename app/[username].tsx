@@ -4,8 +4,12 @@ import { router, useGlobalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { Text } from "react-native-paper";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export default function UsernameRedirect() {
+    const authGuard = useAuthGuard();
+    if (authGuard) return authGuard;
+
     const { username: raw } = useGlobalSearchParams();
     const [status, setStatus] = useState<"loading" | "not-found" | "redirected">("loading");
     const usernameParam = typeof raw === "string" ? raw : String(raw || "");
