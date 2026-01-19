@@ -7,7 +7,6 @@ export default function Index() {
   if (authGuard) return authGuard;
 
   const { editId } = useGlobalSearchParams();
-  console.log(editId);
 
   return <BuzinessEditScreen editId={Number(editId)} />;
 }

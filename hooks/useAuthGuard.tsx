@@ -22,6 +22,7 @@ import { useSelector } from "react-redux";
 export function useAuthGuard(): React.ReactElement | null {
   const { uid } = useSelector((state: RootState) => state.user);
   
+  // Check for undefined, null, or empty string to ensure robust authentication
   if (!uid) {
     return <Redirect href="/" />;
   }
