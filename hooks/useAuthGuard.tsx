@@ -1,5 +1,6 @@
 import { RootState } from "@/redux/store";
 import { Redirect } from "expo-router";
+import React from "react";
 import { useSelector } from "react-redux";
 
 /**
@@ -18,7 +19,7 @@ import { useSelector } from "react-redux";
  * }
  * ```
  */
-export function useAuthGuard(): JSX.Element | null {
+export function useAuthGuard(): React.ReactElement | null {
   const { uid } = useSelector((state: RootState) => state.user);
   
   if (!uid) {
