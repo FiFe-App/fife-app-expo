@@ -24,9 +24,13 @@ import WhatToDo from "@/components/WhatToDo";
 import { Button } from "@/components/Button";
 import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 import { useInfiniteQuery } from "@/hooks/useInfiniteQuery";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 const PAGE_SIZE = Math.floor(Dimensions.get("window").height / 100);
 export default function Index() {
+  const authGuard = useAuthGuard();
+  if (authGuard) return authGuard;
+
   const { uid } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
   const { userSearchParams } = useSelector(
@@ -64,9 +68,8 @@ export default function Index() {
     }, [skip]),
   );
 
-  if (uid)
-    return (
-      <ThemedView style={{ flex: 1, zIndex: 100 }} type="default">
+  return (
+    <ThemedView style={{ flex: 1, zIndex: 100 }} type="default">
         <View style={{ width: "100%", alignItems: "center", zIndex: 100 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
             <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
@@ -115,5 +118,5 @@ export default function Index() {
           </Modal>
         </Portal>
       </ThemedView>
-    );
+  );
 }

@@ -24,8 +24,12 @@ import { Button } from "@/components/Button";
 import { useBuzinessSearch } from "@/hooks/useBuzinessSearch";
 import Measure from "@/components/tutorial/Measure";
 import { MyAppbar } from "@/components/MyAppBar";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export default function Index() {
+  const authGuard = useAuthGuard();
+  if (authGuard) return authGuard;
+
   const { uid } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
   const { searchParams, buzinesses } = useSelector(
@@ -52,9 +56,8 @@ export default function Index() {
     }, []),
   );
 
-  if (uid)
-    return (
-      <ThemedView style={{ flex: 1 }} type="default">
+  return (
+    <ThemedView style={{ flex: 1 }} type="default">
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
 
           <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Találatok</ThemedText>
@@ -109,5 +112,5 @@ export default function Index() {
           </Modal>
         </Portal>
       </ThemedView>
-    );
+  );
 }

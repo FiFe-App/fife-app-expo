@@ -23,10 +23,14 @@ import {
   useTheme,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
+  const authGuard = useAuthGuard();
+  if (authGuard) return authGuard;
+
   const theme = useTheme();
   const { uid: myUid, userData }: UserState = useSelector(
     (state: RootState) => state.user,
@@ -184,9 +188,9 @@ export default function Index() {
 
     return upload;
   };
-  if (myUid)
-    return (
-      <ThemedView style={{ flex: 1 }}>
+
+  return (
+    <ThemedView style={{ flex: 1 }}>
         <ScrollView style={{ flex: 1, padding: 8 }}>
           <View style={{ alignItems: "center", marginBottom: 16 }}>
             <View style={{ width: 100 }}>
@@ -245,5 +249,5 @@ export default function Index() {
           </View>
         </ScrollView>
       </ThemedView>
-    );
+  );
 }
