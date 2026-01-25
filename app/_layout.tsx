@@ -19,7 +19,7 @@ import { RootState } from "@/redux/store";
 
 function RootContent() {
   const pathname = usePathname();
-  const themePreference = useSelector((state: RootState) => state.user.themePreference) || "light";
+  const themePreference = useSelector((state: RootState) => state.user.themePreference);
   const theme = getTheme(themePreference);
 
   return (

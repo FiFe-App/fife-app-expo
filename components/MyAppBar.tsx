@@ -5,14 +5,14 @@ import { Link, useGlobalSearchParams, useNavigation, usePathname, useSegments } 
 import React, { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useWindowDimensions, View, ViewStyle } from "react-native";
-import { Appbar, Menu } from "react-native-paper";
+import { Appbar, Menu, useTheme } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { theme } from "@/assets/theme";
 import { Image } from "expo-image";
 import Smiley from "@/components/Smiley";
 
 export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewStyle }) => {
   const navigation = useNavigation();
+  const theme = useTheme();
   const { options } = useSelector((state: RootState) => state.info);
   const [showMenu, setShowMenu] = useState(false);
   const { width } = useWindowDimensions();
@@ -32,12 +32,12 @@ export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewSt
       mode="center-aligned"
       style={[{
         backgroundColor: theme.colors.background,
-        shadowColor: "#000",
+        shadowColor: theme.colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
         shadowRadius: 4,
         elevation: 2,
-        borderBottomColor: "rgba(0,0,0,0.06)",
+        borderBottomColor: theme.colors.outlineVariant,
         borderBottomWidth: 0.5,
         alignItems: "center",
         width: "100%"
@@ -67,7 +67,6 @@ export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewSt
               >
                 {options.map((option, ind) => (
                   <Menu.Item
-                    theme={{ colors: { onSurface: "green" } }}
                     key={"option" + ind}
                     onPress={option.onPress}
                     title={option.title}

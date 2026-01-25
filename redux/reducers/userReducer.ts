@@ -1,13 +1,14 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { UserState } from "../store.type";
 import { supabase } from "@/lib/supabase/supabase";
+import { DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
 
 const initialState: UserState = {
   uid: undefined,
   name: undefined,
   userData: null,
   locationError: null,
-  themePreference: "light",
+  themePreference: DEFAULT_THEME_PREFERENCE,
 };
 
 const userReducer = createSlice({

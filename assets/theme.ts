@@ -7,6 +7,8 @@ import {
 } from "react-native-paper";
 import { MD3Type } from "react-native-paper/lib/typescript/types";
 
+export const DEFAULT_THEME_PREFERENCE = "light" as const;
+
 const isDesktop = Dimensions.get("window").width > 600;
 const fontConfig: Record<string, Partial<MD3Type>> = {
   default: {
@@ -229,6 +231,6 @@ export const darkTheme: MD3Theme = {
   fonts: configureFonts({ config: fontConfig }),
 };
 
-export const getTheme = (themePreference: "light" | "dark" = "light"): MD3Theme => {
+export const getTheme = (themePreference: "light" | "dark" = DEFAULT_THEME_PREFERENCE): MD3Theme => {
   return themePreference === "dark" ? darkTheme : theme;
 };
