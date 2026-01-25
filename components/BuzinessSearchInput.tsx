@@ -36,7 +36,7 @@ const BuzinessSearchInput = ({ onSearch }: { onSearch: (query: string) => void }
         disabled={!canSearch}
       />
     }
-  />)
+  />);
 };
 
 export default BuzinessSearchInput;

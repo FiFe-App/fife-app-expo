@@ -229,6 +229,6 @@ export const darkTheme: MD3Theme = {
   fonts: configureFonts({ config: fontConfig }),
 };
 
-export const getTheme = (themePreference: 'light' | 'dark' = 'light'): MD3Theme => {
-  return themePreference === 'dark' ? darkTheme : theme;
+export const getTheme = (themePreference: "light" | "dark" = "light"): MD3Theme => {
+  return themePreference === "dark" ? darkTheme : theme;
 };

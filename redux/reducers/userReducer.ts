@@ -7,7 +7,7 @@ const initialState: UserState = {
   name: undefined,
   userData: null,
   locationError: null,
-  themePreference: 'light',
+  themePreference: "light",
 };
 
 const userReducer = createSlice({
@@ -40,7 +40,7 @@ const userReducer = createSlice({
     setLocationError: (state, { payload }: PayloadAction<string | null>) => {
       state.locationError = payload;
     },
-    setThemePreference: (state, { payload }: PayloadAction<'light' | 'dark'>) => {
+    setThemePreference: (state, { payload }: PayloadAction<"light" | "dark">) => {
       state.themePreference = payload;
     },
   },

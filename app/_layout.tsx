@@ -19,13 +19,13 @@ import { RootState } from "@/redux/store";
 
 function RootContent() {
   const pathname = usePathname();
-  const themePreference = useSelector((state: RootState) => state.user.themePreference) || 'light';
+  const themePreference = useSelector((state: RootState) => state.user.themePreference) || "light";
   const theme = getTheme(themePreference);
 
   return (
     <>
       <StatusBar 
-        barStyle={themePreference === 'dark' ? 'light-content' : 'dark-content'}
+        barStyle={themePreference === "dark" ? "light-content" : "dark-content"}
         backgroundColor={theme.colors.background}
       />
       <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.backdrop }}>

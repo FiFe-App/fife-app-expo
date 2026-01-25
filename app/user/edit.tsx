@@ -233,16 +233,16 @@ export default function Index() {
             <ThemedText>{userData?.email}</ThemedText>
           </View>
           <Divider />
-          <View style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ padding: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             <View style={{ flex: 1 }}>
               <ThemedText type="subtitle">Sötét téma</ThemedText>
               <ThemedText type="label" style={{ opacity: 0.7, marginTop: 4 }}>
-                {themePreference === 'dark' ? 'Sötét mód aktív' : 'Világos mód aktív'}
+                {themePreference === "dark" ? "Sötét mód aktív" : "Világos mód aktív"}
               </ThemedText>
             </View>
             <Switch
-              value={themePreference === 'dark'}
-              onValueChange={(value) => dispatch(setThemePreference(value ? 'dark' : 'light'))}
+              value={themePreference === "dark"}
+              onValueChange={(value) => dispatch(setThemePreference(value ? "dark" : "light"))}
             />
           </View>
           <Divider />
