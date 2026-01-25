@@ -25,13 +25,12 @@ function RootContent() {
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
   const hasInitialized = React.useRef(false);
   
-  // On first load only, if user hasn't changed preference from default and device has a dark theme, set to auto
+  // On first load only, mark as initialized
   useEffect(() => {
-    if (!hasInitialized.current && userThemePreference === DEFAULT_THEME_PREFERENCE && deviceColorScheme === "dark") {
-      // Keep it as auto, no need to change
+    if (!hasInitialized.current) {
       hasInitialized.current = true;
     }
-  }, [userThemePreference, deviceColorScheme, dispatch]);
+  }, []);
   
   // Determine if dark mode should be active based on preference
   const isDarkMode = 
