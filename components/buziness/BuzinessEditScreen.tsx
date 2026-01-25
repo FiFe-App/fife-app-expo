@@ -19,8 +19,10 @@ import {
   Card,
   Divider,
   Headline,
+  HelperText,
   Icon,
   IconButton,
+  List,
   MD3DarkTheme,
   Modal,
   Portal,
@@ -47,6 +49,8 @@ import { Image } from "expo-image";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 import BuzinessItem from "./BuzinessItem";
 import { Button } from "../Button";
+import ContactEditScreen from "./ContactEditScreen";
+import { PostgrestSingleResponse } from "@supabase/supabase-js";
 
 interface NewBuzinessInterface {
   title: string;
@@ -71,11 +75,21 @@ export default function BuzinessEditScreen({
 
   const [images, setImages] = useState<ImageDataType[]>([]);
   const imagesUploadRef = useRef<BuzinessImageUploadHandle | null>(null);
+  const contactEditRef = useRef<{
+    saveContacts: () => Promise<
+      | PostgrestSingleResponse<unknown>
+      | {
+          error: string;
+        }
+      | undefined
+    >;
+  }>(null);
   const { myLocation, locationError } = useMyLocation();
   const [circle, setCircle] = useState<MapLocationType | undefined>(undefined);
   const selectedLocation = circle?.location || myLocation?.coords;
   const selectedAddress = "";
   const [loading, setLoading] = useState(false);
+  const [contactsExpanded, setContactsExpanded] = useState(false);
 
   const [mapModalVisible, setMapModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(true);
@@ -87,7 +101,8 @@ export default function BuzinessEditScreen({
   const canSubmit = !!(
     newBuziness.title &&
     categories &&
-    newBuziness.description
+    newBuziness.description &&
+    myContacts.length > 0
   );
   useEffect(() => {
     console.log("images", images);
@@ -95,6 +110,28 @@ export default function BuzinessEditScreen({
   const save = useCallback(async () => {
     setLoading(true);
     if (!uid) return;
+
+    // First save contacts
+    const contactResponse = await contactEditRef.current?.saveContacts();
+    console.log("Contact save response:", contactResponse);
+
+    if (contactResponse?.error) {
+      console.log("Error saving contacts:", contactResponse.error);
+      setLoading(false);
+      return;
+    }
+
+    // Verify at least one contact exists
+    const contactsCheck = await supabase
+      .from("contacts")
+      .select("id")
+      .eq("author", uid);
+    
+    if (!contactsCheck.data || contactsCheck.data.length === 0) {
+      console.log("No contacts found for user");
+      setLoading(false);
+      return;
+    }
 
     console.log(selectedLocation);
 
@@ -158,6 +195,29 @@ export default function BuzinessEditScreen({
       setMapModalVisible(false);
     }
   }, [circle]);
+
+  // Function to reload contacts after saving
+  const reloadContacts = useCallback(() => {
+    if (uid) {
+      supabase
+        .from("contacts")
+        .select("id, data")
+        .eq("author", uid)
+        .then((res) => {
+          if (res.data) {
+            setMyContacts(
+              res.data.map((contact) => {
+                return {
+                  label: contact.data,
+                  value: contact.id.toString(),
+                };
+              }),
+            );
+          }
+        });
+    }
+  }, [uid]);
+
   useEffect(() => {
     dispatch(
       setOptions([
@@ -174,6 +234,7 @@ export default function BuzinessEditScreen({
             );
             await save();
             dispatch(hideLoading());
+            reloadContacts();
           },
           theme: {
             colors: { primary: "red" }
@@ -184,7 +245,7 @@ export default function BuzinessEditScreen({
     return () => {
       dispatch(clearOptions());
     };
-  }, [canSubmit, dispatch, save, loading]);
+  }, [canSubmit, dispatch, save, loading, reloadContacts]);
 
   useFocusEffect(
     useCallback(() => {
@@ -240,6 +301,10 @@ export default function BuzinessEditScreen({
                   };
                 }),
               );
+              // If no contacts exist, expand the contacts section by default
+              if (res.data.length === 0) {
+                setContactsExpanded(true);
+              }
             }
           });
       }
@@ -359,6 +424,22 @@ export default function BuzinessEditScreen({
               setDefaultContact(Number(e));
             }}
           />
+          <Divider style={{ marginVertical: 16 }} />
+          <List.Accordion
+            title="Elérhetőségek"
+            description="Legalább egy elérhetőség megadása kötelező"
+            expanded={contactsExpanded}
+            onPress={() => setContactsExpanded(!contactsExpanded)}
+            left={(props) => <List.Icon {...props} icon="contacts" />}
+          >
+            <View style={{ paddingHorizontal: 8 }}>
+              <HelperText type="info" visible={true}>
+                Legalább egy elérhetőséget kötelező kitölteni a biznisz létrehozásához.
+              </HelperText>
+              <ContactEditScreen ref={contactEditRef} />
+            </View>
+          </List.Accordion>
+          <Divider style={{ marginVertical: 16 }} />
           <BuzinessImageUpload
             images={images}
             setImages={setImages}
