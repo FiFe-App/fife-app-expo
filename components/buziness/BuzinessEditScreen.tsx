@@ -10,7 +10,7 @@ import {
   showLoading
 } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { ImageDataType, UserState } from "@/redux/store.type";
+import { CircleType, ImageDataType, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -85,7 +85,7 @@ export default function BuzinessEditScreen({
     >;
   }>(null);
   const { myLocation, locationError } = useMyLocation();
-  const [circle, setCircle] = useState<MapLocationType | undefined>(undefined);
+  const [circle, setCircle] = useState<CircleType | undefined>(undefined);
   const selectedLocation = circle?.location || myLocation?.coords;
   const selectedAddress = "";
   const [loading, setLoading] = useState(false);
@@ -236,9 +236,6 @@ export default function BuzinessEditScreen({
             dispatch(hideLoading());
             reloadContacts();
           },
-          theme: {
-            colors: { primary: "red" }
-          }
         },
       ]),
     );
@@ -283,6 +280,7 @@ export default function BuzinessEditScreen({
 
                 setCircle({
                   location: { latitude: cords[1], longitude: cords[0] },
+                  radius: editingBuziness.radius || 20,
                 });
               }
             }
@@ -485,7 +483,6 @@ export default function BuzinessEditScreen({
           <View style={{ minHeight: circle ? 300 : 100 }}>
             {circle ? (
               <MapView
-                // @ts-expect-error options error
                 options={{
                   mapTypeControl: false,
                   fullscreenControl: false,
@@ -557,13 +554,14 @@ export default function BuzinessEditScreen({
           <ThemedText>Így fog megjelenni a bizniszed:</ThemedText>
           <BuzinessItem
             data={{
+              id: editId || 0,
+              author: uid || "",
               title: ((newBuziness.title || "A biznisz címe") + (categories ? " $ " + categories : " $ Egy kategória $ Egy másik kategória")),
               description: newBuziness.description || "Hosszabb leírás hogy miről szól a bizniszed.",
               images: images,
               location: circle
                 ? `POINT(${circle.location.longitude} ${circle.location.latitude})`
                 : null,
-              defaultContact,
               recommendations: 0,
             }}
           />
