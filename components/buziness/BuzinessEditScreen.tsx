@@ -7,7 +7,8 @@ import {
   clearOptions,
   hideLoading,
   setOptions,
-  showLoading
+  showLoading,
+  addSnack
 } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { CircleType, ImageDataType, UserState } from "@/redux/store.type";
@@ -59,6 +60,9 @@ interface NewBuzinessInterface {
 interface BuzinessEditScreenProps {
   editId?: number;
 }
+
+// Default radius in km for location-based buziness
+const DEFAULT_RADIUS = 20;
 
 export default function BuzinessEditScreen({
   editId,
@@ -117,6 +121,9 @@ export default function BuzinessEditScreen({
 
     if (contactResponse?.error) {
       console.log("Error saving contacts:", contactResponse.error);
+      dispatch(addSnack({
+        title: "Hiba az elérhetőségek mentése során. Ellenőrizd a mezőket.",
+      }));
       setLoading(false);
       return;
     }
@@ -129,6 +136,9 @@ export default function BuzinessEditScreen({
     
     if (!contactsCheck.data || contactsCheck.data.length === 0) {
       console.log("No contacts found for user");
+      dispatch(addSnack({
+        title: "Legalább egy elérhetőséget kötelező megadni a biznisz létrehozásához.",
+      }));
       setLoading(false);
       return;
     }
@@ -177,6 +187,9 @@ export default function BuzinessEditScreen({
         setLoading(false);
         if (res.error) {
           console.log(res.error);
+          dispatch(addSnack({
+            title: "Hiba történt a biznisz mentése során.",
+          }));
           return;
         }
         setCategories("");
@@ -188,7 +201,7 @@ export default function BuzinessEditScreen({
         console.log(res);
         router.navigate("/user");
       });
-  }, [defaultContact, editId, images.length, newBuziness, selectedLocation, title, uid]);
+  }, [defaultContact, dispatch, editId, images.length, newBuziness, selectedLocation, title, uid]);
 
   useEffect(() => {
     if (circle) {
@@ -280,7 +293,7 @@ export default function BuzinessEditScreen({
 
                 setCircle({
                   location: { latitude: cords[1], longitude: cords[0] },
-                  radius: editingBuziness.radius || 20,
+                  radius: editingBuziness.radius || DEFAULT_RADIUS,
                 });
               }
             }
