@@ -3,29 +3,41 @@ import InfoLayer from "@/components/InfoLayer";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { persistor, store } from "@/redux/store";
 import { Stack, usePathname } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
-import { View, StatusBar } from "react-native";
+import { View, StatusBar, useColorScheme } from "react-native";
 import { PaperProvider } from "react-native-paper";
-import { Provider, useSelector } from "react-redux";
+import { Provider, useSelector, useDispatch } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { ThemedView } from "@/components/ThemedView";
-import { getTheme } from "@/assets/theme";
+import { getTheme, DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
 import Piazzolla from "@/assets/fonts/Piazzolla.ttf";
 import RedHatText from "@/assets/fonts/RedHatText.ttf";
 import PiazzollaExtraBold from "@/assets/fonts/Piazzolla-ExtraBold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
 import { RootState } from "@/redux/store";
+import { setThemePreference } from "@/redux/reducers/userReducer";
 
 function RootContent() {
   const pathname = usePathname();
-  const themePreference = useSelector((state: RootState) => state.user.themePreference);
-  const theme = getTheme(themePreference);
+  const dispatch = useDispatch();
+  const deviceColorScheme = useColorScheme(); // Auto-detect device theme
+  const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
+  
+  // On first load, if user hasn't set a preference and device has a dark theme, use it
+  useEffect(() => {
+    if (userThemePreference === DEFAULT_THEME_PREFERENCE && deviceColorScheme === "dark") {
+      dispatch(setThemePreference("dark"));
+    }
+  }, []); // Only run once on mount
+  
+  const isDarkMode = userThemePreference === "dark";
+  const theme = getTheme(isDarkMode);
 
   return (
     <>
       <StatusBar 
-        barStyle={themePreference === "dark" ? "light-content" : "dark-content"}
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={theme.colors.background}
       />
       <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.backdrop }}>
@@ -62,7 +74,7 @@ function RootContent() {
               />
               <Stack.Screen
                 name="user/[uid]"
-                options={{ title: "FiFe Profil" }}
+                options={{ title": "FiFe Profil" }}
               />
               <Stack.Screen
                 name="user/edit"

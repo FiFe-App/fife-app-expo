@@ -129,7 +129,7 @@ const fontConfig: Record<string, Partial<MD3Type>> = {
   },
 };
 
-export const theme: MD3Theme = {
+export const lightTheme: MD3Theme = {
   ...DefaultTheme,
   ...{
     colors: {
@@ -231,6 +231,11 @@ export const darkTheme: MD3Theme = {
   fonts: configureFonts({ config: fontConfig }),
 };
 
-export const getTheme = (themePreference: "light" | "dark" = DEFAULT_THEME_PREFERENCE): MD3Theme => {
-  return themePreference === "dark" ? darkTheme : theme;
+// Helper function to get theme based on preference
+export const getTheme = (isDark: boolean): MD3Theme => {
+  return isDark ? darkTheme : lightTheme;
 };
+
+// Default export for static imports (defaults to light theme)
+// Components should use this with useTheme() from react-native-paper
+export const theme = lightTheme;
