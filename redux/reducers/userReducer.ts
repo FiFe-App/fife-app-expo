@@ -41,7 +41,7 @@ const userReducer = createSlice({
     setLocationError: (state, { payload }: PayloadAction<string | null>) => {
       state.locationError = payload;
     },
-    setThemePreference: (state, { payload }: PayloadAction<"light" | "dark">) => {
+    setThemePreference: (state, { payload }: PayloadAction<"light" | "dark" | "auto">) => {
       state.themePreference = payload;
     },
   },

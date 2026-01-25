@@ -19,7 +19,7 @@ import {
   HelperText,
   Icon,
   IconButton,
-  Switch,
+  Menu,
   TextInput,
   useTheme,
 } from "react-native-paper";
@@ -36,6 +36,7 @@ export default function Index() {
   const [imageLoading, setImageLoading] = useState(false);
   const [profile, setProfile] = useState<UserInfo>({});
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | undefined>(undefined);
+  const [themeMenuVisible, setThemeMenuVisible] = useState(false);
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -233,17 +234,54 @@ export default function Index() {
             <ThemedText>{userData?.email}</ThemedText>
           </View>
           <Divider />
-          <View style={{ padding: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-            <View style={{ flex: 1 }}>
-              <ThemedText type="subtitle">Sötét téma</ThemedText>
-              <ThemedText type="label" style={{ opacity: 0.7, marginTop: 4 }}>
-                {themePreference === "dark" ? "Sötét mód aktív" : "Világos mód aktív"}
-              </ThemedText>
-            </View>
-            <Switch
-              value={themePreference === "dark"}
-              onValueChange={(value) => dispatch(setThemePreference(value ? "dark" : "light"))}
-            />
+          <View style={{ padding: 16 }}>
+            <ThemedText type="subtitle">Téma</ThemedText>
+            <Menu
+              visible={themeMenuVisible}
+              onDismiss={() => setThemeMenuVisible(false)}
+              anchor={
+                <TextInput
+                  mode="outlined"
+                  label="Téma"
+                  value={
+                    themePreference === "auto" 
+                      ? "Automatikus" 
+                      : themePreference === "dark" 
+                        ? "Sötét" 
+                        : "Világos"
+                  }
+                  right={<TextInput.Icon icon="chevron-down" />}
+                  onPress={() => setThemeMenuVisible(true)}
+                  editable={false}
+                  style={{ marginTop: 8 }}
+                />
+              }
+            >
+              <Menu.Item
+                onPress={() => {
+                  dispatch(setThemePreference("auto"));
+                  setThemeMenuVisible(false);
+                }}
+                title="Automatikus"
+                leadingIcon={themePreference === "auto" ? "check" : undefined}
+              />
+              <Menu.Item
+                onPress={() => {
+                  dispatch(setThemePreference("light"));
+                  setThemeMenuVisible(false);
+                }}
+                title="Világos"
+                leadingIcon={themePreference === "light" ? "check" : undefined}
+              />
+              <Menu.Item
+                onPress={() => {
+                  dispatch(setThemePreference("dark"));
+                  setThemeMenuVisible(false);
+                }}
+                title="Sötét"
+                leadingIcon={themePreference === "dark" ? "check" : undefined}
+              />
+            </Menu>
           </View>
           <Divider />
           <View style={{ gap: 8, paddingTop: 8 }}>

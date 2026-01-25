@@ -33,6 +33,7 @@ import {
   Portal,
   Text,
   TouchableRipple,
+  useTheme,
 } from "react-native-paper";
 import * as Clipboard from "expo-clipboard";
 import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
@@ -43,7 +44,6 @@ import {
   clearTutorialState,
   viewFunction,
 } from "@/redux/reducers/tutorialReducer";
-import { theme } from "@/assets/theme";
 import Measure from "@/components/tutorial/Measure";
 import { SavedProfiles } from "@/components/buziness/SavedProfiles";
 
@@ -58,6 +58,7 @@ export default function Index() {
   const { functions }: TutorialState = useSelector(
     (state: RootState) => state.tutorial,
   );
+  const theme = useTheme();
 
   const dispatch = useDispatch();
   const { width } = useWindowDimensions();
