@@ -29,7 +29,7 @@ function RootContent() {
     if (userThemePreference === DEFAULT_THEME_PREFERENCE && deviceColorScheme === "dark") {
       dispatch(setThemePreference("dark"));
     }
-  }, []); // Only run once on mount
+  }, [userThemePreference, deviceColorScheme, dispatch]); // Re-run if any dependency changes
   
   const isDarkMode = userThemePreference === "dark";
   const theme = getTheme(isDarkMode);
@@ -74,7 +74,7 @@ function RootContent() {
               />
               <Stack.Screen
                 name="user/[uid]"
-                options={{ title": "FiFe Profil" }}
+                options={{ title: "FiFe Profil" }}
               />
               <Stack.Screen
                 name="user/edit"
