@@ -6,7 +6,7 @@ import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
 import { setOptions } from "@/redux/reducers/infoReducer";
-import { setName, setUserData } from "@/redux/reducers/userReducer";
+import { setName, setUserData, setThemePreference } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
@@ -19,6 +19,7 @@ import {
   HelperText,
   Icon,
   IconButton,
+  Switch,
   TextInput,
   useTheme,
 } from "react-native-paper";
@@ -28,7 +29,7 @@ type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
   const theme = useTheme();
-  const { uid: myUid, userData }: UserState = useSelector(
+  const { uid: myUid, userData, themePreference }: UserState = useSelector(
     (state: RootState) => state.user,
   );
   const [loading, setLoading] = useState(false);
@@ -230,6 +231,19 @@ export default function Index() {
           <View style={{ padding: 16 }}>
             <ThemedText type="label">Email, amivel regisztráltál:</ThemedText>
             <ThemedText>{userData?.email}</ThemedText>
+          </View>
+          <Divider />
+          <View style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              <ThemedText type="subtitle">Sötét téma</ThemedText>
+              <ThemedText type="label" style={{ opacity: 0.7, marginTop: 4 }}>
+                {themePreference === 'dark' ? 'Sötét mód aktív' : 'Világos mód aktív'}
+              </ThemedText>
+            </View>
+            <Switch
+              value={themePreference === 'dark'}
+              onValueChange={(value) => dispatch(setThemePreference(value ? 'dark' : 'light'))}
+            />
           </View>
           <Divider />
           <View style={{ gap: 8, paddingTop: 8 }}>

@@ -7,6 +7,7 @@ const initialState: UserState = {
   name: undefined,
   userData: null,
   locationError: null,
+  themePreference: 'light',
 };
 
 const userReducer = createSlice({
@@ -39,10 +40,13 @@ const userReducer = createSlice({
     setLocationError: (state, { payload }: PayloadAction<string | null>) => {
       state.locationError = payload;
     },
+    setThemePreference: (state, { payload }: PayloadAction<'light' | 'dark'>) => {
+      state.themePreference = payload;
+    },
   },
 });
 
-export const { init, login, logout, setName, setUserData, setLocationError } =
+export const { init, login, logout, setName, setUserData, setLocationError, setThemePreference } =
   userReducer.actions;
 
 export default userReducer;

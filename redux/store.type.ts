@@ -14,6 +14,7 @@ export interface UserState {
     lastLoginAt: Date;
   } | null;
   locationError: string | null;
+  themePreference?: 'light' | 'dark';
 }
 
 export type User = Tables<"profiles"> & {
