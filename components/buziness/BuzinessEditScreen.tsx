@@ -442,6 +442,16 @@ export default function BuzinessEditScreen({
             expanded={contactsExpanded}
             onPress={() => setContactsExpanded(!contactsExpanded)}
             left={(props) => <List.Icon {...props} icon="contacts" />}
+            right={(props) =>
+              myContacts.length === 0 ? (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Icon source="alert-circle" size={20} color="orange" />
+                  <List.Icon {...props} />
+                </View>
+              ) : (
+                <List.Icon {...props} />
+              )
+            }
           >
             <View style={{ paddingHorizontal: 8 }}>
               <HelperText type="info" visible={true}>
