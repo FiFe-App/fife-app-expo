@@ -23,15 +23,15 @@ function RootContent() {
   const dispatch = useDispatch();
   const deviceColorScheme = useColorScheme(); // Auto-detect device theme
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
-  const [hasInitialized, setHasInitialized] = React.useState(false);
+  const hasInitialized = React.useRef(false);
   
   // On first load only, if user hasn't changed preference from default and device has a dark theme, use it
   useEffect(() => {
-    if (!hasInitialized && userThemePreference === DEFAULT_THEME_PREFERENCE && deviceColorScheme === "dark") {
+    if (!hasInitialized.current && userThemePreference === DEFAULT_THEME_PREFERENCE && deviceColorScheme === "dark") {
       dispatch(setThemePreference("dark"));
+      hasInitialized.current = true;
     }
-    setHasInitialized(true);
-  }, [hasInitialized, userThemePreference, deviceColorScheme, dispatch]);
+  }, [userThemePreference, deviceColorScheme, dispatch]);
   
   const isDarkMode = userThemePreference === "dark";
   const theme = getTheme(isDarkMode);
