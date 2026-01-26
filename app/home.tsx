@@ -46,8 +46,6 @@ export default function Index() {
   const [userHasBuzinesses, setUserHasBuzinesses] = useState<boolean | null>(null);
   const [showCtaCard, setShowCtaCard] = useState(false);
 
-  const [locationMenuVisible, setLocationMenuVisible] = useState(false);
-  const [whatVisible, setWhatVisible] = useState(false);
   const { fetch, data, fetchNextPage, hasMore } = useInfiniteQuery({
     tableName: "profiles",
     pageSize: PAGE_SIZE,
