@@ -111,6 +111,13 @@ const ContactEditScreen = forwardRef<{
 			return { error: "Invalid field" };
 		}
 		const noNullContacts = contacts.filter((c) => !!c && c.data.length);
+		
+		// Prevent deletion if it would leave user with no contacts
+		if (noNullContacts.length === 0) {
+			setError({ type: contacts[0]?.type || "TEL", text: "Legalább egy elérhetőséget kötelező megadni." });
+			return { error: "At least one contact is required" };
+		}
+		
 		if (uid && contacts.length) {
 			const response = await supabase.from("contacts").upsert(noNullContacts, {
 				onConflict: "id",
@@ -123,11 +130,14 @@ const ContactEditScreen = forwardRef<{
 				.map((c) => c?.id)
 				.filter((id): id is number => id !== undefined);
 
-			const del_response = await supabase
-				.from("contacts")
-				.delete()
-				.in("id", deletableIds);
-			console.log("del", del_response);
+			// Only delete if we have at least one contact remaining after deletion
+			if (deletableIds.length > 0 && deletableIds.length < noNullContacts.length) {
+				const del_response = await supabase
+					.from("contacts")
+					.delete()
+					.in("id", deletableIds);
+				console.log("del", del_response);
+			}
 
 			return response;
 		}
