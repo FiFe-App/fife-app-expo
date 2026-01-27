@@ -52,6 +52,7 @@ import BuzinessItem from "./BuzinessItem";
 import { Button } from "../Button";
 import ContactEditScreen from "./ContactEditScreen";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
+import { Tables } from "@/database.types";
 
 interface NewBuzinessInterface {
   title: string;
@@ -61,6 +62,7 @@ interface BuzinessEditScreenProps {
   editId?: number;
 }
 
+type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 // Default radius in km for location-based buziness
 const DEFAULT_RADIUS = 20;
 
@@ -75,6 +77,7 @@ export default function BuzinessEditScreen({
     description: "",
   });
   const [myContacts, setMyContacts] = useState<Option[]>([]);
+  const [contacts, setContacts] = useState<Optional<Tables<"contacts">, "id">[]>([]);
   const [defaultContact, setDefaultContact] = useState<number | undefined>();
 
   const [images, setImages] = useState<ImageDataType[]>([]);
@@ -83,21 +86,20 @@ export default function BuzinessEditScreen({
     saveContacts: () => Promise<
       | PostgrestSingleResponse<unknown>
       | {
-          error: string;
-        }
+        error: string;
+      }
       | undefined
     >;
+    getContacts: () => Optional<Tables<"contacts">, "id">[];
   }>(null);
-  const { myLocation, locationError } = useMyLocation();
+  const { myLocation } = useMyLocation();
   const [circle, setCircle] = useState<CircleType | undefined>(undefined);
   const selectedLocation = circle?.location || myLocation?.coords;
-  const selectedAddress = "";
   const [loading, setLoading] = useState(false);
   const [contactsExpanded, setContactsExpanded] = useState(false);
 
   const [mapModalVisible, setMapModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(true);
-  const [locationTutorialVisible, setLocationTutorialVisible] = useState(false);
 
   const title = newBuziness.title + " $ " + categories;
   const navigation = useNavigation();
@@ -106,7 +108,7 @@ export default function BuzinessEditScreen({
     newBuziness.title &&
     categories &&
     newBuziness.description &&
-    myContacts.length > 0
+    contacts.some((c) => !!c && !!c.data && c.data.length > 0)
   );
   useEffect(() => {
     console.log("images", images);
@@ -133,7 +135,7 @@ export default function BuzinessEditScreen({
       .from("contacts")
       .select("id")
       .eq("author", uid);
-    
+
     if (!contactsCheck.data || contactsCheck.data.length === 0) {
       console.log("No contacts found for user");
       dispatch(addSnack({
@@ -214,10 +216,11 @@ export default function BuzinessEditScreen({
     if (uid) {
       supabase
         .from("contacts")
-        .select("id, data")
+        .select("*")
         .eq("author", uid)
         .then((res) => {
           if (res.data) {
+            setContacts(res.data as Optional<Tables<"contacts">, "id">[]);
             setMyContacts(
               res.data.map((contact) => {
                 return {
@@ -300,10 +303,11 @@ export default function BuzinessEditScreen({
           });
         supabase
           .from("contacts")
-          .select("id, data")
+          .select("*")
           .eq("author", uid)
           .then((res) => {
             if (res.data) {
+              setContacts(res.data as Optional<Tables<"contacts">, "id">[]);
               setMyContacts(
                 res.data.map((contact) => {
                   return {
@@ -325,7 +329,6 @@ export default function BuzinessEditScreen({
       };
     }, [editId, navigation, uid]),
   );
-
   return (
     <ThemedView style={{ flex: 1 }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{}}>
@@ -394,7 +397,6 @@ export default function BuzinessEditScreen({
               />
             )}
             CustomDropdownItem={({
-              width,
               option,
               value,
               onSelect,
@@ -442,14 +444,11 @@ export default function BuzinessEditScreen({
             expanded={contactsExpanded}
             onPress={() => setContactsExpanded(!contactsExpanded)}
             left={(props) => <List.Icon {...props} icon="contacts" />}
-            right={(props) =>
-              myContacts.length === 0 ? (
+            right={() =>
+              contacts.length === 0 && (
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <Icon source="alert-circle" size={20} color="orange" />
-                  <List.Icon {...props} />
                 </View>
-              ) : (
-                <List.Icon {...props} />
               )
             }
           >
@@ -457,7 +456,7 @@ export default function BuzinessEditScreen({
               <HelperText type="info" visible={true}>
                 Legalább egy elérhetőséget kötelező kitölteni a biznisz létrehozásához.
               </HelperText>
-              <ContactEditScreen ref={contactEditRef} />
+              <ContactEditScreen ref={contactEditRef} onContactsChange={setContacts} />
             </View>
           </List.Accordion>
           <Divider style={{ marginVertical: 16 }} />
