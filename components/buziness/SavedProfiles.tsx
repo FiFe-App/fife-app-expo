@@ -64,7 +64,7 @@ export function SavedProfiles({ uid }: ContactListProps) {
                 <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
                   <Image
                     source={require("../../assets/images/HeroImage.png")}
-                    style={{ height: 200, width: '100%' }}
+                    style={{ height: 200, width: "100%" }}
                     contentFit="contain"
                   />
                   <ThemedText type="subtitle">

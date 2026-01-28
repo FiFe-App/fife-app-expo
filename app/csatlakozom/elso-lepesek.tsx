@@ -66,8 +66,8 @@ export default function Index() {
           if (data.user) getUserData(data.user);
         });
     }
-    dispatch(startTutorial(true))
-    dispatch(setTutorialActive(true))
+    dispatch(startTutorial(true));
+    dispatch(setTutorialActive(true));
   }, [dispatch, token_data]);
 
   return (

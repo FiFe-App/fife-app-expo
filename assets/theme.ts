@@ -2,9 +2,12 @@ import { Dimensions } from "react-native";
 import {
   configureFonts,
   MD3LightTheme as DefaultTheme,
+  MD3DarkTheme,
   MD3Theme,
 } from "react-native-paper";
 import { MD3Type } from "react-native-paper/lib/typescript/types";
+
+export const DEFAULT_THEME_PREFERENCE = "auto" as const;
 
 const isDesktop = Dimensions.get("window").width > 600;
 const fontConfig: Record<string, Partial<MD3Type>> = {
@@ -126,7 +129,7 @@ const fontConfig: Record<string, Partial<MD3Type>> = {
   },
 };
 
-export const theme: MD3Theme = {
+export const lightTheme: MD3Theme = {
   ...DefaultTheme,
   ...{
     colors: {
@@ -176,3 +179,63 @@ export const theme: MD3Theme = {
 
   fonts: configureFonts({ config: fontConfig }),
 };
+
+export const darkTheme: MD3Theme = {
+  ...MD3DarkTheme,
+  ...{
+    colors: {
+      ...MD3DarkTheme.colors,
+      primary: "#f0c048",
+      onPrimary: "#1e1b16",
+      primaryContainer: "#2d2a23",
+      onPrimaryContainer: "#f7f0e7",
+      secondary: "#FF5C42",
+      onSecondary: "#1e1b16",
+      secondaryContainer: "#56442A",
+      onSecondaryContainer: "#FADEBC",
+      tertiary: "#9b7fff",
+      onTertiary: "#1e1b16",
+      tertiaryContainer: "#463D66",
+      onTertiaryContainer: "#e7deff",
+      error: "#ffb4ab",
+      onError: "#690005",
+      errorContainer: "#93000a",
+      onErrorContainer: "#ffdad6",
+      background: "#1e1b16",
+      onBackground: "#e8e2d9",
+      surface: "#2d2a23",
+      onSurface: "#e8e2d9",
+      surfaceVariant: "#3d3a33",
+      onSurfaceVariant: "#cdc5b4",
+      outline: "#968e7e",
+      outlineVariant: "#4d4639",
+      shadow: "#000000",
+      scrim: "#000000",
+      inverseSurface: "#e8e2d9",
+      inverseOnSurface: "#33302a",
+      inversePrimary: "#000000",
+      elevation: {
+        level0: "rgba(0, 0, 0, 0.00)",
+        level1: "rgba(45, 42, 35, 1.00)",
+        level2: "rgba(53, 50, 43, 1.00)",
+        level3: "rgba(61, 58, 51, 1.00)",
+        level4: "rgba(69, 66, 59, 1.00)",
+        level5: "rgba(77, 74, 67, 1.00)",
+      },
+      surfaceDisabled: "rgba(232, 226, 217, 0.12)",
+      onSurfaceDisabled: "rgba(232, 226, 217, 0.38)",
+      backdrop: "rgba(54, 48, 36, 0.4)",
+    },
+  },
+
+  fonts: configureFonts({ config: fontConfig }),
+};
+
+// Helper function to get theme based on preference
+export const getTheme = (isDark: boolean): MD3Theme => {
+  return isDark ? darkTheme : lightTheme;
+};
+
+// Default export for static imports (defaults to light theme)
+// Components should use this with useTheme() from react-native-paper
+export const theme = lightTheme;

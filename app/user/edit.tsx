@@ -6,19 +6,20 @@ import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
 import { setOptions } from "@/redux/reducers/infoReducer";
-import { setName, setUserData } from "@/redux/reducers/userReducer";
+import { setName, setUserData, setThemePreference } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, View, TouchableWithoutFeedback } from "react-native";
 import {
   Divider,
   HelperText,
   Icon,
   IconButton,
+  Menu,
   TextInput,
   useTheme,
 } from "react-native-paper";
@@ -28,13 +29,14 @@ type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
   const theme = useTheme();
-  const { uid: myUid, userData }: UserState = useSelector(
+  const { uid: myUid, userData, themePreference }: UserState = useSelector(
     (state: RootState) => state.user,
   );
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [profile, setProfile] = useState<UserInfo>({});
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | undefined>(undefined);
+  const [themeMenuVisible, setThemeMenuVisible] = useState(false);
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -230,6 +232,63 @@ export default function Index() {
           <View style={{ padding: 16 }}>
             <ThemedText type="label">Email, amivel regisztráltál:</ThemedText>
             <ThemedText>{userData?.email}</ThemedText>
+          </View>
+          <Divider />
+          <View style={{ padding: 16 }}>
+            <Menu
+              visible={themeMenuVisible}
+              onDismiss={() => setThemeMenuVisible(false)}
+              anchor={
+                <TouchableWithoutFeedback 
+                  onPress={() => setThemeMenuVisible(true)}
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel="Téma kiválasztása"
+                >
+                  <View>
+                    <TextInput
+                      mode="outlined"
+                      label="Téma"
+                      value={
+                        themePreference === "auto" 
+                          ? "Automatikus" 
+                          : themePreference === "dark" 
+                            ? "Sötét" 
+                            : "Világos"
+                      }
+                      right={<TextInput.Icon icon="chevron-down" />}
+                      editable={false}
+                      pointerEvents="none"
+                    />
+                  </View>
+                </TouchableWithoutFeedback>
+              }
+            >
+              <Menu.Item
+                onPress={() => {
+                  dispatch(setThemePreference("auto"));
+                  setThemeMenuVisible(false);
+                }}
+                title="Automatikus"
+                leadingIcon={themePreference === "auto" ? "check" : undefined}
+              />
+              <Menu.Item
+                onPress={() => {
+                  dispatch(setThemePreference("light"));
+                  setThemeMenuVisible(false);
+                }}
+                title="Világos"
+                leadingIcon={themePreference === "light" ? "check" : undefined}
+              />
+              <Menu.Item
+                onPress={() => {
+                  dispatch(setThemePreference("dark"));
+                  setThemeMenuVisible(false);
+                }}
+                title="Sötét"
+                leadingIcon={themePreference === "dark" ? "check" : undefined}
+              />
+            </Menu>
           </View>
           <Divider />
           <View style={{ gap: 8, paddingTop: 8 }}>
