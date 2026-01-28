@@ -20,17 +20,25 @@ CREATE POLICY "Enable update for author" ON "public"."contacts"
   WITH CHECK ("author" = "auth"."uid"());
 
 -- DELETE policy: Prevent deletion if it's the user's last contact
-CREATE POLICY "Enable delete for author with remaining contacts" ON "public"."contacts" 
-  FOR DELETE 
-  TO "authenticated" 
+CREATE POLICY "Enable delete for author unless last contact with buziness" ON "public"."contacts"
+  FOR DELETE
+  TO "authenticated"
   USING (
     "author" = "auth"."uid"()
-    AND
-    (
-      SELECT COUNT(*) 
-      FROM "public"."contacts" 
-      WHERE "contacts"."author" = "auth"."uid"()
-      AND "contacts"."data" IS NOT NULL 
-      AND "contacts"."data" != ''
-    ) > 1
+    AND (
+      -- Allow if user has more than one contact
+      (
+        SELECT COUNT(*)
+        FROM "public"."contacts"
+        WHERE "contacts"."author" = "auth"."uid"()
+          AND "contacts"."data" IS NOT NULL
+          AND "contacts"."data" != ''
+      ) > 1
+      -- Or allow if user has no buziness (even if it's their last contact)
+      OR NOT EXISTS (
+        SELECT 1
+        FROM "public"."buziness"
+        WHERE "buziness"."author" = "auth"."uid"()
+      )
+    )
   );

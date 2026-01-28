@@ -20,7 +20,6 @@ import {
   Card,
   Divider,
   Headline,
-  HelperText,
   Icon,
   IconButton,
   List,
@@ -53,6 +52,7 @@ import { Button } from "../Button";
 import ContactEditScreen from "./ContactEditScreen";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { Tables } from "@/database.types";
+import { theme } from "@/assets/theme";
 
 interface NewBuzinessInterface {
   title: string;
@@ -260,6 +260,10 @@ export default function BuzinessEditScreen({
     };
   }, [canSubmit, dispatch, save, loading, reloadContacts]);
 
+  useEffect(() => {
+    console.log("contacts", contacts);
+
+  }, [contacts]);
   useFocusEffect(
     useCallback(() => {
       if (editId && uid) {
@@ -301,6 +305,9 @@ export default function BuzinessEditScreen({
               }
             }
           });
+      }
+      if (uid) {
+
         supabase
           .from("contacts")
           .select("*")
@@ -437,29 +444,24 @@ export default function BuzinessEditScreen({
               setDefaultContact(Number(e));
             }}
           />
-          <Divider style={{ marginVertical: 16 }} />
-          <List.Accordion
+          <List.Item
             title="Elérhetőségek"
+            style={{ marginTop: 8 }}
             description="Legalább egy elérhetőség megadása kötelező"
-            expanded={contactsExpanded}
             onPress={() => setContactsExpanded(!contactsExpanded)}
             left={(props) => <List.Icon {...props} icon="contacts" />}
             right={() =>
-              contacts.length === 0 && (
+              !contacts.some((c) => !!c && !!c.data && c.data.length > 0) ? (
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Icon source="alert-circle" size={20} color="orange" />
+                  <Icon source="alert-circle" size={20} color={theme.colors.error} />
                 </View>
-              )
+              ) : <List.Icon icon={contactsExpanded ? "chevron-up" : "chevron-down"} />
             }
-          >
-            <View style={{ paddingHorizontal: 8 }}>
-              <HelperText type="info" visible={true}>
-                Legalább egy elérhetőséget kötelező kitölteni a biznisz létrehozásához.
-              </HelperText>
-              <ContactEditScreen ref={contactEditRef} onContactsChange={setContacts} />
-            </View>
-          </List.Accordion>
-          <Divider style={{ marginVertical: 16 }} />
+          />
+          <View style={{ display: contactsExpanded ? "flex" : "none" }}>
+            <ContactEditScreen ref={contactEditRef} onContactsChange={(newContacts) => setContacts(newContacts)} style={{ padding: 16, paddingRight: 0, }} />
+          </View>
+          <Divider style={{ marginTop: 8, marginBottom: 8 }} />
           <BuzinessImageUpload
             images={images}
             setImages={setImages}
