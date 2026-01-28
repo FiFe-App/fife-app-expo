@@ -13,7 +13,7 @@ import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, View, Pressable } from "react-native";
 import {
   Divider,
   HelperText,
@@ -235,26 +235,27 @@ export default function Index() {
           </View>
           <Divider />
           <View style={{ padding: 16 }}>
-            <ThemedText type="subtitle">Téma</ThemedText>
             <Menu
               visible={themeMenuVisible}
               onDismiss={() => setThemeMenuVisible(false)}
               anchor={
-                <TextInput
-                  mode="outlined"
-                  label="Téma"
-                  value={
-                    themePreference === "auto" 
-                      ? "Automatikus" 
-                      : themePreference === "dark" 
-                        ? "Sötét" 
-                        : "Világos"
-                  }
-                  right={<TextInput.Icon icon="chevron-down" />}
-                  onPress={() => setThemeMenuVisible(true)}
-                  editable={false}
-                  style={{ marginTop: 8 }}
-                />
+                <Pressable onPress={() => setThemeMenuVisible(true)}>
+                  <View pointerEvents="none">
+                    <TextInput
+                      mode="outlined"
+                      label="Téma"
+                      value={
+                        themePreference === "auto" 
+                          ? "Automatikus" 
+                          : themePreference === "dark" 
+                            ? "Sötét" 
+                            : "Világos"
+                      }
+                      right={<TextInput.Icon icon="chevron-down" />}
+                      editable={false}
+                    />
+                  </View>
+                </Pressable>
               }
             >
               <Menu.Item
