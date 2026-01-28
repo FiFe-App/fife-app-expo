@@ -7,10 +7,11 @@ import {
   clearOptions,
   hideLoading,
   setOptions,
-  showLoading
+  showLoading,
+  addSnack
 } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { ImageDataType, UserState } from "@/redux/store.type";
+import { CircleType, ImageDataType, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -21,6 +22,7 @@ import {
   Headline,
   Icon,
   IconButton,
+  List,
   MD3DarkTheme,
   Modal,
   Portal,
@@ -47,6 +49,10 @@ import { Image } from "expo-image";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 import BuzinessItem from "./BuzinessItem";
 import { Button } from "../Button";
+import ContactEditScreen from "./ContactEditScreen";
+import { PostgrestSingleResponse } from "@supabase/supabase-js";
+import { Tables } from "@/database.types";
+import { theme } from "@/assets/theme";
 
 interface NewBuzinessInterface {
   title: string;
@@ -55,6 +61,10 @@ interface NewBuzinessInterface {
 interface BuzinessEditScreenProps {
   editId?: number;
 }
+
+type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+// Default radius in km for location-based buziness
+const DEFAULT_RADIUS = 20;
 
 export default function BuzinessEditScreen({
   editId,
@@ -67,19 +77,29 @@ export default function BuzinessEditScreen({
     description: "",
   });
   const [myContacts, setMyContacts] = useState<Option[]>([]);
+  const [contacts, setContacts] = useState<Optional<Tables<"contacts">, "id">[]>([]);
   const [defaultContact, setDefaultContact] = useState<number | undefined>();
 
   const [images, setImages] = useState<ImageDataType[]>([]);
   const imagesUploadRef = useRef<BuzinessImageUploadHandle | null>(null);
-  const { myLocation, locationError } = useMyLocation();
-  const [circle, setCircle] = useState<MapLocationType | undefined>(undefined);
+  const contactEditRef = useRef<{
+    saveContacts: () => Promise<
+      | PostgrestSingleResponse<unknown>
+      | {
+        error: string;
+      }
+      | undefined
+    >;
+    getContacts: () => Optional<Tables<"contacts">, "id">[];
+  }>(null);
+  const { myLocation } = useMyLocation();
+  const [circle, setCircle] = useState<CircleType | undefined>(undefined);
   const selectedLocation = circle?.location || myLocation?.coords;
-  const selectedAddress = "";
   const [loading, setLoading] = useState(false);
+  const [contactsExpanded, setContactsExpanded] = useState(false);
 
   const [mapModalVisible, setMapModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(true);
-  const [locationTutorialVisible, setLocationTutorialVisible] = useState(false);
 
   const title = newBuziness.title + " $ " + categories;
   const navigation = useNavigation();
@@ -87,7 +107,8 @@ export default function BuzinessEditScreen({
   const canSubmit = !!(
     newBuziness.title &&
     categories &&
-    newBuziness.description
+    newBuziness.description &&
+    contacts.some((c) => !!c && !!c.data && c.data.length > 0)
   );
   useEffect(() => {
     console.log("images", images);
@@ -95,6 +116,34 @@ export default function BuzinessEditScreen({
   const save = useCallback(async () => {
     setLoading(true);
     if (!uid) return;
+
+    // First save contacts
+    const contactResponse = await contactEditRef.current?.saveContacts();
+    console.log("Contact save response:", contactResponse);
+
+    if (contactResponse?.error) {
+      console.log("Error saving contacts:", contactResponse.error);
+      dispatch(addSnack({
+        title: "Hiba az elérhetőségek mentése során. Ellenőrizd a mezőket.",
+      }));
+      setLoading(false);
+      return;
+    }
+
+    // Verify at least one contact exists
+    const contactsCheck = await supabase
+      .from("contacts")
+      .select("id")
+      .eq("author", uid);
+
+    if (!contactsCheck.data || contactsCheck.data.length === 0) {
+      console.log("No contacts found for user");
+      dispatch(addSnack({
+        title: "Legalább egy elérhetőséget kötelező megadni a biznisz létrehozásához.",
+      }));
+      setLoading(false);
+      return;
+    }
 
     console.log(selectedLocation);
 
@@ -140,6 +189,9 @@ export default function BuzinessEditScreen({
         setLoading(false);
         if (res.error) {
           console.log(res.error);
+          dispatch(addSnack({
+            title: "Hiba történt a biznisz mentése során.",
+          }));
           return;
         }
         setCategories("");
@@ -151,13 +203,37 @@ export default function BuzinessEditScreen({
         console.log(res);
         router.navigate("/user");
       });
-  }, [defaultContact, editId, images.length, newBuziness, selectedLocation, title, uid]);
+  }, [defaultContact, dispatch, editId, images.length, newBuziness, selectedLocation, title, uid]);
 
   useEffect(() => {
     if (circle) {
       setMapModalVisible(false);
     }
   }, [circle]);
+
+  // Function to reload contacts after saving
+  const reloadContacts = useCallback(() => {
+    if (uid) {
+      supabase
+        .from("contacts")
+        .select("*")
+        .eq("author", uid)
+        .then((res) => {
+          if (res.data) {
+            setContacts(res.data as Optional<Tables<"contacts">, "id">[]);
+            setMyContacts(
+              res.data.map((contact) => {
+                return {
+                  label: contact.data,
+                  value: contact.id.toString(),
+                };
+              }),
+            );
+          }
+        });
+    }
+  }, [uid]);
+
   useEffect(() => {
     dispatch(
       setOptions([
@@ -174,18 +250,20 @@ export default function BuzinessEditScreen({
             );
             await save();
             dispatch(hideLoading());
+            reloadContacts();
           },
-          theme: {
-            colors: { primary: "red" }
-          }
         },
       ]),
     );
     return () => {
       dispatch(clearOptions());
     };
-  }, [canSubmit, dispatch, save, loading]);
+  }, [canSubmit, dispatch, save, loading, reloadContacts]);
 
+  useEffect(() => {
+    console.log("contacts", contacts);
+
+  }, [contacts]);
   useFocusEffect(
     useCallback(() => {
       if (editId && uid) {
@@ -222,16 +300,21 @@ export default function BuzinessEditScreen({
 
                 setCircle({
                   location: { latitude: cords[1], longitude: cords[0] },
+                  radius: editingBuziness.radius || DEFAULT_RADIUS,
                 });
               }
             }
           });
+      }
+      if (uid) {
+
         supabase
           .from("contacts")
-          .select("id, data")
+          .select("*")
           .eq("author", uid)
           .then((res) => {
             if (res.data) {
+              setContacts(res.data as Optional<Tables<"contacts">, "id">[]);
               setMyContacts(
                 res.data.map((contact) => {
                   return {
@@ -240,6 +323,10 @@ export default function BuzinessEditScreen({
                   };
                 }),
               );
+              // If no contacts exist, expand the contacts section by default
+              if (res.data.length === 0) {
+                setContactsExpanded(true);
+              }
             }
           });
       }
@@ -249,7 +336,6 @@ export default function BuzinessEditScreen({
       };
     }, [editId, navigation, uid]),
   );
-
   return (
     <ThemedView style={{ flex: 1 }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{}}>
@@ -318,7 +404,6 @@ export default function BuzinessEditScreen({
               />
             )}
             CustomDropdownItem={({
-              width,
               option,
               value,
               onSelect,
@@ -359,6 +444,24 @@ export default function BuzinessEditScreen({
               setDefaultContact(Number(e));
             }}
           />
+          <List.Item
+            title="Elérhetőségek"
+            style={{ marginTop: 8 }}
+            description="Legalább egy elérhetőség megadása kötelező"
+            onPress={() => setContactsExpanded(!contactsExpanded)}
+            left={(props) => <List.Icon {...props} icon="contacts" />}
+            right={() =>
+              !contacts.some((c) => !!c && !!c.data && c.data.length > 0) ? (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Icon source="alert-circle" size={20} color={theme.colors.error} />
+                </View>
+              ) : <List.Icon icon={contactsExpanded ? "chevron-up" : "chevron-down"} />
+            }
+          />
+          <View style={{ display: contactsExpanded ? "flex" : "none" }}>
+            <ContactEditScreen ref={contactEditRef} onContactsChange={(newContacts) => setContacts(newContacts)} style={{ padding: 16, paddingRight: 0, }} />
+          </View>
+          <Divider style={{ marginTop: 8, marginBottom: 8 }} />
           <BuzinessImageUpload
             images={images}
             setImages={setImages}
@@ -404,7 +507,6 @@ export default function BuzinessEditScreen({
           <View style={{ minHeight: circle ? 300 : 100 }}>
             {circle ? (
               <MapView
-                // @ts-expect-error options error
                 options={{
                   mapTypeControl: false,
                   fullscreenControl: false,
@@ -476,13 +578,14 @@ export default function BuzinessEditScreen({
           <ThemedText>Így fog megjelenni a bizniszed:</ThemedText>
           <BuzinessItem
             data={{
+              id: editId || 0,
+              author: uid || "",
               title: ((newBuziness.title || "A biznisz címe") + (categories ? " $ " + categories : " $ Egy kategória $ Egy másik kategória")),
               description: newBuziness.description || "Hosszabb leírás hogy miről szól a bizniszed.",
               images: images,
               location: circle
                 ? `POINT(${circle.location.longitude} ${circle.location.latitude})`
                 : null,
-              defaultContact,
               recommendations: 0,
             }}
           />

@@ -826,7 +826,14 @@ CREATE POLICY "Enable read access for all users" ON "public"."profileRecommendat
 
 
 
-CREATE POLICY "Enable select, insert, update, delete for author" ON "public"."buziness" TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "author"));
+-- Separate policies for buziness: select, update, delete without contact requirement
+CREATE POLICY "Enable select for author" ON "public"."buziness" FOR SELECT TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "author"));
+
+CREATE POLICY "Enable update for author" ON "public"."buziness" FOR UPDATE TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "author"));
+
+CREATE POLICY "Enable delete for author" ON "public"."buziness" FOR DELETE TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "author"));
+
+-- Note: INSERT policy removed - buziness creation should only happen through create-buziness edge function
 
 
 
@@ -858,7 +865,33 @@ ALTER TABLE "public"."comments" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."contacts" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "edit if user's" ON "public"."contacts" USING (("author" = "auth"."uid"())) WITH CHECK (("author" = "auth"."uid"()));
+-- Separate policies for contacts to prevent deletion of last contact
+CREATE POLICY "Enable insert for author" ON "public"."contacts" 
+  FOR INSERT 
+  TO "authenticated" 
+  WITH CHECK ("author" = "auth"."uid"());
+
+CREATE POLICY "Enable update for author" ON "public"."contacts" 
+  FOR UPDATE 
+  TO "authenticated" 
+  USING ("author" = "auth"."uid"())
+  WITH CHECK ("author" = "auth"."uid"());
+
+-- Prevent deletion if it's the user's last contact
+CREATE POLICY "Enable delete for author with remaining contacts" ON "public"."contacts" 
+  FOR DELETE 
+  TO "authenticated" 
+  USING (
+    "author" = "auth"."uid"()
+    AND
+    (
+      SELECT COUNT(*) 
+      FROM "public"."contacts" 
+      WHERE "contacts"."author" = "auth"."uid"()
+      AND "contacts"."data" IS NOT NULL 
+      AND "contacts"."data" != ''
+    ) > 1
+  );
 
 
 

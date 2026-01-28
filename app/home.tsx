@@ -8,11 +8,14 @@ import {
   storeUserSearchParams
 } from "@/redux/reducers/usersReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
+import { dismissHomeAddBuzinessCard } from "@/redux/reducers/appReducer";
 import { RootState } from "@/redux/store";
 import { router, useFocusEffect, useNavigation } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Dimensions, View } from "react-native";
 import {
+  Card,
+  IconButton,
   Modal,
   Portal, Text
 } from "react-native-paper";
@@ -24,10 +27,12 @@ import WhatToDo from "@/components/WhatToDo";
 import { Button } from "@/components/Button";
 import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 import { useInfiniteQuery } from "@/hooks/useInfiniteQuery";
+import { supabase } from "@/lib/supabase/supabase";
 
 const PAGE_SIZE = Math.floor(Dimensions.get("window").height / 100);
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
+  const { homeAddBuzinessCardDismissed } = useSelector((state: RootState) => state.app);
   const navigation = useNavigation();
   const { userSearchParams } = useSelector(
     (state: RootState) => state.users,
@@ -38,6 +43,9 @@ export default function Index() {
 
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [whatVisible, setWhatVisible] = useState(false);
+  const [userHasBuzinesses, setUserHasBuzinesses] = useState<boolean | null>(null);
+  const [showCtaCard, setShowCtaCard] = useState(false);
+
   const { fetch, data, fetchNextPage, hasMore } = useInfiniteQuery({
     tableName: "profiles",
     pageSize: PAGE_SIZE,
@@ -50,6 +58,27 @@ export default function Index() {
   const handleSearch = () => {
     dispatch(storeBuzinesses([]));
     router.push("/biznisz");
+  };
+
+  // Check if user has buzinesses
+  useEffect(() => {
+    if (uid && userHasBuzinesses === null) {
+      supabase
+        .from("buziness")
+        .select("id")
+        .eq("author", uid)
+        .limit(1)
+        .then((res) => {
+          const hasBuzinesses = !!res.data && res.data.length > 0;
+          setUserHasBuzinesses(hasBuzinesses);
+          setShowCtaCard(!hasBuzinesses && !homeAddBuzinessCardDismissed);
+        });
+    }
+  }, [uid, userHasBuzinesses, homeAddBuzinessCardDismissed]);
+
+  const handleDismissCtaCard = () => {
+    dispatch(dismissHomeAddBuzinessCard());
+    setShowCtaCard(false);
   };
 
 
@@ -78,6 +107,35 @@ export default function Index() {
             </View>
           </View>
         </View>
+        {showCtaCard && (
+          <Card
+            mode="elevated"
+            style={{
+              marginHorizontal: 16,
+              marginVertical: 8,
+            }}
+          >
+            <Card.Content style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Text variant="titleMedium">Hozd létre a bizniszed!</Text>
+                <Text variant="bodySmall" style={{ marginTop: 4 }}>
+                  Oszd meg a tudásodat és képességeidet másokkal.
+                </Text>
+              </View>
+              <IconButton
+                icon="plus"
+                mode="contained"
+                size={24}
+                onPress={() => router.push("/biznisz/new")}
+              />
+              <IconButton
+                icon="close"
+                size={20}
+                onPress={handleDismissCtaCard}
+              />
+            </Card.Content>
+          </Card>
+        )}
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
           <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Új fifék Budapesten</ThemedText>
         </View>
