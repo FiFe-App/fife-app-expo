@@ -833,17 +833,7 @@ CREATE POLICY "Enable update for author" ON "public"."buziness" FOR UPDATE TO "a
 
 CREATE POLICY "Enable delete for author" ON "public"."buziness" FOR DELETE TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "author"));
 
--- Insert policy with contact requirement
-CREATE POLICY "Enable insert for author with contacts" ON "public"."buziness" FOR INSERT TO "authenticated" WITH CHECK (
-  (( SELECT "auth"."uid"() AS "uid") = "author") 
-  AND 
-  EXISTS (
-    SELECT 1 FROM "public"."contacts" 
-    WHERE "contacts"."author" = "auth"."uid"()
-    AND "contacts"."data" IS NOT NULL 
-    AND "contacts"."data" != ''
-  )
-);
+-- Note: INSERT policy removed - buziness creation should only happen through create-buziness edge function
 
 
 
