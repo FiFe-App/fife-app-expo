@@ -13,7 +13,7 @@ import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { ScrollView, View, Pressable } from "react-native";
+import { ScrollView, View, TouchableWithoutFeedback } from "react-native";
 import {
   Divider,
   HelperText,
@@ -239,8 +239,13 @@ export default function Index() {
               visible={themeMenuVisible}
               onDismiss={() => setThemeMenuVisible(false)}
               anchor={
-                <Pressable onPress={() => setThemeMenuVisible(true)}>
-                  <View pointerEvents="none">
+                <TouchableWithoutFeedback 
+                  onPress={() => setThemeMenuVisible(true)}
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel="Téma kiválasztása"
+                >
+                  <View>
                     <TextInput
                       mode="outlined"
                       label="Téma"
@@ -253,9 +258,10 @@ export default function Index() {
                       }
                       right={<TextInput.Icon icon="chevron-down" />}
                       editable={false}
+                      pointerEvents="none"
                     />
                   </View>
-                </Pressable>
+                </TouchableWithoutFeedback>
               }
             >
               <Menu.Item
