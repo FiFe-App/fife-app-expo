@@ -56,7 +56,16 @@ const userReducer = createSlice({
   },
 });
 
-export const { init, login, logout, setName, setUserData, setLocationError, setThemePreference, addSavedBuziness, removeSavedBuziness } =
-  userReducer.actions;
+export const {
+  init,
+  login,
+  logout,
+  setName,
+  setUserData,
+  setLocationError,
+  setThemePreference,
+  addSavedBuziness,
+  removeSavedBuziness,
+} = userReducer.actions;
 
 export default userReducer;

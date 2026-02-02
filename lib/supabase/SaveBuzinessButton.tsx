@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { IconButton } from "react-native-paper";
+import { StyleProp, ViewStyle } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
@@ -8,7 +9,7 @@ import { addSnack } from "@/redux/reducers/infoReducer";
 
 interface SaveBuzinessButtonProps {
   buzinessId: number;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 export const SaveBuzinessButton = ({

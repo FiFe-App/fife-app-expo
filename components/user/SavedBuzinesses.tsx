@@ -32,7 +32,7 @@ const SavedBuzinesses = ({ uid }: SavedBuzinessesProps) => {
       .from("buziness")
       .select("*, profiles ( full_name ), buzinessRecommendations ( count )")
       .in("id", savedBuzinesses)
-      .order("created_at")
+      .order("created_at", { ascending: false })
       .then((res) => {
         if (res.data) {
           setBuzinesses(
