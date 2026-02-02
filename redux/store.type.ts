@@ -15,6 +15,7 @@ export interface UserState {
   } | null;
   locationError: string | null;
   themePreference: "light" | "dark" | "auto";
+  savedBuzinesses: number[];
 }
 
 export type User = Tables<"profiles"> & {

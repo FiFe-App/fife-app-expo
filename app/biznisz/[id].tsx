@@ -15,6 +15,7 @@ import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
 import getLinkForContact from "@/lib/functions/getLinkForContact";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
+import { SaveBuzinessButton } from "@/lib/supabase/SaveBuzinessButton";
 import { supabase } from "@/lib/supabase/supabase";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { RootState } from "@/redux/store";
@@ -285,6 +286,11 @@ export default function Index() {
                         );
                     }
                   }}
+                />
+              )}
+              {!myBuziness && (
+                <SaveBuzinessButton
+                  buzinessId={id}
                 />
               )}
             </View>

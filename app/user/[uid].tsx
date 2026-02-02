@@ -2,6 +2,7 @@ import { ContactList } from "@/components/buziness/ContactList";
 import ProfileImage from "@/components/ProfileImage";
 import { ThemedView } from "@/components/ThemedView";
 import MyBuzinesses from "@/components/user/MyBuzinesses";
+import SavedBuzinesses from "@/components/user/SavedBuzinesses";
 import RecommendationsModal from "@/components/user/RecommendationsModal";
 import ReportProfileModal from "@/components/user/ReportProfileModal";
 import { Tables } from "@/database.types";
@@ -271,6 +272,14 @@ export default function Index() {
                 >
                   <SavedProfiles uid={uid} />
                 </TabScreen>
+                {myProfile && (
+                  <TabScreen
+                    label="Mentett bizniszek"
+                    icon="archive"
+                  >
+                    <SavedBuzinesses uid={uid} />
+                  </TabScreen>
+                )}
               </Tabs>
             </TabsProvider>
           </>
