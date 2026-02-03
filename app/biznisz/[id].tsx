@@ -272,26 +272,26 @@ export default function Index() {
               )}
 
               {!myBuziness && (
-                <RecommendBuzinessButton
-                  buzinessId={id}
-                  style={{ flex: 1 }}
-                  recommended={iRecommended}
-                  setRecommended={(recommendedByMe) => {
-                    if (myUid) {
-                      if (recommendedByMe)
-                        setRecommendations([...recommendations, myUid]);
-                      else
-                        setRecommendations(
-                          recommendations.filter((uid) => uid !== myUid)
-                        );
-                    }
-                  }}
-                />
-              )}
-              {!myBuziness && (
-                <SaveBuzinessButton
-                  buzinessId={id}
-                />
+                <>
+                  <RecommendBuzinessButton
+                    buzinessId={id}
+                    style={{ flex: 1 }}
+                    recommended={iRecommended}
+                    setRecommended={(recommendedByMe) => {
+                      if (myUid) {
+                        if (recommendedByMe)
+                          setRecommendations([...recommendations, myUid]);
+                        else
+                          setRecommendations(
+                            recommendations.filter((uid) => uid !== myUid)
+                          );
+                      }
+                    }}
+                  />
+                  <SaveBuzinessButton
+                    buzinessId={id}
+                  />
+                </>
               )}
             </View>
             {/* Vertical sections instead of tabs */}
