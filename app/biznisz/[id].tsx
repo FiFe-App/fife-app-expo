@@ -272,7 +272,7 @@ export default function Index() {
               )}
 
               {!myBuziness && (
-                <>
+                <View style={{flexDirection: "row"}}>
                   <RecommendBuzinessButton
                     buzinessId={id}
                     style={{ flex: 1 }}
@@ -291,7 +291,7 @@ export default function Index() {
                   <SaveBuzinessButton
                     buzinessId={id}
                   />
-                </>
+                </View>
               )}
             </View>
             {/* Vertical sections instead of tabs */}
