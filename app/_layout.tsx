@@ -88,6 +88,14 @@ function RootContent() {
                 name="user/password-reset"
                 options={{ title: "Jelszó visszaállítás" }}
               />
+              <Stack.Screen
+                name="chats"
+                options={{ title: "Üzenetek" }}
+              />
+              <Stack.Screen
+                name="chat/[uid]"
+                options={{ title: "Üzenet" }}
+              />
             </Stack>
             {pathname !== "/" && !pathname.includes("projekt") &&
               !pathname.includes("login") &&
