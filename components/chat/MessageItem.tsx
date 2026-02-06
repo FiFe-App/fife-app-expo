@@ -4,6 +4,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Card, Text, useTheme } from "react-native-paper";
 import { useSelector } from "react-redux";
+import { formatChatDate } from "@/lib/functions/formatChatDate";
 
 type Message = Tables<"messages">;
 
@@ -16,11 +17,7 @@ export function MessageItem({ message }: MessageItemProps) {
   const { uid } = useSelector((state: RootState) => state.user);
   const isMyMessage = message.author === uid;
 
-  const messageDate = new Date(message.created_at);
-  const formattedTime = messageDate.toLocaleTimeString("hu-HU", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const formattedTime = formatChatDate(message.created_at, "time");
 
   return (
     <View

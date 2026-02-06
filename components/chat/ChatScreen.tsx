@@ -45,6 +45,8 @@ export default function ChatScreen() {
   const loadMessages = useCallback(async () => {
     if (!myUid || !otherUid) return;
 
+    // Note: myUid and otherUid are safe to interpolate as they come from authenticated
+    // Redux state and route params. Supabase's query builder handles the escaping.
     const { data, error } = await supabase
       .from("messages")
       .select("*")

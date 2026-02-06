@@ -4,6 +4,7 @@ import { Link } from "expo-router";
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Card, Text, TouchableRipple, useTheme } from "react-native-paper";
+import { formatChatDate } from "@/lib/functions/formatChatDate";
 
 type Message = Tables<"messages">;
 type Profile = Tables<"profiles">;
@@ -22,10 +23,7 @@ export function ChatListItem({
   const theme = useTheme();
 
   const formattedTime = lastMessage
-    ? new Date(lastMessage.created_at).toLocaleDateString("hu-HU", {
-        month: "short",
-        day: "numeric",
-      })
+    ? formatChatDate(lastMessage.created_at, "short")
     : "";
 
   return (
