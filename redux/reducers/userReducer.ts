@@ -9,6 +9,7 @@ const initialState: UserState = {
   userData: null,
   locationError: null,
   themePreference: DEFAULT_THEME_PREFERENCE,
+  savedBuzinesses: [],
 };
 
 const userReducer = createSlice({
@@ -44,10 +45,27 @@ const userReducer = createSlice({
     setThemePreference: (state, { payload }: PayloadAction<"light" | "dark" | "auto">) => {
       state.themePreference = payload;
     },
+    addSavedBuziness: (state, { payload }: PayloadAction<number>) => {
+      if (!state.savedBuzinesses.includes(payload)) {
+        state.savedBuzinesses = [...state.savedBuzinesses, payload];
+      }
+    },
+    removeSavedBuziness: (state, { payload }: PayloadAction<number>) => {
+      state.savedBuzinesses = state.savedBuzinesses.filter((id) => id !== payload);
+    },
   },
 });
 
-export const { init, login, logout, setName, setUserData, setLocationError, setThemePreference } =
-  userReducer.actions;
+export const {
+  init,
+  login,
+  logout,
+  setName,
+  setUserData,
+  setLocationError,
+  setThemePreference,
+  addSavedBuziness,
+  removeSavedBuziness,
+} = userReducer.actions;
 
 export default userReducer;

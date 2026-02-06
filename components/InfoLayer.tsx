@@ -70,6 +70,10 @@ const InfoLayer = () => {
             onDismiss={() => {
               dispath(popSnack());
             }}
+            action={snack.buttonText ? {
+              label: snack.buttonText,
+              onPress: snack.onPress,
+            } : undefined}
             duration={3000}
             onIconPress={() => {
               dispath(popSnack());

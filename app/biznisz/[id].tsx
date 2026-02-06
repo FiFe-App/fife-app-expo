@@ -15,6 +15,7 @@ import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
 import getLinkForContact from "@/lib/functions/getLinkForContact";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
+import { SaveBuzinessButton } from "@/lib/supabase/SaveBuzinessButton";
 import { supabase } from "@/lib/supabase/supabase";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { RootState } from "@/redux/store";
@@ -271,21 +272,26 @@ export default function Index() {
               )}
 
               {!myBuziness && (
-                <RecommendBuzinessButton
-                  buzinessId={id}
-                  style={{ flex: 1 }}
-                  recommended={iRecommended}
-                  setRecommended={(recommendedByMe) => {
-                    if (myUid) {
-                      if (recommendedByMe)
-                        setRecommendations([...recommendations, myUid]);
-                      else
-                        setRecommendations(
-                          recommendations.filter((uid) => uid !== myUid)
-                        );
-                    }
-                  }}
-                />
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <RecommendBuzinessButton
+                    buzinessId={id}
+                    style={{ flex: 1 }}
+                    recommended={iRecommended}
+                    setRecommended={(recommendedByMe) => {
+                      if (myUid) {
+                        if (recommendedByMe)
+                          setRecommendations([...recommendations, myUid]);
+                        else
+                          setRecommendations(
+                            recommendations.filter((uid) => uid !== myUid)
+                          );
+                      }
+                    }}
+                  />
+                  <SaveBuzinessButton
+                    buzinessId={id}
+                  />
+                </View>
               )}
             </View>
             {/* Vertical sections instead of tabs */}

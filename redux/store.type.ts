@@ -15,6 +15,7 @@ export interface UserState {
   } | null;
   locationError: string | null;
   themePreference: "light" | "dark" | "auto";
+  savedBuzinesses: number[];
 }
 
 export type User = Tables<"profiles"> & {
@@ -110,6 +111,7 @@ export interface LoadingProps {
 export interface SnackProps {
   title: string;
   onPress?: () => void;
+  buttonText?: string;
 }
 export interface InfoState {
   dialogs: DialogProps[];
