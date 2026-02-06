@@ -58,11 +58,6 @@ export default function ChatScreen() {
 
     setMessages(data || []);
     setLoading(false);
-
-    // Scroll to bottom after loading
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: false });
-    }, 100);
   }, [myUid, otherUid]);
 
   // Set up realtime subscription
@@ -90,10 +85,6 @@ export default function ChatScreen() {
             (newMessage.author === otherUid && newMessage.to === myUid)
           ) {
             setMessages((prev) => [...prev, newMessage]);
-            // Scroll to bottom when new message arrives
-            setTimeout(() => {
-              flatListRef.current?.scrollToEnd({ animated: true });
-            }, 100);
           }
         }
       )

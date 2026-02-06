@@ -6,7 +6,7 @@ ON public.messages
 FOR SELECT
 TO authenticated
 USING (
-  auth.uid() = author OR auth.uid() = "to"
+  auth.uid() = author OR auth.uid() = "to"::uuid
 );
 
 -- Allow users to insert messages where they are the sender
