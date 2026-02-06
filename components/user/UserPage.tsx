@@ -1,0 +1,307 @@
+import { ContactList } from "@/components/buziness/ContactList";
+import ProfileImage from "@/components/ProfileImage";
+import { ThemedView } from "@/components/ThemedView";
+import MyBuzinesses from "@/components/user/MyBuzinesses";
+import SavedBuzinesses from "@/components/user/SavedBuzinesses";
+import RecommendationsModal from "@/components/user/RecommendationsModal";
+import ReportProfileModal from "@/components/user/ReportProfileModal";
+import { Tables } from "@/database.types";
+import elapsedTime from "@/lib/functions/elapsedTime";
+import {
+    clearBuziness,
+    clearBuzinessSearchParams,
+} from "@/redux/reducers/buzinessReducer";
+import { setOptions } from "@/redux/reducers/infoReducer";
+import { addSnack } from "@/redux/reducers/infoReducer";
+import { logout } from "@/redux/reducers/userReducer";
+import { RootState } from "@/redux/store";
+import { TutorialState, UserState } from "@/redux/store.type";
+import { RecommendProfileButton } from "@/lib/supabase/RecommendProfileButton";
+import { supabase } from "@/lib/supabase/supabase";
+import {
+    Link,
+    router,
+    useFocusEffect,
+    useGlobalSearchParams,
+} from "expo-router";
+import React, { useCallback, useState } from "react";
+import { useWindowDimensions, View } from "react-native";
+import {
+    Badge,
+    Button,
+    Icon,
+    IconButton,
+    Portal,
+    Text,
+    TouchableRipple,
+    useTheme,
+} from "react-native-paper";
+import * as Clipboard from "expo-clipboard";
+import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
+
+import { useDispatch, useSelector } from "react-redux";
+import globStyles from "@/constants/Styles";
+import {
+    clearTutorialState,
+    viewFunction,
+} from "@/redux/reducers/tutorialReducer";
+import Measure from "@/components/tutorial/Measure";
+import { SavedProfiles } from "@/components/buziness/SavedProfiles";
+
+type UserInfo = Tables<"profiles">;
+
+export default function UserPage() {
+    const { uid: paramUid, tab: paramTab } = useGlobalSearchParams();
+    const uid: string = String(paramUid);
+    // Map tab param to index
+    const tabNames = ["buziness", "contacts", "connections", "saved-buzinesses"];
+    let defaultIndex = 0;
+    if (paramTab && typeof paramTab === "string") {
+        const idx = tabNames.indexOf(paramTab);
+        if (idx !== -1) defaultIndex = idx;
+    }
+    const { uid: myUid }: UserState = useSelector(
+        (state: RootState) => state.user,
+    );
+    const { functions }: TutorialState = useSelector(
+        (state: RootState) => state.tutorial,
+    );
+    const theme = useTheme();
+
+    const dispatch = useDispatch();
+    const { width } = useWindowDimensions();
+    const myProfile = myUid === uid;
+    const [data, setData] = useState<UserInfo | null>(null);
+    const [recommendations, setRecommendations] = useState<string[]>([]);
+    const [showRecommendsModal, setShowRecommendsModal] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const iRecommended = recommendations.includes(myUid || "");
+
+    useFocusEffect(
+        useCallback(() => {
+            const load = () => {
+                if (!uid) return;
+
+                setShowRecommendsModal(false);
+
+                supabase
+                    .from("profiles")
+                    .select(
+                        "*, profileRecommendations!profileRecommendations_profile_id_fkey(*)",
+                    )
+                    .eq("id", uid)
+                    .single()
+                    .then(({ data, error }) => {
+                        if (error) {
+                            console.log("err", error.message);
+                            return;
+                        }
+                        if (data) {
+                            setData(data);
+                            setRecommendations(
+                                data.profileRecommendations.map((pr) => pr.author),
+                            );
+                            console.log(data);
+                        }
+                    });
+            };
+            load();
+            if (myProfile)
+                dispatch(
+                    setOptions([
+                        {
+                            icon: "exit-run",
+                            onPress: () => {
+                                dispatch(logout());
+                                dispatch(clearBuziness());
+                                dispatch(clearTutorialState());
+                                dispatch(clearBuzinessSearchParams());
+                                router.navigate("/");
+                            },
+                            title: "Kijelentkezés",
+                        },
+                    ]),
+                );
+            return () => {
+                setShowRecommendsModal(false);
+            };
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [uid]),
+    );
+
+    return (
+        <>
+            <ThemedView style={{ flex: 1 }}>
+                {data && uid && (
+                    <>
+                        <ThemedView style={{ padding: 16, gap: 8 }}>
+                            <View style={{ flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
+                                <ProfileImage
+                                    modal
+                                    uid={uid}
+                                    avatar_url={data.avatar_url}
+                                    style={{ width: 100, height: 100, borderRadius: 8 }}
+                                />
+                                <View style={{ flex: 1 }}>
+                                    <View
+                                        style={{
+                                            flex: 1,
+                                            paddingLeft: 16,
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <Text variant="titleLarge">{data?.full_name}</Text>
+                                        {!!data?.username && (
+                                            <TouchableRipple
+                                                onPress={() => {
+                                                    Clipboard.setStringAsync(`www.fifeapp.hu/@${data.username}`).then(() => {
+                                                        dispatch(addSnack({ title: "Vágólapra másolva!" }));
+                                                    });
+                                                }}
+                                                style={{ borderRadius: 4, alignSelf: "flex-start" }}
+                                            >
+                                                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                                                    <Text variant="labelMedium">
+                                                        @{data.username}
+                                                    </Text>
+                                                    <Icon source="content-copy" size={16} />
+                                                </View>
+
+                                            </TouchableRipple>
+                                        )}
+                                    </View>
+                                    <View style={{ flexDirection: "row", flex: 1 }}>
+                                        <TouchableRipple
+                                            style={{ flex: 1 }}
+                                            onPress={() => {
+                                                if (uid)
+                                                    dispatch(viewFunction({ key: "friendsProfile", uid }));
+                                                setShowRecommendsModal(true);
+                                            }}
+                                        >
+                                            <View
+                                                style={{
+                                                    flex: 1,
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                }}
+                                            >
+                                                <Text> Támogatók: {recommendations.length}</Text>
+                                                {functions.includes("friendsProfile") && (
+                                                    <Badge style={globStyles.badge}>ÚJ</Badge>
+                                                )}
+                                            </View>
+                                        </TouchableRipple>
+                                        {data?.created_at && (
+                                            <View
+                                                style={{
+                                                    flex: 1,
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                }}
+                                            >
+                                                <Text>
+                                                    {elapsedTime(Date.parse(data.created_at.toString()))} Fife
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                </View>
+                                {!myProfile && (
+                                    <IconButton
+                                        icon="alert-octagon"
+                                        size={24}
+                                        onPress={() => setShowReportModal(true)}
+                                    />
+                                )}
+                            </View>
+                            <View style={{ flexDirection: "row", gap: 4, margin: 4 }}>
+                                {myProfile ? (
+                                    <View style={{ flexDirection: "column", width: "100%", gap: 4 }}>
+                                        <Measure name="edit-profile">
+                                            <Link
+                                                asChild
+                                                style={{ flex: 1 }}
+                                                href={{ pathname: "/user/edit" }}
+                                            >
+                                                <Button mode="contained-tonal">Profilom szerkesztése</Button>
+                                            </Link>
+                                        </Measure>
+                                    </View>
+                                ) : (
+                                    <>
+                                        <RecommendProfileButton
+                                            profileId={uid}
+                                            style={{ flex: 1 }}
+                                            recommended={iRecommended}
+                                            setRecommended={(recommendedByMe) => {
+                                                if (myUid) {
+                                                    if (recommendedByMe)
+                                                        setRecommendations([...recommendations, myUid]);
+                                                    else
+                                                        setRecommendations(
+                                                            recommendations.filter((uid) => uid !== myUid),
+                                                        );
+                                                }
+                                            }}
+                                        />
+                                    </>
+                                )}
+                            </View>
+                        </ThemedView>
+                        <TabsProvider defaultIndex={defaultIndex}>
+                            <Tabs showTextLabel={width > 400} theme={theme} style={{ backgroundColor: theme.colors.background }}>
+                                <TabScreen
+                                    label="Bizniszek"
+                                    badge={functions.includes("buzinessProfile") ? "ÚJ" : undefined}
+                                    icon="briefcase"
+                                >
+                                    <Measure name="user-biznisz-tabs">
+                                        <MyBuzinesses uid={uid} myProfile={myProfile} />
+                                    </Measure>
+                                </TabScreen>
+                                <TabScreen
+                                    label="Elérhetőségek"
+                                    badge={functions.includes("contactsProfile") ? "ÚJ" : undefined}
+                                    icon="email-multiple"
+                                >
+                                    <ContactList uid={uid} edit={myProfile} />
+                                </TabScreen>
+                                <TabScreen
+                                    label="Kapcsolatok"
+                                    icon="account-group"
+                                >
+                                    <SavedProfiles uid={uid} />
+                                </TabScreen>
+                                {myProfile && (
+                                    <TabScreen
+                                        label="Mentett bizniszek"
+                                        icon="archive"
+                                    >
+                                        <SavedBuzinesses uid={uid} />
+                                    </TabScreen>
+                                )}
+                            </Tabs>
+                        </TabsProvider>
+                    </>
+                )}
+            </ThemedView>
+            {!!data?.full_name && (
+                <Portal>
+                    <RecommendationsModal
+                        show={showRecommendsModal}
+                        setShow={setShowRecommendsModal}
+                        uid={uid}
+                        name={data.full_name}
+                    />
+                    <ReportProfileModal
+                        show={showReportModal}
+                        setShow={setShowReportModal}
+                        profileId={uid}
+                        profileName={data.full_name}
+                    />
+                </Portal>
+            )}
+        </>
+    );
+}

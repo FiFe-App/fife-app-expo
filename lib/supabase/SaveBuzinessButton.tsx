@@ -5,6 +5,7 @@ import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { addSavedBuziness, removeSavedBuziness } from "@/redux/reducers/userReducer";
 import { addSnack } from "@/redux/reducers/infoReducer";
+import { router } from "expo-router";
 
 interface SaveBuzinessButtonProps {
   buzinessId: number;
@@ -15,7 +16,7 @@ export const SaveBuzinessButton = ({
   buzinessId,
   style,
 }: SaveBuzinessButtonProps) => {
-  const { savedBuzinesses }: UserState = useSelector(
+  const { savedBuzinesses, uid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
   const dispatch = useDispatch();
@@ -27,7 +28,13 @@ export const SaveBuzinessButton = ({
       dispatch(addSnack({ title: "Mentés visszavonva" }));
     } else {
       dispatch(addSavedBuziness(buzinessId));
-      dispatch(addSnack({ title: "Biznisz elmentve" }));
+      dispatch(addSnack({
+        title: "Biznisz elmentve",
+        buttonText: "Megnézem",
+        onPress: () => {
+          router.push("/user/" + uid + "/saved-buzinesses");
+        }
+      }));
     }
   };
 

@@ -111,6 +111,7 @@ export interface LoadingProps {
 export interface SnackProps {
   title: string;
   onPress?: () => void;
+  buttonText?: string;
 }
 export interface InfoState {
   dialogs: DialogProps[];
