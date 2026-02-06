@@ -272,7 +272,7 @@ export default function Index() {
               )}
 
               {!myBuziness && (
-                <View style={{flexDirection: "row"}}>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <RecommendBuzinessButton
                     buzinessId={id}
                     style={{ flex: 1 }}

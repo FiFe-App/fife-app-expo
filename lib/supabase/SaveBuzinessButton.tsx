@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { IconButton } from "react-native-paper";
 import { StyleProp, ViewStyle } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
@@ -34,9 +33,10 @@ export const SaveBuzinessButton = ({
 
   return (
     <IconButton
-      icon={isSaved ? "archive" : "archive-outline"}
+      icon={isSaved ? "bookmark-check" : "bookmark-outline"}
       mode="contained-tonal"
       onPress={toggleSave}
+      size={26}
       style={style}
     />
   );
