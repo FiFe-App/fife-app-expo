@@ -71,7 +71,8 @@ export default function ChatScreen() {
 
     loadMessages();
 
-    // Subscribe to new messages
+    // Subscribe to new messages - listen to all messages and filter client-side
+    // because Supabase realtime filters don't support complex OR conditions well
     const channel = supabase
       .channel("messages_channel")
       .on(
@@ -80,15 +81,20 @@ export default function ChatScreen() {
           event: "INSERT",
           schema: "public",
           table: "messages",
-          filter: `or(and(author.eq.${myUid},to.eq.${otherUid}),and(author.eq.${otherUid},to.eq.${myUid}))`,
         },
         (payload) => {
           const newMessage = payload.new as Message;
-          setMessages((prev) => [...prev, newMessage]);
-          // Scroll to bottom when new message arrives
-          setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
-          }, 100);
+          // Only add if it's relevant to this conversation
+          if (
+            (newMessage.author === myUid && newMessage.to === otherUid) ||
+            (newMessage.author === otherUid && newMessage.to === myUid)
+          ) {
+            setMessages((prev) => [...prev, newMessage]);
+            // Scroll to bottom when new message arrives
+            setTimeout(() => {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+          }
         }
       )
       .subscribe();
