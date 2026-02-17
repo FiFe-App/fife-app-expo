@@ -32,7 +32,7 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
         onChangeText={setText}
         onSubmitEditing={handleSend}
         disabled={disabled}
-        multiline
+        multiline={false}
         maxLength={1000}
         style={styles.input}
         right={

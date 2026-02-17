@@ -2,18 +2,25 @@ import { ThemedView } from "@/components/ThemedView";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
-import { useGlobalSearchParams } from "expo-router";
+import { useFocusEffect, useGlobalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, View, StyleSheet } from "react-native";
+import { Appbar } from "react-native-paper";
+import ProfileImage from "@/components/ProfileImage";
+import { useNavigation } from "@react-navigation/native";
 import { ActivityIndicator, Text } from "react-native-paper";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { MessageItem } from "./MessageItem";
 import { MessageInput } from "./MessageInput";
 import { RealtimeChannel } from "@supabase/supabase-js";
+import { viewFunction } from "@/redux/reducers/tutorialReducer";
+import BuzinessSearchInput from "../BuzinessSearchInput";
+import { MyAppbar } from "../MyAppBar";
 
 type Message = Tables<"messages">;
 
 export default function ChatScreen() {
+  const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null);
   const { uid: otherUid } = useGlobalSearchParams<{ uid: string }>();
   const { uid: myUid } = useSelector((state: RootState) => state.user);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -22,24 +29,40 @@ export default function ChatScreen() {
   const [otherUser, setOtherUser] = useState<Tables<"profiles"> | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const flatListRef = useRef<FlatList>(null);
+  const navigation = useNavigation();
 
-  // Load other user's profile
-  useEffect(() => {
-    if (!otherUid) return;
+  useFocusEffect(
+    useCallback(() => {
+      if (!otherUid) return;
 
-    supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", otherUid)
-      .single()
-      .then(({ data, error }) => {
-        if (error) {
-          console.error("Error loading profile:", error);
-          return;
-        }
-        setOtherUser(data);
-      });
-  }, [otherUid]);
+      supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", otherUid)
+        .single()
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("Error loading profile:", error);
+            return;
+          }
+          setOtherUser(data);
+        });
+      navigation.setOptions({ header: () => <MyAppbar center={
+        otherUser && (
+          <View style={styles.profileHeaderContent}>
+            <ProfileImage
+              uid={otherUser.id}
+              avatar_url={otherUser.avatar_url}
+              size={36}
+              style={styles.profileImage}
+            />
+            <Text variant="titleLarge" style={styles.profileName} numberOfLines={1}>
+              {otherUser.full_name || otherUser.username}
+            </Text>
+          </View>
+        )} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
+    }, [navigation, otherUid, otherUser]),
+  );
 
   // Load messages
   const loadMessages = useCallback(async () => {
@@ -127,13 +150,22 @@ export default function ChatScreen() {
     );
   }
 
+
   return (
     <ThemedView style={styles.container}>
       <FlatList
         ref={flatListRef}
         data={messages}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <MessageItem message={item} />}
+        renderItem={({ item }) => (
+          <MessageItem
+            message={item}
+            selected={selectedMessageId === item.id}
+            onPress={() =>
+              setSelectedMessageId((prev) => (prev === item.id ? null : item.id))
+            }
+          />
+        )}
         contentContainerStyle={styles.messagesList}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -159,6 +191,29 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#eee",
+    elevation: 2,
+    zIndex: 10,
+  },
+  profileHeaderContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    flex:1,
+    marginLeft: 8,
+  },
+  profileImage: {
+    marginRight: 10,
+    width: 35,
+    height:35,
+    borderRadius: 8
+  },
+  profileName: {
+    flexShrink: 1,
+    fontWeight: "bold",
   },
   centerContainer: {
     flex: 1,
