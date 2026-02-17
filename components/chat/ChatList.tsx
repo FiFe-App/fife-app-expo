@@ -8,6 +8,7 @@ import { ActivityIndicator, Text } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { ChatListItem } from "./ChatListItem";
 import { useFocusEffect } from "expo-router";
+import { MessagingDisabled } from "./MessagingDisabled";
 
 type Message = Tables<"messages">;
 type Profile = Tables<"profiles">;
@@ -22,6 +23,8 @@ export default function ChatList() {
   const [chats, setChats] = useState<ChatInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [hasMessagingEnabled, setHasMessagingEnabled] = useState(false);
+  const [checkingMessaging, setCheckingMessaging] = useState(true);
 
   const loadChats = useCallback(async () => {
     if (!myUid) return;
@@ -97,8 +100,23 @@ export default function ChatList() {
 
   useFocusEffect(
     useCallback(() => {
+      const checkMessaging = async () => {
+        if (!myUid) return;
+
+        const { data } = await supabase
+          .from("contacts")
+          .select("*")
+          .eq("author", myUid)
+          .eq("type", "MESSAGE")
+          .maybeSingle();
+
+        setHasMessagingEnabled(!!(data && data.data));
+        setCheckingMessaging(false);
+      };
+
+      checkMessaging();
       loadChats();
-    }, [loadChats])
+    }, [loadChats, myUid])
   );
 
   const onRefresh = () => {
@@ -106,10 +124,23 @@ export default function ChatList() {
     loadChats();
   };
 
-  if (loading) {
+  if (loading || checkingMessaging) {
     return (
       <ThemedView style={styles.centerContainer}>
         <ActivityIndicator size="large" />
+      </ThemedView>
+    );
+  }
+
+  if (!hasMessagingEnabled) {
+    return (
+      <ThemedView style={styles.container}>
+        <MessagingDisabled
+          onEnabled={() => {
+            setHasMessagingEnabled(true);
+            loadChats();
+          }}
+        />
       </ThemedView>
     );
   }

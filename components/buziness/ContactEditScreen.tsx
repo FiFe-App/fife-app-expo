@@ -7,7 +7,7 @@ import typeToPrefix from "@/lib/functions/typeToPrefix";
 import typeToValueLabel from "@/lib/functions/typeToValueLabel";
 import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
-import { useFocusEffect } from "expo-router";
+import { Link, useFocusEffect } from "expo-router";
 import React, {
   forwardRef,
   useCallback,
@@ -15,7 +15,7 @@ import React, {
   useState,
 } from "react";
 import { View } from "react-native";
-import { Icon, Switch, TextInput } from "react-native-paper";
+import { Icon, Switch, TextInput, Button, TouchableRipple, useTheme } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 const types: {
@@ -144,9 +144,11 @@ const ContactEditScreen = forwardRef<{
             ...contacts.find((c) => c?.type === type.value),
           };
           
-          // Special handling for MESSAGE type - it's a switch
+          // Special handling for MESSAGE type - show enable/chat button
           if (type.value === "MESSAGE") {
             const isEnabled = !!current.data;
+            const theme = useTheme();
+            
             return (
               <View key={ind}>
                 <View
@@ -165,20 +167,29 @@ const ContactEditScreen = forwardRef<{
                       flexDirection: "row",
                       gap: 4,
                       alignItems: "center",
+                      flex: 1,
                     }}
                   >
                     <Icon size={16} source={typeToIcon(type?.value)} />
                     <ThemedText>{type.label}</ThemedText>
                   </View>
-                  <Switch
-                    value={isEnabled}
-                    onValueChange={(value) => {
-                      saveContact(ind, { 
-                        data: value ? "enabled" : "",
-                        title: null 
-                      });
-                    }}
-                  />
+                  {isEnabled ? (
+                    <Link asChild href="/chats">
+                      <Button mode="contained-tonal" compact>
+                        Kattints a beszélgetéshez
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Switch
+                      value={false}
+                      onValueChange={(value) => {
+                        saveContact(ind, { 
+                          data: value ? "enabled" : "",
+                          title: null 
+                        });
+                      }}
+                    />
+                  )}
                 </View>
                 {isEnabled && (
                   <TextInput

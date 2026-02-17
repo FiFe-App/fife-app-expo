@@ -16,6 +16,7 @@ import { RealtimeChannel } from "@supabase/supabase-js";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import BuzinessSearchInput from "../BuzinessSearchInput";
 import { MyAppbar } from "../MyAppBar";
+import { MessagingDisabled } from "./MessagingDisabled";
 
 type Message = Tables<"messages">;
 
@@ -27,13 +28,30 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [otherUser, setOtherUser] = useState<Tables<"profiles"> | null>(null);
+  const [hasMessagingEnabled, setHasMessagingEnabled] = useState(false);
+  const [checkingMessaging, setCheckingMessaging] = useState(true);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const flatListRef = useRef<FlatList>(null);
   const navigation = useNavigation();
 
   useFocusEffect(
     useCallback(() => {
-      if (!otherUid) return;
+      if (!otherUid || !myUid) return;
+
+      // Check if user has MESSAGE contact enabled
+      const checkMessaging = async () => {
+        const { data } = await supabase
+          .from("contacts")
+          .select("*")
+          .eq("author", myUid)
+          .eq("type", "MESSAGE")
+          .maybeSingle();
+
+        setHasMessagingEnabled(!!(data && data.data));
+        setCheckingMessaging(false);
+      };
+
+      checkMessaging();
 
       supabase
         .from("profiles")
@@ -61,7 +79,7 @@ export default function ChatScreen() {
             </Text>
           </View>
         )} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
-    }, [navigation, otherUid, otherUser]),
+    }, [navigation, otherUid, otherUser, myUid]),
   );
 
   // Load messages
@@ -142,7 +160,7 @@ export default function ChatScreen() {
     setSending(false);
   };
 
-  if (loading) {
+  if (loading || checkingMessaging) {
     return (
       <ThemedView style={styles.centerContainer}>
         <ActivityIndicator size="large" />
@@ -150,6 +168,18 @@ export default function ChatScreen() {
     );
   }
 
+  if (!hasMessagingEnabled) {
+    return (
+      <ThemedView style={styles.container}>
+        <MessagingDisabled
+          onEnabled={() => {
+            setHasMessagingEnabled(true);
+            loadMessages();
+          }}
+        />
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView style={styles.container}>
