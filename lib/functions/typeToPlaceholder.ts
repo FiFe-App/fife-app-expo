@@ -5,6 +5,7 @@ const typeToPlaceholder = (type?: string): string => {
   if (type === "FACEBOOK") return "BemMozi";
   if (type === "PLACE") return "1097 Ady Endre út 2/b";
   if (type === "WEB") return "weboldalam.com";
+  if (type === "MESSAGE") return "";
   if (type === "OTHER") return "";
   return "";
 };

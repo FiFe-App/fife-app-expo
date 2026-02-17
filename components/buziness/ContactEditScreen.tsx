@@ -15,7 +15,7 @@ import React, {
   useState,
 } from "react";
 import { View } from "react-native";
-import { Icon, TextInput } from "react-native-paper";
+import { Icon, Switch, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 const types: {
@@ -28,6 +28,7 @@ const types: {
   { label: "Instagram", value: "INSTAGRAM" },
   { label: "Facebook", value: "FACEBOOK" },
   { label: "Cím/Hely", value: "PLACE" },
+  { label: "Közvetlen üzenet", value: "MESSAGE" },
   { label: "Más", value: "OTHER" },
 ];
 
@@ -142,6 +143,57 @@ const ContactEditScreen = forwardRef<{
             data: "",
             ...contacts.find((c) => c?.type === type.value),
           };
+          
+          // Special handling for MESSAGE type - it's a switch
+          if (type.value === "MESSAGE") {
+            const isEnabled = !!current.data;
+            return (
+              <View key={ind}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 4,
+                    paddingLeft: 16,
+                    paddingRight: 16,
+                    paddingVertical: 8,
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: 4,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Icon size={16} source={typeToIcon(type?.value)} />
+                    <ThemedText>{type.label}</ThemedText>
+                  </View>
+                  <Switch
+                    value={isEnabled}
+                    onValueChange={(value) => {
+                      saveContact(ind, { 
+                        data: value ? "enabled" : "",
+                        title: null 
+                      });
+                    }}
+                  />
+                </View>
+                {isEnabled && (
+                  <TextInput
+                    value={current?.title || ""}
+                    disabled={loading}
+                    label="Egyéb információ"
+                    placeholder="Pl. Csak munkaidőben"
+                    onChangeText={(t) => saveContact(ind, { title: t })}
+                  />
+                )}
+              </View>
+            );
+          }
+          
+          // Regular contact types
           return (
             <View key={ind}>
               <View
@@ -169,7 +221,7 @@ const ContactEditScreen = forwardRef<{
                   value={current?.title || ""}
                   disabled={loading}
                   label="Egyéb információ"
-                  placeholder="Munkanapokon keress / csak hétvégén"
+                  placeholder="Munkanapokon keress / csak hékvégén"
                   onChangeText={(t) => saveContact(ind, { title: t })}
                 />
               )}

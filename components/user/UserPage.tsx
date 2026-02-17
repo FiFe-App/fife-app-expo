@@ -245,11 +245,6 @@ export default function UserPage() {
                         }
                       }}
                     />
-                    <Link asChild style={{ flex: 1 }} href={`/chat/${uid}`}>
-                      <Button mode="contained" icon="message">
-                        Írok neki
-                      </Button>
-                    </Link>
                   </>
                 )}
               </View>
