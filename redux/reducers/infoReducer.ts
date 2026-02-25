@@ -12,6 +12,7 @@ const initialState: InfoState = {
   snacks: [],
   loading: undefined,
   notificationToken: null,
+  drawerOpen: false,
 };
 
 const infoReducer = createSlice({
@@ -62,6 +63,12 @@ const infoReducer = createSlice({
     hideLoading: (state) => {
       state.loading = undefined;
     },
+    openDrawer: (state) => {
+      state.drawerOpen = true;
+    },
+    closeDrawer: (state) => {
+      state.drawerOpen = false;
+    },
   },
 });
 
@@ -76,6 +83,8 @@ export const {
   popSnack,
   showLoading,
   hideLoading,
+  openDrawer,
+  closeDrawer,
 } = infoReducer.actions;
 
 export default infoReducer.reducer;

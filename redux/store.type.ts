@@ -119,6 +119,7 @@ export interface InfoState {
   snacks: SnackProps[];
   loading?: LoadingProps;
   notificationToken: null | undefined | string;
+  drawerOpen: boolean;
 }
 
 export interface LayoutRectangle {
