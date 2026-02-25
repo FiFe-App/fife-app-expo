@@ -53,6 +53,12 @@ export default {
           "assets/fonts/Piazzolla-ExtraBold.ttf"
         ]
       }
+    ],
+    [
+      "onesignal-expo-plugin",
+      {
+        mode: "development"
+      }
     ]
   ],
   experiments: {
