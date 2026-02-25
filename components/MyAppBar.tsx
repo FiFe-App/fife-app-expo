@@ -10,7 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Image } from "expo-image";
 import Smiley from "@/components/Smiley";
 
-export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewStyle }) => {
+export const MyAppbar = ({ center, style, onMenuPress }: { center?: ReactNode, style?: ViewStyle, onMenuPress?: () => void }) => {
   const navigation = useNavigation();
   const theme = useTheme();
   const { options } = useSelector((state: RootState) => state.info);
@@ -77,7 +77,7 @@ export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewSt
               </Menu>
             </>
           )}
-        </> : <View style={{ width: 48 }} />}
+        </> : onMenuPress ? <Appbar.Action icon="menu" onPress={onMenuPress} /> : <View style={{ width: 48 }} />}
     </Appbar.Header>
   );
 };
