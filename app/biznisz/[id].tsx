@@ -49,8 +49,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { MyAppbar } from "@/components/MyAppBar";
 import typeToIcon from "@/lib/functions/typeToIcon";
 import UrlText from "@/components/comments/UrlText";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export default function Index() {
+  const authGuard = useAuthGuard();
+  if (authGuard) return authGuard;
+
   const { id: paramId } = useGlobalSearchParams();
   const navigation = useNavigation();
   const { width } = useWindowDimensions();

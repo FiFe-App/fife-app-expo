@@ -46,10 +46,14 @@ import {
 import { theme } from "@/assets/theme";
 import Measure from "@/components/tutorial/Measure";
 import { SavedProfiles } from "@/components/buziness/SavedProfiles";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 type UserInfo = Tables<"profiles">;
 
 export default function Index() {
+  const authGuard = useAuthGuard();
+  if (authGuard) return authGuard;
+
   const { uid: paramUid } = useGlobalSearchParams();
   const uid: string = String(paramUid);
   const { uid: myUid }: UserState = useSelector(
