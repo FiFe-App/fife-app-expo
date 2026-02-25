@@ -257,7 +257,7 @@ export default function UserPage() {
                   icon="briefcase"
                 >
                   <Measure name="user-biznisz-tabs">
-                    <MyBuzinesses uid={uid} myProfile={myProfile} />
+                    <MyBuzinesses uid={uid} myProfile={myProfile} name={data.full_name ?? undefined} />
                   </Measure>
                 </TabScreen>
                 <TabScreen
@@ -265,13 +265,13 @@ export default function UserPage() {
                   badge={functions.includes("contactsProfile") ? "ÚJ" : undefined}
                   icon="email-multiple"
                 >
-                  <ContactList uid={uid} edit={myProfile} />
+                  <ContactList uid={uid} edit={myProfile} name={data.full_name ?? undefined} />
                 </TabScreen>
                 <TabScreen
                   label="Kapcsolatok"
                   icon="account-group"
                 >
-                  <SavedProfiles uid={uid} />
+                  <SavedProfiles uid={uid} myProfile={myProfile} name={data.full_name ?? undefined} />
                 </TabScreen>
                 {myProfile && (
                   <TabScreen

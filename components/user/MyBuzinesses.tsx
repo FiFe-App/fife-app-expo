@@ -14,9 +14,10 @@ import { ThemedView } from "../ThemedView";
 interface MyBuzinessesProps {
   uid: string;
   myProfile: boolean;
+  name?: string;
 }
 
-const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
+const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
   const dispatch = useDispatch();
   const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>(
     [],
@@ -74,7 +75,9 @@ const MyBuzinesses = ({ uid, myProfile }: MyBuzinessesProps) => {
               />
               <View style={{alignItems:"center",justifyContent:"center" ,flex:1,gap:16}}>
                 <ThemedText type="subtitle">
-                  Itt fognak megjelenni a saját bizniszeid.
+                  {myProfile
+                    ? "Itt fognak megjelenni a saját bizniszeid."
+                    : `${name} még nem adott meg bizniszt.`}
                 </ThemedText>
                 <FAB
                   icon={"plus"}
