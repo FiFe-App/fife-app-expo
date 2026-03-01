@@ -7,6 +7,7 @@ const typeToIcon = (type: string | undefined): IconSource => {
   if (type === "FACEBOOK") return "facebook";
   if (type === "PLACE") return "map-marker";
   if (type === "WEB") return "web";
+  if (type === "MESSAGE") return "message";
   if (type === "OTHER") return "dots-horizontal";
   return "";
 };

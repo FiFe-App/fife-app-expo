@@ -516,6 +516,8 @@ end;
 $function$
 ;
 
+ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+
 grant delete on table "public"."buziness" to "anon";
 
 grant insert on table "public"."buziness" to "anon";

@@ -76,7 +76,11 @@ export function ContactList({ uid, edit }: ContactListProps) {
                     }}
                   >
                     <List.Item
-                      title={contact.data}
+                      title={
+                        contact.type === "MESSAGE"
+                          ? "Kattints a beszélgetéshez"
+                          : contact.data
+                      }
                       description={
                         contact.title || typeToValueLabel(contact.type)
                       }

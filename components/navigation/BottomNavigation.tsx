@@ -13,6 +13,7 @@ const BottomNavigation = () => {
   const bizniszActive = segment[0]?.includes("biznisz");
   const profilActive = segment[0]?.includes("user");
   const homeActive = segment[0]?.includes("home");
+  const chatsActive = segment[0]?.includes("chat");
 
   return (
     <Surface style={{ flexDirection: "row" }} elevation={1}>
@@ -48,6 +49,22 @@ const BottomNavigation = () => {
               />
               <ThemedText type={homeActive ? "defaultSemiBold" : "default"}>
                 Otthon
+              </ThemedText>
+            </View>
+          </TouchableRipple>
+        </Link>
+      </Measure>
+      <Measure name="chats">
+        <Link asChild href="/chats">
+          <TouchableRipple style={{ ...styles.button }}>
+            <View style={{ alignItems: "center" }}>
+              <Icon
+                source={chatsActive ? "message" : "message-outline"}
+                size={chatsActive ? 30 : 24}
+                color={chatsActive ? theme.colors.secondary : undefined}
+              />
+              <ThemedText type={chatsActive ? "defaultSemiBold" : "default"}>
+                Üzenetek
               </ThemedText>
             </View>
           </TouchableRipple>

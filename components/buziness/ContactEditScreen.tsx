@@ -7,7 +7,7 @@ import typeToPrefix from "@/lib/functions/typeToPrefix";
 import typeToValueLabel from "@/lib/functions/typeToValueLabel";
 import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
-import { useFocusEffect } from "expo-router";
+import { Link, useFocusEffect } from "expo-router";
 import React, {
   forwardRef,
   useCallback,
@@ -15,7 +15,7 @@ import React, {
   useState,
 } from "react";
 import { View } from "react-native";
-import { Icon, TextInput } from "react-native-paper";
+import { Icon, Switch, TextInput, Button, TouchableRipple, useTheme } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 const types: {
@@ -28,6 +28,7 @@ const types: {
   { label: "Instagram", value: "INSTAGRAM" },
   { label: "Facebook", value: "FACEBOOK" },
   { label: "Cím/Hely", value: "PLACE" },
+  { label: "Közvetlen üzenet", value: "MESSAGE" },
   { label: "Más", value: "OTHER" },
 ];
 
@@ -142,6 +143,68 @@ const ContactEditScreen = forwardRef<{
             data: "",
             ...contacts.find((c) => c?.type === type.value),
           };
+          
+          // Special handling for MESSAGE type - show enable/chat button
+          if (type.value === "MESSAGE") {
+            const isEnabled = !!current.data;
+            const theme = useTheme();
+            
+            return (
+              <View key={ind}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 4,
+                    paddingLeft: 16,
+                    paddingRight: 16,
+                    paddingVertical: 8,
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: 4,
+                      alignItems: "center",
+                      flex: 1,
+                    }}
+                  >
+                    <Icon size={16} source={typeToIcon(type?.value)} />
+                    <ThemedText>{type.label}</ThemedText>
+                  </View>
+                  {isEnabled ? (
+                    <Link asChild href="/chats">
+                      <Button mode="contained-tonal" compact>
+                        Kattints a beszélgetéshez
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Switch
+                      value={false}
+                      onValueChange={(value) => {
+                        saveContact(ind, { 
+                          data: value ? "enabled" : "",
+                          title: null 
+                        });
+                      }}
+                    />
+                  )}
+                </View>
+                {isEnabled && (
+                  <TextInput
+                    value={current?.title || ""}
+                    disabled={loading}
+                    label="Egyéb információ"
+                    placeholder="Pl. Csak munkaidőben"
+                    onChangeText={(t) => saveContact(ind, { title: t })}
+                  />
+                )}
+              </View>
+            );
+          }
+          
+          // Regular contact types
           return (
             <View key={ind}>
               <View
@@ -169,7 +232,7 @@ const ContactEditScreen = forwardRef<{
                   value={current?.title || ""}
                   disabled={loading}
                   label="Egyéb információ"
-                  placeholder="Munkanapokon keress / csak hétvégén"
+                  placeholder="Munkanapokon keress / csak hékvégén"
                   onChangeText={(t) => saveContact(ind, { title: t })}
                 />
               )}
