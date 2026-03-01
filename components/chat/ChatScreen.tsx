@@ -29,6 +29,7 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false);
   const [otherUser, setOtherUser] = useState<Tables<"profiles"> | null>(null);
   const [hasMessagingEnabled, setHasMessagingEnabled] = useState(false);
+  const [otherHasMessagingEnabled, setOtherHasMessagingEnabled] = useState(false);
   const [checkingMessaging, setCheckingMessaging] = useState(true);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const flatListRef = useRef<FlatList>(null);
@@ -38,16 +39,29 @@ export default function ChatScreen() {
     useCallback(() => {
       if (!otherUid || !myUid) return;
 
-      // Check if user has MESSAGE contact enabled
+      // Check if both users have MESSAGE contact enabled
       const checkMessaging = async () => {
-        const { data } = await supabase
+        // Check current user's MESSAGE contact
+        const { data: myMessageContact } = await supabase
           .from("contacts")
           .select("*")
           .eq("author", myUid)
           .eq("type", "MESSAGE")
           .maybeSingle();
 
-        setHasMessagingEnabled(!!(data && data.data));
+        // Check other user's MESSAGE contact
+        const { data: otherMessageContact } = await supabase
+          .from("contacts")
+          .select("*")
+          .eq("author", otherUid)
+          .eq("type", "MESSAGE")
+          .maybeSingle();
+
+        const myMessagingEnabled = !!(myMessageContact && myMessageContact.data);
+        const otherMessagingEnabled = !!(otherMessageContact && otherMessageContact.data);
+
+        setHasMessagingEnabled(myMessagingEnabled);
+        setOtherHasMessagingEnabled(otherMessagingEnabled);
         setCheckingMessaging(false);
       };
 
@@ -79,7 +93,7 @@ export default function ChatScreen() {
             </Text>
           </View>
         )} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
-    }, [navigation, otherUid, otherUser, myUid]),
+    }, [otherUid, myUid]),
   );
 
   // Load messages
@@ -105,7 +119,7 @@ export default function ChatScreen() {
 
   // Set up realtime subscription
   useEffect(() => {
-    if (!myUid || !otherUid) return;
+    if (!myUid || !otherUid || !hasMessagingEnabled || !otherHasMessagingEnabled) return;
 
     loadMessages();
 
@@ -140,10 +154,10 @@ export default function ChatScreen() {
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, [myUid, otherUid, loadMessages]);
+  }, [myUid, otherUid, hasMessagingEnabled, otherHasMessagingEnabled, loadMessages]);
 
   const sendMessage = async (text: string) => {
-    if (!myUid || !otherUid || sending) return;
+    if (!myUid || !otherUid || sending || !hasMessagingEnabled || !otherHasMessagingEnabled) return;
 
     setSending(true);
 
@@ -168,13 +182,37 @@ export default function ChatScreen() {
     );
   }
 
-  if (!hasMessagingEnabled) {
+  if (!hasMessagingEnabled || !otherHasMessagingEnabled) {
     return (
       <ThemedView style={styles.container}>
         <MessagingDisabled
           onEnabled={() => {
-            setHasMessagingEnabled(true);
-            loadMessages();
+            // Re-check both users' messaging status
+            (async () => {
+              const { data: myMessageContact } = await supabase
+                .from("contacts")
+                .select("*")
+                .eq("author", myUid)
+                .eq("type", "MESSAGE")
+                .maybeSingle();
+
+              const { data: otherMessageContact } = await supabase
+                .from("contacts")
+                .select("*")
+                .eq("author", otherUid)
+                .eq("type", "MESSAGE")
+                .maybeSingle();
+
+              const myMessagingEnabled = !!(myMessageContact && myMessageContact.data);
+              const otherMessagingEnabled = !!(otherMessageContact && otherMessageContact.data);
+
+              setHasMessagingEnabled(myMessagingEnabled);
+              setOtherHasMessagingEnabled(otherMessagingEnabled);
+              
+              if (myMessagingEnabled && otherMessagingEnabled) {
+                loadMessages();
+              }
+            })();
           }}
         />
       </ThemedView>
@@ -213,7 +251,7 @@ export default function ChatScreen() {
           }
         }}
       />
-      <MessageInput onSend={sendMessage} disabled={sending} />
+      <MessageInput onSend={sendMessage} disabled={sending || !hasMessagingEnabled || !otherHasMessagingEnabled} />
     </ThemedView>
   );
 }
