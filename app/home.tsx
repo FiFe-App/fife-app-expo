@@ -23,9 +23,8 @@ import BuzinessSearchInput from "@/components/BuzinessSearchInput";
 import WhatToDo from "@/components/WhatToDo";
 import { Button } from "@/components/Button";
 import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
-import { useInfiniteQuery } from "@/hooks/useInfiniteQuery";
+import { useFifeSearch } from "@/hooks/useFifeSearch";
 
-const PAGE_SIZE = Math.floor(Dimensions.get("window").height / 100);
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
@@ -38,14 +37,7 @@ export default function Index() {
 
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [whatVisible, setWhatVisible] = useState(false);
-  const { fetch, data, fetchNextPage, hasMore } = useInfiniteQuery({
-    tableName: "profiles",
-    pageSize: PAGE_SIZE,
-    columns: "*, profileRecommendations!profileRecommendations_profile_id_fkey(count), buzinesses:buziness(title)",
-    trailingQuery: (query) => {
-      return query.order("created_at", { ascending: false });
-    }
-  });
+  const { fetch, data, fetchNextPage, hasMore } = useFifeSearch();
 
   const handleSearch = () => {
     dispatch(storeBuzinesses([]));
@@ -58,10 +50,9 @@ export default function Index() {
       if (data.length === 0) {
         fetch();
       }
-      console.log("skip changed", skip);
       if (uid) dispatch(viewFunction({ key: "homePage", uid }));
       navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={handleSearch} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
-    }, [skip]),
+    }, [data.length, uid, fetch]),
   );
 
   if (uid)
@@ -79,7 +70,7 @@ export default function Index() {
           </View>
         </View>
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
-          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Új fifék Budapesten</ThemedText>
+          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Fife radar</ThemedText>
         </View>
         <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} />
         <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />

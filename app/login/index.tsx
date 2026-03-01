@@ -19,6 +19,7 @@ import * as WebBrowser from "expo-web-browser";
 import { loadViewedFunctions } from "@/redux/reducers/tutorialReducer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "@/components/Button";
+import locationToCoords from "@/lib/functions/locationToCoords";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -135,7 +136,8 @@ export default function Index() {
       dispatch(setName(profile?.full_name));
       console.log("user-data", { ...userData, ...profile });
 
-      dispatch(setUserData({ ...userData, ...profile }));
+      const coords = locationToCoords(profile?.location as string);
+      dispatch(setUserData({ ...userData, ...profile, ...{location: {lng:coords[0],lat:coords[1]}} }));
       if (profile?.viewed_functions)
         dispatch(loadViewedFunctions(profile?.viewed_functions));
     }

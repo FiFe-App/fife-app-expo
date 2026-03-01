@@ -4,6 +4,7 @@ import { StyleSheet, View } from "react-native";
 import { Chip, Icon, Surface, Text } from "react-native-paper";
 import ProfileImage from "../ProfileImage";
 import { User } from "@/redux/store.type";
+import toDistanceText from "@/lib/functions/distanceText";
 
 interface UserItemProps {
   data: User;
@@ -11,7 +12,7 @@ interface UserItemProps {
 }
 
 const UserItem = ({ data, showOptions }: UserItemProps) => {
-  const { id, full_name, avatar_url, created_at } = data;
+  const { id, full_name, avatar_url, created_at, distance } = data;
   const recommendations = data?.profileRecommendations?.[0]?.count || 0;
   const buzinesses = data?.buzinesses?.map(b => b.title.split(" $ ")[0]) || [];
 
@@ -49,6 +50,13 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
                 {!showOptions && !!created_at && (
                   <Text>
                     <Icon size={16} source="calendar" /> <Text>{elapsedTime(created_at)} fife</Text>
+                  </Text>
+                )}
+              </View>
+              <View style={{}}>
+                {!showOptions && !!created_at && (
+                  <Text>
+                    <Icon size={16} source="map-marker" /> <Text>{toDistanceText(distance/1000)} km távolságra</Text>
                   </Text>
                 )}
               </View>

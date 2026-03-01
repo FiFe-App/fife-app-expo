@@ -53,6 +53,25 @@ const userReducer = createSlice({
     removeSavedBuziness: (state, { payload }: PayloadAction<number>) => {
       state.savedBuzinesses = state.savedBuzinesses.filter((id) => id !== payload);
     },
+    setLocation: (state, { payload }: PayloadAction<{ latitude: number; longitude: number; radius: number }>) => {
+      if (!state.userData) {
+        state.userData = {
+          authorization: "",
+          email: "",
+          emailVerified: false,
+          providerData: {},
+          createdAt: new Date(),
+          lastLoginAt: new Date(),
+        };
+      }
+      state.userData.location = {
+        location: {
+          latitude: payload.latitude,
+          longitude: payload.longitude,
+        },
+        radius: payload.radius,
+      };
+    },
   },
 });
 
@@ -66,6 +85,7 @@ export const {
   setThemePreference,
   addSavedBuziness,
   removeSavedBuziness,
+  setLocation,
 } = userReducer.actions;
 
 export default userReducer;

@@ -1,25 +1,30 @@
 import ContactEditScreen from "@/components/buziness/ContactEditScreen";
+import MapSelector from "@/components/MapSelector/MapSelector";
 import ProfileImage from "@/components/ProfileImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
+import locationToCoords from "@/lib/functions/locationToCoords";
 import { supabase } from "@/lib/supabase/supabase";
 import { setOptions } from "@/redux/reducers/infoReducer";
 import { setName, setUserData, setThemePreference } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
-import { UserState } from "@/redux/store.type";
+import { UserState, CircleType } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { ScrollView, View, TouchableWithoutFeedback } from "react-native";
 import {
+  Button,
   Divider,
   HelperText,
   Icon,
   IconButton,
   Menu,
+  Modal,
+  Portal,
   TextInput,
   useTheme,
 } from "react-native-paper";
@@ -37,6 +42,8 @@ export default function Index() {
   const [profile, setProfile] = useState<UserInfo>({});
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | undefined>(undefined);
   const [themeMenuVisible, setThemeMenuVisible] = useState(false);
+  const [locationMenuVisible, setLocationMenuVisible] = useState(false);
+  const [userLocation, setUserLocation] = useState<CircleType | undefined>();
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -64,6 +71,19 @@ export default function Index() {
         }
         if (data) {
           setProfile(data[0]);
+          // Parse location from profile if it exists
+          if (data[0].location) {
+            const cords = locationToCoords(
+              String(data[0].location),
+            );
+            setUserLocation({
+              location: {
+                latitude: cords[0],
+                longitude: cords[1],
+              },
+              radius: Number(data[0].location_radius_m ?? 0),
+            });
+          }
           console.log(data);
           setLoading(false);
         }
@@ -88,6 +108,11 @@ export default function Index() {
             {
               ...profile,
               id: myUid,
+              // Add location if user has selected one
+              ...(userLocation && {
+                location: `POINT(${userLocation.location.longitude} ${userLocation.location.latitude})`,
+                location_radius_m: userLocation.radius,
+              }),
             },
             { onConflict: "id" },
           )
@@ -99,7 +124,6 @@ export default function Index() {
             }
             setProfile(profile);
             dispatch(setName(profile?.full_name));
-            dispatch(setUserData(profile));
             console.log(res);
             router.navigate("/user");
           });
@@ -117,7 +141,7 @@ export default function Index() {
         ]),
       );
       return () => { };
-    }, [dispatch, myUid, profile, usernameAvailable]),
+    }, [dispatch, myUid, profile, userLocation, usernameAvailable]),
   );
   useFocusEffect(
     useCallback(() => {
@@ -186,6 +210,14 @@ export default function Index() {
 
     return upload;
   };
+  const containerStyle = {
+    backgroundColor: theme.colors.surface,
+    padding: 20,
+    margin: 20,
+    borderRadius: 16,
+    height: 400
+  };
+
   if (myUid)
     return (
       <ThemedView style={{ flex: 1 }}>
@@ -291,6 +323,40 @@ export default function Index() {
             </Menu>
           </View>
           <Divider />
+          <View style={{ paddingVertical: 16 }}>
+            <ThemedText type="subtitle" style={{ marginBottom: 8 }}>
+              Helyzet
+            </ThemedText>
+            <ThemedText type="label" style={{ marginBottom: 8 }}>
+              Add meg a helyzetedet, hogy lásd a fiféket a környékeden.
+            </ThemedText>
+            {!userLocation && (
+              <ThemedText type="label" style={{ marginBottom: 12 }}>
+                Nincs helyzet beállítva
+              </ThemedText>
+            )}
+            <View style={{flexDirection:"row",gap:4,flexWrap:"wrap"}}>  
+              <Button
+                mode="outlined"
+                onPress={() => setLocationMenuVisible(true)}
+                icon="map-marker"
+                style={{ marginBottom: 8 }}
+              >
+                {userLocation ? "Helyzet módosítása" : "Megadom a helyzetem"}
+              </Button>
+              {userLocation && (
+                <Button
+                  mode="text"
+                  onPress={() => setUserLocation(undefined)}
+                  icon="delete"
+                  textColor={theme.colors.error}
+                >
+                  Helyzet törlése
+                </Button>
+              )}
+            </View>
+          </View>
+          <Divider />
           <View style={{ gap: 8, paddingTop: 8 }}>
             <ThemedText type="subtitle">Elérhetőségeid</ThemedText>
             <View style={{ alignItems: "center" }}>
@@ -303,6 +369,30 @@ export default function Index() {
             <ContactEditScreen ref={contactEditRef} />
           </View>
         </ScrollView>
+        <Portal>
+          <Modal
+            visible={locationMenuVisible}
+            onDismiss={() => setLocationMenuVisible(false)}
+            contentContainerStyle={[
+              {
+                height: "auto",
+                borderRadius: 16,
+              },
+            ]}
+          >
+            <ThemedView style={containerStyle}>
+              <MapSelector
+                data={userLocation}
+                setData={(location) => {
+                  console.log("Selected location:", location);
+                  setUserLocation(location);
+                }}
+                searchEnabled
+                setOpen={setLocationMenuVisible}
+              />
+            </ThemedView>
+          </Modal>
+        </Portal>
       </ThemedView>
     );
 }

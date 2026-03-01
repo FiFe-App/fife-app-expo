@@ -12,6 +12,7 @@ export interface UserState {
     providerData: unknown;
     createdAt: Date;
     lastLoginAt: Date;
+    location?: CircleType;
   } | null;
   locationError: string | null;
   themePreference: "light" | "dark" | "auto";

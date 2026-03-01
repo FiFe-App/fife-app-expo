@@ -3,7 +3,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { supabase } from "@/lib/supabase/supabase";
 import { login, setUserData } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
-import { UserState } from "@/redux/store.type";
+import { UserState, CircleType } from "@/redux/store.type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link, Redirect, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -15,6 +15,14 @@ import { makeRedirectUri } from "expo-auth-session";
 import { Button, Checkbox, HelperText, Icon, TextInput, useTheme } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import UsernameInput from "@/components/UsernameInput";
+
+// Type for signup metadata
+interface SignupMetadata {
+  full_name: string;
+  username: string;
+  location?: string; // PostGIS POINT string format
+  location_radius_m?: number;
+}
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -41,20 +49,43 @@ export default function Index() {
   const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
   const isPasswordWeak = !passwordRegex.exec(password)?.length;
 
-  const { uid }: UserState = useSelector((state: RootState) => state.user);
+  const { uid, userData }: UserState = useSelector((state: RootState) => state.user);
+  const userLocation = userData?.location;
   WebBrowser.maybeCompleteAuthSession(); // required for web only
   const redirectTo = makeRedirectUri({ path: "/csatlakozom/elso-lepesek" });
 
   const createUser = async () => {
     setLoading(true);
+    
+    // Ensure we have required fields
+    if (!email.trim() || !name.trim()) {
+      setError("Email és név megadása kötelező");
+      setLoading(false);
+      return;
+    }
+
+    // Prepare metadata with proper typing
+    const metadata: SignupMetadata = {
+      full_name: name.trim(),
+      username: username.trim(),
+    };
+
+    // Add location if available and properly structured
+    if (userLocation && 
+        userLocation.location && 
+        typeof userLocation.location.latitude === "number" && 
+        typeof userLocation.location.longitude === "number" &&
+        typeof userLocation.radius === "number") {
+      // Format as PostGIS POINT string
+      metadata.location = `POINT(${userLocation.location.longitude} ${userLocation.location.latitude})`;
+      metadata.location_radius_m = userLocation.radius;
+    }
+
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: email.trim(),
       password,
       options: {
-        data: {
-          full_name: name,
-          username,
-        },
+        data: metadata,
         emailRedirectTo: redirectTo,
       },
     });
