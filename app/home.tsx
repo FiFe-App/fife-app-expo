@@ -8,6 +8,7 @@ import {
   storeUserSearchParams
 } from "@/redux/reducers/usersReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
+import { openDrawer } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useState } from "react";
@@ -60,7 +61,7 @@ export default function Index() {
       }
       console.log("skip changed", skip);
       if (uid) dispatch(viewFunction({ key: "homePage", uid }));
-      navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={handleSearch} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
+      navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={handleSearch} />} onMenuPress={() => dispatch(openDrawer())} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
     }, [skip]),
   );
 

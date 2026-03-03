@@ -1,6 +1,7 @@
 import "@expo/match-media"; // enables window.matchMedia across platforms
 import InfoLayer from "@/components/InfoLayer";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
+import { DrawerMenu } from "@/components/navigation/DrawerMenu";
 import { persistor, store } from "@/redux/store";
 import { Stack, usePathname } from "expo-router";
 import React, { useEffect } from "react";
@@ -17,12 +18,15 @@ import PiazzollaExtraBold from "@/assets/fonts/Piazzolla-ExtraBold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
 import { RootState } from "@/redux/store";
 import { setThemePreference } from "@/redux/reducers/userReducer";
+import { openDrawer, closeDrawer } from "@/redux/reducers/infoReducer";
 
 function RootContent() {
   const pathname = usePathname();
   const dispatch = useDispatch();
   const deviceColorScheme = useColorScheme(); // Auto-detect device theme
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
+  const { uid } = useSelector((state: RootState) => state.user);
+  const drawerOpen = useSelector((state: RootState) => state.info.drawerOpen);
   const hasInitialized = React.useRef(false);
   
   // On first load only, mark as initialized
@@ -38,6 +42,8 @@ function RootContent() {
     (userThemePreference === "auto" && deviceColorScheme === "dark");
   const theme = getTheme(isDarkMode);
 
+  const showDrawer = !!uid && pathname !== "/" && !pathname.includes("login") && !pathname.includes("csatlakozom");
+
   return (
     <>
       <StatusBar 
@@ -49,7 +55,7 @@ function RootContent() {
           <PaperProvider theme={theme}>
             <InfoLayer />
             <Stack
-              screenOptions={{ header: () => <MyAppbar /> }}
+              screenOptions={{ header: () => <MyAppbar onMenuPress={showDrawer ? () => dispatch(openDrawer()) : undefined} /> }}
             >
               <Stack.Screen name="index" />
               <Stack.Screen
@@ -93,6 +99,7 @@ function RootContent() {
               !pathname.includes("login") &&
               !pathname.includes("password") &&
               !pathname.includes("csatlakozom") && <BottomNavigation />}
+            <DrawerMenu visible={drawerOpen} onDismiss={() => dispatch(closeDrawer())} />
           </PaperProvider>
         </View>
       </ThemedView>

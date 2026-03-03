@@ -7,20 +7,13 @@ import RecommendationsModal from "@/components/user/RecommendationsModal";
 import ReportProfileModal from "@/components/user/ReportProfileModal";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
-import {
-  clearBuziness,
-  clearBuzinessSearchParams,
-} from "@/redux/reducers/buzinessReducer";
-import { setOptions } from "@/redux/reducers/infoReducer";
 import { addSnack } from "@/redux/reducers/infoReducer";
-import { logout } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { TutorialState, UserState } from "@/redux/store.type";
 import { RecommendProfileButton } from "@/lib/supabase/RecommendProfileButton";
 import { supabase } from "@/lib/supabase/supabase";
 import {
   Link,
-  router,
   useFocusEffect,
   useGlobalSearchParams,
 } from "expo-router";
@@ -42,7 +35,6 @@ import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 import { useDispatch, useSelector } from "react-redux";
 import globStyles from "@/constants/Styles";
 import {
-  clearTutorialState,
   viewFunction,
 } from "@/redux/reducers/tutorialReducer";
 import Measure from "@/components/tutorial/Measure";
@@ -106,22 +98,6 @@ export default function UserPage() {
           });
       };
       load();
-      if (myProfile)
-        dispatch(
-          setOptions([
-            {
-              icon: "exit-run",
-              onPress: () => {
-                dispatch(logout());
-                dispatch(clearBuziness());
-                dispatch(clearTutorialState());
-                dispatch(clearBuzinessSearchParams());
-                router.navigate("/");
-              },
-              title: "Kijelentkezés",
-            },
-          ]),
-        );
       return () => {
         setShowRecommendsModal(false);
       };

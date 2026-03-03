@@ -10,14 +10,13 @@ import Measure from "../tutorial/Measure";
 const BottomNavigation = () => {
   const segment = useSegments();
   const { functions } = useSelector((state: RootState) => state.tutorial);
-  const bizniszActive = segment[0]?.includes("biznisz");
+  const bizniszActive = segment[0]?.includes("biznisz") || segment[0]?.includes("home");
   const profilActive = segment[0]?.includes("user");
-  const homeActive = segment[0]?.includes("home");
 
   return (
     <Surface style={{ flexDirection: "row" }} elevation={1}>
       <Measure name="biznisz">
-        <Link asChild href="/biznisz">
+        <Link asChild href="/home">
           <TouchableRipple style={{ ...styles.button }}>
             <View style={{ alignItems: "center" }}>
               <Icon
@@ -28,27 +27,11 @@ const BottomNavigation = () => {
                 color={bizniszActive ? theme.colors.secondary : undefined}
               />
               <ThemedText type={bizniszActive ? "defaultSemiBold" : "default"}>
-                Biznisz
+                Ők
               </ThemedText>
               {functions.includes("buzinessPage") && (
                 <Badge style={globStyles.badge}>ÚJ</Badge>
               )}
-            </View>
-          </TouchableRipple>
-        </Link>
-      </Measure>
-      <Measure name="home">
-        <Link asChild href="/home">
-          <TouchableRipple style={{ ...styles.button }}>
-            <View style={{ alignItems: "center" }}>
-              <Icon
-                source={homeActive ? "home" : "home-outline"}
-                size={homeActive ? 30 : 24}
-                color={homeActive ? theme.colors.secondary : undefined}
-              />
-              <ThemedText type={homeActive ? "defaultSemiBold" : "default"}>
-                Otthon
-              </ThemedText>
             </View>
           </TouchableRipple>
         </Link>
@@ -63,7 +46,7 @@ const BottomNavigation = () => {
                 color={profilActive ? theme.colors.secondary : undefined}
               />
               <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
-                Profil
+                Én
               </ThemedText>
             </View>
           </TouchableRipple>
