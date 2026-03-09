@@ -7,30 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
@@ -44,7 +24,7 @@ export type Database = {
           embedding_text: string | null
           id: number
           images: string[] | null
-          location: unknown | null
+          location: unknown
           radius: number | null
           title: string
         }
@@ -57,7 +37,7 @@ export type Database = {
           embedding_text?: string | null
           id?: number
           images?: string[] | null
-          location?: unknown | null
+          location?: unknown
           radius?: number | null
           title: string
         }
@@ -70,7 +50,7 @@ export type Database = {
           embedding_text?: string | null
           id?: number
           images?: string[] | null
-          location?: unknown | null
+          location?: unknown
           radius?: number | null
           title?: string
         }
@@ -239,7 +219,7 @@ export type Database = {
           description: string | null
           duration: string | null
           id: number
-          location: unknown | null
+          location: unknown
           locationName: string
           title: string
         }
@@ -250,7 +230,7 @@ export type Database = {
           description?: string | null
           duration?: string | null
           id?: number
-          location?: unknown | null
+          location?: unknown
           locationName: string
           title: string
         }
@@ -261,7 +241,7 @@ export type Database = {
           description?: string | null
           duration?: string | null
           id?: number
-          location?: unknown | null
+          location?: unknown
           locationName?: string
           title?: string
         }
@@ -305,7 +285,7 @@ export type Database = {
           categories: string
           created_at: string
           id: number
-          location: unknown | null
+          location: unknown
           text: string
         }
         Insert: {
@@ -313,7 +293,7 @@ export type Database = {
           categories: string
           created_at?: string
           id?: number
-          location?: unknown | null
+          location?: unknown
           text: string
         }
         Update: {
@@ -321,7 +301,7 @@ export type Database = {
           categories?: string
           created_at?: string
           id?: number
-          location?: unknown | null
+          location?: unknown
           text?: string
         }
         Relationships: [
@@ -376,8 +356,7 @@ export type Database = {
           created_at: string | null
           full_name: string
           id: string
-          location: unknown | null
-          location_radius_m: number | null
+          location: unknown
           updated_at: string | null
           username: string | null
           viewed_functions: string[] | null
@@ -388,7 +367,7 @@ export type Database = {
           created_at?: string | null
           full_name: string
           id: string
-          location?: unknown | null
+          location?: unknown
           location_radius_m?: number | null
           updated_at?: string | null
           username?: string | null
@@ -400,7 +379,7 @@ export type Database = {
           created_at?: string | null
           full_name?: string
           id?: string
-          location?: unknown | null
+          location?: unknown
           location_radius_m?: number | null
           updated_at?: string | null
           username?: string | null
@@ -533,30 +512,6 @@ export type Database = {
           title: string
         }[]
       }
-      newest_profiles: {
-        Args: {
-          distance: number
-          lat: number
-          long: number
-          skip?: number
-          take?: number
-        }
-        Returns: {
-          avatar_url: string
-          buzinesses: Json
-          created_at: string
-          distance: number
-          full_name: string
-          id: string
-          lat: number
-          location: unknown
-          location_radius_m: number
-          long: number
-          recommendations: number
-          username: string
-          website: string
-        }[]
-      }
       newest_users: {
         Args: {
           distance: number
@@ -581,6 +536,35 @@ export type Database = {
           long: number
           recommendations: number
           title: string
+        }[]
+      }
+      nearest_profiles: {
+        Args: {
+          distance: number
+          lat: number
+          long: number
+          skip?: number
+          take?: number
+        }
+        Returns: {
+          id: string
+          full_name: string
+          username: string
+          avatar_url: string
+          website: string
+          created_at: string
+          recommendations: number
+          lat: number
+          long: number
+          distance: number
+          buzinesses: Json
+        }[]
+      }
+      get_my_profile_location: {
+        Args: Record<string, never>
+        Returns: {
+          location_wkt: string | null
+          location_radius_m: number | null
         }[]
       }
     }
@@ -718,9 +702,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       contact_type: [
@@ -735,4 +716,3 @@ export const Constants = {
     },
   },
 } as const
-

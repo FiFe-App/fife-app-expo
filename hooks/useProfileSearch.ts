@@ -20,7 +20,7 @@ export function useProfileSearch() {
   const dispatch = useDispatch();
   const request = useMemo(() => supabase
     .from("profiles")
-    .select("*, profileRecommendations!profileRecommendations_profile_id_fkey(count), buzinesses:buziness(title)"),
+    .select("id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions, profileRecommendations!profileRecommendations_profile_id_fkey(count), buzinesses:buziness(title)"),
   [])
     .order("created_at", { ascending: false });
     

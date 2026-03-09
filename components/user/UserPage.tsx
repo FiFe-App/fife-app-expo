@@ -87,7 +87,7 @@ export default function UserPage() {
         supabase
           .from("profiles")
           .select(
-            "*, profileRecommendations!profileRecommendations_profile_id_fkey(*)",
+            "id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions, profileRecommendations!profileRecommendations_profile_id_fkey(*)",
           )
           .eq("id", uid)
           .single()

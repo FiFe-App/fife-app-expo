@@ -5,7 +5,6 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
-import locationToCoords from "@/lib/functions/locationToCoords";
 import { supabase } from "@/lib/supabase/supabase";
 import { setOptions } from "@/redux/reducers/infoReducer";
 import { setName, setUserData, setThemePreference } from "@/redux/reducers/userReducer";
@@ -62,27 +61,29 @@ export default function Index() {
 
     supabase
       .from("profiles")
-      .select("*")
+      .select("id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions")
       .eq("id", myUid)
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
         if (error) {
           console.log("err", error.message);
           return;
         }
         if (data) {
           setProfile(data[0]);
-          // Parse location from profile if it exists
-          if (data[0].location) {
-            const cords = locationToCoords(
-              String(data[0].location),
-            );
-            setUserLocation({
-              location: {
-                latitude: cords[0],
-                longitude: cords[1],
-              },
-              radius: Number(data[0].location_radius_m ?? 0),
-            });
+          // Fetch own location via secure function
+          const { data: loc } = await supabase.rpc("get_my_profile_location");
+          const myLoc = loc?.[0];
+          if (myLoc?.location_wkt) {
+            const match = myLoc.location_wkt.match(/POINT\(([\d.-]+) ([\d.-]+)\)/);
+            if (match) {
+              setUserLocation({
+                location: {
+                  latitude: parseFloat(match[2]),
+                  longitude: parseFloat(match[1]),
+                },
+                radius: Number(myLoc.location_radius_m ?? 0),
+              });
+            }
           }
           console.log(data);
           setLoading(false);

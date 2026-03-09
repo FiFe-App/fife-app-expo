@@ -1,5 +1,6 @@
--- Create newest_profiles function for location-based profile search with pagination
-CREATE OR REPLACE FUNCTION "public"."newest_profiles"(
+-- Create nearest_profiles function for location-based profile search with pagination
+-- SECURITY DEFINER: runs as the function owner (admin) to access private location data
+CREATE OR REPLACE FUNCTION "public"."nearest_profiles"(
     "lat" double precision, 
     "long" double precision, 
     "distance" double precision, 
@@ -12,8 +13,6 @@ CREATE OR REPLACE FUNCTION "public"."newest_profiles"(
     "avatar_url" text,
     "website" text,
     "created_at" timestamp without time zone, 
-    "location" "extensions"."geography",
-    "location_radius_m" real,
     "recommendations" bigint,
     "lat" double precision, 
     "long" double precision, 
@@ -21,8 +20,9 @@ CREATE OR REPLACE FUNCTION "public"."newest_profiles"(
     "buzinesses" json
 )
 LANGUAGE "sql"
+SECURITY DEFINER
+SET search_path = public, extensions
 AS $$
-  SET search_path TO public; 
   SELECT 
     p.id, 
     p.full_name,
@@ -30,24 +30,10 @@ AS $$
     p.avatar_url,
     p.website,
     p.created_at, 
-    p.location,
-    p.location_radius_m,
     COALESCE(COUNT(pr.id), 0) as recommendations,
-    CASE 
-      WHEN p.location IS NOT NULL 
-      THEN ST_Y(p.location::geometry) 
-      ELSE NULL 
-    END as lat,
-    CASE 
-      WHEN p.location IS NOT NULL 
-      THEN ST_X(p.location::geometry) 
-      ELSE NULL 
-    END as long,
-    CASE 
-      WHEN p.location IS NOT NULL 
-      THEN ST_Distance(p.location, ST_Point(long, lat)::geography) 
-      ELSE NULL 
-    END as distance,
+    ST_Y(p.location::geometry) as lat,
+    ST_X(p.location::geometry) as long,
+    ROUND(ST_Distance(p.location, ST_Point(long, lat)::geography)::numeric) as distance,
     COALESCE(
       JSON_AGG(
         JSON_BUILD_OBJECT('title', b.title)
@@ -58,13 +44,11 @@ AS $$
   LEFT JOIN public."profileRecommendations" pr ON p.id = pr.profile_id
   LEFT JOIN public.buziness b ON p.id = b.author
   WHERE 
-    CASE 
-      WHEN p.location IS NOT NULL 
-      THEN ST_Distance(p.location, ST_Point(long, lat)::geography) <= distance
-      ELSE true 
-    END
+    p.location IS NOT NULL
+    AND p.id IS DISTINCT FROM auth.uid()
+    AND ST_Distance(p.location, ST_Point(long, lat)::geography) <= distance + COALESCE(p.location_radius_m, 0)
   GROUP BY p.id, p.full_name, p.username, p.avatar_url, p.website, p.created_at, p.location, p.location_radius_m
-  ORDER BY p.created_at DESC
+  ORDER BY ST_Distance(p.location, ST_Point(long, lat)::geography) ASC
   OFFSET CASE WHEN skip >= 0 THEN skip END ROWS
   LIMIT CASE WHEN take >= 0 THEN take END;
 $$;
