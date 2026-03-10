@@ -9,7 +9,6 @@ import { Dimensions } from "react-native";
 
 export function useProfileSearch() {
   const PAGE_SIZE = Math.floor(Dimensions.get("window").height/100);
-  console.log("page size",PAGE_SIZE);
   
   const [results, setResults] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
