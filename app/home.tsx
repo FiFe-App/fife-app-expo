@@ -13,6 +13,7 @@ import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useState } from "react";
 import { Dimensions, View } from "react-native";
 import {
+  Icon,
   Modal,
   Portal, Text
 } from "react-native-paper";
@@ -70,7 +71,7 @@ export default function Index() {
           </View>
         </View>
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
-          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Fife radar</ThemedText>
+          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Fife Radar <Icon size={20} color={theme.colors.secondary} source="wifi" /></ThemedText>
         </View>
         <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} />
         <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />
