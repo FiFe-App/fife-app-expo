@@ -3,17 +3,19 @@ import { Link } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { Chip, Icon, Surface, Text } from "react-native-paper";
 import ProfileImage from "../ProfileImage";
-import { User } from "@/redux/store.type";
+import { NearestProfile, User } from "@/redux/store.type";
 import toDistanceText from "@/lib/functions/distanceText";
 
 interface UserItemProps {
-  data: User;
+  data: NearestProfile | User;
   showOptions?: boolean;
 }
 
 const UserItem = ({ data, showOptions }: UserItemProps) => {
-  const { id, full_name, avatar_url, created_at, distance } = data;
-  const recommendations = data?.profileRecommendations?.[0]?.count || 0;
+  const { id, full_name, avatar_url, created_at, distance } = data as NearestProfile;
+  const recommendations = "profileRecommendations" in data
+    ? (data.profileRecommendations?.[0]?.count || 0)
+    : ("recommendations" in data ? (data as NearestProfile).recommendations : 0);
   const buzinesses = data?.buzinesses?.map(b => b.title.split(" $ ")[0]) || [];
 
   return (

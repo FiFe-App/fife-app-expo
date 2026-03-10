@@ -5,12 +5,12 @@ import { ThemedText } from "../ThemedText";
 import UserItem from "./UserItem";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
-import { Tables } from "@/database.types";
+import { NearestProfile } from "@/redux/store.type";
 
 
 interface UsersListProps {
   load: () => void;
-  data: Tables<"profiles">[];
+  data: NearestProfile[];
   canLoadMore: boolean;
 }
 
