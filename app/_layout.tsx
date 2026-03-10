@@ -5,7 +5,7 @@ import { persistor, store } from "@/redux/store";
 import { Stack, usePathname } from "expo-router";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
-import { View, StatusBar, useColorScheme } from "react-native";
+import { View, StatusBar, useColorScheme, Platform } from "react-native";
 import { PaperProvider } from "react-native-paper";
 import { Provider, useSelector, useDispatch } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -23,6 +23,7 @@ function RootContent() {
   const dispatch = useDispatch();
   const deviceColorScheme = useColorScheme(); // Auto-detect device theme
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
+  const { uid } = useSelector((state: RootState) => state.user);
   const hasInitialized = React.useRef(false);
   
   // On first load only, mark as initialized
@@ -31,6 +32,24 @@ function RootContent() {
       hasInitialized.current = true;
     }
   }, []);
+
+  // Initialize OneSignal and set external user ID when user logs in
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    import("react-native-onesignal").then(({ OneSignal, LogLevel }) => {
+      OneSignal.Debug.setLogLevel(LogLevel.None);
+      OneSignal.initialize(process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID || "");
+      OneSignal.Notifications.requestPermission(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    if (!uid) return;
+    import("react-native-onesignal").then(({ OneSignal }) => {
+      OneSignal.login(uid);
+    });
+  }, [uid]);
   
   // Determine if dark mode should be active based on preference
   const isDarkMode = 
