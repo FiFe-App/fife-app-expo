@@ -1,40 +1,79 @@
 -- Make profile.location and profile.location_radius_m private
 -- Users can only read their own location via get_my_profile_location()
 -- nearest_profiles accesses location internally via SECURITY DEFINER
-
 -- Revoke table-level SELECT first (column-level REVOKE won't override table-level GRANT)
-REVOKE SELECT ON public.profiles FROM anon;
-REVOKE SELECT ON public.profiles FROM authenticated;
-
+REVOKE
+SELECT ON public.profiles
+FROM anon;
+REVOKE
+SELECT ON public.profiles
+FROM authenticated;
 -- Grant SELECT on only the non-private columns
-GRANT SELECT (id, updated_at, username, full_name, avatar_url, website, created_at, viewed_functions) ON public.profiles TO anon;
-GRANT SELECT (id, updated_at, username, full_name, avatar_url, website, created_at, viewed_functions) ON public.profiles TO authenticated;
-
+GRANT SELECT (
+    id,
+    updated_at,
+    username,
+    full_name,
+    avatar_url,
+    website,
+    created_at,
+    viewed_functions
+  ) ON public.profiles TO anon;
+GRANT SELECT (
+    id,
+    updated_at,
+    username,
+    full_name,
+    avatar_url,
+    website,
+    created_at,
+    viewed_functions
+  ) ON public.profiles TO authenticated;
 -- Keep INSERT/UPDATE for authenticated (RLS "own profile" policies handle row restriction)
 GRANT INSERT ON public.profiles TO authenticated;
 GRANT UPDATE ON public.profiles TO authenticated;
-
 -- Helper: let authenticated users read their OWN location via a SECURITY DEFINER function
-CREATE OR REPLACE FUNCTION "public"."get_my_profile_location"()
-RETURNS TABLE(
+CREATE OR REPLACE FUNCTION "public"."get_my_profile_location"() RETURNS TABLE(
     "location_wkt" text,
     "location_radius_m" real
-)
-LANGUAGE "sql"
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
-  SELECT
-    CASE
-      WHEN p.location IS NOT NULL
-      THEN ST_AsText(p.location::geometry)
-      ELSE NULL
-    END as location_wkt,
-    p.location_radius_m
-  FROM public.profiles p
-  WHERE p.id = auth.uid();
+  ) LANGUAGE "sql" SECURITY DEFINER
+SET search_path = public,
+  extensions AS $$
+SELECT CASE
+    WHEN p.location IS NOT NULL THEN ST_AsText(p.location::geometry)
+    ELSE NULL
+  END as location_wkt,
+  p.location_radius_m
+FROM public.profiles p
+WHERE p.id = auth.uid();
 $$;
-
 GRANT EXECUTE ON FUNCTION "public"."get_my_profile_location"() TO authenticated;
-REVOKE EXECUTE ON FUNCTION "public"."get_my_profile_location"() FROM anon;
-REVOKE EXECUTE ON FUNCTION "public"."get_my_profile_location"() FROM public;
+REVOKE EXECUTE ON FUNCTION "public"."get_my_profile_location"()
+FROM anon;
+REVOKE EXECUTE ON FUNCTION "public"."get_my_profile_location"()
+FROM public;
+-- Companion write function to get_my_profile_location.
+-- PostgREST cannot write to columns the calling role cannot SELECT, so
+-- location and location_radius_m must be updated via a SECURITY DEFINER
+-- function that runs as the postgres role.
+CREATE OR REPLACE FUNCTION "public"."update_my_profile_location"(
+    "lat" double precision,
+    "long" double precision,
+    "radius_m" real
+  ) RETURNS void LANGUAGE "sql" SECURITY DEFINER
+SET search_path = public,
+  extensions AS $$
+UPDATE public.profiles
+SET location = CASE
+    WHEN lat IS NULL
+    OR long IS NULL THEN NULL
+    ELSE ST_GeogFromText('SRID=4326;POINT(' || long || ' ' || lat || ')')
+  END,
+  location_radius_m = radius_m
+WHERE id = auth.uid();
+$$;
+GRANT EXECUTE ON FUNCTION "public"."update_my_profile_location"(double precision, double precision, real) TO authenticated;
+REVOKE EXECUTE ON FUNCTION "public"."update_my_profile_location"(double precision, double precision, real)
+FROM anon;
+REVOKE EXECUTE ON FUNCTION "public"."update_my_profile_location"(double precision, double precision, real)
+FROM public;

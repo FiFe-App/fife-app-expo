@@ -17,6 +17,11 @@ export function useFifeSearch() {
     (state: RootState) => state.user.userData?.location,
   );
 
+  // User-selected location from MapSelector (highest priority)
+  const searchCircle = useSelector(
+    (state: RootState) => state.users.userSearchParams?.searchCircle,
+  );
+
   const [data, setData] = useState<NearestProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +29,14 @@ export function useFifeSearch() {
   const [skip, setSkip] = useState(0);
 
   const getSearchLocation = useCallback(() => {
-    // Priority: 1) GPS location, 2) profile location, 3) Budapest default
+    // Priority: 1) User-selected location, 2) GPS location, 3) profile location, 4) Budapest default
+    if (searchCircle) {
+      return {
+        lat: searchCircle.location.latitude,
+        long: searchCircle.location.longitude,
+        distance: 100000,
+      };
+    }
     if (myLocation) {
       return {
         lat: myLocation.coords.latitude,
@@ -44,7 +56,7 @@ export function useFifeSearch() {
       long: 19.0402,
       distance: 100000,
     };
-  }, [myLocation, profileLocation]);
+  }, [searchCircle, myLocation, profileLocation]);
 
   const fetch = useCallback(async () => {
     console.log("fetching nearest users");

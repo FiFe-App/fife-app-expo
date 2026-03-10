@@ -1,7 +1,6 @@
 import { theme } from "@/assets/theme";
 import { UsersList } from "@/components/user/UsersList";
 import MapSelector from "@/components/MapSelector/MapSelector";
-import { containerStyle } from "@/components/styles";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import {
@@ -10,10 +9,12 @@ import {
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
 import { router, useFocusEffect, useNavigation } from "expo-router";
-import { useCallback, useState } from "react";
-import { Dimensions, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { View } from "react-native";
+import style from "@/components/styles";
 import {
   Icon,
+  IconButton,
   Modal,
   Portal, Text
 } from "react-native-paper";
@@ -45,6 +46,10 @@ export default function Index() {
     router.push("/biznisz");
   };
 
+  useEffect(() => {
+    fetch()
+  }, [searchCircle]);
+
 
   useFocusEffect(
     useCallback(() => {
@@ -70,8 +75,12 @@ export default function Index() {
             </View>
           </View>
         </View>
-        <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
+        <View style={{ paddingHorizontal: 16, paddingTop: 0, paddingBottom: 0, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Fife Radar <Icon size={20} color={theme.colors.secondary} source="wifi" /></ThemedText>
+          <Button
+            icon={searchCircle ? "map-marker" : "map-marker-outline"}
+            onPress={() => setLocationMenuVisible(true)}
+          >Hol keresel?</Button>
         </View>
         <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} />
         <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />
@@ -81,26 +90,28 @@ export default function Index() {
             onDismiss={() => {
               setLocationMenuVisible(false);
             }}
+            style={{ alignItems: "center" }}
             contentContainerStyle={[
               {
-                height: "auto",
-                borderRadius: 16,
+                width: "90%",
+                height: "90%",
               },
             ]}
           >
-            <ThemedView style={containerStyle}>
+            <ThemedView style={style.containerStyle}>
               <MapSelector
                 data={searchCircle}
                 setData={(sC) => {
-                  console.log("set", sC);
-
                   if (
                     (sC && "location" in sC && "radius" in sC) ||
                     sC == undefined
-                  )
+                  ) {
                     dispatch(storeUserSearchParams({ searchCircle: sC }));
+                    setLocationMenuVisible(false);
+                  }
                 }}
                 searchEnabled
+                markerOnly
                 setOpen={setLocationMenuVisible}
               />
             </ThemedView>

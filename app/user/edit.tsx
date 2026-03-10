@@ -48,11 +48,11 @@ export default function Index() {
     saveContacts: () => Promise<
       | PostgrestSingleResponse<unknown>
       | {
-          error: string;
+        error: string;
       }
       | undefined
     >;
-      }>(null);
+  }>(null);
 
   const load = () => {
     console.log("loaded user", myUid);
@@ -109,20 +109,28 @@ export default function Index() {
             {
               ...profile,
               id: myUid,
-              // Add location if user has selected one
-              ...(userLocation && {
-                location: `POINT(${userLocation.location.longitude} ${userLocation.location.latitude})`,
-                location_radius_m: userLocation.radius,
-              }),
             },
             { onConflict: "id" },
           )
-          .then((res) => {
+          .then(async (res) => {
             setLoading(false);
+            console.log("res", res);
+
             if (res.error) {
               console.log(res.error);
               return;
             }
+            // location/location_radius_m are not in the authenticated SELECT
+            // grant, so they must be written via a SECURITY DEFINER function
+            const { error: locError } = await supabase.rpc(
+              "update_my_profile_location",
+              {
+                lat: userLocation?.location.latitude ?? null,
+                long: userLocation?.location.longitude ?? null,
+                radius_m: userLocation?.radius ?? null,
+              },
+            );
+            if (locError) console.log("location update error", locError);
             setProfile(profile);
             dispatch(setName(profile?.full_name));
             console.log(res);
@@ -272,10 +280,9 @@ export default function Index() {
               visible={themeMenuVisible}
               onDismiss={() => setThemeMenuVisible(false)}
               anchor={
-                <TouchableWithoutFeedback 
+                <TouchableWithoutFeedback
                   onPress={() => setThemeMenuVisible(true)}
                   accessible={true}
-                  accessibilityRole="button"
                   accessibilityLabel="Téma kiválasztása"
                 >
                   <View>
@@ -283,10 +290,10 @@ export default function Index() {
                       mode="outlined"
                       label="Téma"
                       value={
-                        themePreference === "auto" 
-                          ? "Automatikus" 
-                          : themePreference === "dark" 
-                            ? "Sötét" 
+                        themePreference === "auto"
+                          ? "Automatikus"
+                          : themePreference === "dark"
+                            ? "Sötét"
                             : "Világos"
                       }
                       right={<TextInput.Icon icon="chevron-down" />}
@@ -326,24 +333,24 @@ export default function Index() {
           <Divider />
           <View style={{ paddingVertical: 16 }}>
             <ThemedText type="subtitle" style={{ marginBottom: 8 }}>
-              Helyzet
+              Lakhelyed
             </ThemedText>
             <ThemedText type="label" style={{ marginBottom: 8 }}>
-              Add meg a helyzetedet, hogy lásd a fiféket a környékeden.
+              Add meg a lakhelyedet, hogy lásd a fiféket a környékeden.
             </ThemedText>
             {!userLocation && (
               <ThemedText type="label" style={{ marginBottom: 12 }}>
-                Nincs helyzet beállítva
+                Nincs lakhely beállítva
               </ThemedText>
             )}
-            <View style={{flexDirection:"row",gap:4,flexWrap:"wrap"}}>  
+            <View style={{ flexDirection: "row", gap: 4, flexWrap: "wrap" }}>
               <Button
                 mode="outlined"
                 onPress={() => setLocationMenuVisible(true)}
                 icon="map-marker"
                 style={{ marginBottom: 8 }}
               >
-                {userLocation ? "Helyzet módosítása" : "Megadom a helyzetem"}
+                {userLocation ? "Lakhely módosítása" : "Megadom a lakhelyem"}
               </Button>
               {userLocation && (
                 <Button

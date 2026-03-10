@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React from "react";
 import { View, StyleSheet, FlatList } from "react-native";
 import { Divider, ActivityIndicator } from "react-native-paper";
 import { ThemedText } from "../ThemedText";

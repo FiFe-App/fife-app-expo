@@ -58,7 +58,7 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
               <View style={{}}>
                 {!showOptions && !!created_at && (
                   <Text>
-                    <Icon size={16} source="map-marker" /> <Text>{toDistanceText(distance/1000)} km távolságra</Text>
+                    <Icon size={16} source="map-marker" /> <Text>{toDistanceText(distance / 1000)} távolságra</Text>
                   </Text>
                 )}
               </View>
