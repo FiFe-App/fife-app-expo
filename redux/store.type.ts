@@ -15,6 +15,7 @@ export interface UserState {
     location?: {
       lng: number;
       lat: number;
+      radius?: number;
     };
   } | null;
   locationError: string | null;

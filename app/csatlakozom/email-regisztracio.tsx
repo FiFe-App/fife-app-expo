@@ -71,14 +71,14 @@ export default function Index() {
     };
 
     // Add location if available and properly structured
-    if (userLocation && 
-        userLocation.location && 
-        typeof userLocation.location.latitude === "number" && 
-        typeof userLocation.location.longitude === "number" &&
-        typeof userLocation.radius === "number") {
+    if (userLocation &&
+        typeof userLocation.lat === "number" &&
+        typeof userLocation.lng === "number") {
       // Format as PostGIS POINT string
-      metadata.location = `POINT(${userLocation.location.longitude} ${userLocation.location.latitude})`;
-      metadata.location_radius_m = userLocation.radius;
+      metadata.location = `POINT(${userLocation.lng} ${userLocation.lat})`;
+      if (typeof userLocation.radius === "number") {
+        metadata.location_radius_m = userLocation.radius;
+      }
     }
 
     const { data, error } = await supabase.auth.signUp({

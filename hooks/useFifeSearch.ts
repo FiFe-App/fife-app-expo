@@ -8,7 +8,6 @@ import { NearestProfile } from "@/redux/store.type";
 
 export function useFifeSearch() {
   const PAGE_SIZE = Math.floor(Dimensions.get("window").height / 100);
-  console.log("fife search page size", PAGE_SIZE);
 
   const { myLocation } = useMyLocation();
 
