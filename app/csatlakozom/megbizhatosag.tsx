@@ -95,7 +95,7 @@ const Megbizhatosag = () => {
           onRequestClose={() => setModalVisible(false)}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
+            <ThemedView style={styles.modalContent}>
               <ThemedText type="title" style={{ marginBottom: 16 }}>
                 Irányelveink:
               </ThemedText>
@@ -158,7 +158,7 @@ const Megbizhatosag = () => {
                   disabled={!canAccept}
                 >Elfogadom</Button>
               </View>
-            </View>
+            </ThemedView>
           </View>
         </Modal>
       </View>
@@ -175,7 +175,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 24,
     width: "90%",

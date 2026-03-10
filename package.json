@@ -15,7 +15,8 @@
     "eslint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "eslint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "postinstall": "patch-package",
-    "updateTypes": "npx supabase gen types --lang=typescript --project-id pdzuvfkkrhtrrrcckwzj --schema public > database.types.ts"
+    "updateTypes": "npx supabase gen types --lang=typescript --project-id pdzuvfkkrhtrrrcckwzj --schema public > database.types.ts",
+    "updateTypesLocal": "npx supabase gen types typescript --local > database.types.ts"
   },
   "jest": {
     "preset": "jest-expo"

@@ -31,3 +31,6 @@ INSERT TO "authenticated" WITH CHECK (
 -- Only service_role can read reports (for admin purposes)
 CREATE POLICY "Enable read for service_role only" ON "public"."reports" FOR
 SELECT TO "service_role" USING (true);
+
+
+

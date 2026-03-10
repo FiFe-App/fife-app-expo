@@ -1,16 +1,16 @@
-import React, { useRef } from "react";
+import React from "react";
 import { View, StyleSheet, FlatList } from "react-native";
 import { Divider, ActivityIndicator } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import UserItem from "./UserItem";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
-import { Tables } from "@/database.types";
+import { NearestProfile } from "@/redux/store.type";
 
 
 interface UsersListProps {
   load: () => void;
-  data: Tables<"profiles">[];
+  data: NearestProfile[];
   canLoadMore: boolean;
 }
 
