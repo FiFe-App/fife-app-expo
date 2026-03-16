@@ -1,4 +1,3 @@
-import elapsedTime from "@/lib/functions/elapsedTime";
 import { Link } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { Chip, Icon, Surface, Text } from "react-native-paper";
@@ -52,7 +51,6 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
                 {!showOptions && !!created_at && distance != null && (
                   <Text>
                     <Icon size={16} source="map-marker" /><Text> {toDistanceText(distance / 1000)} távolságra</Text>
-
                   </Text>
                 )}
               </View>
