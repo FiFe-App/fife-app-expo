@@ -1,16 +1,15 @@
-import React, { useRef } from "react";
+import React from "react";
 import { View, StyleSheet, FlatList } from "react-native";
 import { Divider, ActivityIndicator } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import UserItem from "./UserItem";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
-import { Tables } from "@/database.types";
-
+import { NearestProfile } from "@/redux/store.type";
 
 interface UsersListProps {
   load: () => void;
-  data: Tables<"profiles">[];
+  data: NearestProfile[];
   canLoadMore: boolean;
 }
 
@@ -19,7 +18,7 @@ export const UsersList: React.FC<UsersListProps> = ({
   data,
   canLoadMore,
 }) => {
-  const { users, userSearchParams } = useSelector(
+  const { userSearchParams } = useSelector(
     (state: RootState) => state.users,
   );
   const loading = userSearchParams?.loading || false;
@@ -38,7 +37,7 @@ export const UsersList: React.FC<UsersListProps> = ({
         }
         ListFooterComponent={
           <View style={{ padding: 16 }}>
-            {(!!users.length && canLoadMore ? (
+            {(!!data.length && canLoadMore ? (
               <ActivityIndicator />
             ) : (
               <ThemedText style={{ alignSelf: "center" }}>
@@ -59,7 +58,7 @@ export const UsersList: React.FC<UsersListProps> = ({
         }}
       />
 
-      {userSearchParams?.loading && !users.length && (
+      {userSearchParams?.loading && !data.length && (
         <View style={{ flex: 1 }}>
           <ActivityIndicator />
         </View>

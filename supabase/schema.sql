@@ -153,21 +153,6 @@ $$;
 ALTER FUNCTION "public"."check_author_different"() OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO ''
-    AS $$
-begin
-  insert into public.profiles (id, full_name, avatar_url)
-  values (new.id, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'avatar_url');
-  return new;
-end;
-$$;
-
-
-ALTER FUNCTION "public"."handle_new_user"() OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."hybrid_buziness_search"("query_text" "text", "query_embedding" "extensions"."vector", "lat" double precision, "long" double precision, "distance" double precision, "skip" integer, "take" integer, "full_text_weight" double precision DEFAULT 0, "semantic_weight" double precision DEFAULT 1, "match_threshold" double precision DEFAULT 0.6, "rrf_k" integer DEFAULT 50) RETURNS TABLE("id" bigint, "title" "text", "description" character varying, "author" "uuid", "created_at" timestamp with time zone, "images" "text"[], "location" "extensions"."geography", "recommendations" integer, "lat" double precision, "long" double precision, "distance" double precision, "relevance" double precision, "defaultcontact" bigint)
     LANGUAGE "sql"
     AS $$
@@ -260,27 +245,6 @@ $$;
 
 ALTER FUNCTION "public"."newest_buziness"("lat" double precision, "long" double precision, "distance" double precision, "skip" integer, "take" integer, "full_text_weight" double precision, "semantic_weight" double precision, "match_threshold" double precision, "rrf_k" integer) OWNER TO "postgres";
 
-
-CREATE OR REPLACE FUNCTION "public"."newest_users"("lat" double precision, "long" double precision, "distance" double precision, "skip" integer DEFAULT 0, "take" integer DEFAULT 6, "full_text_weight" double precision DEFAULT 0, "semantic_weight" double precision DEFAULT 1, "match_threshold" double precision DEFAULT 0.8, "rrf_k" integer DEFAULT 50) RETURNS TABLE("id" bigint, "title" "text", "description" character varying, "author" "uuid", "created_at" timestamp with time zone, "images" "text"[], "location" "extensions"."geography", "recommendations" integer, "lat" double precision, "long" double precision, "distance" double precision)
-    LANGUAGE "sql"
-    AS $$
-  SET search_path TO public; 
-  SELECT 
-    b.id, b.title, b.description, b.author, b.created_at, b.images, b.location, count(br.id) as recommendations, 
-  st_y(location::geometry) as lat,
-  st_x(location::geometry) as long,
-  st_distance(location, st_point(long, lat)::geography) as distance
-  FROM public.buziness b 
-  LEFT OUTER JOIN public."buzinessRecommendations" br
-  ON b.id = br.buziness_id
-  where st_distance(location, st_point(long, lat)::geography) <= distance
-  GROUP BY b.id
-  order by b.created_at asc
-  OFFSET CASE WHEN skip>=0 THEN skip 
-      END ROWS       -- skip 10 rows
-  LIMIT CASE WHEN take>=0 THEN take 
-      END
-$$;
 
 
 ALTER FUNCTION "public"."newest_users"("lat" double precision, "long" double precision, "distance" double precision, "skip" integer, "take" integer, "full_text_weight" double precision, "semantic_weight" double precision, "match_threshold" double precision, "rrf_k" integer) OWNER TO "postgres";
@@ -567,6 +531,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "created_at" timestamp without time zone DEFAULT "now"(),
     "viewed_functions" "text"[],
     "location" "extensions"."geography",
+    "location_radius_m" real,
     CONSTRAINT "username_length" CHECK (("char_length"("username") >= 3))
 );
 
@@ -4204,9 +4169,6 @@ GRANT ALL ON FUNCTION "public"."check_author_different"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "anon";
-GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
 
 
 

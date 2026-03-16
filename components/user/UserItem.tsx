@@ -1,18 +1,20 @@
-import elapsedTime from "@/lib/functions/elapsedTime";
 import { Link } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { Chip, Icon, Surface, Text } from "react-native-paper";
 import ProfileImage from "../ProfileImage";
-import { User } from "@/redux/store.type";
+import { NearestProfile, User } from "@/redux/store.type";
+import toDistanceText from "@/lib/functions/distanceText";
 
 interface UserItemProps {
-  data: User;
+  data: NearestProfile | User;
   showOptions?: boolean;
 }
 
 const UserItem = ({ data, showOptions }: UserItemProps) => {
-  const { id, full_name, avatar_url, created_at } = data;
-  const recommendations = data?.profileRecommendations?.[0]?.count || 0;
+  const { id, full_name, avatar_url, created_at, distance } = data as NearestProfile;
+  const recommendations = "profileRecommendations" in data
+    ? (data.profileRecommendations?.[0]?.count || 0)
+    : ("recommendations" in data ? (data as NearestProfile).recommendations : 0);
   const buzinesses = data?.buzinesses?.map(b => b.title.split(" $ ")[0]) || [];
 
   return (
@@ -46,16 +48,15 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
               }}
             >
               <View style={{}}>
-                {!showOptions && !!created_at && (
+                {!showOptions && !!created_at && distance != null && (
                   <Text>
-                    <Icon size={16} source="calendar" /> <Text>{elapsedTime(created_at)} fife</Text>
+                    <Icon size={16} source="map-marker" /><Text> {toDistanceText(distance / 1000)} távolságra</Text>
                   </Text>
                 )}
               </View>
               {recommendations > 0 && <View style={{ flexDirection: "row" }}>
                 <Text>
-                  <Icon size={16} source="account-group" />
-                  <Text>{recommendations ? <Text>{recommendations} ember ajánlja</Text> : <Text>Még senki sem ajánlotta</Text>}</Text>
+                  <Icon size={16} source="account-group" /> <Text>{recommendations ? <Text>{recommendations} ember ajánlja</Text> : <Text>Még senki sem ajánlotta</Text>}</Text>
                 </Text>
               </View>}
             </View>

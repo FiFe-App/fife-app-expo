@@ -9,7 +9,6 @@ import { Dimensions } from "react-native";
 
 export function useProfileSearch() {
   const PAGE_SIZE = Math.floor(Dimensions.get("window").height/100);
-  console.log("page size",PAGE_SIZE);
   
   const [results, setResults] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -20,7 +19,7 @@ export function useProfileSearch() {
   const dispatch = useDispatch();
   const request = useMemo(() => supabase
     .from("profiles")
-    .select("*, profileRecommendations!profileRecommendations_profile_id_fkey(count), buzinesses:buziness(title)"),
+    .select("id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions, profileRecommendations!profileRecommendations_profile_id_fkey(count), buzinesses:buziness(title)"),
   [])
     .order("created_at", { ascending: false });
     

@@ -13,7 +13,7 @@ import {
 } from "expo-router";
 import { ScrollView, View } from "react-native";
 import Dots from "react-native-dots-pagination";
-import { Button, MD3DarkTheme } from "react-native-paper";
+import { Button } from "react-native-paper";
 import { useSelector } from "react-redux";
 
 export default function RootLayout() {
@@ -21,6 +21,7 @@ export default function RootLayout() {
   const pages: Href<string>[] = [
     "/csatlakozom/",
     "/csatlakozom/megbizhatosag",
+    "/csatlakozom/helyzet",
     "/csatlakozom/email-regisztracio",
     "/csatlakozom/email-ellenorzes",
     "/csatlakozom/elso-lepesek",

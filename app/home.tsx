@@ -1,7 +1,6 @@
 import { theme } from "@/assets/theme";
 import { UsersList } from "@/components/user/UsersList";
 import MapSelector from "@/components/MapSelector/MapSelector";
-import { containerStyle } from "@/components/styles";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import {
@@ -10,9 +9,12 @@ import {
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
 import { router, useFocusEffect, useNavigation } from "expo-router";
-import { useCallback, useState } from "react";
-import { Dimensions, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { View } from "react-native";
+import style from "@/components/styles";
 import {
+  Icon,
+  IconButton,
   Modal,
   Portal, Text
 } from "react-native-paper";
@@ -23,9 +25,8 @@ import BuzinessSearchInput from "@/components/BuzinessSearchInput";
 import WhatToDo from "@/components/WhatToDo";
 import { Button } from "@/components/Button";
 import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
-import { useInfiniteQuery } from "@/hooks/useInfiniteQuery";
+import { useFifeSearch } from "@/hooks/useFifeSearch";
 
-const PAGE_SIZE = Math.floor(Dimensions.get("window").height / 100);
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
@@ -38,19 +39,16 @@ export default function Index() {
 
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [whatVisible, setWhatVisible] = useState(false);
-  const { fetch, data, fetchNextPage, hasMore } = useInfiniteQuery({
-    tableName: "profiles",
-    pageSize: PAGE_SIZE,
-    columns: "*, profileRecommendations!profileRecommendations_profile_id_fkey(count), buzinesses:buziness(title)",
-    trailingQuery: (query) => {
-      return query.order("created_at", { ascending: false });
-    }
-  });
+  const { fetch, data, fetchNextPage, hasMore } = useFifeSearch();
 
   const handleSearch = () => {
     dispatch(storeBuzinesses([]));
     router.push("/biznisz");
   };
+
+  useEffect(() => {
+    fetch()
+  }, [searchCircle]);
 
 
   useFocusEffect(
@@ -58,10 +56,9 @@ export default function Index() {
       if (data.length === 0) {
         fetch();
       }
-      console.log("skip changed", skip);
       if (uid) dispatch(viewFunction({ key: "homePage", uid }));
       navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={handleSearch} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
-    }, [skip]),
+    }, [data.length, uid, fetch]),
   );
 
   if (uid)
@@ -78,8 +75,12 @@ export default function Index() {
             </View>
           </View>
         </View>
-        <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
-          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Új fifék Budapesten</ThemedText>
+        <View style={{ paddingHorizontal: 16, paddingTop: 0, paddingBottom: 0, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Fife Radar <Icon size={20} color={theme.colors.secondary} source="wifi" /></ThemedText>
+          <Button
+            icon={searchCircle ? "map-marker" : "map-marker-outline"}
+            onPress={() => setLocationMenuVisible(true)}
+          >Hol keresel?</Button>
         </View>
         <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} />
         <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />
@@ -89,26 +90,28 @@ export default function Index() {
             onDismiss={() => {
               setLocationMenuVisible(false);
             }}
+            style={{ alignItems: "center" }}
             contentContainerStyle={[
               {
-                height: "auto",
-                borderRadius: 16,
+                width: "90%",
+                height: "90%",
               },
             ]}
           >
-            <ThemedView style={containerStyle}>
+            <ThemedView style={style.containerStyle}>
               <MapSelector
                 data={searchCircle}
                 setData={(sC) => {
-                  console.log("set", sC);
-
                   if (
                     (sC && "location" in sC && "radius" in sC) ||
                     sC == undefined
-                  )
+                  ) {
                     dispatch(storeUserSearchParams({ searchCircle: sC }));
+                    setLocationMenuVisible(false);
+                  }
                 }}
                 searchEnabled
+                markerOnly
                 setOpen={setLocationMenuVisible}
               />
             </ThemedView>
