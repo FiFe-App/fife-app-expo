@@ -350,7 +350,7 @@ export default function Index() {
                 icon="map-marker"
                 style={{ marginBottom: 8 }}
               >
-                {userLocation ? "Lakhely módosítása" : "Megadom a lakhelyem"}
+                {userLocation ? "Környék módosítása" : "Megadom a környékemet"}
               </Button>
               {userLocation && (
                 <Button

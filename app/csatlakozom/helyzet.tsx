@@ -20,13 +20,13 @@ const Register = () => {
   const containerStyle = {
     padding: 20,
     margin: 20,
-    flex:1,
-    height:200
+    flex: 1,
+    height: 200
   };
 
   return (
     <ThemedView style={{ flex: 1, padding: 8 }}>
-      <View style={{justifyContent: "center" }}>
+      <View style={{ justifyContent: "center" }}>
         <ThemedText type="title" style={{ marginBottom: 16 }}>
           FiFe Radar
         </ThemedText>
@@ -34,18 +34,18 @@ const Register = () => {
           Ha megadod a hozzávetőleges lakhelyed, láthatod a környéken élő fiféket!{"\n\n"}
           Elég nagyjából bejelölnöd a térképen a környékedet!
         </ThemedText>
-      </View>  
+      </View>
       <View style={{ flex: 1, marginVertical: 20, gap: 12 }}>
-        <Button icon={myLocation?"check-circle":undefined} mode={myLocation?"contained-tonal":"contained"} onPress={() => setLocationMenuVisible(true)}>
+        <Button icon={myLocation ? "check-circle" : undefined} mode={myLocation ? "contained-tonal" : "contained"} onPress={() => setLocationMenuVisible(true)}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            {myLocation ? "Helyzet módosítása" : "Megadom a helyzetem"}
+            {myLocation ? "Környék módosítása" : "Megadom a környékemet"}
           </View>
         </Button>
-        {myLocation&&<View style={{alignItems:"flex-end",}}>
-          <Button mode="text" 
+        {myLocation && <View style={{ alignItems: "flex-end", }}>
+          <Button mode="text"
             icon="delete"
             textColor={theme.colors.error}
-            onPress={()=>setMyLocation(undefined)}>Törlés</Button>
+            onPress={() => setMyLocation(undefined)}>Törlés</Button>
         </View>}
       </View>
       <Portal>
