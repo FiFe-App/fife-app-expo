@@ -38,10 +38,11 @@
     "@supabase/postgrest-js": "^2.87.1",
     "@supabase/supabase-js": "^2.45.1",
     "@teovilla/react-native-web-maps": "^0.9.5",
-    "axios": "^1.7.2",
+    "axios": "^1.13.5",
     "buffer": "^6.0.3",
     "expo": "^52.0.28",
     "expo-auth-session": "~6.0.2",
+    "expo-build-properties": "~0.13.3",
     "expo-clipboard": "~7.0.1",
     "expo-constants": "~17.0.5",
     "expo-crypto": "~14.0.2",
@@ -85,8 +86,7 @@
     "redux-persist": "^6.0.0",
     "resize-observer-polyfill": "^1.5.1",
     "util": "^0.12.5",
-    "wkx": "^0.5.0",
-    "expo-build-properties": "~0.13.3"
+    "wkx": "^0.5.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
