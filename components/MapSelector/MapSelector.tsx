@@ -7,7 +7,7 @@ import {
   FAB,
   Icon,
   IconButton,
-  List, 
+  List,
   TextInput,
   useTheme
 } from "react-native-paper";
@@ -449,8 +449,8 @@ const MapSelector = ({
                 center={
                   data?.location
                 }
-                strokeColor="#00000088"
-                fillColor="#00000038"
+                strokeColor={isDarkTheme ? "#ffffff18" : "#00000088"}
+                fillColor={isDarkTheme ? "#ffffff38" : "#00000038"}
                 radius={data?.radius}
               >
               </Circle>)}
@@ -467,6 +467,8 @@ const MapSelector = ({
                 center={
                   circle?.location
                 }
+                strokeColor={isDarkTheme ? "#ffffffaa" : "#00000028"}
+                fillColor={isDarkTheme ? "#ffffff" : "#00000028"}
                 radius={circle?.radius}
               >
               </Circle>)}

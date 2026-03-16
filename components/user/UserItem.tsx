@@ -49,23 +49,16 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
               }}
             >
               <View style={{}}>
-                {!showOptions && !!created_at && (
+                {!showOptions && !!created_at && distance != null && (
                   <Text>
-                    <Icon size={16} source="calendar" /> <Text>{elapsedTime(created_at)} fife</Text>
-                  </Text>
-                )}
-              </View>
-              <View style={{}}>
-                {!showOptions && !!created_at && (
-                  <Text>
-                    <Icon size={16} source="map-marker" /> <Text>{toDistanceText(distance / 1000)} távolságra</Text>
+                    <Icon size={16} source="map-marker" /><Text> {toDistanceText(distance / 1000)} távolságra</Text>
+
                   </Text>
                 )}
               </View>
               {recommendations > 0 && <View style={{ flexDirection: "row" }}>
                 <Text>
-                  <Icon size={16} source="account-group" />
-                  <Text>{recommendations ? <Text>{recommendations} ember ajánlja</Text> : <Text>Még senki sem ajánlotta</Text>}</Text>
+                  <Icon size={16} source="account-group" /> <Text>{recommendations ? <Text>{recommendations} ember ajánlja</Text> : <Text>Még senki sem ajánlotta</Text>}</Text>
                 </Text>
               </View>}
             </View>

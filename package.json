@@ -38,7 +38,6 @@
     "@supabase/postgrest-js": "^2.87.1",
     "@supabase/supabase-js": "^2.45.1",
     "@teovilla/react-native-web-maps": "^0.9.5",
-    "axios": "^1.7.2",
     "buffer": "^6.0.3",
     "expo": "^52.0.28",
     "expo-auth-session": "~6.0.2",
