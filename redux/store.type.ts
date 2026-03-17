@@ -5,6 +5,7 @@ import { ImagePickerAsset } from "expo-image-picker";
 export interface UserState {
   uid?: string;
   name?: string;
+  locationAlertDismissed?: boolean;
   userData?: {
     authorization: string;
     email: string;
