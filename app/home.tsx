@@ -7,6 +7,7 @@ import {
   storeUserSearchParams
 } from "@/redux/reducers/usersReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
+import { dismissLocationAlert } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -28,7 +29,7 @@ import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 import { useFifeSearch } from "@/hooks/useFifeSearch";
 
 export default function Index() {
-  const { uid } = useSelector((state: RootState) => state.user);
+  const { uid, userData, locationAlertDismissed } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
   const { userSearchParams } = useSelector(
     (state: RootState) => state.users,
@@ -36,10 +37,12 @@ export default function Index() {
   const skip = userSearchParams?.skip || 0;
   const searchCircle = userSearchParams?.searchCircle;
   const dispatch = useDispatch();
+  const hasProfileLocation = !!userData?.location;
 
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [whatVisible, setWhatVisible] = useState(false);
   const { fetch, data, fetchNextPage, hasMore } = useFifeSearch();
+
 
   const handleSearch = () => {
     dispatch(storeBuzinesses([]));
@@ -82,6 +85,18 @@ export default function Index() {
             onPress={() => setLocationMenuVisible(true)}
           >Hol keresel?</Button>
         </View>
+        {!hasProfileLocation && !locationAlertDismissed && (
+          <ThemedView type="card" style={{ marginHorizontal: 16, marginBottom: 8, borderRadius: 12, padding: 12, alignItems: "center", gap: 8 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1, width: "100%" }}>
+              <View style={{ flex: 1 }}>
+                <ThemedText variant="titleSmall" style={{ marginBottom: 4 }}>Nincs megadva lakhelyed</ThemedText>
+                <ThemedText variant="bodySmall" style={{ marginBottom: 8 }}>Add meg a környékedet, hogy lásd a közeli fiféket.</ThemedText>
+              </View>
+              <IconButton icon="close" iconColor={theme.colors.onSecondaryContainer} onPress={() => dispatch(dismissLocationAlert())} style={{ margin: 0 }} />
+            </View>
+            <Button mode="contained" type="secondary" icon="map-marker" onPress={() => router.push("/user/edit")}>Megadom</Button>
+          </ThemedView>
+        )}
         <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} />
         <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />
         <Portal>
