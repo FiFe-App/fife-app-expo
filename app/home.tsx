@@ -94,7 +94,10 @@ export default function Index() {
               </View>
               <IconButton icon="close" iconColor={theme.colors.onSecondaryContainer} onPress={() => dispatch(dismissLocationAlert())} style={{ margin: 0 }} />
             </View>
-            <Button mode="contained" type="secondary" icon="map-marker" onPress={() => router.push("/user/edit")}>Megadom</Button>
+            <Button mode="contained" type="secondary" icon="map-marker" onPress={() => {
+              dispatch(dismissLocationAlert())
+              router.push("/user/edit")
+            }}>Megadom</Button>
           </ThemedView>
         )}
         <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} />
