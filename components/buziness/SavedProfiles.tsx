@@ -65,7 +65,7 @@ export function SavedProfiles({ uid, myProfile, name }: ContactListProps) {
               ) : (
                 <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
                   <Image
-                    source={require("../../assets/images/HeroImage.png")}
+                    source={require("@/assets/images/HeroImage.png")}
                     style={{ height: 200, width: "100%" }}
                     contentFit="contain"
                   />

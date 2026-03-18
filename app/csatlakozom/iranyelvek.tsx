@@ -37,7 +37,7 @@ const Register = () => {
         router.setParams({
           canGoNext: accepted ? "true" : undefined,
         });
-      return () => {};
+      return () => { };
     }, [accepted]),
   );
 
@@ -74,6 +74,8 @@ const Register = () => {
         <Pressable
           style={styles.inputView}
           onPress={() => {
+            console.log("hello");
+
             if (textInput?.current) textInput?.current?.focus();
           }}
         >
@@ -107,7 +109,12 @@ const styles = StyleSheet.create({
     fontSize: 17,
     margin: 5,
   },
-  inputView: {},
+  inputView: {
+    borderWidth: 1,
+    borderColor: "#ff0000",
+    borderRadius: 8,
+    position: "relative",
+  },
   input: {
     padding: 0,
     paddingHorizontal: 10,

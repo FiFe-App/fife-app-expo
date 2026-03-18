@@ -10,7 +10,7 @@ export default {
   splash: {
     image: "./assets/images/splash.png",
     resizeMode: "contain",
-    backgroundColor: "#ffffff"
+    backgroundColor: "#fff5e0"
   },
   ios: {
     supportsTablet: true,
@@ -19,7 +19,7 @@ export default {
   android: {
     adaptiveIcon: {
       foregroundImage: "./assets/images/Slimey.png",
-      backgroundColor: "#ffffff"
+      backgroundColor: "#fff5e0"
     },
     config: {
       googleMaps: {
@@ -49,8 +49,15 @@ export default {
       {
         fonts: [
           "assets/fonts/Piazzolla.ttf",
+          "assets/fonts/Piazzolla-Regular.ttf",
+          "assets/fonts/Piazzolla-Light.ttf",
+          "assets/fonts/Piazzolla-Medium.ttf",
+          "assets/fonts/Piazzolla-ExtraBold.ttf",
           "assets/fonts/RedHatText.ttf",
-          "assets/fonts/Piazzolla-ExtraBold.ttf"
+          "assets/fonts/RedHatText-Regular.ttf",
+          "assets/fonts/RedHatText-Light.ttf",
+          "assets/fonts/RedHatText-Medium.ttf",
+          "assets/fonts/RedHatText-Bold.ttf"
         ]
       }
     ]

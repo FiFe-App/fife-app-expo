@@ -11,7 +11,7 @@ import {
   TextInput,
   useTheme
 } from "react-native-paper";
-import MyLocationIcon from "../../assets/images/myLocationIcon";
+import MyLocationIcon from "@/assets/images/myLocationIcon";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 import {
   Camera,

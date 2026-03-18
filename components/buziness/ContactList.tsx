@@ -94,7 +94,7 @@ export function ContactList({ uid, edit, name }: ContactListProps) {
               ) : (
                 <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
                   <Image
-                    source={require("../../assets/images/img-map.png")}
+                    source={require("@/assets/images/img-map.png")}
                     style={{ height: 200, width: 200 }}
                   />
                   <ThemedText type="subtitle">

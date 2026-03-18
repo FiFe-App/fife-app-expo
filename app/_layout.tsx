@@ -12,8 +12,15 @@ import { PersistGate } from "redux-persist/integration/react";
 import { ThemedView } from "@/components/ThemedView";
 import { getTheme, DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
 import Piazzolla from "@/assets/fonts/Piazzolla.ttf";
-import RedHatText from "@/assets/fonts/RedHatText.ttf";
+import PiazzollaRegular from "@/assets/fonts/Piazzolla-Regular.ttf";
+import PiazzollaLight from "@/assets/fonts/Piazzolla-Light.ttf";
+import PiazzollaMedium from "@/assets/fonts/Piazzolla-Medium.ttf";
 import PiazzollaExtraBold from "@/assets/fonts/Piazzolla-ExtraBold.ttf";
+import RedHatText from "@/assets/fonts/RedHatText.ttf";
+import RedHatTextRegular from "@/assets/fonts/RedHatText-Regular.ttf";
+import RedHatTextLight from "@/assets/fonts/RedHatText-Light.ttf";
+import RedHatTextMedium from "@/assets/fonts/RedHatText-Medium.ttf";
+import RedHatTextBold from "@/assets/fonts/RedHatText-Bold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
 import { RootState } from "@/redux/store";
 import { setThemePreference } from "@/redux/reducers/userReducer";
@@ -24,23 +31,23 @@ function RootContent() {
   const deviceColorScheme = useColorScheme(); // Auto-detect device theme
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
   const hasInitialized = React.useRef(false);
-  
+
   // On first load only, mark as initialized
   useEffect(() => {
     if (!hasInitialized.current) {
       hasInitialized.current = true;
     }
   }, []);
-  
+
   // Determine if dark mode should be active based on preference
-  const isDarkMode = 
-    userThemePreference === "dark" || 
+  const isDarkMode =
+    userThemePreference === "dark" ||
     (userThemePreference === "auto" && deviceColorScheme === "dark");
   const theme = getTheme(isDarkMode);
 
   return (
     <>
-      <StatusBar 
+      <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={theme.colors.background}
       />
@@ -103,8 +110,15 @@ function RootContent() {
 export default function RootLayout() {
   const [loaded] = useFonts({
     Piazzolla,
-    RedHatText,
+    "Piazzolla-Regular": PiazzollaRegular,
+    "Piazzolla-Light": PiazzollaLight,
+    "Piazzolla-Medium": PiazzollaMedium,
     "Piazzolla-ExtraBold": PiazzollaExtraBold,
+    RedHatText,
+    "RedHatText-Regular": RedHatTextRegular,
+    "RedHatText-Light": RedHatTextLight,
+    "RedHatText-Medium": RedHatTextMedium,
+    "RedHatText-Bold": RedHatTextBold,
   });
 
   if (loaded)

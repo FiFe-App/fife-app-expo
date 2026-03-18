@@ -68,12 +68,12 @@ const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
         ) : (
           <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
 
-            <ThemedView responsive={400} style={{flexDirection:"row",padding:10, alignItems:"center"}}>
+            <ThemedView responsive={400} style={{ flexDirection: "row", padding: 10, alignItems: "center" }}>
               <Image
-                source={require("../../assets/images/img-prof.png")}
+                source={require("@/assets/images/img-prof.png")}
                 style={{ height: 200, width: 200 }}
               />
-              <View style={{alignItems:"center",justifyContent:"center" ,flex:1,gap:16}}>
+              <View style={{ alignItems: "center", justifyContent: "center", flex: 1, gap: 16 }}>
                 <ThemedText type="subtitle">
                   {myProfile
                     ? "Itt fognak megjelenni a saját bizniszeid."

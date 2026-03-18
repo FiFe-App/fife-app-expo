@@ -15,6 +15,7 @@ export function Button({
   type = "default",
   big,
   compact,
+  children,
   ...otherProps
 }: ThemedButtonPProps) {
   const theme = useTheme();
@@ -33,8 +34,8 @@ export function Button({
       };
     }
     return {
-      backgroundColor: undefined,
-      textColor: undefined,
+      backgroundColor: "transparent",
+      textColor: "#000000",
     };
   };
 
@@ -51,7 +52,7 @@ export function Button({
       labelStyle={[
         big && theme.fonts.headlineSmall,
         compact && theme.fonts.labelMedium,
-        { fontFamily: "Piazzolla-ExtraBold", fontWeight: "bold" },
+        { fontFamily: "Piazzolla-ExtraBold" },
       ]}
       style={[
         ButtonPStyle,
@@ -66,6 +67,8 @@ export function Button({
       ]}
       compact={compact}
       {...otherProps}
-    />
+    >
+      {children}
+    </ButtonP>
   );
 }
