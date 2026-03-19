@@ -20,7 +20,7 @@ export const Header = () => {
       <View style={styles.centerRow}>
         <View style={styles.titleRow}>
           <Image
-            source={require("../assets/Logo.png")}
+            source={require("@/assets/Logo.png")}
             style={{ width: 239, height: 40, zIndex: 20 }}
             contentFit="contain"
           />
@@ -74,7 +74,7 @@ const Hero = () => {
           ]}
         >
           <Image
-            source={require("../assets/images/HeroImage.png")}
+            source={require("@/assets/images/HeroImage.png")}
             contentFit="contain"
             style={{
               width: isDesktop ? "100%" : "115%",
@@ -152,17 +152,17 @@ const HowItWorks = () => {
           style={[{ gap: 16 }, isDesktop ? styles.rowWrap : styles.colStack]}
         >
           <StepItem
-            image={require("../assets/images/Funkcio1.png")}
+            image={require("@/assets/images/Funkcio1.png")}
             title="Csatlakozz hozzánk!"
             description="Hozd létre a profilod, és oszd meg az erőforrásaidat."
           />
           <StepItem
-            image={require("../assets/images/Funkcio 2.png")}
+            image={require("@/assets/images/Funkcio 2.png")}
             title="Keress segítséget!"
             description="Találj a környékeden tevékenykedő fiféket."
           />
           <StepItem
-            image={require("../assets/images/Funkcio1.png")}
+            image={require("@/assets/images/Funkcio1.png")}
             title="Építs kapcsolatokat!"
             description="Jelöld meg, kiket tartasz megbízhatónak."
           />
@@ -203,7 +203,7 @@ const Trust = () => {
           ]}
         >
           <Image
-            source={require("../assets/images/trust-connections.png")}
+            source={require("@/assets/images/trust-connections.png")}
             contentFit="contain"
             style={{
               width: "100%",
@@ -236,7 +236,7 @@ const About = () => {
           ]}
         >
           <Image
-            source={require("../assets/images/Community.png")}
+            source={require("@/assets/images/Community.png")}
             contentFit="contain"
             style={{ width: "100%", minHeight: 350, zIndex: 20 }}
           />
@@ -297,7 +297,7 @@ const Banner = () => {
         }}
       >
         <Image
-          source={require("../assets/images/Slimey.png")}
+          source={require("@/assets/images/Slimey.png")}
           style={{ width: 40, height: 40, zIndex: 20 }}
           contentFit="contain"
         />
@@ -337,7 +337,7 @@ const Newsletter = () => {
           ]}
         >
           <Image
-            source={require("../assets/images/Phone.png")}
+            source={require("@/assets/images/Phone.png")}
             contentFit="contain"
             style={{ width: "100%", minHeight: 350, zIndex: 20 }}
           />
@@ -417,7 +417,7 @@ const AboutMe = () => {
           ]}
         >
           <Image
-            source={require("../assets/images/Trust.png")}
+            source={require("@/assets/images/Trust.png")}
             contentFit="contain"
             style={{ width: "100%", minHeight: 350, zIndex: 5 }}
           />
@@ -437,7 +437,7 @@ export const Footer = () => {
       <View style={[styles.flex1, { flexDirection: "row", alignItems: "center", justifyContent: "center" }]}>
         <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
         <Image
-          source={require("../assets/Logo.png")}
+          source={require("@/assets/Logo.png")}
           style={{ width: 180, height: 30, zIndex: 20 }}
           contentFit="contain"
         />

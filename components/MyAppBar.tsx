@@ -47,7 +47,7 @@ export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewSt
       {center || <Link href="/" style={{ flex: 1 }} asChild>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}><Smiley />
           <Image
-            source={require("../assets/Logo.png")}
+            source={require("@/assets/Logo.png")}
             style={{ width: 180, height: 30, zIndex: 20 }}
             contentFit="contain"
           /></View>
