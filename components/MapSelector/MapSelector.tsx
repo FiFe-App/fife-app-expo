@@ -400,7 +400,6 @@ const MapSelector = ({
           style={{ width: "100%", flex: 1, zIndex: 0 }}
         >
           <MapView
-            onPress={() => setSearchFocused(false)}
             ref={mapRef}
             options={{
               mapTypeControl: false,
@@ -408,7 +407,17 @@ const MapSelector = ({
               streetViewControl: false,
               zoomControl: false,
             }}
-            style={{ width: "100%", height: "100%", maxHeight: 200 }}
+            onPoiClick={(e) => {
+              console.log(e);
+
+              e.preventDefault()
+            }}
+            onPress={(e) => {
+              console.log(e);
+              setSearchFocused(false)
+              e.preventDefault()
+            }}
+            style={{ width: "100%", height: "100%" }}
             initialCamera={{
               altitude: 10,
               center: {

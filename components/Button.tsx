@@ -35,7 +35,7 @@ export function Button({
     }
     return {
       backgroundColor: "transparent",
-      textColor: "#000000",
+      textColor: theme.colors.primary,
     };
   };
 

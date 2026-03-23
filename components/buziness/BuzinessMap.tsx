@@ -109,9 +109,25 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
           streetViewControl: false,
           zoomControl: false,
         }}
-        style={{ width: "100%", height: "100%" }}
+        style={StyleSheet.absoluteFillObject}
         onMapLoaded={(e) => {
           //Alert.alert(JSON.stringify(e));
+        }}
+        onPoiClick={(e) => {
+          console.log("poi", e);
+
+          e.stopPropagation()
+          e.preventDefault()
+        }}
+        onMarkerPress={(e) => {
+          console.log("marker", e);
+        }}
+        onPress={(e) => {
+
+          console.log("press", e);
+          setSelectedBuzinessId(null)
+          e.stopPropagation()
+          e.preventDefault()
         }}
         initialCamera={{
           altitude: 10,
@@ -131,7 +147,6 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
         rotateEnabled={false}
         toolbarEnabled={false}
         onRegionChangeComplete={onRegionChange}
-        onPress={() => setSelectedBuzinessId(null)}
       >
         {buzinesses.map((buziness) => {
           if (buziness?.id < 0 || !buziness.location) return;
@@ -156,17 +171,6 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
           );
         })}
 
-        <FAB
-          style={mapStyles.myLocationButton}
-          icon={
-            myLocation
-              ? "crosshairs-gps"
-              : locationError
-                ? "map-marker-alert"
-                : "map-marker-question"
-          }
-          onPress={panToMyLocation}
-        />
         {myLocation && (
           <Marker
             centerOffset={{ x: 10, y: 10 }}

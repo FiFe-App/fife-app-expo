@@ -132,7 +132,7 @@ export default function UserPage() {
   return (
     <>
       <ThemedView style={{ flex: 1 }}>
-        {data && uid && (
+        {!!data && !!uid && (
           <>
             <ThemedView style={{ padding: 16, gap: 8 }}>
               <View style={{ flexDirection: "row", gap: 8, }}>
@@ -250,7 +250,7 @@ export default function UserPage() {
               </View>
             </ThemedView>
             <TabsProvider defaultIndex={defaultIndex}>
-              <Tabs showTextLabel={width > 400} theme={theme} style={{ backgroundColor: theme.colors.background }}>
+              <Tabs showTextLabel={width > 500} theme={theme} style={{ backgroundColor: theme.colors.background }}>
                 <TabScreen
                   label="Bizniszek"
                   badge={functions.includes("buzinessProfile") ? "ÚJ" : undefined}

@@ -162,7 +162,7 @@ export default function Index() {
   };
   return (
     <ThemedView style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ flex: 1 }}>
+      <ScrollView >
         {!data && !error && <ActivityIndicator />}
         {!!id && !!data && (
           <>
