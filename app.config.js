@@ -60,7 +60,20 @@ export default {
           "assets/fonts/RedHatText-Bold.ttf"
         ]
       }
-    ]
+    ],
+    [
+      "expo-build-properties",
+      {
+        "android": {
+          "compileSdkVersion": 35,
+          "targetSdkVersion": 35,
+          "minSdkVersion": 24
+        },
+        "ios": {
+          "useFrameworks": "static"
+        }
+      }
+    ],
   ],
   experiments: {
     $1: true

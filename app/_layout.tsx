@@ -1,4 +1,3 @@
-import "@expo/match-media"; // enables window.matchMedia across platforms
 import InfoLayer from "@/components/InfoLayer";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { persistor, store } from "@/redux/store";

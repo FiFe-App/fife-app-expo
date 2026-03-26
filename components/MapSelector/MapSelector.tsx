@@ -1,6 +1,6 @@
 import { useMyLocation } from "@/hooks/useMyLocation";
 import React, { useMemo, useRef, useState } from "react";
-import { FlatList, Text, View } from "react-native";
+import { FlatList, Platform, Text, View } from "react-native";
 import {
   Button,
   Card,
@@ -401,21 +401,19 @@ const MapSelector = ({
         >
           <MapView
             ref={mapRef}
-            options={{
-              mapTypeControl: false,
-              fullscreenControl: false,
-              streetViewControl: false,
-              zoomControl: false,
+            {...(Platform.OS === "web" ? {
+              options: {
+                mapTypeControl: false,
+                fullscreenControl: false,
+                streetViewControl: false,
+                zoomControl: false,
+              },
+            } : {})}
+            onPoiClick={() => {
+              // no-op: suppress default POI behavior
             }}
-            onPoiClick={(e) => {
-              console.log(e);
-
-              e.preventDefault()
-            }}
-            onPress={(e) => {
-              console.log(e);
-              setSearchFocused(false)
-              e.preventDefault()
+            onPress={() => {
+              setSearchFocused(false);
             }}
             style={{ width: "100%", height: "100%" }}
             initialCamera={{

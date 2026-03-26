@@ -15,6 +15,7 @@ export function Button({
   type = "default",
   big,
   compact,
+  mode,
   children,
   ...otherProps
 }: ThemedButtonPProps) {
@@ -33,6 +34,19 @@ export function Button({
         textColor: theme.colors.onTertiary,
       };
     }
+    // When mode="contained", Paper fills with primary — use onPrimary text
+    if (mode === "contained") {
+      return {
+        backgroundColor: undefined,
+        textColor: theme.colors.onPrimary,
+      };
+    }
+    if (mode === "contained-tonal") {
+      return {
+        backgroundColor: undefined,
+        textColor: theme.colors.onSecondaryContainer,
+      };
+    }
     return {
       backgroundColor: "transparent",
       textColor: theme.colors.primary,
@@ -42,7 +56,7 @@ export function Button({
   const { backgroundColor, textColor } = getButtonPColors();
 
   const ButtonPStyle: ViewStyle = {
-    backgroundColor,
+    ...(backgroundColor != null && { backgroundColor }),
     justifyContent: "center",
   };
 
@@ -66,6 +80,7 @@ export function Button({
         style,
       ]}
       compact={compact}
+      mode={mode}
       {...otherProps}
     >
       {children}

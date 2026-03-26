@@ -50,7 +50,7 @@ export default function Index() {
   };
 
   useEffect(() => {
-    fetch()
+    fetch();
   }, [searchCircle]);
 
 
@@ -79,7 +79,10 @@ export default function Index() {
           </View>
         </View>
         <View style={{ paddingHorizontal: 16, paddingTop: 0, paddingBottom: 0, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Fife Radar <Icon size={20} color={theme.colors.secondary} source="wifi" /></ThemedText>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Fife Radar</ThemedText>
+            <Icon size={20} color={theme.colors.secondary} source="wifi" />
+          </View>
           <Button
             icon={searchCircle ? "map-marker" : "map-marker-outline"}
             onPress={() => setLocationMenuVisible(true)}
@@ -95,8 +98,8 @@ export default function Index() {
               <IconButton icon="close" iconColor={theme.colors.onSecondaryContainer} onPress={() => dispatch(dismissLocationAlert())} style={{ margin: 0 }} />
             </View>
             <Button mode="contained" type="secondary" icon="map-marker" onPress={() => {
-              dispatch(dismissLocationAlert())
-              router.push("/user/edit")
+              dispatch(dismissLocationAlert());
+              router.push("/user/edit");
             }}>Megadom</Button>
           </ThemedView>
         )}

@@ -1,6 +1,6 @@
 import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, Platform, StyleSheet, View } from "react-native";
 import { Image, ImageSource } from "expo-image";
 import { Text } from "react-native-paper";
 import { ThemedInput as TextInput } from "@/components/ThemedInput";
@@ -265,7 +265,6 @@ const Banner = () => {
 
   return (
     <ThemedView
-      responsive={10}
       //onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
       style={{
         alignItems: "center",
@@ -278,7 +277,10 @@ const Banner = () => {
     >
       <ThemedView
         style={{
-          position: "fixed",
+          ...Platform.select({
+            web: { position: "fixed" as const },
+            default: { position: "absolute" as const },
+          }),
           left: 0,
           width: "100%",
           alignItems: "center",

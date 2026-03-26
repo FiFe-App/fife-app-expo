@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet, Pressable, Alert } from "react-native";
+import { Platform, View, StyleSheet, Pressable, Alert } from "react-native";
 import BuzinessItem from "./BuzinessItem";
 import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
@@ -102,32 +102,26 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
     <View style={styles.container}>
       <MapView
         ref={mapRef}
-        //@ts-ignore
-        options={{
-          mapTypeControl: false,
-          fullscreenControl: false,
-          streetViewControl: false,
-          zoomControl: false,
-        }}
+        {...(Platform.OS === "web" ? {
+          options: {
+            mapTypeControl: false,
+            fullscreenControl: false,
+            streetViewControl: false,
+            zoomControl: false,
+          },
+        } : {})}
         style={StyleSheet.absoluteFillObject}
         onMapLoaded={(e) => {
           //Alert.alert(JSON.stringify(e));
         }}
-        onPoiClick={(e) => {
-          console.log("poi", e);
-
-          e.stopPropagation()
-          e.preventDefault()
+        onPoiClick={() => {
+          // no-op: suppress default POI behavior
         }}
         onMarkerPress={(e) => {
           console.log("marker", e);
         }}
-        onPress={(e) => {
-
-          console.log("press", e);
-          setSelectedBuzinessId(null)
-          e.stopPropagation()
-          e.preventDefault()
+        onPress={() => {
+          setSelectedBuzinessId(null);
         }}
         initialCamera={{
           altitude: 10,

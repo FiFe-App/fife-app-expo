@@ -1,4 +1,3 @@
-import "@expo/match-media"; // enables window.matchMedia across platforms
 import { clearOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { Link, useGlobalSearchParams, useNavigation, usePathname, useSegments } from "expo-router";
@@ -43,7 +42,7 @@ export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewSt
         width: "100%"
       }, style]}
     >
-      {navigation.canGoBack() && pathname !== "/home" && pathname !== "/" ? <Appbar.BackAction onPress={navigation.goBack} /> : <View style={{ width: 48 }} />}
+      {navigation.canGoBack() ? pathname !== "/home" && pathname !== "/" ? <Appbar.BackAction onPress={navigation.goBack} /> : <View style={{ width: 48 }} /> : null}
       {center || <Link href="/" style={{ flex: 1 }} asChild>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}><Smiley />
           <Image
@@ -52,9 +51,10 @@ export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewSt
             contentFit="contain"
           /></View>
       </Link>}
-      {options.length > 0 ?
-        <> {options?.length === 1 && <Appbar.Action {...options[0]} />}
-          {options?.length > 1 && (
+      {options.length > 0 ? (
+        <>
+          {options?.length === 1 ? <Appbar.Action {...options[0]} /> : null}
+          {options?.length > 1 ? (
             <>
               <Appbar.Action
                 icon="dots-vertical"
@@ -76,8 +76,9 @@ export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewSt
                 ))}
               </Menu>
             </>
-          )}
-        </> : <View style={{ width: 48 }} />}
+          ) : null}
+        </>
+      ) : <View style={{ width: 48 }} />}
     </Appbar.Header>
   );
 };

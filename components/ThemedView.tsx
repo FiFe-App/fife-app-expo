@@ -1,6 +1,5 @@
-import { StyleSheet, View, type ViewProps } from "react-native";
+import { StyleSheet, View, useWindowDimensions, type ViewProps } from "react-native";
 import { useTheme } from "react-native-paper";
-import { useMediaQuery } from "react-responsive";
 
 export type ThemedViewProps = ViewProps & {
   lightColor?: string;
@@ -18,9 +17,8 @@ export function ThemedView({
   ...otherProps
 }: ThemedViewProps) {
   const theme = useTheme();
-  // Normalize to the same breakpoints used in ResponsiveLayout
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const isCol = responsive ? useMediaQuery({ maxWidth: responsive }) : false;
+  const { width } = useWindowDimensions();
+  const isCol = responsive ? width <= responsive : false;
   
   const styles = StyleSheet.create({
     card: {

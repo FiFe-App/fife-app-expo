@@ -1,7 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Image } from "expo-image";
-import { View, Modal, StyleSheet, Pressable, TextInput } from "react-native";
+import { View, Modal, Platform, StyleSheet, Pressable, TextInput } from "react-native";
 import { useState, useRef, useCallback } from "react";
 import { Icon, Text } from "react-native-paper";
 import { Button } from "@/components/Button";
@@ -213,13 +213,14 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 17,
     position: "absolute",
-    userSelect: "none",
-    cursor: "text",
     fontSize: 15,
     zIndex: 150,
     overflow: "hidden",
     fontWeight: "300",
     fontFamily: "RedHatText",
+    ...Platform.select({
+      web: { userSelect: "none", cursor: "text" },
+    }),
   },
 });
 
