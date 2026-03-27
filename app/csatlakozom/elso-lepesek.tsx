@@ -1,25 +1,16 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { supabase } from "@/lib/supabase/supabase";
+import { loadUserData } from "@/lib/supabase/loadUserData";
 import { setTutorialActive, startTutorial } from "@/redux/reducers/tutorialReducer";
-import { setName, login as sliceLogin } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
-import { User } from "@supabase/auth-js";
 import { Image } from "expo-image";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { AppState, View } from "react-native";
+import { View } from "react-native";
 import { ActivityIndicator, Button, Icon } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-
-AppState.addEventListener("change", (state) => {
-  if (state === "active") {
-    supabase.auth.startAutoRefresh();
-  } else {
-    supabase.auth.stopAutoRefresh();
-  }
-});
 
 export default function Index() {
   const dispatch = useDispatch();
@@ -35,23 +26,6 @@ export default function Index() {
   );
 
   useEffect(() => {
-    const getUserData = async (userData: User) => {
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions")
-        .eq("id", userData.id)
-        .single();
-      if (error) {
-        setError(error.message);
-      }
-      if (profile) {
-        console.log("profile", profile);
-
-        dispatch(sliceLogin(profile?.id));
-        dispatch(setName(profile?.full_name));
-        return;
-      }
-    };
     if (token_data) {
       //dispatch(logout());
       console.log(token_data);
@@ -63,7 +37,7 @@ export default function Index() {
         })
         .then(({ data, error }) => {
           if (error) setError(error.message);
-          if (data.user) getUserData(data.user);
+          if (data.user) loadUserData(data.user, dispatch);
         });
     }
     dispatch(startTutorial(true));
