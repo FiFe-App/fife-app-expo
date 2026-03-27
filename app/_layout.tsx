@@ -5,7 +5,7 @@ import { persistor, store } from "@/redux/store";
 import { Stack, usePathname } from "expo-router";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
-import { View, StatusBar, useColorScheme } from "react-native";
+import { AppState, View, StatusBar, useColorScheme } from "react-native";
 import { PaperProvider } from "react-native-paper";
 import { Provider, useSelector, useDispatch } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -16,7 +16,9 @@ import RedHatText from "@/assets/fonts/RedHatText.ttf";
 import PiazzollaExtraBold from "@/assets/fonts/Piazzolla-ExtraBold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
 import { RootState } from "@/redux/store";
-import { setThemePreference } from "@/redux/reducers/userReducer";
+import { logout, setThemePreference } from "@/redux/reducers/userReducer";
+import { supabase } from "@/lib/supabase/supabase";
+import { loadUserData } from "@/lib/supabase/loadUserData";
 
 function RootContent() {
   const pathname = usePathname();
@@ -24,7 +26,34 @@ function RootContent() {
   const deviceColorScheme = useColorScheme(); // Auto-detect device theme
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
   const hasInitialized = React.useRef(false);
-  
+
+  // Manage Supabase auto-refresh based on app foreground/background state
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        supabase.auth.startAutoRefresh();
+      } else {
+        supabase.auth.stopAutoRefresh();
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
+  // Restore session on app start and keep Redux in sync with Supabase auth state
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "INITIAL_SESSION" && session?.user) {
+          await loadUserData(session.user, dispatch);
+        } else if (event === "SIGNED_OUT") {
+          dispatch(logout());
+        }
+      }
+    );
+    return () => subscription.unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // On first load only, mark as initialized
   useEffect(() => {
     if (!hasInitialized.current) {
