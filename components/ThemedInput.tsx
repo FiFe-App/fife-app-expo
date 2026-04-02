@@ -1,5 +1,6 @@
 import { StyleSheet } from "react-native";
 import { useTheme, TextInputProps, TextInput } from "react-native-paper";
+import { BorderRadius } from "@/constants/borderRadius";
 
 export type ThemedTextInputProps = TextInputProps & {};
 
@@ -23,7 +24,7 @@ export function ThemedInput({ style, ...otherProps }: ThemedTextInputProps) {
       style={[styles.default, style]}
       outlineStyle={{
         borderWidth: 1,
-        borderRadius: 8,
+        borderRadius: BorderRadius.md,
         borderColor: theme.colors.onSurface,
       }}
       {...otherProps}

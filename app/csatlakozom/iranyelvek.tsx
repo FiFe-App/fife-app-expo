@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { Icon, Text, TextInput } from "react-native-paper";
+import { Spacing } from "@/constants/spacing";
 
 const Register = () => {
   const textInput = useRef<TIRN>(null);
@@ -43,9 +44,9 @@ const Register = () => {
   );
 
   return (
-    <ThemedView style={{ flex: 1, padding: 8 }}>
+    <ThemedView style={{ flex: 1, padding: Spacing.sm }}>
       <View style={{ flex: 1, justifyContent: "center" }}>
-        <ThemedText type="title" style={{ marginBottom: 16 }}>
+        <ThemedText type="title" style={{ marginBottom: Spacing.lg }}>
           Ha szeretnél csatlakozni ehhez a közösséghez, be kell tartanod az
           irányelveinket:
         </ThemedText>
@@ -60,7 +61,7 @@ const Register = () => {
           style={[styles.text, { flex: undefined }]}
           renderItem={({ item, index }) => (
             <Text style={styles.listItem} key={"item" + index}>
-              <Text style={{ margin: 4 }}>
+              <Text style={{ margin: Spacing.xs }}>
                 <Icon source="heart" size={20} />
               </Text>
               {item.key}
@@ -68,7 +69,7 @@ const Register = () => {
           )}
         />
       </View>
-      <View style={{ marginVertical: 20 }}>
+      <View style={{ marginVertical: Spacing.xl }}>
         <ThemedText>
           Ha be fogod tartani ezeket, gépeld be a következő szöveget:
         </ThemedText>
@@ -108,7 +109,7 @@ const styles = StyleSheet.create({
   listItem: {
     alignItems: "center",
     fontSize: 17,
-    margin: 5,
+    margin: Spacing.xs,
   },
   inputView: {
     borderWidth: 1,
@@ -118,21 +119,21 @@ const styles = StyleSheet.create({
   },
   input: {
     padding: 0,
-    paddingHorizontal: 10,
+    paddingHorizontal: Spacing.sm,
     fontSize: 15,
     zIndex: 10,
     overflow: "hidden",
   },
   inputContent: {
-    paddingTop: 10,
-    paddingHorizontal: 10,
+    paddingTop: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
     letterSpacing: 0,
     zIndex: 20,
     overflow: "hidden",
   },
   textToType: {
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
     position: "absolute",
     fontSize: 15,
     fontWeight: "400",

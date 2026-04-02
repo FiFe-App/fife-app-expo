@@ -1,10 +1,12 @@
 import { useCallback, useEffect } from "react";
 import { useState } from "react";
 import { Linking, Pressable, Text } from "react-native";
+import { useTheme } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import { theme } from "@/assets/theme";
 
 const UrlText = ({ text = "" }: { text: string }) => {
+  const theme = useTheme();
   // Matches URLs (http/https, with/without www), emails, and phone numbers
   const regex =
     /((https?:\/\/)?(www\.)?[a-zA-Z0-9\-._~%]+(\.[a-zA-Z]{2,})+([\/?#][^\s]*)?)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})|(\+?\d{1,3}[\s.-]?\(?\d{1,4}\)?[\s.-]?\d{1,4}[\s.-]?\d{1,9})/g;

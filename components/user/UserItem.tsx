@@ -4,6 +4,8 @@ import { Chip, Icon, Surface, Text } from "react-native-paper";
 import ProfileImage from "../ProfileImage";
 import { NearestProfile, User } from "@/redux/store.type";
 import toDistanceText from "@/lib/functions/distanceText";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 
 interface UserItemProps {
   data: NearestProfile | User;
@@ -21,20 +23,20 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
     <Link href={{ pathname: "/user/[uid]", params: { uid: id } }} asChild>
       <Pressable>
         <Surface style={styles.container} elevation={2} mode="flat">
-        <View style={{ flexDirection: "row", gap: 12 }}>
+        <View style={{ flexDirection: "row", gap: Spacing.md }}>
           <ProfileImage
             modal
             uid={id}
             size={50}
             avatar_url={avatar_url}
-            style={{ width: 80, height: 80, borderRadius: 6 }}
+            style={{ width: 80, height: 80, borderRadius: BorderRadius.sm }}
           />
-          <View style={{ flex: 1, gap: 4 }}>
+          <View style={{ flex: 1, gap: Spacing.xs }}>
             <Text variant="titleLarge">{full_name || "Nincs név"}</Text>
-            <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4 }}>
+            <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.xs }}>
               {buzinesses?.map((buziness, i) => {
                 return (
-                  <Chip key={"buziness" + i} textStyle={{ margin: 4 }}>
+                  <Chip key={"buziness" + i} textStyle={{ margin: Spacing.xs }}>
                     <Text variant="labelMedium">{buziness}</Text>
                   </Chip>
                 );
@@ -42,10 +44,10 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
             </View>
             <View
               style={{
-                marginRight: 8,
+                marginRight: Spacing.sm,
                 flexDirection: "row",
                 flexWrap: "wrap",
-                gap: 16
+                gap: Spacing.lg
               }}
             >
               <View style={{}}>
@@ -74,8 +76,8 @@ export default UserItem;
 const styles = StyleSheet.create({
   container: {
     overflow: "hidden",
-    borderRadius: 8,
-    marginHorizontal: 4,
-    padding: 8,
+    borderRadius: BorderRadius.md,
+    marginHorizontal: Spacing.xs,
+    padding: Spacing.sm,
   },
 });

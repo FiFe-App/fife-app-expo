@@ -15,6 +15,7 @@ import { ScrollView, View } from "react-native";
 import Dots from "react-native-dots-pagination";
 import { Button } from "react-native-paper";
 import { useSelector } from "react-redux";
+import { Spacing } from "@/constants/spacing";
 
 export default function RootLayout() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
@@ -74,7 +75,7 @@ export default function RootLayout() {
             justifyContent: "space-between",
             flexDirection: "row",
             width: "100%",
-            padding: 16,
+            padding: Spacing.lg,
           }}
         >
           <Link href={current === 0 ? "/" : prev} asChild>

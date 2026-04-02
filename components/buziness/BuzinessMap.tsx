@@ -17,6 +17,7 @@ import locationToCoords from "@/lib/functions/locationToCoords";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { Button, FAB, IconButton } from "react-native-paper";
 import mapStyles from "../mapView/style";
+import { Spacing } from "@/constants/spacing";
 import { addDialog } from "@/redux/reducers/infoReducer";
 
 interface BuzinessBuzinessMapProps {
@@ -161,14 +162,14 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
         pointerEvents="box-none"
         style={{
           position: "absolute",
-          bottom: 8,
+          bottom: Spacing.sm,
           userSelect: "none",
           width: "100%",
           alignItems: "flex-end",
           flexDirection: "column",
         }}
       >
-        <View style={{ padding: 8, bottom: 32 }}>
+        <View style={{ padding: Spacing.sm, bottom: Spacing.xxxl }}>
           <IconButton
             icon="plus"
             style={{
@@ -213,10 +214,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     marginTop: -4,
-  },
-  businessItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
   },
 });

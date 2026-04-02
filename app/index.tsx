@@ -3,6 +3,8 @@ import { Button } from "@/components/Button";
 import { ScrollView, Platform, StyleSheet, View } from "react-native";
 import { Image, ImageSource } from "expo-image";
 import { Text, useTheme } from "react-native-paper";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 import { ThemedInput as TextInput } from "@/components/ThemedInput";
 import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 import { Link, Redirect } from "expo-router";
@@ -13,8 +15,9 @@ import { useSelector } from "react-redux";
 import Smiley from "@/components/Smiley";
 
 export const Header = () => {
+  const theme = useTheme();
   return (
-    <ThemedView style={styles.headerRow} type="default">
+    <ThemedView style={[styles.headerRow, { borderBottomColor: theme.colors.outlineVariant }]} type="default">
       <View style={styles.flex1} />
 
       <View style={styles.centerRow}>
@@ -34,12 +37,12 @@ export const Header = () => {
 const Hero = () => {
   const { isDesktop, screenPadding } = useBreakpoint();
   return (
-    <View style={{ paddingTop: 32, marginHorizontal: screenPadding }}>
+    <View style={{ paddingTop: Spacing.xxxl, marginHorizontal: screenPadding }}>
       <Text variant="displayMedium">
         Találj megbízható embereket a környékeden!
       </Text>
       <ThemedView
-        style={[{ paddingVertical: 16, alignItems: "center" }]}
+        style={[{ paddingVertical: Spacing.lg, alignItems: "center" }]}
         responsive={800}
       >
         <View
@@ -48,7 +51,7 @@ const Hero = () => {
               styles.flex1,
               { maxWidth: 400, paddingHorizontal: 40 },
             ],
-            { gap: 16, width: "100%", alignItems: "center" },
+            { gap: Spacing.lg, width: "100%", alignItems: "center" },
           ]}
         >
           <Text variant="headlineMedium">
@@ -113,14 +116,14 @@ const StepItem = ({
         style={
           isDesktop
             ? { width: "100%", height: 260 }
-            : { height: 100, width: 100, marginRight: 12 }
+            : { height: 100, width: 100, marginRight: Spacing.md }
         }
       />
       <View
         style={{
           flex: 1,
           alignItems: isDesktop ? "center" : "stretch",
-          paddingTop: isDesktop ? 0 : 8,
+          paddingTop: isDesktop ? 0 : Spacing.sm,
         }}
       >
         <Text
@@ -147,9 +150,9 @@ const HowItWorks = () => {
   return (
     <View style={{ marginHorizontal: screenPadding }}>
       <Text variant="displayMedium">Hogyan működik?</Text>
-      <View style={{ paddingHorizontal: isDesktop ? 64 : 4 }}>
+      <View style={{ paddingHorizontal: isDesktop ? 64 : Spacing.xs }}>
         <View
-          style={[{ gap: 16 }, isDesktop ? styles.rowWrap : styles.colStack]}
+          style={[{ gap: Spacing.lg }, isDesktop ? styles.rowWrap : styles.colStack]}
         >
           <StepItem
             image={require("@/assets/images/Funkcio1.png")}
@@ -177,13 +180,13 @@ const Trust = () => {
   return (
     <View style={{ marginHorizontal: screenPadding }}>
       <ThemedView
-        style={[{ paddingVertical: 16, alignItems: "flex-start" }]}
+        style={[{ paddingVertical: Spacing.lg, alignItems: "flex-start" }]}
         responsive={800}
       >
         <View
           style={[
             isDesktop && [styles.flex1, {}],
-            { gap: 16, width: "100%", alignItems: "center" },
+            { gap: Spacing.lg, width: "100%", alignItems: "center" },
           ]}
         >
           <Text variant="displayMedium">
@@ -221,7 +224,7 @@ const About = () => {
   return (
     <View style={{ marginHorizontal: screenPadding }}>
       <ThemedView
-        style={[{ paddingVertical: 16, alignItems: "flex-start", gap: 32 }]}
+        style={[{ paddingVertical: Spacing.lg, alignItems: "flex-start", gap: Spacing.xxxl }]}
         responsive={800}
         reverseOnCol
       >
@@ -244,7 +247,7 @@ const About = () => {
         <View
           style={[
             isDesktop && [styles.flex1],
-            { gap: 16, width: "100%", alignItems: "center" },
+            { gap: Spacing.lg, width: "100%", alignItems: "center" },
           ]}
         >
           <Text variant="displayMedium">Kérjünk egymástól segítséget!</Text>
@@ -268,15 +271,15 @@ const Banner = () => {
       style={{
         alignItems: "center",
         justifyContent: "center",
-        margin: 20,
-        padding: 20,
-        gap: 16,
+        margin: Spacing.xl,
+        padding: Spacing.xl,
+        gap: Spacing.lg,
       }}
       type="card"
     >
       <View
         style={{
-          gap: 16,
+          gap: Spacing.lg,
           maxWidth: 500,
           flexDirection: "row",
           flex: isDesktop ? 1 : undefined,
@@ -311,7 +314,7 @@ const Newsletter = () => {
         Ne maradj le, iratkozz fel a hírlevélre!
       </Text>
       <ThemedView
-        style={[{ paddingVertical: 16, alignItems: "flex-start", gap: 32 }]}
+        style={[{ paddingVertical: Spacing.lg, alignItems: "flex-start", gap: Spacing.xxxl }]}
         responsive={800}
         reverseOnCol
       >
@@ -331,10 +334,10 @@ const Newsletter = () => {
         <View
           style={[
             isDesktop ? [styles.flex1] : {},
-            { gap: 16, width: "100%", alignItems: "center" },
+            { gap: Spacing.lg, width: "100%", alignItems: "center" },
           ]}
         >
-          <View style={{ width: "100%", padding: 24, gap: 16 }}>
+          <View style={{ width: "100%", padding: Spacing.xxl, gap: Spacing.lg }}>
             <Text variant="labelLarge">E-mail címed</Text>
             <TextInput mode="outlined" placeholder="email@fifeapp.hu" />
             <Text variant="labelLarge">Üzenet (opcionális)</Text>
@@ -358,15 +361,15 @@ const Newsletter = () => {
 const AboutMe = () => {
   const { isDesktop } = useBreakpoint();
   return (
-    <View style={{ marginHorizontal: 32 }}>
+    <View style={{ marginHorizontal: Spacing.xxxl }}>
       <ThemedView
-        style={[{ paddingVertical: 16, alignItems: "flex-start" }]}
+        style={[{ paddingVertical: Spacing.lg, alignItems: "flex-start" }]}
         responsive={800}
       >
         <View
           style={[
             isDesktop && [styles.flex1, {}],
-            { gap: 16, width: "100%", alignItems: "flex-start", zIndex: 10 },
+            { gap: Spacing.lg, width: "100%", alignItems: "flex-start", zIndex: 10 },
           ]}
         >
           <Text variant="displayMedium">A FiFe App mögött</Text>
@@ -377,7 +380,7 @@ const AboutMe = () => {
             közösségért és egy szebb jövőért dolgozom. Ha neked is fontosak
             ezek, kérlek, támogasd a FiFe Appot!
           </Text>
-          <ThemedView responsive={1000} style={{ gap: 16, zIndex: 10 }}>
+          <ThemedView responsive={1000} style={{ gap: Spacing.lg, zIndex: 10 }}>
             <Link href="/projekt" asChild>
               <Button type="secondary" big>
                 Beszállnál a projektbe?
@@ -418,10 +421,10 @@ export const Footer = () => {
     <ThemedView
       responsive={600}
       type="card"
-      style={{ flexDirection: "row", padding: 48 }}
+      style={{ flexDirection: "row", padding: Spacing.xxxl }}
     >
       <View style={[styles.flex1, { flexDirection: "row", alignItems: "center", justifyContent: "center" }]}>
-        <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
+        <Smiley style={{ width: 40, height: 40, borderRadius: BorderRadius.sm, zIndex: 100000 }} />
         <Image
           source={require("@/assets/Logo.png")}
           style={{ width: 180, height: 30, zIndex: 20 }}
@@ -439,7 +442,7 @@ export default function App() {
   return (
     <ScrollView contentContainerStyle={{ backgroundColor: theme.colors.background }} style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ThemedView type="default" style={{ alignItems: "center" }}>
-        <View style={{ flex: 1, gap: 16, maxWidth: 1000, width: "100%" }}>
+        <View style={{ flex: 1, gap: Spacing.lg, maxWidth: 1000, width: "100%" }}>
           <Hero />
           <HowItWorks />
           <Trust />
@@ -462,13 +465,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 8,
+    padding: Spacing.sm,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
-    shadowRadius: 4,
+    shadowRadius: Spacing.xs,
     elevation: 2,
-    borderBottomColor: "rgba(0,0,0,0.06)",
     borderBottomWidth: 0.5,
   },
   flex1: { flex: 1 },
@@ -485,7 +487,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   loginButton: {
-    borderRadius: 12,
+    borderRadius: BorderRadius.lg,
     width: "100%",
   },
   rowWrap: {
@@ -498,13 +500,13 @@ const styles = StyleSheet.create({
   },
   stepCard: {
     flex: 1,
-    borderRadius: 16,
-    gap: 8,
+    borderRadius: BorderRadius.xl,
+    gap: Spacing.sm,
   },
   stepRow: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 4,
+    padding: Spacing.xs,
   },
   stepCol: {
     flexDirection: "column",

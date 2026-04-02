@@ -11,6 +11,7 @@ import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
 import { ActivityIndicator, Button, Icon } from "react-native-paper";
+import { Spacing } from "@/constants/spacing";
 import { useDispatch, useSelector } from "react-redux";
 
 AppState.addEventListener("change", (state) => {
@@ -75,7 +76,7 @@ export default function Index() {
       style={{
         flex: 1,
         alignItems: "center",
-        gap: 32,
+        gap: Spacing.xxxl,
       }}
     >
       {!error && !uid && <ActivityIndicator />}
@@ -91,7 +92,7 @@ export default function Index() {
       )}
       {!error && uid && (
         <>
-          <View style={{ justifyContent: "center", flex: 1, gap: 16, width: "100%" }}>
+          <View style={{ justifyContent: "center", flex: 1, gap: Spacing.lg, width: "100%" }}>
             <ThemedText type="title" style={{ textAlign: "center" }}>
               Gratulálok!
             </ThemedText>

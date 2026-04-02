@@ -4,6 +4,7 @@ import { Text, TouchableRipple } from "react-native-paper";
 import { ThemedText } from "./ThemedText";
 import { View } from "react-native";
 import { theme } from "@/assets/theme";
+import { Spacing } from "@/constants/spacing";
 
 function CollapsibleText({ children }: PropsWithChildren) {
   const [isLongDescription, setIsLongDescription] = useState<
@@ -21,10 +22,10 @@ function CollapsibleText({ children }: PropsWithChildren) {
 
   return (
     <TouchableRipple
-      style={{ padding: 10 }}
+      style={{ padding: Spacing.sm }}
       onLayout={(e) => {
         console.log("height",e.nativeEvent.layout.height);
-            
+
         if (
           isLongDescription === undefined &&
               e.nativeEvent.layout.height > 165

@@ -53,6 +53,8 @@ import typeToIcon from "@/lib/functions/typeToIcon";
 import UrlText from "@/components/comments/UrlText";
 import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
 import CategoryChip from "@/components/CategoryChip";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 
 export default function Index() {
   const theme = useTheme();
@@ -186,7 +188,7 @@ export default function Index() {
                 style={{
                   flexWrap: "wrap",
                   flexDirection: "row",
-                  gap: 4,
+                  gap: Spacing.xs,
                   paddingHorizontal: 10,
                 }}
               >
@@ -206,7 +208,7 @@ export default function Index() {
               <View style={{ width: "100%", flexDirection: "row", alignItems: "flex-start" }}>
                 <Link
                   asChild
-                  style={{ flex: 1, padding: 8, justifyContent: "center" }}
+                  style={{ flex: 1, padding: Spacing.sm, justifyContent: "center" }}
                   href={{ pathname: "/user/[uid]", params: { uid: data.author } }}
                 >
                   <TouchableRipple>
@@ -215,7 +217,7 @@ export default function Index() {
                         flexDirection: "row",
                         alignItems: "center",
                         justifyContent: "center",
-                        gap: 8
+                        gap: Spacing.sm
                       }}
                     >
                       <ProfileImage
@@ -223,8 +225,8 @@ export default function Index() {
                         style={{
                           width: 30,
                           height: 30,
-                          borderRadius: 30,
-                          margin: 4,
+                          borderRadius: BorderRadius.pill,
+                          margin: Spacing.xs,
                         }}
                         avatar_url={data.avatarUrl}
                       />
@@ -238,8 +240,8 @@ export default function Index() {
                   style={{
                     flex: 1,
                     alignItems: "center",
-                    justifyContent: "center", padding: 8,
-                    paddingLeft: 24,
+                    justifyContent: "center", padding: Spacing.sm,
+                    paddingLeft: Spacing.xxl,
                     height: 55
                   }}
                   onPress={
@@ -255,7 +257,7 @@ export default function Index() {
                   </Text>
                 </TouchableRipple>
               </View>
-              <View style={{ gap: 4, padding: 4 }}>
+              <View style={{ gap: Spacing.xs, padding: Spacing.xs }}>
                 {defaultContact && (
                   <Link asChild href={getLinkForContact(defaultContact)} style={{ width: "100%" }}>
                     <Button mode="contained-tonal" icon={typeToIcon(defaultContact.type)}>
@@ -289,8 +291,8 @@ export default function Index() {
               </View>
               {/* Vertical sections instead of tabs */}
               {data.location && (
-                <View style={{ marginTop: 8 }}>
-                  <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Helyzete</Text>
+                <View style={{ marginTop: Spacing.sm }}>
+                  <Text variant="titleMedium" style={{ marginHorizontal: Spacing.sm, marginBottom: 6 }}>Helyzete</Text>
                   <View style={{ minHeight: 200, flex: 1 }}>
                     <FiFeMap
                       style={{ width: "100%", height: 240 }}
@@ -321,7 +323,7 @@ export default function Index() {
                             end: location.latitude + "," + location.longitude,
                           })
                         }
-                        style={{ right: 4, bottom: 17, position: "absolute" }}
+                        style={{ right: Spacing.xs, bottom: 17, position: "absolute" }}
                       />
                     )}
                   </View>
@@ -329,8 +331,8 @@ export default function Index() {
               )}
 
               {images.length > 0 && (
-                <View style={{ marginTop: 16 }}>
-                  <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Képek</Text>
+                <View style={{ marginTop: Spacing.lg }}>
+                  <Text variant="titleMedium" style={{ marginHorizontal: Spacing.sm, marginBottom: 6 }}>Képek</Text>
                   {images.map((image, ind) => (
                     <View key={"image-" + ind} style={{ width: "100%" }}>
                       <ImageModal
@@ -347,7 +349,7 @@ export default function Index() {
                           </ScrollView>
                         )}
                       />
-                      <View style={{ padding: 4 }}>
+                      <View style={{ padding: Spacing.xs }}>
                         <CollapsibleText>
                           {image.description}
                         </CollapsibleText>
@@ -357,13 +359,13 @@ export default function Index() {
                 </View>
               )}
 
-              <View style={{ marginTop: 16 }}>
-                <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Elérhetőségek</Text>
+              <View style={{ marginTop: Spacing.lg }}>
+                <Text variant="titleMedium" style={{ marginHorizontal: Spacing.sm, marginBottom: 6 }}>Elérhetőségek</Text>
                 <ContactList uid={data.author} />
               </View>
 
-              <View style={{ marginTop: 16 }}>
-                <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Vélemények</Text>
+              <View style={{ marginTop: Spacing.lg }}>
+                <Text variant="titleMedium" style={{ marginHorizontal: Spacing.sm, marginBottom: 6 }}>Vélemények</Text>
                 <Comments path={"buziness/" + id} placeholder="Mondd el a véleményed" />
               </View>
             </>

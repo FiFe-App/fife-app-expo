@@ -17,6 +17,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "../ThemedText";
 import { theme } from "@/assets/theme";
 import CategoryChip from "../CategoryChip";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 
 interface BuzinessItemProps {
   data: BuzinessItemInterface;
@@ -78,7 +80,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1 }}>
               <ThemedText variant="titleMedium" type="bold" >{title}</ThemedText>
-              <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4, marginTop: 4 }}>
+              <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.xs, marginTop: Spacing.xs }}>
                 {!!isNew && <CategoryChip key="category-new" style={{ backgroundColor: theme.colors.tertiary }} textStyle={{ color: theme.colors.onTertiary }}>új</CategoryChip>}
                 {categories?.map((e, i) => {
                   if (e.trim())
@@ -89,23 +91,23 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
               </View>
             </View>
           </View>
-          <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4 }}>
+          <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.xs }}>
             <View style={{ flexDirection: "row" }}>
               <Text>
                 <Icon size={16} source="account-group" />
-                <Text style={{ marginLeft: 4 }}> {recommendations} ember ajánlja</Text>
+                <Text style={{ marginLeft: Spacing.xs }}> {recommendations} ember ajánlja</Text>
               </Text>
             </View>
             {data.images?.length && <View style={{ flexDirection: "row" }}>
               <Text>
                 <Icon size={16} source="image" />
-                <Text style={{ marginLeft: 4 }}> {data?.images?.length || 0} kép</Text>
+                <Text style={{ marginLeft: Spacing.xs }}> {data?.images?.length || 0} kép</Text>
               </Text>
             </View>}
             {!!distanceText && <View style={{ flexDirection: "row" }}>
               <Text>
                 <Icon size={16} source="map-marker" />
-                <Text style={{ marginLeft: 4 }}>{distanceText}</Text>
+                <Text style={{ marginLeft: Spacing.xs }}>{distanceText}</Text>
               </Text>
             </View>}
           </View>
@@ -143,9 +145,9 @@ export default BuzinessItem;
 const styles = StyleSheet.create({
   container: {
     overflow: "hidden",
-    borderRadius: 8,
-    marginHorizontal: 4,
-    padding: 8,
-    gap: 4,
+    borderRadius: BorderRadius.md,
+    marginHorizontal: Spacing.xs,
+    padding: Spacing.sm,
+    gap: Spacing.xs,
   },
 });

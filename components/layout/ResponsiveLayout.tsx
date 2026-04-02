@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
 import { StyleSheet, ViewStyle, useWindowDimensions } from "react-native";
+import { Spacing } from "@/constants/spacing";
 import { ThemedView as View } from "@/components/ThemedView";
 
 export type Breakpoint = "mobile" | "tablet" | "desktop";
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
   },
   center: {
     alignSelf: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
   },
   row: {
     flexDirection: "row",
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
   },
   gap16: {
-    gap: 16,
+    gap: Spacing.lg,
   },
   left: {
     width: 280,

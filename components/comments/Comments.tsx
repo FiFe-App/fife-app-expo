@@ -34,6 +34,8 @@ import UrlText from "./UrlText";
 import { Comment, CommentsProps } from "./comments.types";
 import { ThemedText } from "../ThemedText";
 import { addSnack } from "@/redux/reducers/infoReducer";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 
 const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   const dispatch = useDispatch();
@@ -285,8 +287,8 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
           contentContainerStyle={{
             flexDirection: "column",
             paddingBottom: 10,
-            gap: 8,
-            padding: 4,
+            gap: Spacing.sm,
+            padding: Spacing.xs,
           }}
         >
           {!!comments.length &&
@@ -298,7 +300,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                       { flexDirection: "row", maxWidth: "100%", padding: 0 },
                     ]}
                   >
-                    <View style={{ flex: 1, padding: 8 }}>
+                    <View style={{ flex: 1, padding: Spacing.sm }}>
                       <View
                         style={{ flexDirection: "row", alignItems: "center" }}
                       >
@@ -316,7 +318,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                               {comment?.profiles?.full_name}
                             </ThemedText>
                           </Pressable>
-                          <ThemedText style={{ marginLeft: 8 }}>
+                          <ThemedText style={{ marginLeft: Spacing.sm }}>
                             {elapsedTime(comment.created_at)}
                           </ThemedText>
                         </View>
@@ -331,8 +333,8 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                           style={{
                             width: 100,
                             height: 100,
-                            borderTopRightRadius: 12,
-                            borderBottomRightRadius: 12,
+                            borderTopRightRadius: BorderRadius.lg,
+                            borderBottomRightRadius: BorderRadius.lg,
                           }}
                         />
                       </Pressable>
@@ -356,7 +358,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
         <ActivityIndicator />
       ) : (
         !comments?.length && (
-          <ThemedText style={{ padding: 20 }}>
+          <ThemedText style={{ padding: Spacing.xl }}>
             Még nem érkezett komment
           </ThemedText>
         )

@@ -30,6 +30,8 @@ import {
   useTheme,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
@@ -258,16 +260,16 @@ export default function Index() {
     return upload;
   };
   const containerStyle = {
-    flex:1,
+    flex: 1,
     height: "100%",
-    borderRadius:8,
+    borderRadius: BorderRadius.md,
   };
 
   if (myUid)
     return (
-      <ThemedView style={{ flex: 1,  paddingBottom: 24 }}>
-        <ScrollView style={{ flex: 1, padding: 8 }}>
-          <View style={{ alignItems: "center", marginBottom: 16 }}>
+      <ThemedView style={{ flex: 1, paddingBottom: Spacing.xxl }}>
+        <ScrollView style={{ flex: 1, padding: Spacing.sm }}>
+          <View style={{ alignItems: "center", marginBottom: Spacing.lg }}>
             <View style={{ width: 200 }}>
               <ProfileImage
                 key={profile?.avatar_url}
@@ -317,14 +319,14 @@ export default function Index() {
             excludeUid={myUid}
             onAvailabilityChange={setUsernameAvailable}
             onChangeText={(t) => setProfile({ ...profile, username: t })}
-            style={{ marginTop: 8 }}
+            style={{ marginTop: Spacing.sm }}
           />
-          <View style={{ padding: 8 }}>
+          <View style={{ padding: Spacing.sm }}>
             <ThemedText type="label">Email, amivel regisztráltál:</ThemedText>
             <ThemedText>{userData?.email}</ThemedText>
           </View>
           <Divider />
-          <View style={{ padding: 8 }}>
+          <View style={{ padding: Spacing.sm }}>
             <Menu
               visible={themeMenuVisible}
               onDismiss={() => setThemeMenuVisible(false)}
@@ -380,24 +382,24 @@ export default function Index() {
             </Menu>
           </View>
           <Divider />
-          <View style={{ paddingVertical: 16 }}>
-            <ThemedText variant="bodyLarge" type="bold" style={{ marginBottom: 8 }}>
+          <View style={{ paddingVertical: Spacing.lg }}>
+            <ThemedText variant="bodyLarge" type="bold" style={{ marginBottom: Spacing.sm }}>
               Lakhelyed környéke
             </ThemedText>
-            <ThemedText type="label" style={{ marginBottom: 8 }}>
+            <ThemedText type="label" style={{ marginBottom: Spacing.sm }}>
               Add meg a lakhelyedet, hogy lásd a fiféket a környékeden.
             </ThemedText>
             {!userLocation && (
-              <ThemedText type="label" style={{ marginBottom: 12 }}>
+              <ThemedText type="label" style={{ marginBottom: Spacing.md }}>
                 Nincs lakhely beállítva
               </ThemedText>
             )}
-            <View style={{ flexDirection: "row", gap: 4, flexWrap: "wrap" }}>
+            <View style={{ flexDirection: "row", gap: Spacing.xs, flexWrap: "wrap" }}>
               <Button
                 mode="outlined"
                 onPress={() => setLocationMenuVisible(true)}
                 icon="map-marker"
-                style={{ marginBottom: 8 }}
+                style={{ marginBottom: Spacing.sm }}
               >
                 {userLocation ? "Környék módosítása" : "Megadom a környékemet"}
               </Button>
@@ -414,7 +416,7 @@ export default function Index() {
             </View>
           </View>
           <Divider />
-          <View style={{ paddingVertical: 16, gap: 12 }}>
+          <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
             <ThemedText variant="bodyLarge" type="bold">Értesítések</ThemedText>
             {Platform.OS !== "web" && (
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -441,7 +443,7 @@ export default function Index() {
             </View>
           </View>
           <Divider />
-          <View style={{ gap: 8, paddingTop: 8, paddingBottom: 48 }}>
+          <View style={{ gap: Spacing.sm, paddingTop: Spacing.sm, paddingBottom: 48 }}>
             <ThemedText variant="bodyLarge" type="bold">Elérhetőségeid</ThemedText>
             <View style={{ alignItems: "center" }}>
               <Icon source="alert" size={24} color={theme.colors.error} />

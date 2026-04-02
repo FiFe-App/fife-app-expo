@@ -42,6 +42,8 @@ import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 
 import { useDispatch, useSelector } from "react-redux";
 import globStyles from "@/constants/Styles";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 import {
   clearTutorialState,
   viewFunction,
@@ -137,19 +139,19 @@ export default function UserPage() {
       <ThemedView style={{ flex: 1 }}>
         {!!data && !!uid && (
           <>
-            <ThemedView style={{ padding: 16, gap: 8 }}>
-              <View style={{ flexDirection: "row", gap: 8, }}>
+            <ThemedView style={{ padding: Spacing.lg, gap: Spacing.sm }}>
+              <View style={{ flexDirection: "row", gap: Spacing.sm, }}>
                 <ProfileImage
                   modal
                   uid={uid}
                   avatar_url={data.avatar_url}
-                  style={{ width: 100, height: 100, borderRadius: 8 }}
+                  style={{ width: 100, height: 100, borderRadius: BorderRadius.md }}
                 />
                 <View style={{ flex: 1, justifyContent: "center" }}>
                   <View
                     style={{
                       flex: 1,
-                      paddingLeft: 16,
+                      paddingLeft: Spacing.lg,
                       justifyContent: "center",
                     }}
                   >
@@ -161,9 +163,9 @@ export default function UserPage() {
                             dispatch(addSnack({ title: "Vágólapra másolva!" }));
                           });
                         }}
-                        style={{ borderRadius: 4, alignSelf: "flex-start" }}
+                        style={{ borderRadius: BorderRadius.xs, alignSelf: "flex-start" }}
                       >
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.xs }}>
                           <Text variant="labelMedium">
                             @{data.username}
                           </Text>
@@ -218,9 +220,9 @@ export default function UserPage() {
                   />
                 )}
               </View>
-              <View style={{ flexDirection: "row", gap: 4, margin: 4 }}>
+              <View style={{ flexDirection: "row", gap: Spacing.xs, margin: Spacing.xs }}>
                 {myProfile ? (
-                  <View style={{ flexDirection: "column", width: "100%", gap: 4 }}>
+                  <View style={{ flexDirection: "column", width: "100%", gap: Spacing.xs }}>
                     <Measure name="edit-profile">
                       <Link
                         asChild

@@ -1,5 +1,6 @@
 import React from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
+import { Spacing } from "@/constants/spacing";
 import { Divider, ActivityIndicator, Button } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import BuzinessItem from "./BuzinessItem";
@@ -53,15 +54,15 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
-          gap: 8,
-          marginVertical: 8,
+          gap: Spacing.sm,
+          marginVertical: Spacing.sm,
         }}
       >
         {buzinesses.map((buzinessItem,ind) =>
           buzinessItem.id === -1 ? (
             <Divider
               key={Math.random() * 100000 + 100000 + "div"}
-              style={{ marginVertical: 16 }}
+              style={{ marginVertical: Spacing.lg }}
             />
           ) : (
             <Measure key={buzinessItem.id} name={ind==0 ? "first-biznisz" : null }>
@@ -77,7 +78,7 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
           (<ThemedText style={{ alignSelf: "center" }}>
             Válassz környéket a kereséshez
           </ThemedText>)}
-        <View style={{ padding: 16 }}>
+        <View style={{ padding: Spacing.lg }}>
           {!loading &&
             (!!buzinesses.length && canLoadMore ? (
               <Button onPress={loadNext} style={{ alignSelf: "center" }}>
@@ -103,10 +104,5 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  businessItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
   },
 });

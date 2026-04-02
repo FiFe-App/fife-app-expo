@@ -10,6 +10,7 @@ import { useDispatch } from "react-redux";
 import BuzinessItem from "../buziness/BuzinessItem";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
+import { Spacing } from "@/constants/spacing";
 
 interface MyBuzinessesProps {
   uid: string;
@@ -51,8 +52,8 @@ const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
       });
   }, [dispatch, uid]);
   return (
-    <SafeAreaView style={{ flex: 1, padding: 4 }}>
-      <ScrollView contentContainerStyle={{ gap: 8, flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, padding: Spacing.xs }}>
+      <ScrollView contentContainerStyle={{ gap: Spacing.sm, flex: 1 }}>
         {loading ? (
           <View style={{ flex: 1, justifyContent: "center" }}>
             <ActivityIndicator style={{}} />
@@ -66,14 +67,14 @@ const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
             />
           ))
         ) : (
-          <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
+          <View style={{ alignItems: "center", gap: Spacing.lg, padding: Spacing.sm }}>
 
-            <ThemedView responsive={400} style={{ flexDirection: "row", padding: 10, alignItems: "center" }}>
+            <ThemedView responsive={400} style={{ flexDirection: "row", padding: Spacing.sm, alignItems: "center" }}>
               <Image
                 source={require("@/assets/images/img-prof.png")}
                 style={{ height: 200, width: 200 }}
               />
-              <View style={{ alignItems: "center", justifyContent: "center", gap: 16 }}>
+              <View style={{ alignItems: "center", justifyContent: "center", gap: Spacing.lg }}>
                 <ThemedText type="subtitle">
                   {myProfile
                     ? "Itt fognak megjelenni a saját bizniszeid."
@@ -111,8 +112,8 @@ export default MyBuzinesses;
 
 const styles = StyleSheet.create({
   fabStyle: {
-    bottom: 16,
-    right: 16,
+    bottom: Spacing.lg,
+    right: Spacing.lg,
     position: "absolute",
   },
 });

@@ -1,4 +1,6 @@
 import { ThemedInput } from "@/components/ThemedInput";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 import {
   storeBuzinessSearchParams
 } from "@/redux/reducers/buzinessReducer";
@@ -19,8 +21,8 @@ const BuzinessSearchInput = ({ onSearch }: { onSearch: (query: string) => void }
   return (<ThemedInput
     value={searchText}
     mode="outlined"
-    outlineStyle={{ borderRadius: 1000, borderWidth: 0, }}
-    style={{ backgroundColor:theme.colors.background, marginVertical: 4, textAlign: searchText ? "left" : "center", width: "100%", flex: 1, paddingLeft: 16 }}
+    outlineStyle={{ borderRadius: BorderRadius.full, borderWidth: 0, }}
+    style={{ backgroundColor:theme.colors.background, marginVertical: Spacing.xs, textAlign: searchText ? "left" : "center", width: "100%", flex: 1, paddingLeft: Spacing.lg }}
     onChangeText={(text) => {
       if (!text.includes("$"))
         dispatch(storeBuzinessSearchParams({ text }));

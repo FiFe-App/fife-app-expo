@@ -3,8 +3,10 @@ import { ThemedView } from "@/components/ThemedView";
 import { Image } from "expo-image";
 import { View, Modal, Platform, StyleSheet, Pressable, TextInput } from "react-native";
 import { useState, useRef, useCallback } from "react";
-import { Icon, Text } from "react-native-paper";
+import { Icon, Text, useTheme } from "react-native-paper";
 import { Button } from "@/components/Button";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 import { useFocusEffect, router } from "expo-router";
 import { ThemedInput } from "@/components/ThemedInput";
 
@@ -17,6 +19,7 @@ const iranyelvekList = [
 const textToType = "Nem leszek rosszindulatú";
 
 const Megbizhatosag = () => {
+  const theme = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [typed, setTyped] = useState("");
@@ -54,7 +57,7 @@ const Megbizhatosag = () => {
       <View style={{ flex: 1 }}>
         <ThemedText
           type="title"
-          style={{ textAlign: "left", marginBottom: 16 }}
+          style={{ textAlign: "left", marginBottom: Spacing.lg }}
         >
           Bizalom a platformon.
         </ThemedText>
@@ -66,20 +69,20 @@ const Megbizhatosag = () => {
           másokat, megbízhatónak jelölheted a profilján, így támogatva és a
           bizalom által építve a közösségünket.
         </ThemedText>
-        <View style={{ alignItems: "center", paddingTop: 32 }}>
+        <View style={{ alignItems: "center", paddingTop: Spacing.xxxl }}>
           <Button
             mode="contained"
             onPress={() => setModalVisible(true)}
             icon={accepted ? (props => <Icon {...props} source="check" />) : undefined}
             disabled={accepted}
-            style={{ marginBottom: 16, minWidth: 220 }}
+            style={{ marginBottom: Spacing.lg, minWidth: 220 }}
           >
             Irányelvek {accepted ? "elfogadva" : "elfogadása"}
           </Button>
         </View>
 
         <View
-          style={{ alignItems: "center", justifyContent: "center", margin: 24 }}
+          style={{ alignItems: "center", justifyContent: "center", margin: Spacing.xxl }}
         >
           <Image
             source={require("@/assets/images/Trust.png")}
@@ -94,19 +97,19 @@ const Megbizhatosag = () => {
           transparent={true}
           onRequestClose={() => setModalVisible(false)}
         >
-          <View style={styles.modalOverlay}>
+          <View style={[styles.modalOverlay, { backgroundColor: theme.colors.backdrop }]}>
             <ThemedView style={styles.modalContent}>
               <ThemedText type="title" style={{ marginBottom: 16 }}>
                 Irányelveink:
               </ThemedText>
               <View style={{ alignItems: "flex-start" }}>
                 {iranyelvekList.map((item, idx) => (
-                  <ThemedText key={idx} style={{ fontSize: 17, margin: 5 }}>
+                  <ThemedText key={idx} style={{ fontSize: 17, margin: Spacing.xs }}>
                     <Icon source="heart" size={20} /> {item}
                   </ThemedText>
                 ))}
               </View>
-              <View style={{ marginVertical: 20, width:"100%" }}>
+              <View style={{ marginVertical: Spacing.xl, width:"100%" }}>
                 <ThemedText style={{ fontWeight: "bold" }}>
                   Ha be fogod tartani ezeket, gépeld be a következő szöveget:
                 </ThemedText>
@@ -144,7 +147,7 @@ const Megbizhatosag = () => {
                     pointerEvents="none">{typed}</Text>
                 </Pressable>
               </View>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", width: "100%", gap: 16 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-end", width: "100%", gap: Spacing.lg }}>
 
                 <Button mode="text" onPress={() => setModalVisible(false)}>
                   Mégsem
@@ -170,13 +173,12 @@ const Megbizhatosag = () => {
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalContent: {
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.xxl,
     width: "90%",
     maxWidth: 400,
     alignItems: "flex-start",
@@ -185,8 +187,8 @@ const styles = StyleSheet.create({
   inputView: {
     width: "100%",
     minHeight: 48,
-    marginTop: 8,
-    marginBottom: 8,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.sm,
     position: "relative",
     justifyContent: "center",
   },
@@ -212,7 +214,7 @@ const styles = StyleSheet.create({
   },
   textToType: {
     top: 0,
-    padding: 16,
+    padding: Spacing.lg,
     paddingTop: 17,
     position: "absolute",
     fontSize: 15,

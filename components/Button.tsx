@@ -1,6 +1,8 @@
 import * as React from "react";
 import { ViewStyle } from "react-native";
 import { Button as ButtonP, useTheme } from "react-native-paper";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 import type { ButtonProps } from "react-native-paper";
 
 export type ThemedButtonPProps = ButtonProps & {
@@ -70,12 +72,12 @@ export function Button({
       ]}
       style={[
         ButtonPStyle,
-        big && { paddingVertical: 12, paddingHorizontal: 16 },
+        big && { paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg },
         compact && {
           maxHeight: 12,
-          paddingVertical: 12,
-          paddingHorizontal: 4,
-          borderRadius: 8,
+          paddingVertical: Spacing.md,
+          paddingHorizontal: Spacing.xs,
+          borderRadius: BorderRadius.md,
         },
         style,
       ]}
