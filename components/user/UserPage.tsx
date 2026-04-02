@@ -1,12 +1,13 @@
-import { ContactList } from "@/components/buziness/ContactList";
 import ProfileImage from "@/components/ProfileImage";
 import { ThemedView } from "@/components/ThemedView";
 import MyBuzinesses from "@/components/user/MyBuzinesses";
-import SavedBuzinesses from "@/components/user/SavedBuzinesses";
 import RecommendationsModal from "@/components/user/RecommendationsModal";
 import ReportProfileModal from "@/components/user/ReportProfileModal";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
+import getLinkForContact from "@/lib/functions/getLinkForContact";
+import typeToIcon from "@/lib/functions/typeToIcon";
+import typeToValueLabel from "@/lib/functions/typeToValueLabel";
 import {
   clearBuziness,
   clearBuzinessSearchParams,
@@ -26,19 +27,19 @@ import {
   useGlobalSearchParams,
 } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { useWindowDimensions, View } from "react-native";
+import { Linking, ScrollView, View } from "react-native";
 import {
   Badge,
   Button,
   Icon,
   IconButton,
+  List,
   Portal,
   Text,
   TouchableRipple,
   useTheme,
 } from "react-native-paper";
 import * as Clipboard from "expo-clipboard";
-import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 
 import { useDispatch, useSelector } from "react-redux";
 import globStyles from "@/constants/Styles";
@@ -49,21 +50,12 @@ import {
   viewFunction,
 } from "@/redux/reducers/tutorialReducer";
 import Measure from "@/components/tutorial/Measure";
-import { SavedProfiles } from "@/components/buziness/SavedProfiles";
-import { MyAppbar } from "../MyAppBar";
 
 type UserInfo = Tables<"profiles">;
 
 export default function UserPage() {
-  const { uid: paramUid, tab: paramTab } = useGlobalSearchParams();
+  const { uid: paramUid } = useGlobalSearchParams();
   const uid: string = String(paramUid);
-  // Map tab param to index
-  const tabNames = ["buziness", "contacts", "connections", "saved-buzinesses"];
-  let defaultIndex = 0;
-  if (paramTab && typeof paramTab === "string") {
-    const idx = tabNames.indexOf(paramTab);
-    if (idx !== -1) defaultIndex = idx;
-  }
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
@@ -73,10 +65,11 @@ export default function UserPage() {
   const theme = useTheme();
 
   const dispatch = useDispatch();
-  const { width } = useWindowDimensions();
   const myProfile = myUid === uid;
   const [data, setData] = useState<UserInfo | null>(null);
   const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [contacts, setContacts] = useState<Tables<"contacts">[]>([]);
+  const [connectionsCount, setConnectionsCount] = useState(0);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const iRecommended = recommendations.includes(myUid || "");
@@ -105,14 +98,34 @@ export default function UserPage() {
               setRecommendations(
                 data.profileRecommendations.map((pr) => pr.author),
               );
-              console.log(data);
             }
+          });
+
+        supabase
+          .from("contacts")
+          .select("*")
+          .eq("author", uid)
+          .then((res) => {
+            if (res.data) setContacts(res.data);
+          });
+
+        supabase
+          .from("profileRecommendations")
+          .select("id", { count: "exact", head: true })
+          .eq("author", uid)
+          .then((res) => {
+            setConnectionsCount(res.count ?? 0);
           });
       };
       load();
       if (myProfile)
         dispatch(
           setOptions([
+            {
+              icon: "archive",
+              onPress: () => router.push("/user/saved-buzinesses"),
+              title: "Mentett bizniszek",
+            },
             {
               icon: "exit-run",
               onPress: () => {
@@ -137,156 +150,178 @@ export default function UserPage() {
     <>
       {<Stack.Screen options={{ title:myProfile ? "Profilod" : "" }} />}
       <ThemedView style={{ flex: 1 }}>
-        {!!data && !!uid && (
-          <>
-            <ThemedView style={{ padding: Spacing.lg, gap: Spacing.sm }}>
-              <View style={{ flexDirection: "row", gap: Spacing.sm, }}>
+        {data && uid && (
+          <ScrollView>
+            <ThemedView style={{ padding: Spacing.lg, paddingBottom: Spacing.sm, gap: Spacing.sm }}>
+              {/* Hero: Avatar left, name + stats right */}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.lg, position: "relative" }}>
+                {!myProfile && (
+                  <IconButton
+                    icon="alert-octagon"
+                    size={20}
+                    onPress={() => setShowReportModal(true)}
+                    style={{ position: "absolute", right: -Spacing.sm, top: -Spacing.sm, zIndex: 1 }}
+                  />
+                )}
                 <ProfileImage
                   modal
                   uid={uid}
                   avatar_url={data.avatar_url}
-                  style={{ width: 100, height: 100, borderRadius: BorderRadius.md }}
+                  style={{ width: 80, height: 80, borderRadius: BorderRadius.full }}
                 />
-                <View style={{ flex: 1, justifyContent: "center" }}>
-                  <View
-                    style={{
-                      flex: 1,
-                      paddingLeft: Spacing.lg,
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Text variant="titleLarge">{data?.full_name}</Text>
-                    {!!data?.username && (
-                      <TouchableRipple
-                        onPress={() => {
-                          Clipboard.setStringAsync(`www.fifeapp.hu/@${data.username}`).then(() => {
-                            dispatch(addSnack({ title: "Vágólapra másolva!" }));
-                          });
-                        }}
-                        style={{ borderRadius: BorderRadius.xs, alignSelf: "flex-start" }}
-                      >
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.xs }}>
-                          <Text variant="labelMedium">
-                            @{data.username}
-                          </Text>
-                          <Icon source="content-copy" size={16} />
-                        </View>
-
-                      </TouchableRipple>
-                    )}
-                  </View>
-                  <View style={{ flexDirection: "row", flex: 1 }}>
+                <View style={{ flex: 1 }}>
+                  <Text variant="titleLarge">{data?.full_name}</Text>
+                  {/* Stats row */}
+                  <View style={{ flexDirection: "row", marginTop: Spacing.xs }}>
                     <TouchableRipple
-                      style={{ flex: 1 }}
                       onPress={() => {
                         if (uid)
                           dispatch(viewFunction({ key: "friendsProfile", uid }));
                         setShowRecommendsModal(true);
                       }}
+                      style={{ flex: 1, borderRadius: BorderRadius.md }}
                     >
-                      <View
-                        style={{
-                          flex: 1,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Text> Támogatók: {recommendations.length}</Text>
-                        {functions.includes("friendsProfile") && (
-                          <Badge style={globStyles.badge}>ÚJ</Badge>
-                        )}
+                      <View style={{ paddingVertical: Spacing.xs }}>
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                          <Text variant="titleMedium" style={{ fontWeight: "700" }}>
+                            {recommendations.length}
+                          </Text>
+                          {functions.includes("friendsProfile") && (
+                            <Badge style={globStyles.badge}>ÚJ</Badge>
+                          )}
+                        </View>
+                        <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                          Támogatók
+                        </Text>
                       </View>
                     </TouchableRipple>
+
+                    <TouchableRipple
+                      onPress={() => router.push({ pathname: "/user/[uid]/connections", params: { uid } })}
+                      style={{ flex: 1, borderRadius: BorderRadius.md }}
+                    >
+                      <View style={{ paddingVertical: Spacing.xs }}>
+                        <Text variant="titleMedium" style={{ fontWeight: "700" }}>
+                          {connectionsCount}
+                        </Text>
+                        <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                          Kapcsolatok
+                        </Text>
+                      </View>
+                    </TouchableRipple>
+
                     {data?.created_at && (
-                      <View
-                        style={{
-                          flex: 1,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Text>
-                          {elapsedTime(Date.parse(data.created_at.toString()))} Fife
+                      <View style={{ flex: 1, paddingVertical: Spacing.xs }}>
+                        <Text variant="titleMedium" style={{ fontWeight: "700" }}>
+                          {elapsedTime(Date.parse(data.created_at.toString()))}
+                        </Text>
+                        <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                          Fife
                         </Text>
                       </View>
                     )}
                   </View>
                 </View>
-                {!myProfile && (
-                  <IconButton
-                    icon="alert-octagon"
-                    size={24}
-                    onPress={() => setShowReportModal(true)}
+              </View>
+
+              {/* Username */}
+              {!!data?.username && (
+                <TouchableRipple
+                  onPress={() => {
+                    Clipboard.setStringAsync(`www.fifeapp.hu/@${data.username}`).then(() => {
+                      dispatch(addSnack({ title: "Vágólapra másolva!" }));
+                    });
+                  }}
+                  style={{ borderRadius: BorderRadius.xs, alignSelf: "flex-start" }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.xs }}>
+                    <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+                      @{data.username}
+                    </Text>
+                    <Icon source="content-copy" size={14} color={theme.colors.onSurfaceVariant} />
+                  </View>
+                </TouchableRipple>
+              )}
+
+              {/* Contacts */}
+              {contacts.length > 0 && (
+                <View style={{ width: "100%" }}>
+                  {contacts.map((contact) => (
+                    <TouchableRipple
+                      key={contact.id}
+                      onPress={() => {
+                        const link = getLinkForContact(contact);
+                        if (link) Linking.openURL(String(link));
+                      }}
+                      onLongPress={() => {
+                        Clipboard.setStringAsync(contact.data).then(() => {
+                          dispatch(addSnack({ title: "Vágólapra másolva!" }));
+                        });
+                      }}
+                    >
+                      <List.Item
+                        title={contact.data}
+                        description={contact.title || typeToValueLabel(contact.type)}
+                        left={(props) => (
+                          <List.Icon {...props} icon={typeToIcon(contact.type)} />
+                        )}
+                        right={(props) => (
+                          <List.Icon {...props} icon="open-in-new" />
+                        )}
+                      />
+                    </TouchableRipple>
+                  ))}
+                </View>
+              )}
+              {myProfile && contacts.length === 0 && (
+                <TouchableRipple
+                  onPress={() => router.push("/user/edit")}
+                  style={{ borderRadius: BorderRadius.sm }}
+                >
+                  <Text variant="labelMedium" style={{ color: theme.colors.primary, padding: Spacing.xs }}>
+                    Elérhetőségek hozzáadása
+                  </Text>
+                </TouchableRipple>
+              )}
+
+              {/* Action button */}
+              <View style={{ width: "100%" }}>
+                {myProfile ? (
+                  <Measure name="edit-profile">
+                    <Link
+                      asChild
+                      style={{ width: "100%" }}
+                      href={{ pathname: "/user/edit" }}
+                    >
+                      <Button mode="contained-tonal">Profilom szerkesztése</Button>
+                    </Link>
+                  </Measure>
+                ) : (
+                  <RecommendProfileButton
+                    profileId={uid}
+                    style={{ width: "100%" }}
+                    recommended={iRecommended}
+                    setRecommended={(recommendedByMe) => {
+                      if (myUid) {
+                        if (recommendedByMe)
+                          setRecommendations([...recommendations, myUid]);
+                        else
+                          setRecommendations(
+                            recommendations.filter((uid) => uid !== myUid),
+                          );
+                      }
+                    }}
                   />
                 )}
               </View>
-              <View style={{ flexDirection: "row", gap: Spacing.xs, margin: Spacing.xs }}>
-                {myProfile ? (
-                  <View style={{ flexDirection: "column", width: "100%", gap: Spacing.xs }}>
-                    <Measure name="edit-profile">
-                      <Link
-                        asChild
-                        style={{ width: "100%" }}
-                        href={{ pathname: "/user/edit" }}
-                      >
-                        <Button mode="contained-tonal">Profilom szerkesztése</Button>
-                      </Link>
-                    </Measure>
-                  </View>
-                ) : (
-                  <>
-                    <RecommendProfileButton
-                      profileId={uid}
-                      style={{ flex: 1 }}
-                      recommended={iRecommended}
-                      setRecommended={(recommendedByMe) => {
-                        if (myUid) {
-                          if (recommendedByMe)
-                            setRecommendations([...recommendations, myUid]);
-                          else
-                            setRecommendations(
-                              recommendations.filter((uid) => uid !== myUid),
-                            );
-                        }
-                      }}
-                    />
-                  </>
-                )}
-              </View>
             </ThemedView>
-            <TabsProvider defaultIndex={defaultIndex}>
-              <Tabs showTextLabel={width > 500} theme={theme} style={{ backgroundColor: theme.colors.background }}>
-                <TabScreen
-                  label="Bizniszek"
-                  badge={functions.includes("buzinessProfile") ? "ÚJ" : undefined}
-                  icon="briefcase"
-                >
-                  <MyBuzinesses uid={uid} myProfile={myProfile} name={data.full_name ?? undefined} />
-                </TabScreen>
-                <TabScreen
-                  label="Elérhetőségek"
-                  badge={functions.includes("contactsProfile") ? "ÚJ" : undefined}
-                  icon="email-multiple"
-                >
-                  <ContactList uid={uid} edit={myProfile} name={data.full_name ?? undefined} />
-                </TabScreen>
-                <TabScreen
-                  label="Kapcsolatok"
-                  icon="account-group"
-                >
-                  <SavedProfiles uid={uid} myProfile={myProfile} name={data.full_name ?? undefined} />
-                </TabScreen>
-                {myProfile && (
-                  <TabScreen
-                    label="Mentett bizniszek"
-                    icon="bookmark"
-                  >
-                    <SavedBuzinesses uid={uid} />
-                  </TabScreen>
-                )}
-              </Tabs>
-            </TabsProvider>
-          </>
+            <View style={{ height: 1, backgroundColor: theme.colors.surfaceVariant, marginHorizontal: Spacing.lg }} />
+
+            {/* Businesses inline */}
+            <Measure name="user-biznisz-tabs">
+              <MyBuzinesses uid={uid} myProfile={myProfile} name={data.full_name ?? undefined} />
+            </Measure>
+          </ScrollView>
         )}
       </ThemedView>
       {!!data?.full_name && (
