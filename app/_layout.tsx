@@ -4,12 +4,15 @@ import { persistor, store } from "@/redux/store";
 import { Stack, usePathname } from "expo-router";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
-import { View, StatusBar, useColorScheme } from "react-native";
+import { View, StatusBar, useColorScheme, Platform } from "react-native";
+import * as NavigationBar from "expo-navigation-bar";
 import { PaperProvider } from "react-native-paper";
 import { Provider, useSelector, useDispatch } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { ThemedView } from "@/components/ThemedView";
 import { getTheme, DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import Piazzolla from "@/assets/fonts/Piazzolla.ttf";
 import PiazzollaRegular from "@/assets/fonts/Piazzolla-Regular.ttf";
 import PiazzollaLight from "@/assets/fonts/Piazzolla-Light.ttf";
@@ -44,12 +47,19 @@ function RootContent() {
     (userThemePreference === "auto" && deviceColorScheme === "dark");
   const theme = getTheme(isDarkMode);
 
-  return (
-    <>
-      <StatusBar
-        barStyle={isDarkMode ? "light-content" : "dark-content"}
-        backgroundColor={theme.colors.background}
-      />
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      NavigationBar.setBackgroundColorAsync(theme.colors.background);
+      NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
+    }
+  }, [isDarkMode, theme.colors.background]);
+
+  return (<>
+    <StatusBar
+      barStyle={isDarkMode ? "light-content" : "dark-content"}
+      backgroundColor={theme.colors.background}
+    />
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={["left", "right","bottom"]}>
       <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.backdrop }}>
         <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
           <PaperProvider theme={theme}>
@@ -79,7 +89,7 @@ function RootContent() {
                 options={{ title: "FiFe Biznisz" }}
               />
               <Stack.Screen
-                name="biznisz/edit/[id]"
+                name="biznisz/edit/[editId]"
                 options={{ title: "FiFe Biznisz" }}
               />
               <Stack.Screen
@@ -102,8 +112,8 @@ function RootContent() {
           </PaperProvider>
         </View>
       </ThemedView>
-    </>
-  );
+    </SafeAreaView>
+  </>);
 }
 
 export default function RootLayout() {
@@ -122,10 +132,14 @@ export default function RootLayout() {
 
   if (loaded)
     return (
-      <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
-          <RootContent />
-        </PersistGate>
-      </Provider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <Provider store={store}>
+            <PersistGate loading={null} persistor={persistor}>
+              <RootContent />
+            </PersistGate>
+          </Provider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     );
 }

@@ -106,7 +106,7 @@ const Megbizhatosag = () => {
                   </ThemedText>
                 ))}
               </View>
-              <View style={{ marginVertical: 20 }}>
+              <View style={{ marginVertical: 20, width:"100%" }}>
                 <ThemedText style={{ fontWeight: "bold" }}>
                   Ha be fogod tartani ezeket, gépeld be a következő szöveget:
                 </ThemedText>
@@ -191,6 +191,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   input: {
+    width: "100%",
     padding: 0,
     fontSize: 15,
     lineHeight: 22,
@@ -200,6 +201,7 @@ const styles = StyleSheet.create({
     fontFamily: "RedHatText",
   },
   inputContent: {
+    width: "auto",
     padding: 0,
     letterSpacing: 0.5,
     fontSize: 15,

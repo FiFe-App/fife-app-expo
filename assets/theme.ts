@@ -33,7 +33,7 @@ const fontConfig: Record<string, Partial<MD3Type>> = {
     lineHeight: isDesktop ? 48 : 32,
   },
   headlineSmall: {
-    fontFamily: "Piazzolla",
+    fontFamily: "Piazzolla-Regular",
     fontSize: isDesktop ? 24 : 20,
     lineHeight: isDesktop ? 28 : 24,
     letterSpacing: 0,

@@ -30,7 +30,7 @@ export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewSt
     <Appbar.Header
       mode="center-aligned"
       style={[{
-        backgroundColor: theme.colors.background,
+        backgroundColor: theme.colors.surface,
         shadowColor: theme.colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
@@ -42,19 +42,25 @@ export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewSt
         width: "100%"
       }, style]}
     >
-      {navigation.canGoBack() ? pathname !== "/home" && pathname !== "/" ? <Appbar.BackAction onPress={navigation.goBack} /> : <View style={{ width: 48 }} /> : null}
-      {center || <Link href="/" style={{ flex: 1 }} asChild>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}><Smiley />
-          <Image
-            source={require("@/assets/Logo.png")}
-            style={{ width: 180, height: 30, zIndex: 20 }}
-            contentFit="contain"
-          /></View>
-      </Link>}
+      <View style={{ width: 48 }} >
+        {navigation.canGoBack() && pathname !== "/home" && pathname !== "/" && <Appbar.BackAction onPress={navigation.goBack} />}
+      </View>
+      {center ? <View style={{ flex: 1 }}>{center}</View> : 
+        <Link href="/" style={{ flex: 1 }} asChild>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+            <Smiley />
+            <Image
+              source={require("@/assets/Logo.png")}
+              style={{ width: 180, height: 30, zIndex: 20 }}
+              contentFit="contain"
+            />
+          </View>
+        </Link>}
       {options.length > 0 ? (
         <>
-          {options?.length === 1 ? <Appbar.Action {...options[0]} /> : null}
-          {options?.length > 1 ? (
+          {options?.length <= 2 ? options.map((o)=>
+            <Appbar.Action key={o.title} {...o} />) : null}
+          {options?.length > 2 ? (
             <>
               <Appbar.Action
                 icon="dots-vertical"

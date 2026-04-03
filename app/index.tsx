@@ -454,7 +454,7 @@ export default function App() {
   return (
     <ScrollView style={{ flex: 1 }}>
       <ThemedView type="default" style={{ alignItems: "center" }}>
-        <View style={{ flex: 1, gap: 16, maxWidth: 1000 }}>
+        <View style={{ flex: 1, gap: 16, maxWidth: 1000, width:"100%" }}>
           <Hero />
           <HowItWorks />
           <Trust />

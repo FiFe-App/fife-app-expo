@@ -72,10 +72,10 @@ export const WhatToDo: React.FC<WhatToDoProps> = ({ visible, onDismiss }) => {
           setSelected(null);
           onDismiss();
         }}
-        style={{ alignItems: "center" }}
-        contentContainerStyle={[{ width: "92%", maxHeight: "90%" }]}
+        style={{ alignItems: "center", justifyContent: "center" }}
+        contentContainerStyle={[{ width: "92%", maxHeight: "90%", minHeight: 300 }]}
       >
-        <ThemedView style={[style.containerStyle, { padding: 0, overflow: "hidden" }]}>          
+        <ThemedView style={[style.containerStyle, { padding: 0, overflow: "hidden", flex: undefined }]}>          
           <Appbar.Header elevated={false} style={{ backgroundColor: "transparent" }}>
             {selected && (
               <Appbar.BackAction onPress={() => setSelected(null)} />

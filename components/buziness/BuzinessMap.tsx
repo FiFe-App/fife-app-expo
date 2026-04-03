@@ -143,7 +143,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
         onRegionChangeComplete={onRegionChange}
       >
         {buzinesses.map((buziness) => {
-          if (buziness?.id < 0 || !buziness.location) return;
+          if (buziness?.id < 0 || !buziness.location) return null;
 
           const cords = locationToCoords(String(buziness.location));
           return (
@@ -188,7 +188,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
         onPress={panToMyLocation}
       />
       <View
-        pointerEvents="none"
+        pointerEvents="box-none"
         style={{
           position: "absolute",
           bottom: 8,

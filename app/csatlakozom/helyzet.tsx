@@ -25,7 +25,7 @@ const Register = () => {
   };
 
   return (
-    <ThemedView style={{ flex: 1, padding: 8 }}>
+    <ThemedView style={{ flex: 1, padding: 8,paddingTop: 36 }}>
       <View style={{ justifyContent: "center" }}>
         <ThemedText type="title" style={{ marginBottom: 16 }}>
           FiFe Radar
@@ -37,9 +37,8 @@ const Register = () => {
       </View>
       <View style={{ flex: 1, marginVertical: 20, gap: 12 }}>
         <Button icon={myLocation ? "check-circle" : undefined} mode={myLocation ? "contained-tonal" : "contained"} onPress={() => setLocationMenuVisible(true)}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            {myLocation ? "Környék módosítása" : "Megadom a környékemet"}
-          </View>
+          
+          {myLocation ? "Környék módosítása" : "Megadom a környékemet"}
         </Button>
         {myLocation && <View style={{ alignItems: "flex-end", }}>
           <Button mode="text"

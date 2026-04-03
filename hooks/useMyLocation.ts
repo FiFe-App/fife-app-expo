@@ -27,10 +27,10 @@ export function useMyLocation() {
       })();
     };
 
-    Location.getForegroundPermissionsAsync().then((res) => {
+    Location.requestForegroundPermissionsAsync().then((res) => {
       const { status } = res;
 
-      if (status !== "denied") getLocation();
+      if (status === "granted") getLocation();
       if (status === "denied") dispatch(setLocationError(blockedMessage));
     });
   }, [dialogs, dispatch]);

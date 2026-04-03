@@ -1,6 +1,9 @@
 import { PropsWithChildren, useEffect, useState } from "react";
 
 import { Text, TouchableRipple } from "react-native-paper";
+import { ThemedText } from "./ThemedText";
+import { View } from "react-native";
+import { theme } from "@/assets/theme";
 
 function CollapsibleText({ children }: PropsWithChildren) {
   const [isLongDescription, setIsLongDescription] = useState<
@@ -19,6 +22,16 @@ function CollapsibleText({ children }: PropsWithChildren) {
   return (
     <TouchableRipple
       style={{ padding: 10 }}
+      onLayout={(e) => {
+        console.log("height",e.nativeEvent.layout.height);
+            
+        if (
+          isLongDescription === undefined &&
+              e.nativeEvent.layout.height > 165
+        ) {
+          setIsLongDescription(true);
+        }
+      }}
       onPress={
         isLongDescription !== undefined
           ? () => {
@@ -30,24 +43,14 @@ function CollapsibleText({ children }: PropsWithChildren) {
       }
       disabled={isLongDescription === undefined}
     >
-      <Text>
-        <Text
-          numberOfLines={isLongDescription ? 10 : undefined}
-          onLayout={(e) => {
-            if (
-              isLongDescription === undefined &&
-              e.nativeEvent.layout.height > 165
-            ) {
-              setIsLongDescription(true);
-            }
-          }}
-        >
+      <View style={{gap:8}}>
+        <Text numberOfLines={isLongDescription ? 10 : undefined} >
           {children}
         </Text>
         {isLongDescription !== undefined && (
-          <Text>{isLongDescription ? "Több" : ""}</Text>
+          <ThemedText>{isLongDescription ? "Több" : ""}</ThemedText>
         )}
-      </Text>
+      </View>
     </TouchableRipple>
   );
 }

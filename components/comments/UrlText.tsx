@@ -2,6 +2,7 @@ import { useCallback, useEffect } from "react";
 import { useState } from "react";
 import { Linking, Pressable, Text } from "react-native";
 import { ThemedText } from "../ThemedText";
+import { theme } from "@/assets/theme";
 
 const UrlText = ({ text = "" }: { text: string }) => {
   // Matches URLs (http/https, with/without www), emails, and phone numbers
@@ -20,15 +21,13 @@ const UrlText = ({ text = "" }: { text: string }) => {
         const end = start + link?.length;
         list.push(<Text key={ind + "s"}>{text.slice(pre, start)}</Text>);
         list.push(
-          <Text key={ind + "k"}>
-            <Pressable
-              onPress={() => {
-                Linking.openURL(text.slice(start, end));
-              }}
-            >
-              <Text style={{ color: "red" }}>{text.slice(start, end)}</Text>
-            </Pressable>
-          </Text>,
+          <Pressable key={ind + "k"}
+            onPress={() => {
+              Linking.openURL(text.slice(start, end));
+            }}
+          >
+            <ThemedText style={{ color: theme.colors.secondary, }}>{text.slice(start, end)}</ThemedText>
+          </Pressable>,
         );
         pre += end;
       });

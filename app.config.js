@@ -1,12 +1,11 @@
 export default {
-  name: "fife-app-blodqy3cwbfgnkjv24has",
+  name: "Fife App",
   slug: "fife-app-blodqy3cwbfgnkjv24has",
   version: "1.0.1",
   orientation: "portrait",
   icon: "./assets/images/Slimey.png",
   scheme: "com.fife.app",
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
   splash: {
     image: "./assets/images/splash.png",
     resizeMode: "contain",
@@ -14,11 +13,21 @@ export default {
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.fife.app"
+    bundleIdentifier: "com.fife.app",
+    splash: {
+      image: "./assets/images/splash.png",
+      resizeMode: "contain",
+      backgroundColor: "#fff5e0"
+    }
   },
   android: {
+    splash: {
+      image: "./assets/images/splash.png",
+      resizeMode: "contain",
+      backgroundColor: "#fff5e0"
+    },
     adaptiveIcon: {
-      foregroundImage: "./assets/images/Slimey.png",
+      foregroundImage: "./assets/images/adaptive-icon.png",
       backgroundColor: "#fff5e0"
     },
     config: {
@@ -65,8 +74,8 @@ export default {
       "expo-build-properties",
       {
         "android": {
-          "compileSdkVersion": 35,
-          "targetSdkVersion": 35,
+          "compileSdkVersion": 36,
+          "targetSdkVersion": 36,
           "minSdkVersion": 24
         },
         "ios": {
@@ -76,7 +85,8 @@ export default {
     ],
   ],
   experiments: {
-    $1: true
+    typedRoutes: true,
+    reactCompiler: true
   },
   extra: {
     router: {

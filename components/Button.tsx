@@ -70,7 +70,7 @@ export function Button({
       ]}
       style={[
         ButtonPStyle,
-        big && { maxHeight: 48, paddingVertical: 16, paddingHorizontal: 16 },
+        big && { paddingVertical: 12, paddingHorizontal: 16 },
         compact && {
           maxHeight: 12,
           paddingVertical: 12,

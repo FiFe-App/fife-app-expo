@@ -67,7 +67,7 @@ export default function Index() {
   if (uid)
     return (
       <ThemedView style={{ flex: 1, zIndex: 100 }} type="default">
-        <View style={{ width: "100%", alignItems: "center", zIndex: 100 }}>
+        <ThemedView style={{ width: "100%", alignItems: "center", zIndex: 100 }} type="card">
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
             <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
             <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, flex: 1 }}>
@@ -77,8 +77,8 @@ export default function Index() {
               </Button>
             </View>
           </View>
-        </View>
-        <View style={{ paddingHorizontal: 16, paddingTop: 0, paddingBottom: 0, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        </ThemedView>
+        <ThemedView type="card" style={{ paddingHorizontal: 16, paddingTop: 0, paddingBottom: 0, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Fife Radar</ThemedText>
             <Icon size={20} color={theme.colors.secondary} source="wifi" />
@@ -87,7 +87,7 @@ export default function Index() {
             icon={searchCircle ? "map-marker" : "map-marker-outline"}
             onPress={() => setLocationMenuVisible(true)}
           >Hol keresel?</Button>
-        </View>
+        </ThemedView>
         {!hasProfileLocation && !locationAlertDismissed && (
           <ThemedView type="card" style={{ marginHorizontal: 16, marginBottom: 8, borderRadius: 12, padding: 12, alignItems: "center", gap: 8 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1, width: "100%" }}>

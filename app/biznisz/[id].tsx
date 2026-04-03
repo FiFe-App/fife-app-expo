@@ -32,7 +32,7 @@ import {
   useGlobalSearchParams,
   useNavigation,
 } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import ImageModal from "react-native-image-modal";
 import openMap from "react-native-open-maps";
@@ -50,6 +50,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { MyAppbar } from "@/components/MyAppBar";
 import typeToIcon from "@/lib/functions/typeToIcon";
 import UrlText from "@/components/comments/UrlText";
+import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
 
 export default function Index() {
   const { id: paramId } = useGlobalSearchParams();
@@ -79,6 +80,24 @@ export default function Index() {
   const myBuziness = myUid === data?.author;
   const { myLocation } = useMyLocation();
   const [commentsCount, setCommentsCount] = useState<number>();
+
+  useEffect(() => {
+    if (myBuziness)
+      dispatch(
+        setOptions([
+          {
+            title: "Mentés",
+            icon: "pencil",
+            onPress: async () => {
+              router.push("/biznisz/edit/"+id);
+            },
+          },
+        ]),
+      );
+    return () => {
+      dispatch(clearOptions());
+    };
+  }, [dispatch, id, myBuziness]);
 
   useFocusEffect(
     useCallback(() => {
@@ -248,16 +267,6 @@ export default function Index() {
               </TouchableRipple>
             </View>
             <View style={{ flexWrap: "wrap", gap: 4, padding: 4 }}>
-              {myBuziness && (
-                <Button
-                  style={{ flex: 1 }}
-                  mode="contained"
-                  onPress={onPimary}
-                  disabled={!myBuziness}
-                >
-                  Szerkesztés
-                </Button>
-              )}
               {defaultContact && (
                 <Link asChild href={getLinkForContact(defaultContact)}>
                   <Button style={{ flex: 1 }} mode="contained-tonal" icon={typeToIcon(defaultContact.type)}>
