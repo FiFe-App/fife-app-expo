@@ -1,16 +1,16 @@
 import React, { ReactNode } from "react";
-import { StyleSheet, ViewStyle } from "react-native";
+import { StyleSheet, ViewStyle, useWindowDimensions } from "react-native";
 import { ThemedView as View } from "@/components/ThemedView";
-import { useMediaQuery } from "react-responsive";
 
 export type Breakpoint = "mobile" | "tablet" | "desktop";
 
 export const useBreakpoint = () => {
-  const isMobile = useMediaQuery({ maxWidth: 599 });
-  const isDesktop = useMediaQuery({ minWidth: 600 });
+  const { width } = useWindowDimensions();
+  const isMobile = width < 600;
+  const isDesktop = !isMobile;
   const screenPadding = isDesktop ? 32 : 8;
   const current: Breakpoint = isDesktop ? "desktop" : "mobile";
-  return { isMobile, isDesktop: !isMobile, current, screenPadding };
+  return { isMobile, isDesktop, current, screenPadding };
 };
 
 type Props = {

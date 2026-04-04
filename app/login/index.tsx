@@ -8,7 +8,7 @@ import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
-import { Link, Redirect, router, useLocalSearchParams } from "expo-router";
+import { Link, Redirect, router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
 import { Divider, Text, TextInput } from "react-native-paper";
@@ -19,6 +19,7 @@ import * as WebBrowser from "expo-web-browser";
 import { loadViewedFunctions } from "@/redux/reducers/tutorialReducer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "@/components/Button";
+import { MyAppbar } from "@/components/MyAppBar";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -29,6 +30,7 @@ AppState.addEventListener("change", (state) => {
 });
 
 export default function Index() {
+  const navigation = useNavigation();
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,6 +45,7 @@ export default function Index() {
   const redirectTo = makeRedirectUri();
 
   useEffect(() => {
+    navigation.setOptions({"title": "Bejelentkezés"});
     if (token_data) {
       console.log(token_data);
 

@@ -131,7 +131,7 @@ export default function Index() {
               },
             );
             if (locError) console.log("location update error", locError);
-            setProfile(profile);
+            setProfile({ ...profile, location: userLocation?.location || null });
             dispatch(setName(profile?.full_name));
             console.log(res);
             router.navigate("/user");

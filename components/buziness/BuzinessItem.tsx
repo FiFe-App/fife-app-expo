@@ -15,6 +15,7 @@ import { Chip, Icon, IconButton, Surface, Text } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "../ThemedText";
+import { ThemedView } from "../ThemedView";
 
 interface BuzinessItemProps {
   data: BuzinessItemInterface;
@@ -77,9 +78,9 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
                 {categories?.slice(1).map((e, i) => {
                   if (e.trim())
                     return (
-                      <Chip key={"category" + i} textStyle={{ margin: 4 }}>
+                      <ThemedView type="card" key={"category" + i} style={{ paddingHorizontal: 4, borderRadius: 6 }}>
                         <Text>{e}</Text>
-                      </Chip>
+                      </ThemedView>
                     );
                 })}
               </View>

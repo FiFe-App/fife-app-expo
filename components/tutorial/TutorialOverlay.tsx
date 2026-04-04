@@ -160,7 +160,7 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
 
   if (isTutorialStarted && isTutorialActive && highlight && user && pathname != "/" && pathname != "/login" && !pathname.includes("/csatlakozom"))
     return (
-      <TutorialContext.Provider value={{ handleNextTutorialStep: handleNext }}>
+      <TutorialContext value={{ handleNextTutorialStep: handleNext }}>
         <Animated.View
           entering={FadeIn.delay(1000)}
           exiting={FadeOut}
@@ -294,11 +294,11 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
           </View>}
         </Animated.View>
         {children}
-      </TutorialContext.Provider>
+      </TutorialContext>
     );
 
   if (pathname == "/" && !isTutorialStarted && isTutorialActive)
-    return <TutorialContext.Provider value={{ handleNextTutorialStep: handleNext }}>
+    return <TutorialContext value={{ handleNextTutorialStep: handleNext }}>
       <View
         pointerEvents="auto"
         style={{
@@ -340,9 +340,9 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
         </View>
       </View>
       {children}
-    </TutorialContext.Provider>;
+    </TutorialContext>;
   // Render children if overlay is not active
-  return <TutorialContext.Provider value={{ handleNextTutorialStep: handleNext }}>{children}</TutorialContext.Provider>;
+  return <TutorialContext value={{ handleNextTutorialStep: handleNext }}>{children}</TutorialContext>;
 };
 
 const styles = StyleSheet.create({

@@ -5,18 +5,20 @@ import { ThemedText } from "../ThemedText";
 import UserItem from "./UserItem";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
-import { NearestProfile } from "@/redux/store.type";
+import { NearestProfile, User } from "@/redux/store.type";
 
 interface UsersListProps {
   load: () => void;
   data: NearestProfile[];
   canLoadMore: boolean;
+  footerContent?: React.ReactNode;
 }
 
 export const UsersList: React.FC<UsersListProps> = ({
   load,
   data,
   canLoadMore,
+  footerContent,
 }) => {
   const { userSearchParams } = useSelector(
     (state: RootState) => state.users,
@@ -36,15 +38,18 @@ export const UsersList: React.FC<UsersListProps> = ({
           )
         }
         ListFooterComponent={
-          <View style={{ padding: 16 }}>
-            {(!!data.length && canLoadMore ? (
-              <ActivityIndicator />
-            ) : (
-              <ThemedText style={{ alignSelf: "center" }}>
-                Nem található több fife
-              </ThemedText>
-            ))}
-          </View>
+          <>
+            <View style={{ padding: 16 }}>
+              {(!!data.length && canLoadMore ? (
+                <ActivityIndicator />
+              ) : (
+                <ThemedText style={{ alignSelf: "center" }}>
+                  Nem található több fife
+                </ThemedText>
+              ))}
+            </View>
+            {footerContent}
+          </>
         }
         onEndReached={() => {
           if (canLoadMore && !loading) {

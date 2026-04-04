@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet, Pressable, Alert } from "react-native";
+import { Platform, View, StyleSheet, Pressable, Alert } from "react-native";
 import BuzinessItem from "./BuzinessItem";
 import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,6 +19,8 @@ import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { Button, FAB, IconButton } from "react-native-paper";
 import mapStyles from "../mapView/style";
 import { addDialog } from "@/redux/reducers/infoReducer";
+import { darkMapStyle, lightMapStyle } from "../MapSelector/mapStyles";
+import { theme } from "@/assets/theme";
 
 interface BuzinessBuzinessMapProps {
   load: (arg0?: number) => void;
@@ -41,7 +43,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
   const [circleRadiusText, setCircleRadiusText] = useState("0 km");
   const mapRef = useRef<any>(null);
 
-  const { myLocation, locationError } = useMyLocation();
+  const { myLocation } = useMyLocation();
 
   const panToMyLocation = () => {
     if (!myLocation) {
@@ -102,16 +104,26 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
     <View style={styles.container}>
       <MapView
         ref={mapRef}
-        //@ts-ignore
-        options={{
-          mapTypeControl: false,
-          fullscreenControl: false,
-          streetViewControl: false,
-          zoomControl: false,
-        }}
-        style={{ width: "100%", height: "100%" }}
+        {...(Platform.OS === "web" ? {
+          options: {
+            mapTypeControl: false,
+            fullscreenControl: false,
+            streetViewControl: false,
+            zoomControl: false,
+          },
+        } : {})}
+        style={StyleSheet.absoluteFillObject}
         onMapLoaded={(e) => {
           //Alert.alert(JSON.stringify(e));
+        }}
+        onPoiClick={() => {
+          // no-op: suppress default POI behavior
+        }}
+        onMarkerPress={(e) => {
+          console.log("marker", e);
+        }}
+        onPress={() => {
+          setSelectedBuzinessId(null);
         }}
         initialCamera={{
           altitude: 10,
@@ -123,6 +135,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
           pitch: 0,
           zoom: 12,
         }}
+        customMapStyle={theme.dark ? darkMapStyle : lightMapStyle}
         provider="google"
         googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
         pitchEnabled={false}
@@ -131,10 +144,9 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
         rotateEnabled={false}
         toolbarEnabled={false}
         onRegionChangeComplete={onRegionChange}
-        onPress={() => setSelectedBuzinessId(null)}
       >
         {buzinesses.map((buziness) => {
-          if (buziness?.id < 0 || !buziness.location) return;
+          if (buziness?.id < 0 || !buziness.location) return null;
 
           const cords = locationToCoords(String(buziness.location));
           return (
@@ -156,17 +168,6 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
           );
         })}
 
-        <FAB
-          style={mapStyles.myLocationButton}
-          icon={
-            myLocation
-              ? "crosshairs-gps"
-              : locationError
-                ? "map-marker-alert"
-                : "map-marker-question"
-          }
-          onPress={panToMyLocation}
-        />
         {myLocation && (
           <Marker
             centerOffset={{ x: 10, y: 10 }}
@@ -180,17 +181,11 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
       </MapView>
       <FAB
         style={mapStyles.myLocationButton}
-        icon={
-          myLocation
-            ? "map-marker"
-            : locationError
-              ? "map-marker-alert"
-              : "map-marker-question"
-        }
+        icon={myLocation ? "map-marker" : "map-marker-question"}
         onPress={panToMyLocation}
       />
       <View
-        pointerEvents="none"
+        pointerEvents="box-none"
         style={{
           position: "absolute",
           bottom: 8,

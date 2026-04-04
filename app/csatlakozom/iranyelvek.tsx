@@ -4,6 +4,7 @@ import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
   FlatList,
+  Platform,
   Pressable,
   StyleSheet,
   TextInput as TIRN,
@@ -37,7 +38,7 @@ const Register = () => {
         router.setParams({
           canGoNext: accepted ? "true" : undefined,
         });
-      return () => {};
+      return () => { };
     }, [accepted]),
   );
 
@@ -74,10 +75,12 @@ const Register = () => {
         <Pressable
           style={styles.inputView}
           onPress={() => {
+            console.log("hello");
+
             if (textInput?.current) textInput?.current?.focus();
           }}
         >
-          <Text style={[styles.textToType, { opacity: 0.5 }]}>
+          <Text pointerEvents="none" style={[styles.textToType, { opacity: 0.5 }]}>
             {textToType}
           </Text>
           <TextInput
@@ -90,7 +93,7 @@ const Register = () => {
             multiline
             onChangeText={handleTextInput}
           />
-          <Text style={[styles.textToType, {}]}>{text}</Text>
+          <Text pointerEvents="none" style={[styles.textToType, {}]}>{text}</Text>
         </Pressable>
       </View>
     </ThemedView>
@@ -107,7 +110,12 @@ const styles = StyleSheet.create({
     fontSize: 17,
     margin: 5,
   },
-  inputView: {},
+  inputView: {
+    borderWidth: 1,
+    borderColor: "#ff0000",
+    borderRadius: 8,
+    position: "relative",
+  },
   input: {
     padding: 0,
     paddingHorizontal: 10,
@@ -126,11 +134,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 10,
     position: "absolute",
-    userSelect: "none",
-    cursor: "text",
     fontSize: 15,
     fontWeight: "400",
     zIndex: 150,
+    ...Platform.select({
+      web: { userSelect: "none", cursor: "text" },
+    }),
   },
 });
 export default Register;

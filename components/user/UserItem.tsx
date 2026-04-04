@@ -1,5 +1,5 @@
 import { Link } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Chip, Icon, Surface, Text } from "react-native-paper";
 import ProfileImage from "../ProfileImage";
 import { NearestProfile, User } from "@/redux/store.type";
@@ -19,7 +19,8 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
 
   return (
     <Link href={{ pathname: "/user/[uid]", params: { uid: id } }} asChild>
-      <Surface style={styles.container} elevation={2} mode="flat">
+      <Pressable>
+        <Surface style={styles.container} elevation={2} mode="flat">
         <View style={{ flexDirection: "row", gap: 12 }}>
           <ProfileImage
             modal
@@ -62,7 +63,8 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
             </View>
           </View>
         </View>
-      </Surface>
+        </Surface>
+      </Pressable>
     </Link>
   );
 };

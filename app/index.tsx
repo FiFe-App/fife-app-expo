@@ -1,6 +1,6 @@
 import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, Platform, StyleSheet, View } from "react-native";
 import { Image, ImageSource } from "expo-image";
 import { Text } from "react-native-paper";
 import { ThemedInput as TextInput } from "@/components/ThemedInput";
@@ -11,6 +11,7 @@ import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { useSelector } from "react-redux";
 import Smiley from "@/components/Smiley";
+import { theme } from "@/assets/theme";
 
 export const Header = () => {
   return (
@@ -56,12 +57,12 @@ const Hero = () => {
             alkalmazásban.
           </Text>
           <Link asChild href="/csatlakozom">
-            <Button style={styles.loginButton} type="secondary" big>
+            <Button style={styles.loginButton} type="secondary">
               Regisztrálok
             </Button>
           </Link>
           <Link asChild href="/login">
-            <Button style={styles.loginButton} mode="contained" big>
+            <Button style={styles.loginButton} mode="contained">
               Bejelentkezem
             </Button>
           </Link>
@@ -261,12 +262,11 @@ const About = () => {
 
 const Banner = () => {
   const { isDesktop } = useBreakpoint();
-  const [height, setHeight] = useState(100);
+  const [height, setHeight] = useState(20);
 
   return (
     <ThemedView
-      responsive={600}
-      onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
+      //onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
       style={{
         alignItems: "center",
         justifyContent: "center",
@@ -276,18 +276,6 @@ const Banner = () => {
       }}
       type="card"
     >
-      <ThemedView
-        style={{
-          position: "fixed",
-          left: 0,
-          width: "100%",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 16,
-          height,
-        }}
-        type="card"
-      />
       <View
         style={{
           gap: 16,
@@ -450,9 +438,9 @@ export default function App() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   if (uid) return <Redirect href="/home" />;
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <ThemedView type="default" style={{ flex: 1, alignItems: "center" }}>
-        <View style={{ flex: 1, gap: 16, maxWidth: 1000 }}>
+    <ScrollView contentContainerStyle={{ backgroundColor: theme.colors.background }} style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <ThemedView type="default" style={{ alignItems: "center" }}>
+        <View style={{ flex: 1, gap: 16, maxWidth: 1000, width:"100%" }}>
           <Hero />
           <HowItWorks />
           <Trust />

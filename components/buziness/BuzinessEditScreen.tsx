@@ -71,7 +71,7 @@ export default function BuzinessEditScreen({
 
   const [images, setImages] = useState<ImageDataType[]>([]);
   const imagesUploadRef = useRef<BuzinessImageUploadHandle | null>(null);
-  const { myLocation, locationError } = useMyLocation();
+  const { myLocation } = useMyLocation();
   const [circle, setCircle] = useState<MapLocationType | undefined>(undefined);
   const selectedLocation = circle?.location || myLocation?.coords;
   const selectedAddress = "";
@@ -92,13 +92,14 @@ export default function BuzinessEditScreen({
   useEffect(() => {
     console.log("images", images);
   }, [images]);
+
   const save = useCallback(async () => {
     setLoading(true);
     if (!uid) return;
 
     console.log(selectedLocation);
 
-    supabase.functions
+    await supabase.functions
       .invoke("create-buziness", {
         body: {
           id: editId,
@@ -142,16 +143,13 @@ export default function BuzinessEditScreen({
           console.log(res.error);
           return;
         }
-        setCategories("");
-        setNewBuziness({
-          title: "",
-          description: "",
-        });
-        setCircle(undefined);
         console.log(res);
         router.navigate("/user");
       });
   }, [defaultContact, editId, images.length, newBuziness, selectedLocation, title, uid]);
+
+  const saveRef = useRef(save);
+  useEffect(() => { saveRef.current = save; }, [save]);
 
   useEffect(() => {
     if (circle) {
@@ -172,19 +170,16 @@ export default function BuzinessEditScreen({
                 title: "Kérlek várj, amíg a bizniszed feltöltődik",
               }),
             );
-            await save();
+            await saveRef.current();
             dispatch(hideLoading());
           },
-          theme: {
-            colors: { primary: "red" }
-          }
         },
       ]),
     );
     return () => {
       dispatch(clearOptions());
     };
-  }, [canSubmit, dispatch, save, loading]);
+  }, [canSubmit, dispatch, loading]);
 
   useFocusEffect(
     useCallback(() => {
@@ -344,7 +339,7 @@ export default function BuzinessEditScreen({
                         padding: 8,
                       }}
                     >
-                      <Icon source={typeToIcon(option.value)} size={22} />
+                      <Icon source={typeToIcon(option.label) || "dots-horizontal"} size={22} />
                       <ThemedText style={{ marginLeft: 8 }}>
                         {option.label}
                       </ThemedText>
@@ -491,32 +486,9 @@ export default function BuzinessEditScreen({
               disabled={!canSubmit || loading}>Mentés</Button>
           </View>
         </ThemedView>
-        <Portal>
-          <Modal
-            visible={mapModalVisible}
-            onDismiss={() => {
-              setMapModalVisible(false);
-            }}
-            contentContainerStyle={{}}
-            dismissableBackButton
-          >
-            <ThemedView style={[{ flex: 1, padding: 16 }]}>
-              <MapSelector
-                data={circle}
-                setData={setCircle}
-                setOpen={setMapModalVisible}
-                searchEnabled
-                title="Találjanak meg a helyiek!"
-                text="Ha fontos a földrajzi helyzete a bizniszednek, itt megadhatod tetszőleges pontossággal."
-              />
-            </ThemedView>
-          </Modal>
-        </Portal>
       </ScrollView>
       <Portal>
-
         <Modal
-
           visible={mapModalVisible}
           onDismiss={() => {
             setMapModalVisible(false);

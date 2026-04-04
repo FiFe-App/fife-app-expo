@@ -132,7 +132,7 @@ export default function UserPage() {
   return (
     <>
       <ThemedView style={{ flex: 1 }}>
-        {data && uid && (
+        {!!data && !!uid && (
           <>
             <ThemedView style={{ padding: 16, gap: 8 }}>
               <View style={{ flexDirection: "row", gap: 8, }}>
@@ -221,7 +221,7 @@ export default function UserPage() {
                     <Measure name="edit-profile">
                       <Link
                         asChild
-                        style={{ flex: 1 }}
+                        style={{ width: "100%" }}
                         href={{ pathname: "/user/edit" }}
                       >
                         <Button mode="contained-tonal">Profilom szerkesztése</Button>
@@ -250,15 +250,13 @@ export default function UserPage() {
               </View>
             </ThemedView>
             <TabsProvider defaultIndex={defaultIndex}>
-              <Tabs showTextLabel={width > 400} theme={theme} style={{ backgroundColor: theme.colors.background }}>
+              <Tabs showTextLabel={width > 500} theme={theme} style={{ backgroundColor: theme.colors.background }}>
                 <TabScreen
                   label="Bizniszek"
                   badge={functions.includes("buzinessProfile") ? "ÚJ" : undefined}
                   icon="briefcase"
                 >
-                  <Measure name="user-biznisz-tabs">
-                    <MyBuzinesses uid={uid} myProfile={myProfile} name={data.full_name ?? undefined} />
-                  </Measure>
+                  <MyBuzinesses uid={uid} myProfile={myProfile} name={data.full_name ?? undefined} />
                 </TabScreen>
                 <TabScreen
                   label="Elérhetőségek"
@@ -276,7 +274,7 @@ export default function UserPage() {
                 {myProfile && (
                   <TabScreen
                     label="Mentett bizniszek"
-                    icon="archive"
+                    icon="bookmark"
                   >
                     <SavedBuzinesses uid={uid} />
                   </TabScreen>
