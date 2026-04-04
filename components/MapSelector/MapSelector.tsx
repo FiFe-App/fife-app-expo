@@ -5,7 +5,6 @@ import {
   Button,
   Card,
   FAB,
-  Icon,
   IconButton,
   List,
   TextInput,
@@ -22,7 +21,6 @@ import {
   Region,
 } from "../mapView/mapView";
 import styles from "../mapView/style";
-import { ThemedText } from "../ThemedText";
 import { MapSelectorProps } from "./MapSelector.types";
 import { CircleType } from "@/redux/store.type";
 import { lightMapStyle, darkMapStyle } from "./mapStyles";
@@ -60,7 +58,7 @@ const MapSelector = ({
   const [approxLocation, setApproxLocation] = useState(false);
   const mapRef = useRef<MapView>(null);
 
-  const { myLocation, locationError } = useMyLocation();
+  const { myLocation } = useMyLocation();
 
   // Determine if we're using dark theme
   const isDarkTheme = theme.dark;
@@ -327,12 +325,7 @@ const MapSelector = ({
           )}
         </View>
         <View style={{ padding: 8 }}>
-          {!!locationError && (
-            <ThemedText>
-              <Icon source="map-marker-alert" size={16} />
-              {locationError}
-            </ThemedText>
-          )}
+
           <View
             style={{ alignSelf: "flex-end", flexDirection: "row", gap: 8 }}
           >

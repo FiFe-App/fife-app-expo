@@ -71,7 +71,7 @@ export default function BuzinessEditScreen({
 
   const [images, setImages] = useState<ImageDataType[]>([]);
   const imagesUploadRef = useRef<BuzinessImageUploadHandle | null>(null);
-  const { myLocation, locationError } = useMyLocation();
+  const { myLocation } = useMyLocation();
   const [circle, setCircle] = useState<MapLocationType | undefined>(undefined);
   const selectedLocation = circle?.location || myLocation?.coords;
   const selectedAddress = "";

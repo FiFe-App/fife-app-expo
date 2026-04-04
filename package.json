@@ -51,7 +51,6 @@
     "expo-image": "~55.0.8",
     "expo-image-picker": "~55.0.16",
     "expo-linking": "~55.0.11",
-    "expo-location": "~55.1.6",
     "expo-navigation-bar": "~55.0.10",
     "expo-router": "~55.0.10",
     "expo-screen-orientation": "~55.0.11",

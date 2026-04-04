@@ -35,11 +35,7 @@ export default {
         apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
       }
     },
-    package: "com.fife.app",
-    permissions: [
-      "android.permission.ACCESS_COARSE_LOCATION",
-      "android.permission.ACCESS_FINE_LOCATION"
-    ]
+    package: "com.fife.app"
   },
   web: {
     bundler: "metro",
@@ -47,12 +43,6 @@ export default {
     favicon: "./assets/images/favicon.png"
   },
   plugins: [
-    [
-      "expo-location",
-      {
-        locationAlwaysAndWhenInUsePermission: "Allow FiFe app to use your location."
-      }
-    ],
     [
       "expo-font",
       {

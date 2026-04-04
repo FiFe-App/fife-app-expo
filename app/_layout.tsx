@@ -60,7 +60,7 @@ function RootContent() {
       backgroundColor={theme.colors.background}
     />
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={["left", "right","bottom"]}>
-      <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.backdrop }}>
+      <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
         <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
           <PaperProvider theme={theme}>
             <InfoLayer />

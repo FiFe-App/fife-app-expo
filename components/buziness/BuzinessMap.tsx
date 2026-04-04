@@ -19,6 +19,8 @@ import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { Button, FAB, IconButton } from "react-native-paper";
 import mapStyles from "../mapView/style";
 import { addDialog } from "@/redux/reducers/infoReducer";
+import { darkMapStyle, lightMapStyle } from "../MapSelector/mapStyles";
+import { theme } from "@/assets/theme";
 
 interface BuzinessBuzinessMapProps {
   load: (arg0?: number) => void;
@@ -41,7 +43,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
   const [circleRadiusText, setCircleRadiusText] = useState("0 km");
   const mapRef = useRef<any>(null);
 
-  const { myLocation, locationError } = useMyLocation();
+  const { myLocation } = useMyLocation();
 
   const panToMyLocation = () => {
     if (!myLocation) {
@@ -133,6 +135,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
           pitch: 0,
           zoom: 12,
         }}
+        customMapStyle={theme.dark ? darkMapStyle : lightMapStyle}
         provider="google"
         googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
         pitchEnabled={false}
@@ -178,13 +181,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
       </MapView>
       <FAB
         style={mapStyles.myLocationButton}
-        icon={
-          myLocation
-            ? "map-marker"
-            : locationError
-              ? "map-marker-alert"
-              : "map-marker-question"
-        }
+        icon={myLocation ? "map-marker" : "map-marker-question"}
         onPress={panToMyLocation}
       />
       <View

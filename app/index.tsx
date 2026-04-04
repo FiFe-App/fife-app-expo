@@ -11,6 +11,7 @@ import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { useSelector } from "react-redux";
 import Smiley from "@/components/Smiley";
+import { theme } from "@/assets/theme";
 
 export const Header = () => {
   return (
@@ -56,12 +57,12 @@ const Hero = () => {
             alkalmazásban.
           </Text>
           <Link asChild href="/csatlakozom">
-            <Button style={styles.loginButton} type="secondary" big>
+            <Button style={styles.loginButton} type="secondary">
               Regisztrálok
             </Button>
           </Link>
           <Link asChild href="/login">
-            <Button style={styles.loginButton} mode="contained" big>
+            <Button style={styles.loginButton} mode="contained">
               Bejelentkezem
             </Button>
           </Link>
@@ -275,21 +276,6 @@ const Banner = () => {
       }}
       type="card"
     >
-      <ThemedView
-        style={{
-          ...Platform.select({
-            web: { position: "fixed" as const },
-            default: { position: "absolute" as const },
-          }),
-          left: 0,
-          width: "100%",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 16,
-          height: 20
-        }}
-        type="card"
-      />
       <View
         style={{
           gap: 16,
@@ -452,7 +438,7 @@ export default function App() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   if (uid) return <Redirect href="/home" />;
   return (
-    <ScrollView style={{ flex: 1 }}>
+    <ScrollView contentContainerStyle={{ backgroundColor: theme.colors.background }} style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ThemedView type="default" style={{ alignItems: "center" }}>
         <View style={{ flex: 1, gap: 16, maxWidth: 1000, width:"100%" }}>
           <Hero />
