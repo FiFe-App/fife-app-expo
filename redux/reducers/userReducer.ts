@@ -10,6 +10,7 @@ const initialState: UserState = {
   locationError: null,
   themePreference: DEFAULT_THEME_PREFERENCE,
   savedBuzinesses: [],
+  locationAlertDismissed: false,
 };
 
 const userReducer = createSlice({
@@ -46,12 +47,34 @@ const userReducer = createSlice({
       state.themePreference = payload;
     },
     addSavedBuziness: (state, { payload }: PayloadAction<number>) => {
+      if (!state.savedBuzinesses) state.savedBuzinesses = [];
       if (!state.savedBuzinesses.includes(payload)) {
         state.savedBuzinesses = [...state.savedBuzinesses, payload];
       }
     },
     removeSavedBuziness: (state, { payload }: PayloadAction<number>) => {
+      if (!state.savedBuzinesses) state.savedBuzinesses = [];
       state.savedBuzinesses = state.savedBuzinesses.filter((id) => id !== payload);
+    },
+    dismissLocationAlert: (state) => {
+      state.locationAlertDismissed = true;
+    },
+    setLocation: (state, { payload }: PayloadAction<{ latitude: number; longitude: number; radius: number }>) => {
+      if (!state.userData) {
+        state.userData = {
+          authorization: "",
+          email: "",
+          emailVerified: false,
+          providerData: {},
+          createdAt: new Date(),
+          lastLoginAt: new Date(),
+        };
+      }
+      state.userData.location = {
+        lat: payload.latitude,
+        lng: payload.longitude,
+        radius: payload.radius,
+      };
     },
   },
 });
@@ -66,6 +89,8 @@ export const {
   setThemePreference,
   addSavedBuziness,
   removeSavedBuziness,
+  setLocation,
+  dismissLocationAlert,
 } = userReducer.actions;
 
 export default userReducer;

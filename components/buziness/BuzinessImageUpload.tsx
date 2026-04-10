@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
 import { ImageDataType, UserState } from "@/redux/store.type";
 import * as ExpoImagePicker from "expo-image-picker";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { useImperativeHandle, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import ImageModal from "react-native-image-modal";
 import { IconButton, TextInput } from "react-native-paper";
@@ -16,12 +16,10 @@ interface BuzinessImageUploadProps {
   images: ImageDataType[];
   setImages: (images: ImageDataType[]) => void;
   buzinessId?: number;
+  ref?: React.Ref<BuzinessImageUploadHandle>;
 }
 
-const BuzinessImageUpload = forwardRef<
-  BuzinessImageUploadHandle,
-  BuzinessImageUploadProps
->(({ images, setImages, buzinessId }, ref) => {
+const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessImageUploadProps) => {
   useImperativeHandle(ref, () => ({
     uploadImages: async (buzinessId: number) => {
       const uploadPromises = images.map(async (i) => {
@@ -193,6 +191,5 @@ const BuzinessImageUpload = forwardRef<
       </ScrollView>
     </View>
   );
-});
-BuzinessImageUpload.displayName = "BuzinessImageUpload";
+};
 export default BuzinessImageUpload;

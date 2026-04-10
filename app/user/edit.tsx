@@ -1,4 +1,5 @@
 import ContactEditScreen from "@/components/buziness/ContactEditScreen";
+import MapSelector from "@/components/MapSelector/MapSelector";
 import ProfileImage from "@/components/ProfileImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -8,18 +9,21 @@ import { supabase } from "@/lib/supabase/supabase";
 import { setOptions } from "@/redux/reducers/infoReducer";
 import { setName, setUserData, setThemePreference } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
-import { UserState } from "@/redux/store.type";
+import { UserState, CircleType } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { ScrollView, View, TouchableWithoutFeedback } from "react-native";
 import {
+  Button,
   Divider,
   HelperText,
   Icon,
   IconButton,
   Menu,
+  Modal,
+  Portal,
   TextInput,
   useTheme,
 } from "react-native-paper";
@@ -37,16 +41,18 @@ export default function Index() {
   const [profile, setProfile] = useState<UserInfo>({});
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | undefined>(undefined);
   const [themeMenuVisible, setThemeMenuVisible] = useState(false);
+  const [locationMenuVisible, setLocationMenuVisible] = useState(false);
+  const [userLocation, setUserLocation] = useState<CircleType | undefined>();
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
       | PostgrestSingleResponse<unknown>
       | {
-          error: string;
+        error: string;
       }
       | undefined
     >;
-      }>(null);
+  }>(null);
 
   const load = () => {
     console.log("loaded user", myUid);
@@ -55,15 +61,30 @@ export default function Index() {
 
     supabase
       .from("profiles")
-      .select("*")
+      .select("id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions")
       .eq("id", myUid)
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
         if (error) {
           console.log("err", error.message);
           return;
         }
         if (data) {
           setProfile(data[0]);
+          // Fetch own location via secure function
+          const { data: loc } = await supabase.rpc("get_my_profile_location");
+          const myLoc = loc?.[0];
+          if (myLoc?.location_wkt) {
+            const match = myLoc.location_wkt.match(/POINT\(([\d.-]+) ([\d.-]+)\)/);
+            if (match) {
+              setUserLocation({
+                location: {
+                  latitude: parseFloat(match[2]),
+                  longitude: parseFloat(match[1]),
+                },
+                radius: Number(myLoc.location_radius_m ?? 0),
+              });
+            }
+          }
           console.log(data);
           setLoading(false);
         }
@@ -91,15 +112,27 @@ export default function Index() {
             },
             { onConflict: "id" },
           )
-          .then((res) => {
+          .then(async (res) => {
             setLoading(false);
+            console.log("res", res);
+
             if (res.error) {
               console.log(res.error);
               return;
             }
-            setProfile(profile);
+            // location/location_radius_m are not in the authenticated SELECT
+            // grant, so they must be written via a SECURITY DEFINER function
+            const { error: locError } = await supabase.rpc(
+              "update_my_profile_location",
+              {
+                lat: userLocation?.location.latitude ?? null,
+                long: userLocation?.location.longitude ?? null,
+                radius_m: userLocation?.radius ?? null,
+              },
+            );
+            if (locError) console.log("location update error", locError);
+            setProfile({ ...profile, location: userLocation?.location || null });
             dispatch(setName(profile?.full_name));
-            dispatch(setUserData(profile));
             console.log(res);
             router.navigate("/user");
           });
@@ -117,7 +150,7 @@ export default function Index() {
         ]),
       );
       return () => { };
-    }, [dispatch, myUid, profile, usernameAvailable]),
+    }, [dispatch, myUid, profile, userLocation, usernameAvailable]),
   );
   useFocusEffect(
     useCallback(() => {
@@ -186,6 +219,14 @@ export default function Index() {
 
     return upload;
   };
+  const containerStyle = {
+    backgroundColor: theme.colors.surface,
+    padding: 20,
+    margin: 20,
+    borderRadius: 16,
+    height: 400
+  };
+
   if (myUid)
     return (
       <ThemedView style={{ flex: 1 }}>
@@ -239,10 +280,9 @@ export default function Index() {
               visible={themeMenuVisible}
               onDismiss={() => setThemeMenuVisible(false)}
               anchor={
-                <TouchableWithoutFeedback 
+                <TouchableWithoutFeedback
                   onPress={() => setThemeMenuVisible(true)}
                   accessible={true}
-                  accessibilityRole="button"
                   accessibilityLabel="Téma kiválasztása"
                 >
                   <View>
@@ -250,10 +290,10 @@ export default function Index() {
                       mode="outlined"
                       label="Téma"
                       value={
-                        themePreference === "auto" 
-                          ? "Automatikus" 
-                          : themePreference === "dark" 
-                            ? "Sötét" 
+                        themePreference === "auto"
+                          ? "Automatikus"
+                          : themePreference === "dark"
+                            ? "Sötét"
                             : "Világos"
                       }
                       right={<TextInput.Icon icon="chevron-down" />}
@@ -291,6 +331,40 @@ export default function Index() {
             </Menu>
           </View>
           <Divider />
+          <View style={{ paddingVertical: 16 }}>
+            <ThemedText type="subtitle" style={{ marginBottom: 8 }}>
+              Lakhelyed
+            </ThemedText>
+            <ThemedText type="label" style={{ marginBottom: 8 }}>
+              Add meg a lakhelyedet, hogy lásd a fiféket a környékeden.
+            </ThemedText>
+            {!userLocation && (
+              <ThemedText type="label" style={{ marginBottom: 12 }}>
+                Nincs lakhely beállítva
+              </ThemedText>
+            )}
+            <View style={{ flexDirection: "row", gap: 4, flexWrap: "wrap" }}>
+              <Button
+                mode="outlined"
+                onPress={() => setLocationMenuVisible(true)}
+                icon="map-marker"
+                style={{ marginBottom: 8 }}
+              >
+                {userLocation ? "Környék módosítása" : "Megadom a környékemet"}
+              </Button>
+              {userLocation && (
+                <Button
+                  mode="text"
+                  onPress={() => setUserLocation(undefined)}
+                  icon="delete"
+                  textColor={theme.colors.error}
+                >
+                  Helyzet törlése
+                </Button>
+              )}
+            </View>
+          </View>
+          <Divider />
           <View style={{ gap: 8, paddingTop: 8 }}>
             <ThemedText type="subtitle">Elérhetőségeid</ThemedText>
             <View style={{ alignItems: "center" }}>
@@ -303,6 +377,30 @@ export default function Index() {
             <ContactEditScreen ref={contactEditRef} />
           </View>
         </ScrollView>
+        <Portal>
+          <Modal
+            visible={locationMenuVisible}
+            onDismiss={() => setLocationMenuVisible(false)}
+            contentContainerStyle={[
+              {
+                height: "auto",
+                borderRadius: 16,
+              },
+            ]}
+          >
+            <ThemedView style={containerStyle}>
+              <MapSelector
+                data={userLocation}
+                setData={(location) => {
+                  console.log("Selected location:", location);
+                  setUserLocation(location);
+                }}
+                searchEnabled
+                setOpen={setLocationMenuVisible}
+              />
+            </ThemedView>
+          </Modal>
+        </Portal>
       </ThemedView>
     );
 }

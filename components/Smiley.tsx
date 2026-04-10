@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { useRef } from "react";
-import { Animated, Pressable, View, ViewStyle } from "react-native";
+import { Animated, Platform, Pressable, View, ViewStyle } from "react-native";
 
 const Smiley = ({ style }: { style?: ViewStyle }) => {
   const size = useRef(new Animated.Value(1)).current;
@@ -26,7 +26,10 @@ const Smiley = ({ style }: { style?: ViewStyle }) => {
       <Animated.View // Special animatable View
         style={[
           {
-            position: "fixed",
+            ...Platform.select({
+              web: { position: "fixed" as const },
+              default: { position: "absolute" as const },
+            }),
             transform: [{ scale: size }],
             transformOrigin: "50% 30%",
             zIndex: 10000,
@@ -36,7 +39,7 @@ const Smiley = ({ style }: { style?: ViewStyle }) => {
       >
         <Pressable onPress={handleGrow}>
           <Image
-            source={require("../assets/smiley.gif")}
+            source={require("@/assets/smiley.gif")}
             style={[{ width: 40, height: 40, zIndex: 20, borderRadius: 6, }, style]}
           />
         </Pressable>

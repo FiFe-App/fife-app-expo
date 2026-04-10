@@ -55,13 +55,13 @@ export default function Index() {
   if (uid)
     return (
       <ThemedView style={{ flex: 1 }} type="default">
-        <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <ThemedView type="card" style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
 
           <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Találatok</ThemedText>
           <Measure name="filter">
             <View><Button icon='filter' mode="text" onPress={() => setLocationMenuVisible(true)}>Finomítás</Button></View>
           </Measure>
-        </View>
+        </ThemedView>
         {searchType === "list" || !searchType ? (
           <BuzinessList load={loadNext} canLoadMore={canLoadMore} />
         ) : (
@@ -71,7 +71,7 @@ export default function Index() {
           <FAB
             icon={searchType === "map" ? "format-list-bulleted" : "map"}
             style={{ position: "absolute", bottom: 16, right: 16 }}
-            variant="primary"
+            variant="tertiary"
             customSize={80}
             onPress={() => {
               dispatch(storeBuzinessSearchType(searchType === "map" ? "list" : "map"));

@@ -15,9 +15,11 @@ import { theme } from "@/assets/theme";
 
 export interface ContactListProps {
   uid: string;
+  myProfile?: boolean;
+  name?: string;
 }
 
-export function SavedProfiles({ uid }: ContactListProps) {
+export function SavedProfiles({ uid, myProfile, name }: ContactListProps) {
   const [contacts, setContacts] = useState<Tables<"profiles">[]>([]);
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
@@ -45,7 +47,7 @@ export function SavedProfiles({ uid }: ContactListProps) {
   return (
     <>
       <ThemedView style={{ flex: 1 }}>
-        {contacts.length > 0 && <ThemedText variant="labelLarge" style={{ padding: 6, color: theme.colors.secondary, fontWeight: "bold" }}>Őket jelölted megbízhatónak</ThemedText>
+        {contacts.length > 0 && <ThemedText variant="labelLarge" style={{ padding: 6, color: theme.colors.secondary, fontWeight: "bold" }}>{myProfile ? "Őket jelölted megbízhatónak" : `Őket jelölte ${name} megbízhatónak`}</ThemedText>
         }<ScrollView contentContainerStyle={{ flex: 1 }}>
           {loading && (
             <View
@@ -63,12 +65,14 @@ export function SavedProfiles({ uid }: ContactListProps) {
               ) : (
                 <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
                   <Image
-                    source={require("../../assets/images/HeroImage.png")}
+                    source={require("@/assets/images/HeroImage.png")}
                     style={{ height: 200, width: "100%" }}
                     contentFit="contain"
                   />
                   <ThemedText type="subtitle">
-                    Itt fognak megjelenni a mentett profiljaid.
+                    {myProfile
+                      ? "Itt fognak megjelenni a mentett profiljaid."
+                      : `${name} még nem jelölt meg senkit megbízhatónak.`}
                   </ThemedText>
                 </View>
               ))}

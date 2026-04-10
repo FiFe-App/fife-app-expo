@@ -5,6 +5,7 @@ import { ImagePickerAsset } from "expo-image-picker";
 export interface UserState {
   uid?: string;
   name?: string;
+  locationAlertDismissed?: boolean;
   userData?: {
     authorization: string;
     email: string;
@@ -12,6 +13,11 @@ export interface UserState {
     providerData: unknown;
     createdAt: Date;
     lastLoginAt: Date;
+    location?: {
+      lng: number;
+      lat: number;
+      radius?: number;
+    };
   } | null;
   locationError: string | null;
   themePreference: "light" | "dark" | "auto";
@@ -22,6 +28,21 @@ export type User = Tables<"profiles"> & {
     buzinesses: { title: string }[];
     profileRecommendations?: { count: number }[];
   };
+
+/** Return type of the nearest_profiles RPC */
+export interface NearestProfile {
+  id: string;
+  full_name: string;
+  username: string | null;
+  avatar_url: string | null;
+  website: string | null;
+  created_at: string | null;
+  recommendations: number;
+  lat: number;
+  long: number;
+  distance: number;
+  buzinesses: { title: string }[];
+}
 
 export interface UsersState {
   users: User[];

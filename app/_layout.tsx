@@ -1,4 +1,3 @@
-import "@expo/match-media"; // enables window.matchMedia across platforms
 import InfoLayer from "@/components/InfoLayer";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { persistor, store } from "@/redux/store";
@@ -6,17 +5,27 @@ import { Stack, usePathname } from "expo-router";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
 import { View, StatusBar, useColorScheme, Platform } from "react-native";
+import * as NavigationBar from "expo-navigation-bar";
 import { PaperProvider } from "react-native-paper";
 import { Provider, useSelector, useDispatch } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { ThemedView } from "@/components/ThemedView";
-import { getTheme, DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
+import { getTheme } from "@/assets/theme";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import Piazzolla from "@/assets/fonts/Piazzolla.ttf";
-import RedHatText from "@/assets/fonts/RedHatText.ttf";
+import PiazzollaRegular from "@/assets/fonts/Piazzolla-Regular.ttf";
+import PiazzollaLight from "@/assets/fonts/Piazzolla-Light.ttf";
+import PiazzollaMedium from "@/assets/fonts/Piazzolla-Medium.ttf";
 import PiazzollaExtraBold from "@/assets/fonts/Piazzolla-ExtraBold.ttf";
+import RedHatText from "@/assets/fonts/RedHatText.ttf";
+import RedHatTextRegular from "@/assets/fonts/RedHatText-Regular.ttf";
+import RedHatTextLight from "@/assets/fonts/RedHatText-Light.ttf";
+import RedHatTextMedium from "@/assets/fonts/RedHatText-Medium.ttf";
+import RedHatTextBold from "@/assets/fonts/RedHatText-Bold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
 import { RootState } from "@/redux/store";
-import { setThemePreference } from "@/redux/reducers/userReducer";
+import { OneSignal } from "react-native-onesignal";
 
 function RootContent() {
   const pathname = usePathname();
@@ -25,7 +34,7 @@ function RootContent() {
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
   const { uid } = useSelector((state: RootState) => state.user);
   const hasInitialized = React.useRef(false);
-  
+
   // On first load only, mark as initialized
   useEffect(() => {
     if (!hasInitialized.current) {
@@ -36,34 +45,36 @@ function RootContent() {
   // Initialize OneSignal and set external user ID when user logs in
   useEffect(() => {
     if (Platform.OS === "web") return;
-    import("react-native-onesignal").then(({ OneSignal, LogLevel }) => {
-      OneSignal.Debug.setLogLevel(LogLevel.None);
-      OneSignal.initialize(process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID || "");
-      OneSignal.Notifications.requestPermission(true);
-    });
+    OneSignal.initialize(process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID || "");
+    OneSignal.Notifications.requestPermission(true);
   }, []);
 
   useEffect(() => {
     if (Platform.OS === "web") return;
     if (!uid) return;
-    import("react-native-onesignal").then(({ OneSignal }) => {
-      OneSignal.login(uid);
-    });
+    OneSignal.login(uid);
   }, [uid]);
   
   // Determine if dark mode should be active based on preference
-  const isDarkMode = 
-    userThemePreference === "dark" || 
+  const isDarkMode =
+    userThemePreference === "dark" ||
     (userThemePreference === "auto" && deviceColorScheme === "dark");
   const theme = getTheme(isDarkMode);
 
-  return (
-    <>
-      <StatusBar 
-        barStyle={isDarkMode ? "light-content" : "dark-content"}
-        backgroundColor={theme.colors.background}
-      />
-      <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.backdrop }}>
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      NavigationBar.setBackgroundColorAsync(theme.colors.background);
+      NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
+    }
+  }, [isDarkMode, theme.colors.background]);
+
+  return (<>
+    <StatusBar
+      barStyle={isDarkMode ? "light-content" : "dark-content"}
+      backgroundColor={theme.colors.background}
+    />
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={["left", "right","bottom"]}>
+      <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
         <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
           <PaperProvider theme={theme}>
             <InfoLayer />
@@ -92,7 +103,7 @@ function RootContent() {
                 options={{ title: "FiFe Biznisz" }}
               />
               <Stack.Screen
-                name="biznisz/edit/[id]"
+                name="biznisz/edit/[editId]"
                 options={{ title: "FiFe Biznisz" }}
               />
               <Stack.Screen
@@ -115,23 +126,34 @@ function RootContent() {
           </PaperProvider>
         </View>
       </ThemedView>
-    </>
-  );
+    </SafeAreaView>
+  </>);
 }
 
 export default function RootLayout() {
   const [loaded] = useFonts({
     Piazzolla,
-    RedHatText,
+    "Piazzolla-Regular": PiazzollaRegular,
+    "Piazzolla-Light": PiazzollaLight,
+    "Piazzolla-Medium": PiazzollaMedium,
     "Piazzolla-ExtraBold": PiazzollaExtraBold,
+    RedHatText,
+    "RedHatText-Regular": RedHatTextRegular,
+    "RedHatText-Light": RedHatTextLight,
+    "RedHatText-Medium": RedHatTextMedium,
+    "RedHatText-Bold": RedHatTextBold,
   });
 
   if (loaded)
     return (
-      <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
-          <RootContent />
-        </PersistGate>
-      </Provider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <Provider store={store}>
+            <PersistGate loading={null} persistor={persistor}>
+              <RootContent />
+            </PersistGate>
+          </Provider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     );
 }

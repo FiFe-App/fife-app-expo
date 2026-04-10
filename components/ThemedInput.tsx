@@ -19,7 +19,7 @@ export function ThemedInput({ style, ...otherProps }: ThemedTextInputProps) {
 
   return (
     <TextInput
-      placeholderTextColor={theme.colors.backdrop}
+      placeholderTextColor={theme.colors.onSurfaceVariant}
       style={[styles.default, style]}
       outlineStyle={{
         borderWidth: 1,

@@ -1,39 +1,48 @@
-import { setLocationError } from "@/redux/reducers/userReducer";
+import { dismissLocationAlert } from "@/redux/reducers/userReducer";
+import { addDialog } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import * as Location from "expo-location";
+import { router } from "expo-router";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
-const blockedMessage = "Letiltottad a helyzeted.";
 
 export function useMyLocation() {
   const dispatch = useDispatch();
-  const [myLocation, setLocation] = useState<Location.LocationObject | null>(
-    null,
+  const { uid, userData, locationAlertDismissed } = useSelector(
+    (state: RootState) => state.user,
   );
 
-  const { locationError } = useSelector((state: RootState) => state.user);
-  const { dialogs } = useSelector((state: RootState) => state.info);
+  const dialogShown = useRef(false);
+
+  const myLocation = useMemo(() => {
+    if (!userData?.location) return null;
+    return {
+      coords: {
+        latitude: userData.location.lat,
+        longitude: userData.location.lng,
+      },
+    };
+  }, [userData?.location]);
 
   useEffect(() => {
-    const getLocation = async () => {
-      (async () => {
-        const location = await Location.getCurrentPositionAsync({});
-        if (location) {
-          dispatch(setLocationError(null));
-          setLocation(location);
-        }
-      })();
-    };
+    if (uid && !myLocation && !locationAlertDismissed && !dialogShown.current) {
+      dialogShown.current = true;
+      dispatch(
+        addDialog({
+          title: "Nincs megadva a helyzeted",
+          text: "Add meg a környékedet a profilbeállításokban, hogy a közeledben kereshess.",
+          submitText: "Beállítom",
+          dismissable: true,
+          onSubmit: () => {
+            router.push("/user/edit");
+          },
+          onCancel: () => {
+            dispatch(dismissLocationAlert());
+          },
+        }),
+      );
+    }
+  }, [myLocation, locationAlertDismissed, dispatch]);
 
-    Location.getForegroundPermissionsAsync().then((res) => {
-      const { status } = res;
-
-      if (status !== "denied") getLocation();
-      if (status === "denied") dispatch(setLocationError(blockedMessage));
-    });
-  }, [dialogs, dispatch]);
-
-  return { myLocation, locationError };
+  return { myLocation };
 }

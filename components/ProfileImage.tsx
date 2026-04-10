@@ -53,12 +53,12 @@ const ProfileImage = ({
   }, [uid, avatar_url]);
 
   return (
-    <View>
+    <View
+      style={style}>
       {!!source &&
         (!modal ? (
           <Image
             source={source}
-            style={style}
             cachePolicy="memory-disk"
             contentFit={resizeMode}
             onLoadEnd={() => setLoading(false)}

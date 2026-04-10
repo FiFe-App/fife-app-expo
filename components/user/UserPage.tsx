@@ -87,7 +87,7 @@ export default function UserPage() {
         supabase
           .from("profiles")
           .select(
-            "*, profileRecommendations!profileRecommendations_profile_id_fkey(*)",
+            "id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions, profileRecommendations!profileRecommendations_profile_id_fkey(*)",
           )
           .eq("id", uid)
           .single()
@@ -132,7 +132,7 @@ export default function UserPage() {
   return (
     <>
       <ThemedView style={{ flex: 1 }}>
-        {data && uid && (
+        {!!data && !!uid && (
           <>
             <ThemedView style={{ padding: 16, gap: 8 }}>
               <View style={{ flexDirection: "row", gap: 8, }}>
@@ -221,7 +221,7 @@ export default function UserPage() {
                     <Measure name="edit-profile">
                       <Link
                         asChild
-                        style={{ flex: 1 }}
+                        style={{ width: "100%" }}
                         href={{ pathname: "/user/edit" }}
                       >
                         <Button mode="contained-tonal">Profilom szerkesztése</Button>
@@ -250,33 +250,31 @@ export default function UserPage() {
               </View>
             </ThemedView>
             <TabsProvider defaultIndex={defaultIndex}>
-              <Tabs showTextLabel={width > 400} theme={theme} style={{ backgroundColor: theme.colors.background }}>
+              <Tabs showTextLabel={width > 500} theme={theme} style={{ backgroundColor: theme.colors.background }}>
                 <TabScreen
                   label="Bizniszek"
                   badge={functions.includes("buzinessProfile") ? "ÚJ" : undefined}
                   icon="briefcase"
                 >
-                  <Measure name="user-biznisz-tabs">
-                    <MyBuzinesses uid={uid} myProfile={myProfile} />
-                  </Measure>
+                  <MyBuzinesses uid={uid} myProfile={myProfile} name={data.full_name ?? undefined} />
                 </TabScreen>
                 <TabScreen
                   label="Elérhetőségek"
                   badge={functions.includes("contactsProfile") ? "ÚJ" : undefined}
                   icon="email-multiple"
                 >
-                  <ContactList uid={uid} edit={myProfile} />
+                  <ContactList uid={uid} edit={myProfile} name={data.full_name ?? undefined} />
                 </TabScreen>
                 <TabScreen
                   label="Kapcsolatok"
                   icon="account-group"
                 >
-                  <SavedProfiles uid={uid} />
+                  <SavedProfiles uid={uid} myProfile={myProfile} name={data.full_name ?? undefined} />
                 </TabScreen>
                 {myProfile && (
                   <TabScreen
                     label="Mentett bizniszek"
-                    icon="archive"
+                    icon="bookmark"
                   >
                     <SavedBuzinesses uid={uid} />
                   </TabScreen>

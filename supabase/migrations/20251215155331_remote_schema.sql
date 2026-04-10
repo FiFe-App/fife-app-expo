@@ -166,8 +166,9 @@ alter table "public"."profileRecommendations" enable row level security;
     "website" text,
     "created_at" timestamp without time zone default now(),
     "viewed_functions" text[],
-    "location" extensions.geography
-      );
+    "location" extensions.geography,
+    "location_radius_m" float
+  );
 
 
 alter table "public"."profiles" enable row level security;
@@ -499,20 +500,6 @@ BEGIN
 
   RETURN retval;
 END;
-$function$
-;
-
-CREATE OR REPLACE FUNCTION public.handle_new_user()
- RETURNS trigger
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
-begin
-  insert into public.profiles (id, full_name, avatar_url)
-  values (new.id, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'avatar_url');
-  return new;
-end;
 $function$
 ;
 
