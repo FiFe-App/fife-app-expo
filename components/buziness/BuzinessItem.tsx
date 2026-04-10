@@ -11,7 +11,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Badge, Chip, Icon, IconButton, Surface, Text, useTheme } from "react-native-paper";
+import { Chip, Icon, IconButton, Surface, Text, useTheme } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import { useMemo } from "react";
@@ -82,11 +82,13 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
         <Surface style={styles.container} elevation={2} mode="flat">
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <ThemedText variant="titleMedium" type="title" style={{}}>{categories?.[0]}</ThemedText>
-                {isNew && <Badge style={{ backgroundColor: theme.colors.tertiary, color: theme.colors.onTertiary }}>ÚJ</Badge>}
-              </View>
+              <ThemedText variant="titleMedium" type="title" style={{}}>{categories?.[0]}</ThemedText>
               <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4, marginTop: 4 }}>
+                {isNew && (
+                  <View style={{ paddingHorizontal: 4, borderRadius: 6, backgroundColor: theme.colors.tertiary }}>
+                    <Text style={{ color: theme.colors.onTertiary }}>ÚJ</Text>
+                  </View>
+                )}
                 {categories?.slice(1).map((e, i) => {
                   if (e.trim())
                     return (

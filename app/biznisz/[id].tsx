@@ -38,7 +38,6 @@ import ImageModal from "react-native-image-modal";
 import openMap from "react-native-open-maps";
 import {
   ActivityIndicator,
-  Badge,
   Button,
   Chip,
   IconButton,
@@ -201,11 +200,15 @@ export default function Index() {
                 flexDirection: "row",
                 gap: 4,
                 paddingHorizontal: 10,
-                alignItems: "center",
               }}
             >
               {isNew && (
-                <Badge style={{ backgroundColor: theme.colors.tertiary, color: theme.colors.onTertiary }}>ÚJ</Badge>
+                <Chip
+                  textStyle={{ margin: 4 }}
+                  style={{ backgroundColor: theme.colors.tertiary }}
+                >
+                  <Text style={{ color: theme.colors.onTertiary }}>ÚJ</Text>
+                </Chip>
               )}
               {categories?.slice(1).map((e, i) => {
                 if (e.trim())
