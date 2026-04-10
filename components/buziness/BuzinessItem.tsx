@@ -11,7 +11,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Chip, Icon, IconButton, Surface, Text } from "react-native-paper";
+import { Badge, Chip, Icon, IconButton, Surface, Text } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "../ThemedText";
@@ -30,6 +30,10 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
   const { uid } = useSelector((state: RootState) => state.user);
   const myBuziness = author === uid;
   const dispatch = useDispatch();
+
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+  const isNew = data.created_at ? new Date(data.created_at) >= threeMonthsAgo : false;
 
   const distance = data.distance ? Math.round(data?.distance * 10) / 10 : null;
   const distanceText =
@@ -73,7 +77,10 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
         <Surface style={styles.container} elevation={2} mode="flat">
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1 }}>
-              <ThemedText variant="titleMedium" type="title" style={{}}>{categories?.[0]}</ThemedText>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <ThemedText variant="titleMedium" type="title" style={{}}>{categories?.[0]}</ThemedText>
+                {isNew && <Badge style={{ backgroundColor: "#4CAF50", color: "#fff" }}>ÚJ</Badge>}
+              </View>
               <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4, marginTop: 4 }}>
                 {categories?.slice(1).map((e, i) => {
                   if (e.trim())

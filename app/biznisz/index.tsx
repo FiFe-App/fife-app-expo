@@ -16,7 +16,9 @@ import { View } from "react-native";
 import {
   FAB,
   Modal,
-  Portal
+  Portal,
+  Switch,
+  Text
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import BuzinessSearchInput from "@/components/BuzinessSearchInput";
@@ -93,6 +95,15 @@ export default function Index() {
             ]}
           >
             <ThemedView style={style.containerStyle}>
+              <ThemedView type="card" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 8 }}>
+                <Text variant="bodyLarge">Csak új bizniszek</Text>
+                <Switch
+                  value={!!searchParams?.onlyNew}
+                  onValueChange={(value) => {
+                    dispatch(storeBuzinessSearchParams({ onlyNew: value }));
+                  }}
+                />
+              </ThemedView>
               <MapSelector
                 data={searchCircle}
                 setData={(sC) => {
