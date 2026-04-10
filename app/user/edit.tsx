@@ -24,6 +24,7 @@ import {
   Menu,
   Modal,
   Portal,
+  Switch,
   TextInput,
   useTheme,
 } from "react-native-paper";
@@ -43,6 +44,8 @@ export default function Index() {
   const [themeMenuVisible, setThemeMenuVisible] = useState(false);
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [userLocation, setUserLocation] = useState<CircleType | undefined>();
+  const [notifyPush, setNotifyPush] = useState(true);
+  const [notifyEmail, setNotifyEmail] = useState(false);
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -52,7 +55,7 @@ export default function Index() {
       }
       | undefined
     >;
-  }>(null);
+      }>(null);
 
   const load = () => {
     console.log("loaded user", myUid);
@@ -84,6 +87,12 @@ export default function Index() {
                 radius: Number(myLoc.location_radius_m ?? 0),
               });
             }
+          }
+          // Fetch notification preferences
+          const { data: prefs } = await supabase.rpc("get_my_notification_prefs");
+          if (prefs?.[0]) {
+            setNotifyPush(prefs[0].notify_push ?? true);
+            setNotifyEmail(prefs[0].notify_email ?? false);
           }
           console.log(data);
           setLoading(false);
@@ -131,6 +140,11 @@ export default function Index() {
               },
             );
             if (locError) console.log("location update error", locError);
+            // Save notification preferences
+            await supabase
+              .from("profiles")
+              .update({ notify_push: notifyPush, notify_email: notifyEmail })
+              .eq("id", myUid);
             setProfile({ ...profile, location: userLocation?.location || null });
             dispatch(setName(profile?.full_name));
             console.log(res);
@@ -150,7 +164,7 @@ export default function Index() {
         ]),
       );
       return () => { };
-    }, [dispatch, myUid, profile, userLocation, usernameAvailable]),
+    }, [dispatch, myUid, profile, userLocation, usernameAvailable, notifyPush, notifyEmail]),
   );
   useFocusEffect(
     useCallback(() => {
@@ -362,6 +376,24 @@ export default function Index() {
                   Helyzet törlése
                 </Button>
               )}
+            </View>
+          </View>
+          <Divider />
+          <View style={{ paddingVertical: 16, gap: 12 }}>
+            <ThemedText type="subtitle">Értesítések</ThemedText>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <View style={{ flex: 1 }}>
+                <ThemedText>Push értesítések</ThemedText>
+                <ThemedText type="label">Értesítések a telefonodon</ThemedText>
+              </View>
+              <Switch value={notifyPush} onValueChange={setNotifyPush} />
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <View style={{ flex: 1 }}>
+                <ThemedText>Email értesítések</ThemedText>
+                <ThemedText type="label">Értesítések a(z) {userData?.email} címedre</ThemedText>
+              </View>
+              <Switch value={notifyEmail} onValueChange={setNotifyEmail} />
             </View>
           </View>
           <Divider />

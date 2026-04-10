@@ -35,7 +35,8 @@ export default {
         apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
       }
     },
-    package: "com.fife.app"
+    package: "com.fife.app",
+    googleServicesFile: "./google-services.json"
   },
   web: {
     bundler: "metro",
@@ -43,6 +44,13 @@ export default {
     favicon: "./assets/images/favicon.png"
   },
   plugins: [
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/images/Slimey.png",
+        color: "#fff5e0"
+      }
+    ],
     [
       "expo-font",
       {
@@ -58,12 +66,6 @@ export default {
           "assets/fonts/RedHatText-Medium.ttf",
           "assets/fonts/RedHatText-Bold.ttf"
         ]
-      }
-    ],
-    [
-      "onesignal-expo-plugin",
-      {
-        mode: "development"
       }
     ],
     [

@@ -25,7 +25,9 @@ import RedHatTextMedium from "@/assets/fonts/RedHatText-Medium.ttf";
 import RedHatTextBold from "@/assets/fonts/RedHatText-Bold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
 import { RootState } from "@/redux/store";
-import { OneSignal } from "react-native-onesignal";
+import { setLocation } from "@/redux/reducers/userReducer";
+import { supabase } from "@/lib/supabase/supabase";
+import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 
 function RootContent() {
   const pathname = usePathname();
@@ -42,17 +44,33 @@ function RootContent() {
     }
   }, []);
 
-  // Initialize OneSignal and set external user ID when user logs in
+  // Fetch user location from Supabase on mount
   useEffect(() => {
-    if (Platform.OS === "web") return;
-    OneSignal.initialize(process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID || "");
-    OneSignal.Notifications.requestPermission(true);
-  }, []);
-
-  useEffect(() => {
-    if (Platform.OS === "web") return;
     if (!uid) return;
-    OneSignal.login(uid);
+    supabase.rpc("get_my_profile_location").then(({ data: loc }) => {
+      const myLoc = loc?.[0];
+      if (!myLoc?.location_wkt) return;
+      const match = myLoc.location_wkt.match(/POINT\(([\d.-]+) ([\d.-]+)\)/);
+      if (match) {
+        dispatch(setLocation({
+          latitude: parseFloat(match[2]),
+          longitude: parseFloat(match[1]),
+          radius: myLoc.location_radius_m ?? 0,
+        }));
+      }
+    });
+  }, [uid, dispatch]);
+
+  // Register push token if user opted in to push notifications
+  useEffect(() => {
+    if (!uid || Platform.OS === "web") return;
+    supabase.rpc("get_my_notification_prefs").then(async ({ data }) => {
+      if (!data?.[0]?.notify_push) return;
+      const token = await registerForPushNotificationsAsync();
+      if (token) {
+        await supabase.rpc("update_my_push_token", { token });
+      }
+    });
   }, [uid]);
   
   // Determine if dark mode should be active based on preference

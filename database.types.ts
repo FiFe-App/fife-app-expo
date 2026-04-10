@@ -1,3 +1,5 @@
+WARN: no SMS provider is enabled. Disabling phone login
+Connecting to db 5432
 export type Json =
   | string
   | number
@@ -44,7 +46,7 @@ export type Database = {
           embedding_text: string | null
           id: number
           images: string[] | null
-          location: unknown | null
+          location: unknown
           radius: number | null
           title: string
         }
@@ -57,7 +59,7 @@ export type Database = {
           embedding_text?: string | null
           id?: number
           images?: string[] | null
-          location?: unknown | null
+          location?: unknown
           radius?: number | null
           title: string
         }
@@ -70,7 +72,7 @@ export type Database = {
           embedding_text?: string | null
           id?: number
           images?: string[] | null
-          location?: unknown | null
+          location?: unknown
           radius?: number | null
           title?: string
         }
@@ -239,7 +241,7 @@ export type Database = {
           description: string | null
           duration: string | null
           id: number
-          location: unknown | null
+          location: unknown
           locationName: string
           title: string
         }
@@ -250,7 +252,7 @@ export type Database = {
           description?: string | null
           duration?: string | null
           id?: number
-          location?: unknown | null
+          location?: unknown
           locationName: string
           title: string
         }
@@ -261,7 +263,7 @@ export type Database = {
           description?: string | null
           duration?: string | null
           id?: number
-          location?: unknown | null
+          location?: unknown
           locationName?: string
           title?: string
         }
@@ -305,7 +307,7 @@ export type Database = {
           categories: string
           created_at: string
           id: number
-          location: unknown | null
+          location: unknown
           text: string
         }
         Insert: {
@@ -313,7 +315,7 @@ export type Database = {
           categories: string
           created_at?: string
           id?: number
-          location?: unknown | null
+          location?: unknown
           text: string
         }
         Update: {
@@ -321,7 +323,7 @@ export type Database = {
           categories?: string
           created_at?: string
           id?: number
-          location?: unknown | null
+          location?: unknown
           text?: string
         }
         Relationships: [
@@ -376,8 +378,11 @@ export type Database = {
           created_at: string | null
           full_name: string
           id: string
-          location: unknown | null
+          location: unknown
           location_radius_m: number | null
+          notify_email: boolean
+          notify_push: boolean
+          push_token: string | null
           updated_at: string | null
           username: string | null
           viewed_functions: string[] | null
@@ -388,8 +393,11 @@ export type Database = {
           created_at?: string | null
           full_name: string
           id: string
-          location?: unknown | null
+          location?: unknown
           location_radius_m?: number | null
+          notify_email?: boolean
+          notify_push?: boolean
+          push_token?: string | null
           updated_at?: string | null
           username?: string | null
           viewed_functions?: string[] | null
@@ -400,8 +408,11 @@ export type Database = {
           created_at?: string | null
           full_name?: string
           id?: string
-          location?: unknown | null
+          location?: unknown
           location_radius_m?: number | null
+          notify_email?: boolean
+          notify_push?: boolean
+          push_token?: string | null
           updated_at?: string | null
           username?: string | null
           viewed_functions?: string[] | null
@@ -441,11 +452,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_my_notification_prefs: {
+        Args: never
+        Returns: {
+          notify_email: boolean
+          notify_push: boolean
+        }[]
+      }
       get_my_profile_location: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           location_radius_m: number
           location_wkt: string
+        }[]
+      }
+      get_notification_prefs_for: {
+        Args: { user_id: string }
+        Returns: {
+          email: string
+          notify_email: boolean
+          notify_push: boolean
+          push_token: string
         }[]
       }
       hybrid_buziness_search: {
@@ -592,6 +619,7 @@ export type Database = {
         Args: { lat: number; long: number; radius_m: number }
         Returns: undefined
       }
+      update_my_push_token: { Args: { token: string }; Returns: undefined }
     }
     Enums: {
       contact_type:

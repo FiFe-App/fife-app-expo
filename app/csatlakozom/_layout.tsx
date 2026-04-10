@@ -22,6 +22,7 @@ export default function RootLayout() {
     "/csatlakozom/",
     "/csatlakozom/megbizhatosag",
     "/csatlakozom/helyzet",
+    "/csatlakozom/ertesitesek",
     "/csatlakozom/email-regisztracio",
     "/csatlakozom/email-ellenorzes",
     "/csatlakozom/elso-lepesek",

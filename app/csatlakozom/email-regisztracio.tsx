@@ -22,6 +22,8 @@ interface SignupMetadata {
   username: string;
   location?: string; // PostGIS POINT string format
   location_radius_m?: number;
+  notify_push?: boolean;
+  notify_email?: boolean;
 }
 
 AppState.addEventListener("change", (state) => {
@@ -49,7 +51,7 @@ export default function Index() {
   const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
   const isPasswordWeak = !passwordRegex.exec(password)?.length;
 
-  const { uid, userData }: UserState = useSelector((state: RootState) => state.user);
+  const { uid, userData, notificationPrefs }: UserState = useSelector((state: RootState) => state.user);
   const userLocation = userData?.location;
   WebBrowser.maybeCompleteAuthSession(); // required for web only
   const redirectTo = makeRedirectUri({ path: "/csatlakozom/elso-lepesek" });
@@ -79,6 +81,12 @@ export default function Index() {
       if (typeof userLocation.radius === "number") {
         metadata.location_radius_m = userLocation.radius;
       }
+    }
+
+    // Add notification preferences from onboarding
+    if (notificationPrefs) {
+      metadata.notify_push = notificationPrefs.notifyPush;
+      metadata.notify_email = notificationPrefs.notifyEmail;
     }
 
     const { data, error } = await supabase.auth.signUp({

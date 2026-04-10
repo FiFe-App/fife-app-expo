@@ -25,7 +25,7 @@ const BottomNavigation = () => {
   }, []);
 
   return (
-    <ThemedView style={{ flexDirection: "row", backgroundColor:theme.colors.elevation.level1 }}>
+    <ThemedView style={{ flexDirection: "row", backgroundColor:theme.colors.background }}>
       <Measure name="biznisz">
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/biznisz")}>
           <View style={{ alignItems: "center" }}>

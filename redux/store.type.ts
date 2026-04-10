@@ -6,6 +6,10 @@ export interface UserState {
   uid?: string;
   name?: string;
   locationAlertDismissed?: boolean;
+  notificationPrefs?: {
+    notifyPush: boolean;
+    notifyEmail: boolean;
+  };
   userData?: {
     authorization: string;
     email: string;
