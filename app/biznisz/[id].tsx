@@ -32,18 +32,20 @@ import {
   useGlobalSearchParams,
   useNavigation,
 } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import ImageModal from "react-native-image-modal";
 import openMap from "react-native-open-maps";
 import {
   ActivityIndicator,
+  Badge,
   Button,
   Chip,
   IconButton,
   Portal,
   Text,
   TouchableRipple,
+  useTheme,
 } from "react-native-paper";
 // Removed tabs; sections will be stacked vertically
 import { useDispatch, useSelector } from "react-redux";
@@ -80,6 +82,14 @@ export default function Index() {
   const myBuziness = myUid === data?.author;
   const { myLocation } = useMyLocation();
   const [commentsCount, setCommentsCount] = useState<number>();
+  const theme = useTheme();
+
+  const isNew = useMemo(() => {
+    if (!data?.created_at) return false;
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    return new Date(data.created_at) >= threeMonthsAgo;
+  }, [data?.created_at]);
 
   useEffect(() => {
     if (myBuziness)
@@ -191,8 +201,12 @@ export default function Index() {
                 flexDirection: "row",
                 gap: 4,
                 paddingHorizontal: 10,
+                alignItems: "center",
               }}
             >
+              {isNew && (
+                <Badge style={{ backgroundColor: theme.colors.tertiary, color: theme.colors.onTertiary }}>ÚJ</Badge>
+              )}
               {categories?.slice(1).map((e, i) => {
                 if (e.trim())
                   return (

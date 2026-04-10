@@ -6,8 +6,6 @@
 const tintColorLight = "#0a7ea4";
 const tintColorDark = "#fff";
 
-export const newBadgeColor = "#4CAF50";
-
 export const Colors = {
   light: {
     text: "#11181C",
