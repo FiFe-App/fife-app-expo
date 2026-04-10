@@ -67,6 +67,7 @@ export interface BuzinessSearchItemInterface {
   authorName?: string;
   distance?: number;
   buzinessRecommendations: { author: string }[];
+  created_at?: string;
 }
 export interface BuzinessItemInterface {
   id: number;
@@ -81,6 +82,7 @@ export interface BuzinessItemInterface {
   avatarUrl?: string | null;
   images?: ImageDataType[];
   recommendations: number | { count: number }[];
+  created_at?: string;
 }
 export interface EventItemInterface extends Tables<"events"> {
   lat: number | null;
@@ -103,6 +105,7 @@ export interface SearchParams {
   loading?: boolean;
   searchType?: string;
   skip?: number;
+  onlyNew?: boolean;
 }
 export interface BuzinessState {
   buzinesses: BuzinessSearchItemInterface[];

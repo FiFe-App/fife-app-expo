@@ -32,7 +32,7 @@ import {
   useGlobalSearchParams,
   useNavigation,
 } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import ImageModal from "react-native-image-modal";
 import openMap from "react-native-open-maps";
@@ -44,6 +44,7 @@ import {
   Portal,
   Text,
   TouchableRipple,
+  useTheme,
 } from "react-native-paper";
 // Removed tabs; sections will be stacked vertically
 import { useDispatch, useSelector } from "react-redux";
@@ -80,6 +81,14 @@ export default function Index() {
   const myBuziness = myUid === data?.author;
   const { myLocation } = useMyLocation();
   const [commentsCount, setCommentsCount] = useState<number>();
+  const theme = useTheme();
+
+  const isNew = useMemo(() => {
+    if (!data?.created_at) return false;
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    return new Date(data.created_at) >= threeMonthsAgo;
+  }, [data?.created_at]);
 
   useEffect(() => {
     if (myBuziness)
@@ -193,6 +202,14 @@ export default function Index() {
                 paddingHorizontal: 10,
               }}
             >
+              {isNew && (
+                <Chip
+                  textStyle={{ margin: 4 }}
+                  style={{ backgroundColor: theme.colors.tertiary }}
+                >
+                  <Text style={{ color: theme.colors.onTertiary }}>ÚJ</Text>
+                </Chip>
+              )}
               {categories?.slice(1).map((e, i) => {
                 if (e.trim())
                   return (

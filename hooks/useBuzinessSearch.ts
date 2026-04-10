@@ -73,6 +73,7 @@ export function useBuzinessSearch() {
           query: query || "",
           take: searchParams?.searchType === "map" ? -1 : PAGE_SIZE,
           skip: 0,
+          onlyNew: searchParams?.onlyNew || false,
           ...searchLocation,
         },
       });
@@ -126,6 +127,7 @@ export function useBuzinessSearch() {
           query: lastQuery.current || "",
           take: PAGE_SIZE,
           skip: nextSkip,
+          onlyNew: searchParams?.onlyNew || false,
           ...searchLocation,
         },
       });

@@ -11,9 +11,10 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Chip, Icon, IconButton, Surface, Text } from "react-native-paper";
+import { Chip, Icon, IconButton, Surface, Text, useTheme } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
+import { useMemo } from "react";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 
@@ -30,6 +31,14 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
   const { uid } = useSelector((state: RootState) => state.user);
   const myBuziness = author === uid;
   const dispatch = useDispatch();
+  const theme = useTheme();
+
+  const isNew = useMemo(() => {
+    if (!data.created_at) return false;
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    return new Date(data.created_at) >= threeMonthsAgo;
+  }, [data.created_at]);
 
   const distance = data.distance ? Math.round(data?.distance * 10) / 10 : null;
   const distanceText =
@@ -75,6 +84,11 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
             <View style={{ flex: 1 }}>
               <ThemedText variant="titleMedium" type="title" style={{}}>{categories?.[0]}</ThemedText>
               <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4, marginTop: 4 }}>
+                {isNew && (
+                  <View style={{ paddingHorizontal: 4, borderRadius: 6, backgroundColor: theme.colors.tertiary }}>
+                    <Text style={{ color: theme.colors.onTertiary }}>ÚJ</Text>
+                  </View>
+                )}
                 {categories?.slice(1).map((e, i) => {
                   if (e.trim())
                     return (

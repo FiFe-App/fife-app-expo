@@ -23,7 +23,10 @@ Deno.serve(async (req) => {
       headers: corsHeaders,
     });
   }
-  const { query, skip, take, lat, long, maxdistance } = await req.json();
+  const { query, skip, take, lat, long, maxdistance, onlyNew } = await req.json();
+
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
   // Instantiate OpenAI client
   const openai = new OpenAI({ apiKey: openaiApiKey });
@@ -87,14 +90,23 @@ Deno.serve(async (req) => {
       query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),
       query_text: query,
     });
+    if (onlyNew && res.data) {
+      res = { ...res, data: res.data.filter((item: { created_at: string }) => new Date(item.created_at) >= threeMonthsAgo) };
+    }
   } else {
     console.log("no query, normal search");
     
-    res = await supabase
+    let q = supabase
       .from("buziness")
       .select("*, recommendations: buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(count)")
       .range(skip || 0, (skip || 0) + (take || 20) - 1)
       .order("created_at", { ascending: false });
+
+    if (onlyNew) {
+      q = q.gte("created_at", threeMonthsAgo.toISOString());
+    }
+
+    res = await q;
   }
   console.log("res", res);
   
