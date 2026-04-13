@@ -1,10 +1,15 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import nodemailer from "npm:nodemailer@6";
+import {
+  buzinessRecommendationHtml,
+  commentHtml,
+  profileRecommendationHtml,
+} from "../_shared/email.ts";
 
-const supabaseUrl = Deno.env.get("EXPO_PUBLIC_SUPABASE_URL") || "";
-const supabaseServiceRoleKey = Deno.env.get("EXPO_PUBLIC_SUPABASE_ANON_KEY") || "";
+const supabaseUrl = Deno.env.get("SUPABASE_URL") || Deno.env.get("EXPO_PUBLIC_SUPABASE_URL") || "";
+const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 // Rackhost SMTP config (set via supabase secrets)
 const smtpHost = Deno.env.get("SMTP_HOST") || "";
@@ -43,27 +48,24 @@ async function sendPushNotification(pushToken: string, message: string) {
   return data;
 }
 
-async function sendEmailNotification(email: string, subject: string, message: string) {
+async function sendEmailNotification(email: string, subject: string, html: string) {
   if (!smtpHost || !smtpUser || !smtpPass) {
     console.error("Missing SMTP credentials, skipping email");
     return;
   }
   try {
-    const client = new SMTPClient({
-      connection: {
-        hostname: smtpHost,
-        port: smtpPort,
-        tls: true,
-        auth: { username: smtpUser, password: smtpPass },
-      },
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: { user: smtpUser, pass: smtpPass },
     });
-    await client.send({
+    await transporter.sendMail({
       from: smtpFrom,
       to: email,
       subject,
-      html: `<p>${message}</p>`,
+      html,
     });
-    await client.close();
     console.log("Email sent to", email);
   } catch (err) {
     console.error("SMTP error:", err);
@@ -73,20 +75,30 @@ async function sendEmailNotification(email: string, subject: string, message: st
 async function getNotificationPrefs(supabase: ReturnType<typeof createClient>, userId: string) {
   const { data } = await supabase.rpc("get_notification_prefs_for", { user_id: userId });
   console.log(data);
-  
-  return data?.[0] ?? { notify_push: true, notify_email: false, email: null, push_token: "ExponentPushToken[q0dNuPCvDncNMNxNgIhn0l]" };
+  return data?.[0] ?? { notify_push: true, notify_email: false, email: null, push_token: null, full_name: null };
 }
 
-async function sendNotification(supabase: ReturnType<typeof createClient>, targetUserId: string, message: string, subject?: string) {
+async function sendNotification(
+  supabase: ReturnType<typeof createClient>,
+  targetUserId: string,
+  message: string,
+  options: {
+    subject?: string;
+    htmlBuilder?: (recipientName: string | null) => string;
+  } = {},
+) {
   const prefs = await getNotificationPrefs(supabase, targetUserId);
-  console.log("user prefs:",prefs);
-  
+  console.log("user prefs:", prefs);
+
   const promises: Promise<unknown>[] = [];
   if (prefs.notify_push && prefs.push_token) {
     promises.push(sendPushNotification(prefs.push_token, message));
   }
   if (prefs.notify_email && prefs.email) {
-    promises.push(sendEmailNotification(prefs.email, subject || "FiFe értesítés", message));
+    const html = options.htmlBuilder
+      ? options.htmlBuilder(prefs.full_name ?? null)
+      : `<p>${message}</p>`;
+    promises.push(sendEmailNotification(prefs.email, options.subject || "FiFe értesítés", html));
   }
   if (promises.length === 0) {
     console.log(`User ${targetUserId} has all notifications disabled or missing tokens`);
@@ -127,7 +139,10 @@ Deno.serve(async (req) => {
       if (buziness && buziness.author !== record.author) {
         const buzinessTitle = buziness.title?.split(" $ ")[0] || "bizniszedet";
         const message = `${authorName} ajánlja a ${buzinessTitle} bizniszedet!`;
-        await sendNotification(supabase, buziness.author, message);
+        await sendNotification(supabase, buziness.author, message, {
+          subject: `${authorName} ajánlja a bizniszedet!`,
+          htmlBuilder: (name) => buzinessRecommendationHtml(name, authorName, buzinessTitle, record.buziness_id),
+        });
       }
     } else if (table === "profileRecommendations") {
       // Fetch the author's name
@@ -139,7 +154,10 @@ Deno.serve(async (req) => {
       const authorName = authorRes.data?.full_name || "Valaki";
       if (record.profile_id && record.profile_id !== record.author) {
         const message = `${authorName} megbízhatónak jelölt!`;
-        await sendNotification(supabase, record.profile_id, message);
+        await sendNotification(supabase, record.profile_id, message, {
+          subject: `${authorName} megbízhatónak jelölt!`,
+          htmlBuilder: (name) => profileRecommendationHtml(name, authorName, record.author),
+        });
       }
     } else if (table === "comments") {
       // key format: "buziness/{id}"
@@ -155,7 +173,10 @@ Deno.serve(async (req) => {
         if (buziness && buziness.author !== record.author) {
           const buzinessTitle = buziness.title?.split(" $ ")[0] || "bizniszedhez";
           const message = `${authorName} kommentet írt a ${buzinessTitle} bizniszedhez!`;
-          await sendNotification(supabase, buziness.author, message);
+          await sendNotification(supabase, buziness.author, message, {
+            subject: `${authorName} kommentet írt a bizniszedhez!`,
+            htmlBuilder: (name) => commentHtml(name, authorName, buzinessTitle, buzinessId),
+          });
         }
       }
     }
