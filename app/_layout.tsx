@@ -1,10 +1,10 @@
 import InfoLayer from "@/components/InfoLayer";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { persistor, store } from "@/redux/store";
-import { Stack, usePathname } from "expo-router";
+import { Stack, router, usePathname } from "expo-router";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
-import { View, StatusBar, useColorScheme, Platform } from "react-native";
+import { AppState, View, StatusBar, useColorScheme, Platform } from "react-native";
 import * as NavigationBar from "expo-navigation-bar";
 import { PaperProvider } from "react-native-paper";
 import { Provider, useSelector, useDispatch } from "react-redux";
@@ -25,13 +25,18 @@ import RedHatTextMedium from "@/assets/fonts/RedHatText-Medium.ttf";
 import RedHatTextBold from "@/assets/fonts/RedHatText-Bold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
 import { RootState } from "@/redux/store";
-import { setThemePreference } from "@/redux/reducers/userReducer";
+import { logout, setThemePreference } from "@/redux/reducers/userReducer";
+import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
+import { supabase } from "@/lib/supabase/supabase";
+import { getUserData } from "@/lib/supabase/getUserData";
 
 function RootContent() {
   const pathname = usePathname();
   const dispatch = useDispatch();
   const deviceColorScheme = useColorScheme(); // Auto-detect device theme
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
+  const uid = useSelector((state: RootState) => state.user.uid);
   const hasInitialized = React.useRef(false);
 
   // On first load only, mark as initialized
@@ -40,6 +45,39 @@ function RootContent() {
       hasInitialized.current = true;
     }
   }, []);
+
+  // Centralized AppState listener for token auto-refresh
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        supabase.auth.startAutoRefresh();
+      } else {
+        supabase.auth.stopAutoRefresh();
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
+  // Keep Redux in sync with Supabase auth state
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          if (session?.user && !uid) {
+            await getUserData(session.user, dispatch);
+          }
+        } else if (event === "SIGNED_OUT") {
+          dispatch(logout());
+          dispatch(clearBuziness());
+          dispatch(clearTutorialState());
+          dispatch(clearBuzinessSearchParams());
+          router.replace("/");
+        }
+      },
+    );
+    return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid]);
 
   // Determine if dark mode should be active based on preference
   const isDarkMode =
@@ -59,7 +97,7 @@ function RootContent() {
       barStyle={isDarkMode ? "light-content" : "dark-content"}
       backgroundColor={theme.colors.background}
     />
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={["left", "right","bottom"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={["left", "right", "bottom"]}>
       <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
         <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
           <PaperProvider theme={theme}>

@@ -6,17 +6,9 @@ import { supabase } from "@/lib/supabase/supabase";
 import { makeRedirectUri } from "expo-auth-session";
 import { Link, Redirect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { AppState, View } from "react-native";
+import { View } from "react-native";
 import { Button, Divider } from "react-native-paper";
 import { useSelector } from "react-redux";
-
-AppState.addEventListener("change", (state) => {
-  if (state === "active") {
-    supabase.auth.startAutoRefresh();
-  } else {
-    supabase.auth.stopAutoRefresh();
-  }
-});
 
 export default function Index() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);

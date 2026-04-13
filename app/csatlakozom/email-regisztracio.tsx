@@ -8,7 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link, Redirect, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
-import { AppState, View } from "react-native";
+import { View } from "react-native";
 
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { makeRedirectUri } from "expo-auth-session";
@@ -23,14 +23,6 @@ interface SignupMetadata {
   location?: string; // PostGIS POINT string format
   location_radius_m?: number;
 }
-
-AppState.addEventListener("change", (state) => {
-  if (state === "active") {
-    supabase.auth.startAutoRefresh();
-  } else {
-    supabase.auth.stopAutoRefresh();
-  }
-});
 
 export default function Index() {
   const theme = useTheme();
@@ -56,7 +48,7 @@ export default function Index() {
 
   const createUser = async () => {
     setLoading(true);
-    
+
     // Ensure we have required fields
     if (!email.trim() || !name.trim()) {
       setError("Email és név megadása kötelező");
@@ -72,8 +64,8 @@ export default function Index() {
 
     // Add location if available and properly structured
     if (userLocation &&
-        typeof userLocation.lat === "number" &&
-        typeof userLocation.lng === "number") {
+      typeof userLocation.lat === "number" &&
+      typeof userLocation.lng === "number") {
       // Format as PostGIS POINT string
       metadata.location = `POINT(${userLocation.lng} ${userLocation.lat})`;
       if (typeof userLocation.radius === "number") {

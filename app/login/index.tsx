@@ -1,33 +1,20 @@
 import { ThemedView } from "@/components/ThemedView";
-import {
-  setName,
-  setUserData,
-  login as sliceLogin,
-} from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
 import { Link, Redirect, router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
-import { AppState, View } from "react-native";
+import { View } from "react-native";
 import { Divider, Text, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 
 import { makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
-import { loadViewedFunctions } from "@/redux/reducers/tutorialReducer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "@/components/Button";
 import { MyAppbar } from "@/components/MyAppBar";
-
-AppState.addEventListener("change", (state) => {
-  if (state === "active") {
-    supabase.auth.startAutoRefresh();
-  } else {
-    supabase.auth.stopAutoRefresh();
-  }
-});
+import { getUserData as getUserDataHelper } from "@/lib/supabase/getUserData";
 
 export default function Index() {
   const navigation = useNavigation();
@@ -45,7 +32,7 @@ export default function Index() {
   const redirectTo = makeRedirectUri();
 
   useEffect(() => {
-    navigation.setOptions({"title": "Bejelentkezés"});
+    navigation.setOptions({ "title": "Bejelentkezés" });
     if (token_data) {
       console.log(token_data);
 
@@ -122,42 +109,8 @@ export default function Index() {
     });
   };
 
-  const getUserData = async (userData: User) => {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions")
-      .eq("id", userData.id)
-      .maybeSingle();
-    if (error) {
-      console.log(error);
-    }
-    if (profile) {
-      console.log("profile", profile);
-
-      dispatch(sliceLogin(profile?.id));
-      dispatch(setName(profile?.full_name));
-
-      // Fetch own location via secure function
-      const { data: loc } = await supabase.rpc("get_my_profile_location");
-      const myLoc = loc?.[0];
-      const locationData = myLoc?.location_wkt
-        ? (() => {
-          const match = myLoc.location_wkt.match(/POINT\(([\d.-]+) ([\d.-]+)\)/);
-          return match
-            ? { location: { lng: parseFloat(match[1]), lat: parseFloat(match[2]) }, radius: myLoc.location_radius_m ?? 0 }
-            : undefined;
-        })()
-        : undefined;
-
-      console.log("user-data", { ...userData, ...profile });
-      dispatch(setUserData({ 
-        ...userData, 
-        ...profile, 
-        ...(locationData ? { location: locationData } : {}) 
-      }));
-      if (profile?.viewed_functions)
-        dispatch(loadViewedFunctions(profile?.viewed_functions));
-    }
+  const getUserData = async (user: User) => {
+    await getUserDataHelper(user, dispatch);
   };
 
   if (!uid)
