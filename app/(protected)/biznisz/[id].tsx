@@ -54,7 +54,7 @@ import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
 
 export default function Index() {
   const { id: paramId } = useGlobalSearchParams();
-  const navigation = useNavigation();
+  const navigation = useNavigation().getParent();
   const { width } = useWindowDimensions();
   const dispatch = useDispatch();
   const { uid: myUid }: UserState = useSelector(

@@ -28,7 +28,7 @@ import { useProfileSearch } from "@/hooks/useProfileSearch";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
-  const navigation = useNavigation();
+  const navigation = useNavigation().getParent();
   const { userSearchParams } = useSelector(
     (state: RootState) => state.users,
   );
@@ -61,7 +61,7 @@ export default function Index() {
       }
       if (uid) dispatch(viewFunction({ key: "homePage", uid }));
       navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={handleSearch} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
-    }, [data.length, newestUsers.length, uid, fetch, fetchNewest]),
+    }, [data.length, newestUsers.length, uid, dispatch, navigation, fetch, fetchNewest, handleSearch]),
   );
 
   if (uid)

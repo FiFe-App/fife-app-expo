@@ -81,23 +81,23 @@ function RootContent() {
                 options={{ headerShown: false, animation: "slide_from_right" }}
               />
               <Stack.Screen
-                name="biznisz/new"
+                name="(protected)/biznisz/new"
                 options={{ title: "Új Biznisz" }}
               />
               <Stack.Screen
-                name="biznisz/[id]"
+                name="(protected)/biznisz/[id]"
                 options={{ title: "FiFe Biznisz" }}
               />
               <Stack.Screen
-                name="biznisz/edit/[editId]"
+                name="(protected)/biznisz/edit/[editId]"
                 options={{ title: "FiFe Biznisz" }}
               />
               <Stack.Screen
-                name="user/[uid]"
+                name="(protected)/user/[uid]"
                 options={{ title: "FiFe Profil" }}
               />
               <Stack.Screen
-                name="user/edit"
+                name="(protected)/user/edit"
                 options={{ title: "Profil Szerkesztése" }}
               />
               <Stack.Screen

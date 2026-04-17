@@ -23,6 +23,7 @@ import {
   router,
   useFocusEffect,
   useGlobalSearchParams,
+  useNavigation,
 } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { useWindowDimensions, View } from "react-native";
@@ -47,6 +48,7 @@ import {
 } from "@/redux/reducers/tutorialReducer";
 import Measure from "@/components/tutorial/Measure";
 import { SavedProfiles } from "@/components/buziness/SavedProfiles";
+import { MyAppbar } from "../MyAppBar";
 
 type UserInfo = Tables<"profiles">;
 
@@ -69,6 +71,7 @@ export default function UserPage() {
   const theme = useTheme();
 
   const dispatch = useDispatch();
+  const navigation = useNavigation();
   const { width } = useWindowDimensions();
   const myProfile = myUid === uid;
   const [data, setData] = useState<UserInfo | null>(null);
@@ -79,6 +82,8 @@ export default function UserPage() {
 
   useFocusEffect(
     useCallback(() => {
+      navigation.setOptions({ header: () => <MyAppbar style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
+
       const load = () => {
         if (!uid) return;
 
