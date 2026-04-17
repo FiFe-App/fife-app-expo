@@ -7,7 +7,7 @@ export default {
   scheme: "com.fife.app",
   userInterfaceStyle: "automatic",
   splash: {
-    image: "./assets/images/splash.png",
+    image: "./assets/images/Slimey.png",
     resizeMode: "contain",
     backgroundColor: "#fff5e0"
   },
@@ -15,19 +15,19 @@ export default {
     supportsTablet: true,
     bundleIdentifier: "com.fife.app",
     splash: {
-      image: "./assets/images/splash.png",
+      image: "./assets/images/Slimey.png",
       resizeMode: "contain",
       backgroundColor: "#fff5e0"
     }
   },
   android: {
     splash: {
-      image: "./assets/images/splash.png",
+      image: "./assets/images/Slimey.png",
       resizeMode: "contain",
       backgroundColor: "#fff5e0"
     },
     adaptiveIcon: {
-      foregroundImage: "./assets/images/adaptive-icon.png",
+      foregroundImage: "./assets/images/Slimey-adaptive.png",
       backgroundColor: "#fff5e0"
     },
     config: {
@@ -35,7 +35,8 @@ export default {
         apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
       }
     },
-    package: "com.fife.app"
+    package: "com.fife.app",
+    googleServicesFile: "./google-services.json"
   },
   web: {
     bundler: "metro",
@@ -43,6 +44,13 @@ export default {
     favicon: "./assets/images/favicon.png"
   },
   plugins: [
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/images/Slimey.png",
+        color: "#fff5e0"
+      }
+    ],
     [
       "expo-font",
       {
