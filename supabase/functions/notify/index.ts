@@ -17,6 +17,7 @@ const smtpPort = parseInt(Deno.env.get("SMTP_PORT") || "465");
 const smtpUser = Deno.env.get("SMTP_USER") || "";
 const smtpPass = Deno.env.get("SMTP_PASS") || "";
 const smtpFrom = Deno.env.get("SMTP_FROM") || smtpUser;
+const expoAccessToken = Deno.env.get("EXPO_ACCESS_TOKEN") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,13 +32,15 @@ async function sendPushNotification(pushToken: string, message: string) {
   }
   const body = {
     to: pushToken,
-    title: "FiFe",
+    title: "FiFe App",
     body: message,
     sound: "default",
   };
+  
   const res = await fetch("https://exp.host/--/api/v2/push/send", {
     method: "POST",
     headers: {
+      "Authorization": "Bearer "+expoAccessToken,
       "Content-Type": "application/json",
       Accept: "application/json",
     },

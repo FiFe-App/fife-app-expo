@@ -9,6 +9,7 @@ export interface UserState {
   notificationPrefs?: {
     notifyPush: boolean;
     notifyEmail: boolean;
+    newsletter: boolean;
   };
   userData?: {
     authorization: string;

@@ -10,7 +10,7 @@ export default function Ertesitesek() {
   const dispatch = useDispatch();
   const prefs = useSelector(
     (state: RootState) => state.user.notificationPrefs,
-  ) ?? { notifyPush: true, notifyEmail: false };
+  ) ?? { notifyPush: false, notifyEmail: false, newsletter: false };
 
   return (
     <ThemedView style={{ flex: 1, padding: 8, paddingTop: 36 }}>
@@ -43,11 +43,11 @@ export default function Ertesitesek() {
             </View>
             <Switch
               value={prefs.notifyPush}
-              onValueChange={(v) =>
+              onValueChange={(v) => {
                 dispatch(
                   setNotificationPrefs({ ...prefs, notifyPush: v }),
-                )
-              }
+                );
+              }}
             />
           </View>
         )}
@@ -69,11 +69,36 @@ export default function Ertesitesek() {
           </View>
           <Switch
             value={prefs.notifyEmail}
-            onValueChange={(v) =>
+            onValueChange={(v) => {
               dispatch(
                 setNotificationPrefs({ ...prefs, notifyEmail: v }),
-              )
-            }
+              );
+            }}
+          />
+        </View>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <Icon source="newspaper-variant-outline" size={24} />
+            <View style={{ flex: 1 }}>
+              <ThemedText>Kérek hírlevelet</ThemedText>
+              <ThemedText type="label">
+                Újdonságok és tippek emailben
+              </ThemedText>
+            </View>
+          </View>
+          <Switch
+            value={prefs.newsletter}
+            onValueChange={(v) => {
+              dispatch(
+                setNotificationPrefs({ ...prefs, newsletter: v }),
+              );
+            }}
           />
         </View>
       </View>

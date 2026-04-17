@@ -1,5 +1,3 @@
-WARN: no SMS provider is enabled. Disabling phone login
-Connecting to db 5432
 export type Json =
   | string
   | number
@@ -9,30 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
@@ -380,6 +358,7 @@ export type Database = {
           id: string
           location: unknown
           location_radius_m: number | null
+          newsletter: boolean
           notify_email: boolean
           notify_push: boolean
           push_token: string | null
@@ -395,6 +374,7 @@ export type Database = {
           id: string
           location?: unknown
           location_radius_m?: number | null
+          newsletter?: boolean
           notify_email?: boolean
           notify_push?: boolean
           push_token?: string | null
@@ -410,6 +390,7 @@ export type Database = {
           id?: string
           location?: unknown
           location_radius_m?: number | null
+          newsletter?: boolean
           notify_email?: boolean
           notify_push?: boolean
           push_token?: string | null
@@ -455,6 +436,7 @@ export type Database = {
       get_my_notification_prefs: {
         Args: never
         Returns: {
+          newsletter: boolean
           notify_email: boolean
           notify_push: boolean
         }[]
@@ -470,6 +452,8 @@ export type Database = {
         Args: { user_id: string }
         Returns: {
           email: string
+          full_name: string
+          newsletter: boolean
           notify_email: boolean
           notify_push: boolean
           push_token: string
@@ -755,9 +739,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       contact_type: [
@@ -771,5 +752,4 @@ export const Constants = {
       ],
     },
   },
-} as const
-
+} as const;

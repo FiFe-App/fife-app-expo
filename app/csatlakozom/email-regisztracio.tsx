@@ -24,6 +24,7 @@ interface SignupMetadata {
   location_radius_m?: number;
   notify_push?: boolean;
   notify_email?: boolean;
+  newsletter?: boolean;
 }
 
 AppState.addEventListener("change", (state) => {
@@ -87,6 +88,7 @@ export default function Index() {
     if (notificationPrefs) {
       metadata.notify_push = notificationPrefs.notifyPush;
       metadata.notify_email = notificationPrefs.notifyEmail;
+      metadata.newsletter = notificationPrefs.newsletter;
     }
 
     const { data, error } = await supabase.auth.signUp({

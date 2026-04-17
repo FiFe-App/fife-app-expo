@@ -7,7 +7,7 @@ export default {
   scheme: "com.fife.app",
   userInterfaceStyle: "automatic",
   splash: {
-    image: "./assets/images/splash.png",
+    image: "./assets/images/Slimey.png",
     resizeMode: "contain",
     backgroundColor: "#fff5e0"
   },
@@ -15,19 +15,19 @@ export default {
     supportsTablet: true,
     bundleIdentifier: "com.fife.app",
     splash: {
-      image: "./assets/images/splash.png",
+      image: "./assets/images/Slimey.png",
       resizeMode: "contain",
       backgroundColor: "#fff5e0"
     }
   },
   android: {
     splash: {
-      image: "./assets/images/splash.png",
+      image: "./assets/images/Slimey.png",
       resizeMode: "contain",
       backgroundColor: "#fff5e0"
     },
     adaptiveIcon: {
-      foregroundImage: "./assets/images/adaptive-icon.png",
+      foregroundImage: "./assets/images/Slimey-adaptive.png",
       backgroundColor: "#fff5e0"
     },
     config: {
