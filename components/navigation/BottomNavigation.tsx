@@ -1,7 +1,7 @@
 import { router, useSegments } from "expo-router";
 import { useRef, useCallback } from "react";
 import { StyleSheet, View } from "react-native";
-import { Badge, Icon, Surface, TouchableRipple } from "react-native-paper";
+import { Badge, Icon, TouchableRipple } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -25,7 +25,7 @@ const BottomNavigation = () => {
   }, []);
 
   return (
-    <ThemedView style={{ flexDirection: "row", backgroundColor:theme.colors.elevation.level1 }}>
+    <ThemedView style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level0 }}>
       <Measure name="biznisz">
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/biznisz")}>
           <View style={{ alignItems: "center" }}>
