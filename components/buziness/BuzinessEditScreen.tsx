@@ -12,7 +12,7 @@ import {
 import { RootState } from "@/redux/store";
 import { ImageDataType, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
-import { router, useFocusEffect, useNavigation } from "expo-router";
+import { router, Stack, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
 import {
@@ -82,8 +82,6 @@ export default function BuzinessEditScreen({
   const [locationTutorialVisible, setLocationTutorialVisible] = useState(false);
 
   const title = newBuziness.title + " $ " + categories;
-  const navigation = useNavigation().getParent();
-
   const canSubmit = !!(
     newBuziness.title &&
     categories &&
@@ -184,7 +182,6 @@ export default function BuzinessEditScreen({
   useFocusEffect(
     useCallback(() => {
       if (editId && uid) {
-        navigation.setOptions({ title: "Biznisz szerkesztése" });
         supabase
           .from("buziness")
           .select("*")
@@ -246,6 +243,8 @@ export default function BuzinessEditScreen({
   );
 
   return (
+    <>
+    {editId && <Stack.Screen options={{ title: "Biznisz szerkesztése" }} />}
     <ThemedView style={{ flex: 1 }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{}}>
         {tutorialVisible && (
@@ -513,5 +512,6 @@ export default function BuzinessEditScreen({
         </Modal>
       </Portal>
     </ThemedView>
+    </>
   );
 }
