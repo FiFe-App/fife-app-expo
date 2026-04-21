@@ -8,7 +8,7 @@ import {
 } from "@/redux/reducers/usersReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
-import { router, useFocusEffect, useNavigation } from "expo-router";
+import { router, Stack, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import style from "@/components/styles";
@@ -28,7 +28,6 @@ import { useProfileSearch } from "@/hooks/useProfileSearch";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
-  const navigation = useNavigation().getParent();
   const { userSearchParams } = useSelector(
     (state: RootState) => state.users,
   );
@@ -60,12 +59,13 @@ export default function Index() {
         fetchNewest();
       }
       if (uid) dispatch(viewFunction({ key: "homePage", uid }));
-      navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={handleSearch} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
-    }, [data.length, newestUsers.length, uid, dispatch, navigation, fetch, fetchNewest, handleSearch]),
+    }, [data.length, newestUsers.length, uid, dispatch, fetch, fetchNewest]),
   );
 
   if (uid)
     return (
+      <>
+      <Stack.Screen options={{ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={handleSearch} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> }} />
       <ThemedView style={{ flex: 1, zIndex: 100 }} type="default">
         <ThemedView style={{ width: "100%", alignItems: "center", zIndex: 100 }} type="card">
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
@@ -126,5 +126,6 @@ export default function Index() {
           </Modal>
         </Portal>
       </ThemedView>
+      </>
     );
 }

@@ -28,9 +28,9 @@ import { PostgrestError } from "@supabase/supabase-js";
 import {
   Link,
   router,
+  Stack,
   useFocusEffect,
   useGlobalSearchParams,
-  useNavigation,
 } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
@@ -54,7 +54,6 @@ import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
 
 export default function Index() {
   const { id: paramId } = useGlobalSearchParams();
-  const navigation = useNavigation().getParent();
   const { width } = useWindowDimensions();
   const dispatch = useDispatch();
   const { uid: myUid }: UserState = useSelector(
@@ -132,8 +131,6 @@ export default function Index() {
                 authorName: data?.profiles?.full_name || "???",
                 avatarUrl: data?.profiles?.avatar_url,
               });
-              navigation.setOptions({ header: () => <MyAppbar center={<Text variant="titleLarge">{data?.title?.split(" $ ")[0]}</Text>} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
-
               if (data.images) setImages(getImagesUrlFromSupabase(data.images));
               if (data.defaultContact) {
                 if (data.contacts) {
@@ -180,6 +177,8 @@ export default function Index() {
     }
   };
   return (
+    <>
+    <Stack.Screen options={{ header: () => <MyAppbar center={data?.title ? <Text variant="titleLarge">{data.title.split(" $ ")[0]}</Text> : undefined} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> }} />
     <ThemedView style={{ flex: 1 }}>
       <ScrollView >
         {!data && !error && <ActivityIndicator />}
@@ -426,5 +425,6 @@ export default function Index() {
         )}
       </ScrollView>
     </ThemedView>
+    </>
   );
 }
