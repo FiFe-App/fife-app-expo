@@ -86,15 +86,15 @@ function RootContent() {
     }
   }, [isDarkMode, theme.colors.background]);
 
-  return (<>
-    <StatusBar
-      barStyle={isDarkMode ? "light-content" : "dark-content"}
-      backgroundColor={theme.colors.background}
-    />
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={["left", "right", "bottom"]}>
-      <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
-        <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
-          <PaperProvider theme={theme}>
+  return (
+    <PaperProvider theme={theme}>
+      <StatusBar
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={theme.colors.background}
+      />
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={["left", "right", "bottom"]}>
+        <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
+          <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
             <InfoLayer />
             <Stack
               screenOptions={{ header: () => <MyAppbar /> }}
@@ -141,11 +141,11 @@ function RootContent() {
               !pathname.includes("login") &&
               !pathname.includes("password") &&
               !pathname.includes("csatlakozom") && <BottomNavigation />}
-          </PaperProvider>
-        </View>
-      </ThemedView>
-    </SafeAreaView>
-  </>);
+          </View>
+        </ThemedView>
+      </SafeAreaView>
+    </PaperProvider>
+  );
 }
 
 export default function RootLayout() {
