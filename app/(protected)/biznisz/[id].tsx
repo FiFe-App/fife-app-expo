@@ -54,7 +54,7 @@ import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
 
 export default function Index() {
   const { id: paramId } = useGlobalSearchParams();
-  const navigation = useNavigation();
+  const navigation = useNavigation().getParent();
   const { width } = useWindowDimensions();
   const dispatch = useDispatch();
   const { uid: myUid }: UserState = useSelector(
@@ -281,7 +281,7 @@ export default function Index() {
               )}
 
               {!myBuziness && (
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <View style={{ flexDirection: "row", alignItems: "center", width:"100%" }}>
                   <RecommendBuzinessButton
                     buzinessId={id}
                     style={{ flex: 1 }}

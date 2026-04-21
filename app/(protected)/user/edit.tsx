@@ -6,7 +6,8 @@ import { ThemedView } from "@/components/ThemedView";
 import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
-import { setOptions } from "@/redux/reducers/infoReducer";
+import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
+import { setOptions, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
 import { setName, setUserData, setThemePreference } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
@@ -14,7 +15,7 @@ import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { ScrollView, View, TouchableWithoutFeedback } from "react-native";
+import { ScrollView, View, TouchableWithoutFeedback, Platform } from "react-native";
 import {
   Button,
   Divider,
@@ -24,6 +25,7 @@ import {
   Menu,
   Modal,
   Portal,
+  Switch,
   TextInput,
   useTheme,
 } from "react-native-paper";
@@ -43,6 +45,9 @@ export default function Index() {
   const [themeMenuVisible, setThemeMenuVisible] = useState(false);
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [userLocation, setUserLocation] = useState<CircleType | undefined>();
+  const [notifyPush, setNotifyPush] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState(false);
+  const [newsletter, setNewsletter] = useState(false);
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -52,13 +57,13 @@ export default function Index() {
       }
       | undefined
     >;
-  }>(null);
+      }>(null);
 
   const load = () => {
     console.log("loaded user", myUid);
     if (!myUid) return;
+    dispatch(showLoading({ title: "Betöltés...", dismissable: false }));
     setLoading(true);
-
     supabase
       .from("profiles")
       .select("id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions")
@@ -66,6 +71,7 @@ export default function Index() {
       .then(async ({ data, error }) => {
         if (error) {
           console.log("err", error.message);
+          dispatch(hideLoading());
           return;
         }
         if (data) {
@@ -85,8 +91,16 @@ export default function Index() {
               });
             }
           }
+          // Fetch notification preferences
+          const { data: prefs } = await supabase.rpc("get_my_notification_prefs");
+          if (prefs?.[0]) {
+            setNotifyPush(prefs[0].notify_push ?? false);
+            setNotifyEmail(prefs[0].notify_email ?? false);
+            setNewsletter(prefs[0].newsletter ?? false);
+          }
           console.log(data);
           setLoading(false);
+          dispatch(hideLoading());
         }
       });
   };
@@ -94,6 +108,7 @@ export default function Index() {
     useCallback(() => {
       const save = async () => {
         setLoading(true);
+        dispatch(showLoading({ title: "Mentés...", dismissable: false }));
         if (!myUid) return;
 
         const response = await contactEditRef.current?.saveContacts();
@@ -118,6 +133,7 @@ export default function Index() {
 
             if (res.error) {
               console.log(res.error);
+              dispatch(hideLoading());
               return;
             }
             // location/location_radius_m are not in the authenticated SELECT
@@ -131,9 +147,22 @@ export default function Index() {
               },
             );
             if (locError) console.log("location update error", locError);
+            // Save notification preferences
+            await supabase
+              .from("profiles")
+              .update({ notify_push: notifyPush, notify_email: notifyEmail, newsletter })
+              .eq("id", myUid);
+            // If push enabled, ensure we have a token registered
+            if (notifyPush) {
+              const token = await registerForPushNotificationsAsync();
+              if (token) {
+                await supabase.rpc("update_my_push_token", { token });
+              }
+            }
             setProfile({ ...profile, location: userLocation?.location || null });
             dispatch(setName(profile?.full_name));
             console.log(res);
+            dispatch(hideLoading());
             router.navigate("/user");
           });
       };
@@ -150,7 +179,7 @@ export default function Index() {
         ]),
       );
       return () => { };
-    }, [dispatch, myUid, profile, userLocation, usernameAvailable]),
+    }, [dispatch, myUid, profile, userLocation, usernameAvailable, notifyPush, notifyEmail, newsletter]),
   );
   useFocusEffect(
     useCallback(() => {
@@ -362,6 +391,33 @@ export default function Index() {
                   Helyzet törlése
                 </Button>
               )}
+            </View>
+          </View>
+          <Divider />
+          <View style={{ paddingVertical: 16, gap: 12 }}>
+            <ThemedText type="subtitle">Értesítések</ThemedText>
+            {Platform.OS !== "web" && (
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <View style={{ flex: 1 }}>
+                  <ThemedText>Push értesítések</ThemedText>
+                  <ThemedText type="label">Értesítések a telefonodon</ThemedText>
+                </View>
+                <Switch value={notifyPush} onValueChange={setNotifyPush} />
+              </View>
+            )}
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <View style={{ flex: 1 }}>
+                <ThemedText>Email értesítések</ThemedText>
+                <ThemedText type="label">Értesítések a(z) {userData?.email} címedre</ThemedText>
+              </View>
+              <Switch value={notifyEmail} onValueChange={setNotifyEmail} />
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <View style={{ flex: 1 }}>
+                <ThemedText>Kérek hírlevelet</ThemedText>
+                <ThemedText type="label">Újdonságok és tippek emailben</ThemedText>
+              </View>
+              <Switch value={newsletter} onValueChange={setNewsletter} />
             </View>
           </View>
           <Divider />

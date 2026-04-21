@@ -28,7 +28,7 @@ import { useProfileSearch } from "@/hooks/useProfileSearch";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
-  const navigation = useNavigation();
+  const navigation = useNavigation().getParent();
   const { userSearchParams } = useSelector(
     (state: RootState) => state.users,
   );
@@ -61,7 +61,7 @@ export default function Index() {
       }
       if (uid) dispatch(viewFunction({ key: "homePage", uid }));
       navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={handleSearch} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
-    }, [data.length, newestUsers.length, uid, fetch, fetchNewest]),
+    }, [data.length, newestUsers.length, uid, dispatch, navigation, fetch, fetchNewest, handleSearch]),
   );
 
   if (uid)
@@ -78,13 +78,15 @@ export default function Index() {
             </View>
           </View>
         </ThemedView>
-        <ThemedView type="card" style={{ paddingHorizontal: 16, paddingTop: 0, paddingBottom: 0, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+        <ThemedView type="card" style={{ paddingHorizontal: 16, paddingTop: 0, paddingBottom: 8, flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
+          <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 4 }}>
             <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Fife Radar</ThemedText>
-            <Icon size={20} color={theme.colors.secondary} source="wifi" />
+            <Icon size={18} color={theme.colors.secondary} source="wifi" />
           </View>
           <Button
             icon={searchCircle ? "map-marker" : "map-marker-outline"}
+            mode="contained-tonal"
+            labelStyle={{marginVertical: 4}}
             onPress={() => setLocationMenuVisible(true)}
           >Hol keresel?</Button>
         </ThemedView>

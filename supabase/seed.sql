@@ -80,7 +80,7 @@ VALUES (
         '00000000-0000-0000-0000-000000000000',
         'authenticated',
         'authenticated',
-        'test@fife.hu',
+        'macos.acos@gmail.com',
         extensions.crypt('fifewok42', extensions.gen_salt('bf')),
         NOW(),
         '{"provider":"email","providers":["email"]}',
@@ -1395,5 +1395,11 @@ SELECT setval(
             FROM public."profileRecommendations"
         )
     );
+-- Seed private.app_config for local dev (notify trigger needs these)
+INSERT INTO private.app_config (key, value) VALUES
+  ('supabase_url', 'http://supabase_kong_fife-app-expo:8000'),
+  ('service_role_key', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+
 -- Done. Re-enable triggers
 SET session_replication_role = DEFAULT;

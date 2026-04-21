@@ -10,7 +10,7 @@ import { PaperProvider } from "react-native-paper";
 import { Provider, useSelector, useDispatch } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { ThemedView } from "@/components/ThemedView";
-import { getTheme, DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
+import { getTheme } from "@/assets/theme";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import Piazzolla from "@/assets/fonts/Piazzolla.ttf";
@@ -25,13 +25,16 @@ import RedHatTextMedium from "@/assets/fonts/RedHatText-Medium.ttf";
 import RedHatTextBold from "@/assets/fonts/RedHatText-Bold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
 import { RootState } from "@/redux/store";
-import { setThemePreference } from "@/redux/reducers/userReducer";
+import { setLocation } from "@/redux/reducers/userReducer";
+import { supabase } from "@/lib/supabase/supabase";
+import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 
 function RootContent() {
   const pathname = usePathname();
   const dispatch = useDispatch();
   const deviceColorScheme = useColorScheme(); // Auto-detect device theme
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
+  const { uid } = useSelector((state: RootState) => state.user);
   const hasInitialized = React.useRef(false);
 
   // On first load only, mark as initialized
@@ -40,6 +43,35 @@ function RootContent() {
       hasInitialized.current = true;
     }
   }, []);
+
+  // Fetch user location from Supabase on mount
+  useEffect(() => {
+    if (!uid) return;
+    supabase.rpc("get_my_profile_location").then(({ data: loc }) => {
+      const myLoc = loc?.[0];
+      if (!myLoc?.location_wkt) return;
+      const match = myLoc.location_wkt.match(/POINT\(([\d.-]+) ([\d.-]+)\)/);
+      if (match) {
+        dispatch(setLocation({
+          latitude: parseFloat(match[2]),
+          longitude: parseFloat(match[1]),
+          radius: myLoc.location_radius_m ?? 0,
+        }));
+      }
+    });
+  }, [uid, dispatch]);
+
+  // Register push token if user opted in to push notifications
+  useEffect(() => {
+    if (!uid || Platform.OS === "web") return;
+    supabase.rpc("get_my_notification_prefs").then(async ({ data }) => {
+      if (!data?.[0]?.notify_push) return;
+      const token = await registerForPushNotificationsAsync();
+      if (token) {
+        await supabase.rpc("update_my_push_token", { token });
+      }
+    });
+  }, [uid]);
 
   // Determine if dark mode should be active based on preference
   const isDarkMode =
@@ -54,15 +86,15 @@ function RootContent() {
     }
   }, [isDarkMode, theme.colors.background]);
 
-  return (<>
-    <StatusBar
-      barStyle={isDarkMode ? "light-content" : "dark-content"}
-      backgroundColor={theme.colors.background}
-    />
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={["left", "right","bottom"]}>
-      <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
-        <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
-          <PaperProvider theme={theme}>
+  return (
+    <PaperProvider theme={theme}>
+      <StatusBar
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={theme.colors.background}
+      />
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={["left", "right", "bottom"]}>
+        <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
+          <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
             <InfoLayer />
             <Stack
               screenOptions={{ header: () => <MyAppbar /> }}
@@ -81,23 +113,23 @@ function RootContent() {
                 options={{ headerShown: false, animation: "slide_from_right" }}
               />
               <Stack.Screen
-                name="biznisz/new"
+                name="(protected)/biznisz/new"
                 options={{ title: "Új Biznisz" }}
               />
               <Stack.Screen
-                name="biznisz/[id]"
+                name="(protected)/biznisz/[id]"
                 options={{ title: "FiFe Biznisz" }}
               />
               <Stack.Screen
-                name="biznisz/edit/[editId]"
+                name="(protected)/biznisz/edit/[editId]"
                 options={{ title: "FiFe Biznisz" }}
               />
               <Stack.Screen
-                name="user/[uid]"
+                name="(protected)/user/[uid]"
                 options={{ title: "FiFe Profil" }}
               />
               <Stack.Screen
-                name="user/edit"
+                name="(protected)/user/edit"
                 options={{ title: "Profil Szerkesztése" }}
               />
               <Stack.Screen
@@ -109,11 +141,11 @@ function RootContent() {
               !pathname.includes("login") &&
               !pathname.includes("password") &&
               !pathname.includes("csatlakozom") && <BottomNavigation />}
-          </PaperProvider>
-        </View>
-      </ThemedView>
-    </SafeAreaView>
-  </>);
+          </View>
+        </ThemedView>
+      </SafeAreaView>
+    </PaperProvider>
+  );
 }
 
 export default function RootLayout() {
