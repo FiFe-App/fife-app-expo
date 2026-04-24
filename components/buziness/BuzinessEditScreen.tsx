@@ -160,9 +160,10 @@ export default function BuzinessEditScreen({
         },
       })
       .then(async (res) => {
-        console.log(res, images.length, editId);
-        if (images.length && editId) {
-          const newImages = await imagesUploadRef.current?.uploadImages(editId);
+        const buzinessId = editId ?? res.data?.id;
+        console.log(res, images.length, buzinessId);
+        if (images.length && buzinessId) {
+          const newImages = await imagesUploadRef.current?.uploadImages(buzinessId);
           console.log("uploadRes", newImages);
           if (uid && newImages)
             await supabase
@@ -178,7 +179,7 @@ export default function BuzinessEditScreen({
                     }),
                   ) as string[],
               })
-              .eq("id", editId)
+              .eq("id", buzinessId)
               .then((res) => {
                 console.log("images upsert", res);
               });
@@ -386,7 +387,7 @@ export default function BuzinessEditScreen({
             <Dropdown
               label="Kiemelt elérhetőséged"
               options={myContacts}
-              value={defaultContact?.toString()}
+              value={defaultContact?.toString() ?? ""}
               CustomDropdownInput={({
                 placeholder,
                 selectedLabel,
@@ -396,7 +397,7 @@ export default function BuzinessEditScreen({
                 <TextInput
                   placeholder={placeholder}
                   label={label}
-                  value={selectedLabel}
+                  value={selectedLabel ?? ""}
                   right={rightIcon}
                 />
               )}
@@ -482,6 +483,7 @@ export default function BuzinessEditScreen({
                   style={{ width: 300 }}
                   onValueChange={
                     (v) => {
+                      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                       v == "net" ?
                         setCircle(undefined) :
                         setMapModalVisible(true);
@@ -521,7 +523,7 @@ export default function BuzinessEditScreen({
                     pitch: 0,
                     zoom: 12,
                   }}
-                  style={{}}
+                  style={{ width: "100%", height: 300 }}
                   provider="google"
                   googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
                   pitchEnabled={false}
@@ -587,8 +589,12 @@ export default function BuzinessEditScreen({
               }}
             />
             <View style={{ alignItems: "flex-end" }}>
-              <Button mode="contained" onPress={save}
-                disabled={!canSubmit || loading}>Mentés</Button>
+              <Button mode="contained" onPress={async () => {
+                dispatch(showLoading({ dismissable: false, title: "Kérlek várj, amíg a bizniszed feltöltődik" }));
+                await saveRef.current();
+                dispatch(hideLoading());
+                reloadContacts();
+              }} disabled={!canSubmit || loading}>Mentés</Button>
             </View>
           </ThemedView>
         </ScrollView>

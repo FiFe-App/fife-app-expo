@@ -9,7 +9,7 @@ import {
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { dismissHomeAddBuzinessCard } from "@/redux/reducers/appReducer";
 import { RootState } from "@/redux/store";
-import { router, Stack, useFocusEffect } from "expo-router";
+import { router, Stack, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import style from "@/components/styles";
@@ -44,14 +44,6 @@ export default function Index() {
   const [userHasBuzinesses, setUserHasBuzinesses] = useState<boolean | null>(null);
   const [showCtaCard, setShowCtaCard] = useState(false);
 
-  const { fetch, data, fetchNextPage, hasMore } = useInfiniteQuery({
-    tableName: "profiles",
-    pageSize: PAGE_SIZE,
-    columns: "*, profileRecommendations!profileRecommendations_profile_id_fkey(count), buzinesses:buziness(title)",
-    trailingQuery: (query) => {
-      return query.order("created_at", { ascending: false });
-    }
-  });
   const { fetch, data, fetchNextPage, hasMore } = useFifeSearch();
   const { results: newestUsers, search: fetchNewest } = useProfileSearch();
 
@@ -140,9 +132,6 @@ export default function Index() {
               </Card.Content>
             </Card>
           )}
-          <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
-            <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Új fifék Budapesten</ThemedText>
-          </View>
           <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} />
           <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />
           <Portal>
