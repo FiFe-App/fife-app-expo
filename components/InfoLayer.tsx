@@ -1,4 +1,5 @@
 import {
+  hideLoading,
   popSnack,
   popDialog as slicepopDialog,
 } from "@/redux/reducers/infoReducer";
@@ -35,6 +36,9 @@ const InfoLayer = () => {
     }
     dispath(slicepopDialog());
   }
+  function dismissLoading() {
+    dispath(hideLoading());
+  }
 
   return (
     <>
@@ -70,6 +74,10 @@ const InfoLayer = () => {
             onDismiss={() => {
               dispath(popSnack());
             }}
+            action={snack.buttonText ? {
+              label: snack.buttonText,
+              onPress: snack.onPress,
+            } : undefined}
             duration={3000}
             onIconPress={() => {
               dispath(popSnack());
@@ -81,12 +89,12 @@ const InfoLayer = () => {
         {loading && (
           <Dialog
             visible={!!loading}
-            onDismiss={cancelDialog}
-            dismissable={loading?.dismissable}
+            onDismiss={dismissLoading}
+            dismissable={true}
           >
             <Dialog.Content style={{ alignItems: "center", gap: 16 }}>
               <ActivityIndicator size="large" />
-              <ThemedText>{loading?.title || "Kérlek várj..."}</ThemedText>
+              <ThemedText style={{textAlign:"center"}}>{loading?.title || "Kérlek várj..."}</ThemedText>
             </Dialog.Content>
           </Dialog>
         )}

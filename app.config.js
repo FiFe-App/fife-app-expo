@@ -1,25 +1,34 @@
 export default {
-  name: "fife-app-blodqy3cwbfgnkjv24has",
+  name: "Fife App",
   slug: "fife-app-blodqy3cwbfgnkjv24has",
   version: "1.0.1",
   orientation: "portrait",
   icon: "./assets/images/Slimey.png",
   scheme: "com.fife.app",
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
   splash: {
-    image: "./assets/images/splash.png",
+    image: "./assets/images/Slimey.png",
     resizeMode: "contain",
-    backgroundColor: "#ffffff"
+    backgroundColor: "#fff5e0"
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.fife.app"
+    bundleIdentifier: "com.fife.app",
+    splash: {
+      image: "./assets/images/Slimey.png",
+      resizeMode: "contain",
+      backgroundColor: "#fff5e0"
+    }
   },
   android: {
+    splash: {
+      image: "./assets/images/Slimey.png",
+      resizeMode: "contain",
+      backgroundColor: "#fff5e0"
+    },
     adaptiveIcon: {
-      foregroundImage: "./assets/images/Slimey.png",
-      backgroundColor: "#ffffff"
+      foregroundImage: "./assets/images/Slimey-adaptive.png",
+      backgroundColor: "#fff5e0"
     },
     config: {
       googleMaps: {
@@ -27,10 +36,7 @@ export default {
       }
     },
     package: "com.fife.app",
-    permissions: [
-      "android.permission.ACCESS_COARSE_LOCATION",
-      "android.permission.ACCESS_FINE_LOCATION"
-    ]
+    googleServicesFile: "./google-services.json"
   },
   web: {
     bundler: "metro",
@@ -39,9 +45,10 @@ export default {
   },
   plugins: [
     [
-      "expo-location",
+      "expo-notifications",
       {
-        locationAlwaysAndWhenInUsePermission: "Allow FiFe app to use your location."
+        icon: "./assets/images/Slimey.png",
+        color: "#fff5e0"
       }
     ],
     [
@@ -49,14 +56,35 @@ export default {
       {
         fonts: [
           "assets/fonts/Piazzolla.ttf",
+          "assets/fonts/Piazzolla-Regular.ttf",
+          "assets/fonts/Piazzolla-Light.ttf",
+          "assets/fonts/Piazzolla-Medium.ttf",
+          "assets/fonts/Piazzolla-ExtraBold.ttf",
           "assets/fonts/RedHatText.ttf",
-          "assets/fonts/Piazzolla-ExtraBold.ttf"
+          "assets/fonts/RedHatText-Regular.ttf",
+          "assets/fonts/RedHatText-Light.ttf",
+          "assets/fonts/RedHatText-Medium.ttf",
+          "assets/fonts/RedHatText-Bold.ttf"
         ]
       }
-    ]
+    ],
+    [
+      "expo-build-properties",
+      {
+        "android": {
+          "compileSdkVersion": 36,
+          "targetSdkVersion": 36,
+          "minSdkVersion": 24
+        },
+        "ios": {
+          "useFrameworks": "static"
+        }
+      }
+    ],
   ],
   experiments: {
-    $1: true
+    typedRoutes: true,
+    reactCompiler: true
   },
   extra: {
     router: {

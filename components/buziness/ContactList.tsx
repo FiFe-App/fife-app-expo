@@ -20,9 +20,10 @@ import typeToPlaceholder from "@/lib/functions/typeToPlaceholder";
 export interface ContactListProps {
   uid: string;
   edit?: boolean;
+  name?: string;
 }
 
-export function ContactList({ uid, edit }: ContactListProps) {
+export function ContactList({ uid, edit, name }: ContactListProps) {
   const [contacts, setContacts] = useState<Tables<"contacts">[]>([]);
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
@@ -93,12 +94,13 @@ export function ContactList({ uid, edit }: ContactListProps) {
               ) : (
                 <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
                   <Image
-                    source={require("../../assets/images/img-map.png")}
+                    source={require("@/assets/images/img-map.png")}
                     style={{ height: 200, width: 200 }}
                   />
                   <ThemedText type="subtitle">
-                    Itt fognak megjelenni az elérhetőségeid, hogy könnyebben
-                    elérjenek.
+                    {edit
+                      ? "Itt fognak megjelenni az elérhetőségeid, hogy könnyebben elérjenek."
+                      : `${name} még nem adott meg elérhetőséget.`}
                   </ThemedText>
                 </View>
               ))}

@@ -2,48 +2,45 @@ import { Dimensions } from "react-native";
 import {
   configureFonts,
   MD3LightTheme as DefaultTheme,
+  MD3DarkTheme,
   MD3Theme,
 } from "react-native-paper";
 import { MD3Type } from "react-native-paper/lib/typescript/types";
+
+export const DEFAULT_THEME_PREFERENCE = "auto" as const;
 
 const isDesktop = Dimensions.get("window").width > 600;
 const fontConfig: Record<string, Partial<MD3Type>> = {
   default: {
     fontFamily: "RedHatText",
-    fontWeight: "400",
     letterSpacing: 0.5,
     lineHeight: 22,
     fontSize: isDesktop ? 18 : 12,
   },
   displayLarge: {
     fontFamily: "Piazzolla-ExtraBold",
-    fontWeight: "bold",
     lineHeight: isDesktop ? 58 : 45,
     fontSize: isDesktop ? 50 : 45,
   },
   displayMedium: {
     fontFamily: "Piazzolla-ExtraBold",
-    fontWeight: "bold",
     lineHeight: isDesktop ? 55 : 38,
     fontSize: isDesktop ? 45 : 30,
   },
   displaySmall: {
     fontFamily: "Piazzolla-ExtraBold",
-    fontWeight: "bold",
     fontSize: isDesktop ? 40 : 26,
     lineHeight: isDesktop ? 48 : 32,
   },
   headlineSmall: {
-    fontFamily: "Piazzolla",
+    fontFamily: "Piazzolla-Regular",
     fontSize: isDesktop ? 24 : 20,
     lineHeight: isDesktop ? 28 : 24,
-    fontWeight: "400",
     letterSpacing: 0,
   },
 
   headlineMedium: {
-    fontFamily: "Piazzolla",
-    fontWeight: "300",
+    fontFamily: "Piazzolla-Light",
     letterSpacing: 0,
     fontSize: isDesktop ? 30 : 24,
   },
@@ -51,14 +48,12 @@ const fontConfig: Record<string, Partial<MD3Type>> = {
   headlineLarge: {
     fontFamily: "Piazzolla",
     fontSize: isDesktop ? 32 : 28,
-    fontWeight: "400",
     letterSpacing: 0,
     lineHeight: 40,
   },
   titleSmall: {
     fontFamily: "Piazzolla-ExtraBold",
     fontSize: 14,
-    fontWeight: "500",
     letterSpacing: 0.1,
     lineHeight: 20,
   },
@@ -66,7 +61,6 @@ const fontConfig: Record<string, Partial<MD3Type>> = {
   titleMedium: {
     fontFamily: "Piazzolla-ExtraBold",
     fontSize: 16,
-    fontWeight: "500",
     letterSpacing: 0.15,
     lineHeight: 24,
   },
@@ -74,67 +68,60 @@ const fontConfig: Record<string, Partial<MD3Type>> = {
   titleLarge: {
     fontFamily: "Piazzolla-ExtraBold",
     fontSize: 22,
-    fontWeight: "300",
     letterSpacing: 0,
     lineHeight: 28,
   },
   labelSmall: {
-    fontFamily: "RedHatText",
+    fontFamily: "RedHatText-Medium",
     fontSize: 11,
-    fontWeight: "500",
     letterSpacing: 0.5,
     lineHeight: 16,
   },
 
   labelMedium: {
-    fontFamily: "RedHatText",
+    fontFamily: "RedHatText-Medium",
     fontSize: isDesktop ? 14 : 12,
-    fontWeight: "500",
     letterSpacing: 0.5,
     lineHeight: isDesktop ? 18 : 16,
   },
 
   labelLarge: {
-    fontFamily: "RedHatText",
-    fontWeight: "bold",
+    fontFamily: "RedHatText-Bold",
     letterSpacing: 0.1,
     fontSize: isDesktop ? 18 : 16,
     lineHeight: isDesktop ? 22 : 20,
   },
   bodySmall: {
     fontFamily: "RedHatText",
-    fontWeight: "400",
     letterSpacing: 0.4,
     fontSize: isDesktop ? 14 : 10,
     lineHeight: isDesktop ? 20 : 18,
   },
 
   bodyMedium: {
-    fontFamily: "RedHatText",
-    fontWeight: "300",
+    fontFamily: "RedHatText-Light",
     letterSpacing: 0.25,
     fontSize: isDesktop ? 20 : 17,
     lineHeight: isDesktop ? 26 : 24,
   },
 
   bodyLarge: {
-    fontFamily: "RedHatText",
-    fontWeight: "300",
+    fontFamily: "RedHatText-Light",
     letterSpacing: 0.15,
     fontSize: isDesktop ? 26 : 20,
     lineHeight: isDesktop ? 32 : 28,
   },
 };
 
-export const theme: MD3Theme = {
+export const lightTheme: MD3Theme = {
   ...DefaultTheme,
   ...{
     colors: {
       ...DefaultTheme.colors,
-      primary: "#000",
-      onPrimary: "#fff",
+      primary: "#000000",
+      onPrimary: "#ffffff",
       primaryContainer: "#000000",
-      onPrimaryContainer: "#fff",
+      onPrimaryContainer: "#ffffff",
       secondary: "#DF442E",
       onSecondary: "#ffffff",
       secondaryContainer: "#FADEBC",
@@ -161,7 +148,7 @@ export const theme: MD3Theme = {
       inverseOnSurface: "#f7f0e7",
       inversePrimary: "#f0c048",
       elevation: {
-        level0: "hsla(42, 100%, 98%, 0.00)",
+        level0: "transparent",
         level1: "hsla(40, 100%, 98%, 1.00)",
         level2: "hsla(40, 100%, 96%, 1.00)",
         level3: "hsla(40, 100%, 94%, 1.00)",
@@ -176,3 +163,63 @@ export const theme: MD3Theme = {
 
   fonts: configureFonts({ config: fontConfig }),
 };
+
+export const darkTheme: MD3Theme = {
+  ...MD3DarkTheme,
+  ...{
+    colors: {
+      ...MD3DarkTheme.colors,
+      primary: "#f0c048",
+      onPrimary: "#1e1b16",
+      primaryContainer: "#2d2a23",
+      onPrimaryContainer: "#f7f0e7",
+      secondary: "#FF5C42",
+      onSecondary: "#1e1b16",
+      secondaryContainer: "#56442A",
+      onSecondaryContainer: "#FADEBC",
+      tertiary: "#9b7fff",
+      onTertiary: "#1e1b16",
+      tertiaryContainer: "#463D66",
+      onTertiaryContainer: "#e7deff",
+      error: "#ffb4ab",
+      onError: "#690005",
+      errorContainer: "#93000a",
+      onErrorContainer: "#ffdad6",
+      background: "#1e1b16",
+      onBackground: "#e8e2d9",
+      surface: "#2d2a23",
+      onSurface: "#e8e2d9",
+      surfaceVariant: "#3d3a33",
+      onSurfaceVariant: "#cdc5b4",
+      outline: "#968e7e",
+      outlineVariant: "#4d4639",
+      shadow: "#000000",
+      scrim: "#000000",
+      inverseSurface: "#e8e2d9",
+      inverseOnSurface: "#33302a",
+      inversePrimary: "#000000",
+      elevation: {
+        level0: "rgba(0, 0, 0, 0.00)",
+        level1: "rgba(45, 42, 35, 1.00)",
+        level2: "rgba(53, 50, 43, 1.00)",
+        level3: "rgba(61, 58, 51, 1.00)",
+        level4: "rgba(69, 66, 59, 1.00)",
+        level5: "rgba(77, 74, 67, 1.00)",
+      },
+      surfaceDisabled: "rgba(232, 226, 217, 0.12)",
+      onSurfaceDisabled: "rgba(232, 226, 217, 0.38)",
+      backdrop: "rgba(54, 48, 36, 0.4)",
+    },
+  },
+
+  fonts: configureFonts({ config: fontConfig }),
+};
+
+// Helper function to get theme based on preference
+export const getTheme = (isDark: boolean): MD3Theme => {
+  return isDark ? darkTheme : lightTheme;
+};
+
+// Default export for static imports (defaults to light theme)
+// Components should use this with useTheme() from react-native-paper
+export const theme = lightTheme;

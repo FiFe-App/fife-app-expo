@@ -8,7 +8,7 @@ import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
-import { Link, Redirect, router, useLocalSearchParams } from "expo-router";
+import { Link, Redirect, router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
 import { Divider, Text, TextInput } from "react-native-paper";
@@ -29,13 +29,14 @@ AppState.addEventListener("change", (state) => {
 });
 
 export default function Index() {
+  const navigation = useNavigation();
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
-  const { "#": hash } = useLocalSearchParams<{ "#": string }>();
+  const { "#": hash, redirected_from } = useLocalSearchParams<{ "#": string; redirected_from?: string }>();
   const token_data = hash
     ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
     : null;
@@ -43,6 +44,7 @@ export default function Index() {
   const redirectTo = makeRedirectUri();
 
   useEffect(() => {
+    navigation.setOptions({"title": "Bejelentkezés"});
     if (token_data) {
       console.log(token_data);
 
@@ -122,7 +124,7 @@ export default function Index() {
   const getUserData = async (userData: User) => {
     const { data: profile } = await supabase
       .from("profiles")
-      .select()
+      .select("id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions")
       .eq("id", userData.id)
       .maybeSingle();
     if (error) {
@@ -133,95 +135,109 @@ export default function Index() {
 
       dispatch(sliceLogin(profile?.id));
       dispatch(setName(profile?.full_name));
-      console.log("user-data", { ...userData, ...profile });
 
-      dispatch(setUserData({ ...userData, ...profile }));
+      // Fetch own location via secure function
+      const { data: loc } = await supabase.rpc("get_my_profile_location");
+      const myLoc = loc?.[0];
+      const locationData = myLoc?.location_wkt
+        ? (() => {
+          const match = myLoc.location_wkt.match(/POINT\(([\d.-]+) ([\d.-]+)\)/);
+          return match
+            ? { location: { lng: parseFloat(match[1]), lat: parseFloat(match[2]) }, radius: myLoc.location_radius_m ?? 0 }
+            : undefined;
+        })()
+        : undefined;
+
+      console.log("user-data", { ...userData, ...profile });
+      dispatch(setUserData({ 
+        ...userData, 
+        ...profile, 
+        ...(locationData ? { location: locationData } : {}) 
+      }));
       if (profile?.viewed_functions)
         dispatch(loadViewedFunctions(profile?.viewed_functions));
+
+      // Navigate back to the original screen, or fall back to home
+      const isValidInternal =
+        typeof redirected_from === "string" &&
+        redirected_from.startsWith("/") &&
+        !redirected_from.startsWith("//") &&
+        !redirected_from.includes(":");
+      router.replace(isValidInternal ? (redirected_from as `/${string}`) : "/");
     }
   };
 
-  if (!uid)
-    return (
-      <ThemedView style={{ flex: 1 }} type="default">
-        <View style={{ maxWidth: 300, width: "100%", gap: 8, margin: "auto" }}>
-          <Button onPress={autoLogin} mode="contained">
-            Próba felhasználó
-          </Button>
-          <Button
-            mode="contained"
-            icon="facebook"
-            disabled
-            onPress={startFacebookLogin}
-          >
-            Facebook bejelentkezés
-          </Button>
-          <Button
-            mode="contained"
-            icon="google"
-            disabled
-            onPress={signInWithGoogle}
-          >
-            Google bejelentkezés
-          </Button>
-          <Divider style={{ marginVertical: 16 }} />
-          <TextInput
-            mode="outlined"
-            onChangeText={setEmail}
-            value={email}
-            label="E-mail"
-            autoComplete="email"
-            textContentType="emailAddress"
-            inputMode="email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <TextInput
-            mode="outlined"
-            onChangeText={setPassword}
-            value={password}
-            label="Jelszó"
-            secureTextEntry={!showPassword}
-            autoComplete="current-password"
-            textContentType="password"
-            right={
-              <TextInput.Icon
-                icon={showPassword ? "eye" : "eye-off"}
-                onPress={() => setShowPassword(!showPassword)}
-              />
-            }
-          />
-          <Button
-            onPress={signInWithEmail}
-            loading={loading}
-            mode="contained"
-            type="secondary"
-          >
-            Bejelentkezés
-          </Button>
-          <View style={{ flexDirection: "row", justifyContent: "center" }}>
-            <Link href="/csatlakozom" asChild>
-              <Button>Még nincs fiókom</Button>
-            </Link>
-            <Link href="/user/password-reset" asChild>
-              <Button>Elfelejtettem a jelszavam</Button>
-            </Link>
-          </View>
-          <Text style={{ color: "red" }}>{error}</Text>
-        </View>
-      </ThemedView>
-    );
+  if (uid)
+    return <Redirect href="/" />;
+
   return (
-    <ThemedView
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 32,
-      }}
-    >
-      <Redirect href="/" />
+    <ThemedView style={{ flex: 1 }} type="default">
+      <View style={{ maxWidth: 300, width: "100%", gap: 8, margin: "auto" }}>
+        <Button onPress={autoLogin} mode="contained">
+          Próba felhasználó
+        </Button>
+        <Button
+          mode="contained"
+          icon="facebook"
+          disabled
+          onPress={startFacebookLogin}
+        >
+          Facebook bejelentkezés
+        </Button>
+        <Button
+          mode="contained"
+          icon="google"
+          disabled
+          onPress={signInWithGoogle}
+        >
+          Google bejelentkezés
+        </Button>
+        <Divider style={{ marginVertical: 16 }} />
+        <TextInput
+          mode="outlined"
+          onChangeText={setEmail}
+          value={email}
+          label="E-mail"
+          autoComplete="email"
+          textContentType="emailAddress"
+          inputMode="email"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        <TextInput
+          mode="outlined"
+          onChangeText={setPassword}
+          value={password}
+          label="Jelszó"
+          secureTextEntry={!showPassword}
+          autoComplete="current-password"
+          textContentType="password"
+          right={
+            <TextInput.Icon
+              icon={showPassword ? "eye" : "eye-off"}
+              onPress={() => setShowPassword(!showPassword)}
+            />
+          }
+        />
+        <Button
+          onPress={signInWithEmail}
+          loading={loading}
+          mode="contained"
+          type="secondary"
+        >
+          Bejelentkezés
+        </Button>
+        <View style={{ flexDirection: "row", justifyContent: "center" }}>
+          <Link href="/csatlakozom" asChild>
+            <Button>Még nincs fiókom</Button>
+          </Link>
+          <Link href="/user/password-reset" asChild>
+            <Button>Elfelejtettem a jelszavam</Button>
+          </Link>
+        </View>
+        <Text style={{ color: "red" }}>{error}</Text>
+      </View>
     </ThemedView>
   );
 }

@@ -38,7 +38,7 @@ export default function Index() {
     const getUserData = async (userData: User) => {
       const { data: profile, error } = await supabase
         .from("profiles")
-        .select()
+        .select("id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions")
         .eq("id", userData.id)
         .single();
       if (error) {
@@ -66,8 +66,8 @@ export default function Index() {
           if (data.user) getUserData(data.user);
         });
     }
-    dispatch(startTutorial(true))
-    dispatch(setTutorialActive(true))
+    dispatch(startTutorial(true));
+    dispatch(setTutorialActive(true));
   }, [dispatch, token_data]);
 
   return (

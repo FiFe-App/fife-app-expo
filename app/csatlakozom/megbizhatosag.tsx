@@ -1,7 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Image } from "expo-image";
-import { View, Modal, StyleSheet, Pressable, TextInput } from "react-native";
+import { View, Modal, Platform, StyleSheet, Pressable, TextInput } from "react-native";
 import { useState, useRef, useCallback } from "react";
 import { Icon, Text } from "react-native-paper";
 import { Button } from "@/components/Button";
@@ -95,7 +95,7 @@ const Megbizhatosag = () => {
           onRequestClose={() => setModalVisible(false)}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
+            <ThemedView style={styles.modalContent}>
               <ThemedText type="title" style={{ marginBottom: 16 }}>
                 Irányelveink:
               </ThemedText>
@@ -106,7 +106,7 @@ const Megbizhatosag = () => {
                   </ThemedText>
                 ))}
               </View>
-              <View style={{ marginVertical: 20 }}>
+              <View style={{ marginVertical: 20, width:"100%" }}>
                 <ThemedText style={{ fontWeight: "bold" }}>
                   Ha be fogod tartani ezeket, gépeld be a következő szöveget:
                 </ThemedText>
@@ -158,7 +158,7 @@ const Megbizhatosag = () => {
                   disabled={!canAccept}
                 >Elfogadom</Button>
               </View>
-            </View>
+            </ThemedView>
           </View>
         </Modal>
       </View>
@@ -175,7 +175,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 24,
     width: "90%",
@@ -192,6 +191,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   input: {
+    width: "100%",
     padding: 0,
     fontSize: 15,
     lineHeight: 22,
@@ -201,6 +201,7 @@ const styles = StyleSheet.create({
     fontFamily: "RedHatText",
   },
   inputContent: {
+    width: "auto",
     padding: 0,
     letterSpacing: 0.5,
     fontSize: 15,
@@ -214,13 +215,14 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 17,
     position: "absolute",
-    userSelect: "none",
-    cursor: "text",
     fontSize: 15,
     zIndex: 150,
     overflow: "hidden",
     fontWeight: "300",
     fontFamily: "RedHatText",
+    ...Platform.select({
+      web: { userSelect: "none", cursor: "text" },
+    }),
   },
 });
 

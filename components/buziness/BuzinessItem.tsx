@@ -15,6 +15,8 @@ import { Chip, Icon, IconButton, Surface, Text } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "../ThemedText";
+import { ThemedView } from "../ThemedView";
+import { theme } from "@/assets/theme";
 
 interface BuzinessItemProps {
   data: BuzinessItemInterface;
@@ -22,7 +24,7 @@ interface BuzinessItemProps {
 }
 
 const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
-  const { author, title, description, id } = data;
+  const { author, title: titleAndCats, description, id } = data;
   console.log(data?.recommendations?.[0]?.count, data.recommendations);
 
   const recommendations = typeof data?.recommendations?.[0]?.count === "number" ? data?.recommendations?.[0]?.count : data.recommendations;
@@ -38,7 +40,11 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
         : "közel hozzád"
       : "";
 
-  const categories = title?.split(" $ ");
+  const isNew = data?.created_at && new Date().getTime() - new Date(data.created_at).getTime() < 1000 * 60 * 60 * 24 * 10;
+
+  const splitted = titleAndCats?.split(" $ ");
+  const title = splitted?.[0] || "";
+  const categories = splitted.splice(1);
 
   const showDelete = (e: GestureResponderEvent) => {
     e.stopPropagation();
@@ -72,14 +78,17 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
         <Surface style={styles.container} elevation={2} mode="flat">
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1 }}>
-              <ThemedText variant="titleMedium" type="title" style={{}}>{categories?.[0]}</ThemedText>
+              <ThemedText variant="titleMedium" type="title" style={{}}>{title}</ThemedText>
               <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4, marginTop: 4 }}>
-                {categories?.slice(1).map((e, i) => {
+                {!!isNew && <ThemedView type="card" key={"category-new"} style={{ paddingHorizontal: 4, borderRadius: 6, paddingVertical: 2, backgroundColor: theme.colors.tertiary }}>
+                  <Text>új</Text>
+                </ThemedView>}
+                {categories?.map((e, i) => {
                   if (e.trim())
                     return (
-                      <Chip key={"category" + i} textStyle={{ margin: 4 }}>
+                      <ThemedView type="card" key={"category" + i} style={{ paddingHorizontal: 4, borderRadius: 6, paddingVertical: 2 }}>
                         <Text>{e}</Text>
-                      </Chip>
+                      </ThemedView>
                     );
                 })}
               </View>

@@ -2,6 +2,7 @@ import { ContactList } from "@/components/buziness/ContactList";
 import ProfileImage from "@/components/ProfileImage";
 import { ThemedView } from "@/components/ThemedView";
 import MyBuzinesses from "@/components/user/MyBuzinesses";
+import SavedBuzinesses from "@/components/user/SavedBuzinesses";
 import RecommendationsModal from "@/components/user/RecommendationsModal";
 import ReportProfileModal from "@/components/user/ReportProfileModal";
 import { Tables } from "@/database.types";
@@ -20,6 +21,7 @@ import { supabase } from "@/lib/supabase/supabase";
 import {
   Link,
   router,
+  Stack,
   useFocusEffect,
   useGlobalSearchParams,
 } from "expo-router";
@@ -33,6 +35,7 @@ import {
   Portal,
   Text,
   TouchableRipple,
+  useTheme,
 } from "react-native-paper";
 import * as Clipboard from "expo-clipboard";
 import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
@@ -43,21 +46,29 @@ import {
   clearTutorialState,
   viewFunction,
 } from "@/redux/reducers/tutorialReducer";
-import { theme } from "@/assets/theme";
 import Measure from "@/components/tutorial/Measure";
 import { SavedProfiles } from "@/components/buziness/SavedProfiles";
+import { MyAppbar } from "../MyAppBar";
 
 type UserInfo = Tables<"profiles">;
 
-export default function Index() {
-  const { uid: paramUid } = useGlobalSearchParams();
+export default function UserPage() {
+  const { uid: paramUid, tab: paramTab } = useGlobalSearchParams();
   const uid: string = String(paramUid);
+  // Map tab param to index
+  const tabNames = ["buziness", "contacts", "connections", "saved-buzinesses"];
+  let defaultIndex = 0;
+  if (paramTab && typeof paramTab === "string") {
+    const idx = tabNames.indexOf(paramTab);
+    if (idx !== -1) defaultIndex = idx;
+  }
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
   const { functions }: TutorialState = useSelector(
     (state: RootState) => state.tutorial,
   );
+  const theme = useTheme();
 
   const dispatch = useDispatch();
   const { width } = useWindowDimensions();
@@ -78,7 +89,7 @@ export default function Index() {
         supabase
           .from("profiles")
           .select(
-            "*, profileRecommendations!profileRecommendations_profile_id_fkey(*)",
+            "id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions, profileRecommendations!profileRecommendations_profile_id_fkey(*)",
           )
           .eq("id", uid)
           .single()
@@ -122,18 +133,19 @@ export default function Index() {
 
   return (
     <>
+      <Stack.Screen options={{ header: () => <MyAppbar style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> }} />
       <ThemedView style={{ flex: 1 }}>
-        {data && uid && (
+        {!!data && !!uid && (
           <>
             <ThemedView style={{ padding: 16, gap: 8 }}>
-              <View style={{ flexDirection: "row", gap: 8, alignItems: "flex-start" }}>
+              <View style={{ flexDirection: "row", gap: 8, }}>
                 <ProfileImage
                   modal
                   uid={uid}
                   avatar_url={data.avatar_url}
                   style={{ width: 100, height: 100, borderRadius: 8 }}
                 />
-                <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, justifyContent: "center" }}>
                   <View
                     style={{
                       flex: 1,
@@ -212,7 +224,7 @@ export default function Index() {
                     <Measure name="edit-profile">
                       <Link
                         asChild
-                        style={{ flex: 1 }}
+                        style={{ width: "100%" }}
                         href={{ pathname: "/user/edit" }}
                       >
                         <Button mode="contained-tonal">Profilom szerkesztése</Button>
@@ -240,36 +252,36 @@ export default function Index() {
                 )}
               </View>
             </ThemedView>
-            <TabsProvider defaultIndex={0}>
-              <Tabs showTextLabel={width > 400} theme={theme} style={{ backgroundColor: theme.colors.background }}>
+            <TabsProvider defaultIndex={defaultIndex}>
+              <Tabs showTextLabel={width > 500} theme={theme} style={{ backgroundColor: theme.colors.background }}>
                 <TabScreen
                   label="Bizniszek"
-                  badge={
-                    functions.includes("buzinessProfile") ? "ÚJ" : undefined
-                  }
+                  badge={functions.includes("buzinessProfile") ? "ÚJ" : undefined}
                   icon="briefcase"
                 >
-                  <Measure name="user-biznisz-tabs">
-                    <View style={{ flex: 1 }}>
-                      <MyBuzinesses uid={uid} myProfile={myProfile} />
-                    </View>
-                  </Measure>
+                  <MyBuzinesses uid={uid} myProfile={myProfile} name={data.full_name ?? undefined} />
                 </TabScreen>
                 <TabScreen
                   label="Elérhetőségek"
-                  badge={
-                    functions.includes("contactsProfile") ? "ÚJ" : undefined
-                  }
+                  badge={functions.includes("contactsProfile") ? "ÚJ" : undefined}
                   icon="email-multiple"
                 >
-                  <ContactList uid={uid} edit={myProfile} />
+                  <ContactList uid={uid} edit={myProfile} name={data.full_name ?? undefined} />
                 </TabScreen>
                 <TabScreen
                   label="Kapcsolatok"
                   icon="account-group"
                 >
-                  <SavedProfiles uid={uid} />
+                  <SavedProfiles uid={uid} myProfile={myProfile} name={data.full_name ?? undefined} />
                 </TabScreen>
+                {myProfile && (
+                  <TabScreen
+                    label="Mentett bizniszek"
+                    icon="bookmark"
+                  >
+                    <SavedBuzinesses uid={uid} />
+                  </TabScreen>
+                )}
               </Tabs>
             </TabsProvider>
           </>

@@ -15,6 +15,8 @@ export function Button({
   type = "default",
   big,
   compact,
+  mode,
+  children,
   ...otherProps
 }: ThemedButtonPProps) {
   const theme = useTheme();
@@ -32,16 +34,29 @@ export function Button({
         textColor: theme.colors.onTertiary,
       };
     }
+    // When mode="contained", Paper fills with primary — use onPrimary text
+    if (mode === "contained") {
+      return {
+        backgroundColor: undefined,
+        textColor: theme.colors.onPrimary,
+      };
+    }
+    if (mode === "contained-tonal") {
+      return {
+        backgroundColor: undefined,
+        textColor: theme.colors.onSecondaryContainer,
+      };
+    }
     return {
-      backgroundColor: undefined,
-      textColor: undefined,
+      backgroundColor: "transparent",
+      textColor: theme.colors.primary,
     };
   };
 
   const { backgroundColor, textColor } = getButtonPColors();
 
   const ButtonPStyle: ViewStyle = {
-    backgroundColor,
+    ...(backgroundColor != null && { backgroundColor }),
     justifyContent: "center",
   };
 
@@ -51,11 +66,11 @@ export function Button({
       labelStyle={[
         big && theme.fonts.headlineSmall,
         compact && theme.fonts.labelMedium,
-        { fontFamily: "Piazzolla-ExtraBold", fontWeight: "bold" },
+        { fontFamily: "Piazzolla-ExtraBold" },
       ]}
       style={[
         ButtonPStyle,
-        big && { maxHeight: 48, paddingVertical: 16, paddingHorizontal: 16 },
+        big && { paddingVertical: 12, paddingHorizontal: 16 },
         compact && {
           maxHeight: 12,
           paddingVertical: 12,
@@ -65,7 +80,10 @@ export function Button({
         style,
       ]}
       compact={compact}
+      mode={mode}
       {...otherProps}
-    />
+    >
+      {children}
+    </ButtonP>
   );
 }

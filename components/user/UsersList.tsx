@@ -1,25 +1,26 @@
-import React, { useRef } from "react";
+import React from "react";
 import { View, StyleSheet, FlatList } from "react-native";
 import { Divider, ActivityIndicator } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import UserItem from "./UserItem";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
-import { Tables } from "@/database.types";
-
+import { NearestProfile, User } from "@/redux/store.type";
 
 interface UsersListProps {
   load: () => void;
-  data: Tables<"profiles">[];
+  data: NearestProfile[];
   canLoadMore: boolean;
+  footerContent?: React.ReactNode;
 }
 
 export const UsersList: React.FC<UsersListProps> = ({
   load,
   data,
   canLoadMore,
+  footerContent,
 }) => {
-  const { users, userSearchParams } = useSelector(
+  const { userSearchParams } = useSelector(
     (state: RootState) => state.users,
   );
   const loading = userSearchParams?.loading || false;
@@ -37,15 +38,18 @@ export const UsersList: React.FC<UsersListProps> = ({
           )
         }
         ListFooterComponent={
-          <View style={{ padding: 16 }}>
-            {(!!users.length && canLoadMore ? (
-              <ActivityIndicator />
-            ) : (
-              <ThemedText style={{ alignSelf: "center" }}>
-                Nem található több fife
-              </ThemedText>
-            ))}
-          </View>
+          <>
+            <View style={{ padding: 16 }}>
+              {(!!data.length && canLoadMore ? (
+                <ActivityIndicator />
+              ) : (
+                <ThemedText style={{ alignSelf: "center" }}>
+                  Nem található több fife
+                </ThemedText>
+              ))}
+            </View>
+            {footerContent}
+          </>
         }
         onEndReached={() => {
           if (canLoadMore && !loading) {
@@ -59,7 +63,7 @@ export const UsersList: React.FC<UsersListProps> = ({
         }}
       />
 
-      {userSearchParams?.loading && !users.length && (
+      {userSearchParams?.loading && !data.length && (
         <View style={{ flex: 1 }}>
           <ActivityIndicator />
         </View>

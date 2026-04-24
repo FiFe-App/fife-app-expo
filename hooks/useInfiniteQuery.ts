@@ -196,7 +196,7 @@ function useInfiniteQuery<
     if (!state.hasInitialFetch && typeof window !== "undefined") {
       storeRef.current.initialize();
     }
-  };
+  }
 
   useEffect(() => {
   }, [props.tableName, props.columns, props.pageSize, state.hasInitialFetch]);

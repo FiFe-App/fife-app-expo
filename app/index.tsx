@@ -1,6 +1,6 @@
 import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, Platform, StyleSheet, View } from "react-native";
 import { Image, ImageSource } from "expo-image";
 import { Text } from "react-native-paper";
 import { ThemedInput as TextInput } from "@/components/ThemedInput";
@@ -11,6 +11,7 @@ import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { useSelector } from "react-redux";
 import Smiley from "@/components/Smiley";
+import { theme } from "@/assets/theme";
 
 export const Header = () => {
   return (
@@ -20,7 +21,7 @@ export const Header = () => {
       <View style={styles.centerRow}>
         <View style={styles.titleRow}>
           <Image
-            source={require("../assets/Logo.png")}
+            source={require("@/assets/Logo.png")}
             style={{ width: 239, height: 40, zIndex: 20 }}
             contentFit="contain"
           />
@@ -56,12 +57,12 @@ const Hero = () => {
             alkalmazásban.
           </Text>
           <Link asChild href="/csatlakozom">
-            <Button style={styles.loginButton} type="secondary" big>
+            <Button style={styles.loginButton} type="secondary">
               Regisztrálok
             </Button>
           </Link>
           <Link asChild href="/login">
-            <Button style={styles.loginButton} mode="contained" big>
+            <Button style={styles.loginButton} mode="contained">
               Bejelentkezem
             </Button>
           </Link>
@@ -74,7 +75,7 @@ const Hero = () => {
           ]}
         >
           <Image
-            source={require("../assets/images/HeroImage.png")}
+            source={require("@/assets/images/HeroImage.png")}
             contentFit="contain"
             style={{
               width: isDesktop ? "100%" : "115%",
@@ -152,17 +153,17 @@ const HowItWorks = () => {
           style={[{ gap: 16 }, isDesktop ? styles.rowWrap : styles.colStack]}
         >
           <StepItem
-            image={require("../assets/images/Funkcio1.png")}
+            image={require("@/assets/images/Funkcio1.png")}
             title="Csatlakozz hozzánk!"
             description="Hozd létre a profilod, és oszd meg az erőforrásaidat."
           />
           <StepItem
-            image={require("../assets/images/Funkcio 2.png")}
+            image={require("@/assets/images/Funkcio 2.png")}
             title="Keress segítséget!"
             description="Találj a környékeden tevékenykedő fiféket."
           />
           <StepItem
-            image={require("../assets/images/Funkcio1.png")}
+            image={require("@/assets/images/Funkcio1.png")}
             title="Építs kapcsolatokat!"
             description="Jelöld meg, kiket tartasz megbízhatónak."
           />
@@ -203,7 +204,7 @@ const Trust = () => {
           ]}
         >
           <Image
-            source={require("../assets/images/trust-connections.png")}
+            source={require("@/assets/images/trust-connections.png")}
             contentFit="contain"
             style={{
               width: "100%",
@@ -236,7 +237,7 @@ const About = () => {
           ]}
         >
           <Image
-            source={require("../assets/images/Community.png")}
+            source={require("@/assets/images/Community.png")}
             contentFit="contain"
             style={{ width: "100%", minHeight: 350, zIndex: 20 }}
           />
@@ -261,12 +262,11 @@ const About = () => {
 
 const Banner = () => {
   const { isDesktop } = useBreakpoint();
-  const [height, setHeight] = useState(100);
+  const [height, setHeight] = useState(20);
 
   return (
     <ThemedView
-      responsive={600}
-      onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
+      //onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
       style={{
         alignItems: "center",
         justifyContent: "center",
@@ -276,18 +276,6 @@ const Banner = () => {
       }}
       type="card"
     >
-      <ThemedView
-        style={{
-          position: "fixed",
-          left: 0,
-          width: "100%",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 16,
-          height,
-        }}
-        type="card"
-      />
       <View
         style={{
           gap: 16,
@@ -297,7 +285,7 @@ const Banner = () => {
         }}
       >
         <Image
-          source={require("../assets/images/Slimey.png")}
+          source={require("@/assets/images/Slimey.png")}
           style={{ width: 40, height: 40, zIndex: 20 }}
           contentFit="contain"
         />
@@ -337,7 +325,7 @@ const Newsletter = () => {
           ]}
         >
           <Image
-            source={require("../assets/images/Phone.png")}
+            source={require("@/assets/images/Phone.png")}
             contentFit="contain"
             style={{ width: "100%", minHeight: 350, zIndex: 20 }}
           />
@@ -417,7 +405,7 @@ const AboutMe = () => {
           ]}
         >
           <Image
-            source={require("../assets/images/Trust.png")}
+            source={require("@/assets/images/Trust.png")}
             contentFit="contain"
             style={{ width: "100%", minHeight: 350, zIndex: 5 }}
           />
@@ -437,7 +425,7 @@ export const Footer = () => {
       <View style={[styles.flex1, { flexDirection: "row", alignItems: "center", justifyContent: "center" }]}>
         <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
         <Image
-          source={require("../assets/Logo.png")}
+          source={require("@/assets/Logo.png")}
           style={{ width: 180, height: 30, zIndex: 20 }}
           contentFit="contain"
         />
@@ -450,9 +438,9 @@ export default function App() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   if (uid) return <Redirect href="/home" />;
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <ThemedView type="default" style={{ flex: 1, alignItems: "center" }}>
-        <View style={{ flex: 1, gap: 16, maxWidth: 1000 }}>
+    <ScrollView contentContainerStyle={{ backgroundColor: theme.colors.background }} style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <ThemedView type="default" style={{ alignItems: "center" }}>
+        <View style={{ flex: 1, gap: 16, maxWidth: 1000, width:"100%" }}>
           <Hero />
           <HowItWorks />
           <Trust />

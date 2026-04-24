@@ -62,7 +62,7 @@ const TagInput = ({
           return (
             <Chip
               key={"tags" + i}
-              mode="outlined"
+              mode="flat"
               style={{ margin: 4 }}
               onClose={() => {
                 onChange(toString(list.filter((el, ind) => ind !== i)) + " $ ");
