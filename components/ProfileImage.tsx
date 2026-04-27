@@ -1,9 +1,8 @@
 import { supabase } from "@/lib/supabase/supabase";
 import { Image, ImageContentFit } from "expo-image";
 import { useEffect, useState } from "react";
-import { ImageStyle, StyleProp, StyleSheet, View } from "react-native";
-import ImageModal from "react-native-image-modal";
-import { ActivityIndicator, Icon } from "react-native-paper";
+import { ImageStyle, Modal, StyleProp, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 
 interface ProfileImageProps {
   uid: string;
@@ -27,6 +26,7 @@ const ProfileImage = ({
   const [source, setSource] = useState("");
   const [error, setError] = useState<null | string>(null);
   const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     const getImage = async () => {
@@ -56,21 +56,32 @@ const ProfileImage = ({
     <View
       style={style}>
       {!!source &&
-        (!modal ? (
+        (modal ? (
+          <>
+            <TouchableOpacity activeOpacity={0.8} onPress={() => setModalVisible(true)}>
+              <Image
+                source={source}
+                style={style}
+                cachePolicy="memory-disk"
+                contentFit={resizeMode ?? "cover"}
+                onLoadEnd={() => setLoading(false)}
+                onError={() => { setLoading(false); setSource(""); setError("Load failed"); }}
+              />
+            </TouchableOpacity>
+            <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={() => setModalVisible(false)}>
+              <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setModalVisible(false)}>
+                <Image source={source} style={styles.modalImage} contentFit="contain" />
+              </TouchableOpacity>
+            </Modal>
+          </>
+        ) : (
           <Image
             source={source}
+            style={style}
             cachePolicy="memory-disk"
             contentFit={resizeMode}
             onLoadEnd={() => setLoading(false)}
-            onError={() => setLoading(false)}
-          />
-        ) : (
-          <ImageModal
-            resizeMode="cover"
-            modalImageResizeMode="contain"
-            overlayBackgroundColor="#00000088"
-            style={style}
-            source={{ uri: source }}
+            onError={() => { setLoading(false); setSource(""); setError("Load failed"); }}
           />
         ))}
       {(loading || propLoading) && (
@@ -91,6 +102,16 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     zIndex: 10,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "#00000088",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalImage: {
+    width: "100%",
+    height: "100%",
   },
 });
 

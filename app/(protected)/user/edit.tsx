@@ -57,7 +57,7 @@ export default function Index() {
       }
       | undefined
     >;
-      }>(null);
+  }>(null);
 
   const load = () => {
     console.log("loaded user", myUid);
@@ -188,6 +188,15 @@ export default function Index() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [myUid]),
   );
+  const deleteImage = async () => {
+    if (!myUid || !profile?.avatar_url) return;
+    setImageLoading(true);
+    await supabase.storage.from("avatars").remove([myUid + "/" + profile.avatar_url]);
+    await supabase.from("profiles").update({ avatar_url: null }).eq("id", myUid);
+    setProfile({ ...profile, avatar_url: null });
+    setImageLoading(false);
+  };
+
   const pickImage = async () => {
     const result = await ExpoImagePicker.launchImageLibraryAsync({
       mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
@@ -261,15 +270,16 @@ export default function Index() {
       <ThemedView style={{ flex: 1 }}>
         <ScrollView style={{ flex: 1, padding: 8 }}>
           <View style={{ alignItems: "center", marginBottom: 16 }}>
-            <View style={{ width: 100 }}>
+            <View style={{ width: 200 }}>
               <ProfileImage
                 key={profile?.avatar_url}
                 uid={myUid}
                 avatar_url={profile?.avatar_url}
                 propLoading={imageLoading}
                 style={{
-                  width: 100,
-                  height: 100,
+                  width: 200,
+                  height: 200,
+                  borderRadius: 8
                 }}
               />
               <IconButton
@@ -278,10 +288,18 @@ export default function Index() {
                 mode="contained-tonal"
                 style={{ position: "absolute", right: 0, bottom: 0 }}
               />
+              {!!profile?.avatar_url && (
+                <IconButton
+                  icon="close"
+                  onPress={deleteImage}
+                  mode="contained-tonal"
+                  style={{ position: "absolute", right: 0, top: 0 }}
+                />
+              )}
             </View>
           </View>
           <TextInput
-            label="Teljes név* (kötelező)"
+            label="Név* (kötelező)"
             value={profile?.full_name || ""}
             disabled={loading}
             autoComplete="name"
