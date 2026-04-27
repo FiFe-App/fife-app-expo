@@ -86,6 +86,7 @@ export interface BuzinessItemInterface {
   avatarUrl?: string | null;
   images?: ImageDataType[];
   recommendations: number | { count: number }[];
+  created_at?: string;
 }
 export interface EventItemInterface extends Tables<"events"> {
   lat: number | null;

@@ -1,5 +1,4 @@
 import MyLocationIcon from "@/assets/images/myLocationIcon";
-import { theme } from "@/assets/theme";
 import CollapsibleText from "@/components/CollapsibleText";
 import ErrorScreen from "@/components/ErrorScreen";
 import ProfileImage from "@/components/ProfileImage";
@@ -44,6 +43,7 @@ import {
   Portal,
   Text,
   TouchableRipple,
+  useTheme,
 } from "react-native-paper";
 // Removed tabs; sections will be stacked vertically
 import { useDispatch, useSelector } from "react-redux";
@@ -53,6 +53,7 @@ import UrlText from "@/components/comments/UrlText";
 import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
 
 export default function Index() {
+  const theme = useTheme();
   const { id: paramId } = useGlobalSearchParams();
   const { width } = useWindowDimensions();
   const dispatch = useDispatch();
@@ -79,6 +80,7 @@ export default function Index() {
   const myBuziness = myUid === data?.author;
   const { myLocation } = useMyLocation();
   const [commentsCount, setCommentsCount] = useState<number>();
+  const isNew = data?.created_at && new Date().getTime() - new Date(data.created_at).getTime() < 1000 * 60 * 60 * 24 * 10;
 
   useEffect(() => {
     if (myBuziness)
@@ -88,7 +90,7 @@ export default function Index() {
             title: "Mentés",
             icon: "pencil",
             onPress: async () => {
-              router.push("/biznisz/edit/"+id);
+              router.push("/biznisz/edit/" + id);
             },
           },
         ]),
@@ -168,263 +170,258 @@ export default function Index() {
     }, [id])
   );
 
-  const onPimary = () => {
-    if (myBuziness) {
-      router.navigate({
-        pathname: "/biznisz/edit/[editId]",
-        params: { editId: id },
-      });
-    }
-  };
   return (
     <>
-    <Stack.Screen options={{ header: () => <MyAppbar center={data?.title ? <Text variant="titleLarge">{data.title.split(" $ ")[0]}</Text> : undefined} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> }} />
-    <ThemedView style={{ flex: 1 }}>
-      <ScrollView >
-        {!data && !error && <ActivityIndicator />}
-        {!!id && !!data && (
-          <>
-            <View
-              style={{
-                flexWrap: "wrap",
-                flexDirection: "row",
-                gap: 4,
-                paddingHorizontal: 10,
-              }}
-            >
-              {categories?.slice(1).map((e, i) => {
-                if (e.trim())
-                  return (
-                    <Chip
-                      key={"category" + i}
-                      textStyle={{ margin: 4 }}
-                      onPress={() => {
-                        dispatch(storeBuzinessSearchParams({ text: e }));
-                        router.navigate({
-                          pathname: "/biznisz",
-                        });
+      <Stack.Screen options={{
+        header: () => <MyAppbar
+          center={data?.title ?
+            <Text variant="titleLarge">{title}</Text> : undefined}
+          style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0, backgroundColor: "transparent" }} />
+      }} />
+      <ThemedView style={{ flex: 1 }}>
+        <ScrollView >
+          {!data && !error && <ActivityIndicator />}
+          {!!id && !!data && (
+            <>
+              <View
+                style={{
+                  flexWrap: "wrap",
+                  flexDirection: "row",
+                  gap: 4,
+                  paddingHorizontal: 10,
+                }}
+              >
+                {!!isNew && (
+                  <ThemedView type="card" key={"category-new"} style={{ paddingHorizontal: 4, borderRadius: 6, paddingVertical: 2, backgroundColor: theme.colors.tertiary }}>
+                    <Text>új</Text>
+                  </ThemedView>
+                )}
+                {categories?.slice(1).map((e, i) => {
+                  if (e.trim())
+                    return (
+                      <ThemedView type="card" key={"category" + i} style={{ paddingHorizontal: 4, borderRadius: 6, paddingVertical: 2 }}
+
+                      >
+                        <ThemedText>{e}</ThemedText>
+                      </ThemedView>
+                    );
+                })}
+              </View>
+              <CollapsibleText>
+                <UrlText text={data.description} />
+              </CollapsibleText>
+              <View style={{ width: "100%", flexDirection: "row", alignItems: "flex-start" }}>
+                <Link
+                  asChild
+                  style={{ flex: 1, padding: 8, justifyContent: "center" }}
+                  href={{ pathname: "/user/[uid]", params: { uid: data.author } }}
+                >
+                  <TouchableRipple>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8
                       }}
                     >
-                      {e}
-                    </Chip>
-                  );
-              })}
-            </View>
-            <CollapsibleText>
-              <UrlText text={data.description} />
-            </CollapsibleText>
-            <View style={{ width: "100%", flexDirection: "row", alignItems: "flex-start" }}>
-              <Link
-                asChild
-                style={{ flex: 1, padding: 8, justifyContent: "center" }}
-                href={{ pathname: "/user/[uid]", params: { uid: data.author } }}
-              >
-                <TouchableRipple>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8
-                    }}
-                  >
-                    <ProfileImage
-                      uid={data.author}
-                      style={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: 30,
-                        margin: 4,
-                      }}
-                      avatar_url={data.avatarUrl}
-                    />
-                    <Text style={{ textAlign: "center" }}>
-                      {data.authorName} biznisze
-                    </Text>
-                  </View>
-                </TouchableRipple>
-              </Link>
-              <TouchableRipple
-                style={{
-                  flex: 1,
-                  alignItems: "center",
-                  justifyContent: "center", padding: 8,
-                  paddingLeft: 24,
-                  height: 55
-                }}
-                onPress={
-                  recommendations?.length
-                    ? () => setShowRecommendsModal(true)
-                    : undefined
-                }
-              >
-                <Text style={{ textAlign: "center" }}>
-                  {recommendations?.length
-                    ? recommendations?.length + " ajánlás"
-                    : "Még senki sem ajánlja"}
-                </Text>
-              </TouchableRipple>
-            </View>
-            <View style={{ flexWrap: "wrap", gap: 4, padding: 4 }}>
-              {defaultContact && (
-                <Link asChild href={getLinkForContact(defaultContact)}>
-                  <Button style={{ flex: 1 }} mode="contained-tonal" icon={typeToIcon(defaultContact.type)}>
-                    {defaultContact.title || defaultContact?.data}
-                  </Button>
-                </Link>
-              )}
-              {requestContanct && (
-                <Button style={{ flex: 1 }} mode="contained">
-                  Kérd el a kontaktját
-                </Button>
-              )}
-
-              {!myBuziness && (
-                <View style={{ flexDirection: "row", alignItems: "center", width:"100%" }}>
-                  <RecommendBuzinessButton
-                    buzinessId={id}
-                    style={{ flex: 1 }}
-                    recommended={iRecommended}
-                    setRecommended={(recommendedByMe) => {
-                      if (myUid) {
-                        if (recommendedByMe)
-                          setRecommendations([...recommendations, myUid]);
-                        else
-                          setRecommendations(
-                            recommendations.filter((uid) => uid !== myUid)
-                          );
-                      }
-                    }}
-                  />
-                  <SaveBuzinessButton
-                    buzinessId={id}
-                  />
-                </View>
-              )}
-            </View>
-            {/* Vertical sections instead of tabs */}
-            {data.location && (
-              <View style={{ marginTop: 8 }}>
-                <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Helyzete</Text>
-                <View style={{ minHeight: 200, flex: 1 }}>
-                  <MapView
-                    // @ts-expect-error options type are colliding in different mapViews
-                    options={{
-                      mapTypeControl: false,
-                      fullscreenControl: false,
-                      streetViewControl: false,
-                      zoomControl: false,
-                    }}
-                    style={{ width: "100%", height: 240 }}
-                    initialCamera={{
-                      altitude: 10,
-                      center: location || {
-                        latitude: 47.4979,
-                        longitude: 19.0402,
-                      },
-                      heading: 0,
-                      pitch: 0,
-                      zoom: 12,
-                    }}
-                    provider="google"
-                    googleMapsApiKey={
-                      process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
-                    }
-                    pitchEnabled={false}
-                    rotateEnabled={false}
-                    toolbarEnabled={false}
-                  >
-                    {location && <Marker coordinate={location} />}
-                    {myLocation && (
-                      <Marker
-                        centerOffset={{ x: 10, y: 10 }}
-                        coordinate={myLocation?.coords}
-                        style={{ justifyContent: "center", alignItems: "center" }}
-                      >
-                        <MyLocationIcon style={{ width: 20, height: 20 }} />
-                      </Marker>
-                    )}
-                  </MapView>
-                  {location && (
-                    <IconButton
-                      icon="directions"
-                      mode="contained"
-                      onPress={() =>
-                        openMap({
-                          latitude: location.latitude,
-                          longitude: location.longitude,
-                          navigate: true,
-                          start: "My Location",
-                          travelType: "public_transport",
-                          end: location.latitude + "," + location.longitude,
-                        })
-                      }
-                      style={{ right: 4, bottom: 17, position: "absolute" }}
-                    />
-                  )}
-                </View>
-              </View>
-            )}
-
-            {images.length > 0 && (
-              <View style={{ marginTop: 16 }}>
-                <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Képek</Text>
-                {images.map((image, ind) => (
-                  <View key={"image-" + ind} style={{ width: "100%" }}>
-                    <ImageModal
-                      source={{ uri: image.url }}
-                      resizeMode="contain"
-                      modalImageResizeMode="contain"
-                      overlayBackgroundColor="#00000096"
-                      style={{ width: width, height: 200 }}
-                      renderFooter={() => (
-                        <ScrollView style={{ maxHeight: 250 }}>
-                          <ThemedText style={{ color: "white", textShadowColor: "black", textShadowRadius: 3 }}>
-                            {image.description}
-                          </ThemedText>
-                        </ScrollView>
-                      )}
-                    />
-                    <View style={{ padding: 4 }}>
-                      <CollapsibleText>
-                        {image.description}
-                      </CollapsibleText>
+                      <ProfileImage
+                        uid={data.author}
+                        style={{
+                          width: 30,
+                          height: 30,
+                          borderRadius: 30,
+                          margin: 4,
+                        }}
+                        avatar_url={data.avatarUrl}
+                      />
+                      <Text style={{ textAlign: "center" }}>
+                        {data.authorName} biznisze
+                      </Text>
                     </View>
-                  </View>
-                ))}
+                  </TouchableRipple>
+                </Link>
+                <TouchableRipple
+                  style={{
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center", padding: 8,
+                    paddingLeft: 24,
+                    height: 55
+                  }}
+                  onPress={
+                    recommendations?.length
+                      ? () => setShowRecommendsModal(true)
+                      : undefined
+                  }
+                >
+                  <Text style={{ textAlign: "center" }}>
+                    {recommendations?.length
+                      ? recommendations?.length + " ajánlás"
+                      : "Még senki sem ajánlja"}
+                  </Text>
+                </TouchableRipple>
               </View>
-            )}
+              <View style={{ flexWrap: "wrap", gap: 4, padding: 4 }}>
+                {defaultContact && (
+                  <Link asChild href={getLinkForContact(defaultContact)}>
+                    <Button style={{ flex: 1 }} mode="contained-tonal" icon={typeToIcon(defaultContact.type)}>
+                      {defaultContact.title || defaultContact?.data}
+                    </Button>
+                  </Link>
+                )}
+                {requestContanct && (
+                  <Button style={{ flex: 1 }} mode="contained">
+                    Kérd el a kontaktját
+                  </Button>
+                )}
 
-            <View style={{ marginTop: 16 }}>
-              <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Elérhetőségek</Text>
-              <ContactList uid={data.author} />
-            </View>
+                {!myBuziness && (
+                  <View style={{ flexDirection: "row", alignItems: "center", width: "100%" }}>
+                    <RecommendBuzinessButton
+                      buzinessId={id}
+                      style={{ flex: 1 }}
+                      recommended={iRecommended}
+                      setRecommended={(recommendedByMe) => {
+                        if (myUid) {
+                          if (recommendedByMe)
+                            setRecommendations([...recommendations, myUid]);
+                          else
+                            setRecommendations(
+                              recommendations.filter((uid) => uid !== myUid)
+                            );
+                        }
+                      }}
+                    />
+                    <SaveBuzinessButton
+                      buzinessId={id}
+                    />
+                  </View>
+                )}
+              </View>
+              {/* Vertical sections instead of tabs */}
+              {data.location && (
+                <View style={{ marginTop: 8 }}>
+                  <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Helyzete</Text>
+                  <View style={{ minHeight: 200, flex: 1 }}>
+                    <MapView
+                      // @ts-expect-error options type are colliding in different mapViews
+                      options={{
+                        mapTypeControl: false,
+                        fullscreenControl: false,
+                        streetViewControl: false,
+                        zoomControl: false,
+                      }}
+                      style={{ width: "100%", height: 240 }}
+                      initialCamera={{
+                        altitude: 10,
+                        center: location || {
+                          latitude: 47.4979,
+                          longitude: 19.0402,
+                        },
+                        heading: 0,
+                        pitch: 0,
+                        zoom: 12,
+                      }}
+                      provider="google"
+                      googleMapsApiKey={
+                        process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+                      }
+                      pitchEnabled={false}
+                      rotateEnabled={false}
+                      toolbarEnabled={false}
+                    >
+                      {location && <Marker coordinate={location} />}
+                      {myLocation && (
+                        <Marker
+                          centerOffset={{ x: 10, y: 10 }}
+                          coordinate={myLocation?.coords}
+                          style={{ justifyContent: "center", alignItems: "center" }}
+                        >
+                          <MyLocationIcon style={{ width: 20, height: 20 }} />
+                        </Marker>
+                      )}
+                    </MapView>
+                    {location && (
+                      <IconButton
+                        icon="directions"
+                        mode="contained"
+                        onPress={() =>
+                          openMap({
+                            latitude: location.latitude,
+                            longitude: location.longitude,
+                            navigate: true,
+                            start: "My Location",
+                            travelType: "public_transport",
+                            end: location.latitude + "," + location.longitude,
+                          })
+                        }
+                        style={{ right: 4, bottom: 17, position: "absolute" }}
+                      />
+                    )}
+                  </View>
+                </View>
+              )}
 
-            <View style={{ marginTop: 16 }}>
-              <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Vélemények</Text>
-              <Comments path={"buziness/" + id} placeholder="Mondd el a véleményed" />
-            </View>
-          </>
-        )}
-        {!!title && (
-          <Portal>
-            <BuzinessRecommendationsModal
-              show={showRecommendsModal}
-              setShow={setShowRecommendsModal}
-              id={id}
-              name={title}
+              {images.length > 0 && (
+                <View style={{ marginTop: 16 }}>
+                  <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Képek</Text>
+                  {images.map((image, ind) => (
+                    <View key={"image-" + ind} style={{ width: "100%" }}>
+                      <ImageModal
+                        source={{ uri: image.url }}
+                        resizeMode="contain"
+                        modalImageResizeMode="contain"
+                        overlayBackgroundColor="#00000096"
+                        style={{ width: width, height: 200 }}
+                        renderFooter={() => (
+                          <ScrollView style={{ maxHeight: 250 }}>
+                            <ThemedText style={{ color: "white", textShadowColor: "black", textShadowRadius: 3 }}>
+                              {image.description}
+                            </ThemedText>
+                          </ScrollView>
+                        )}
+                      />
+                      <View style={{ padding: 4 }}>
+                        <CollapsibleText>
+                          {image.description}
+                        </CollapsibleText>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              <View style={{ marginTop: 16 }}>
+                <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Elérhetőségek</Text>
+                <ContactList uid={data.author} />
+              </View>
+
+              <View style={{ marginTop: 16 }}>
+                <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Vélemények</Text>
+                <Comments path={"buziness/" + id} placeholder="Mondd el a véleményed" />
+              </View>
+            </>
+          )}
+          {!!title && (
+            <Portal>
+              <BuzinessRecommendationsModal
+                show={showRecommendsModal}
+                setShow={setShowRecommendsModal}
+                id={id}
+                name={title}
+              />
+            </Portal>
+          )}
+          {!!error && (
+            <ErrorScreen
+              icon="briefcase-off"
+              title={error.code}
+              text={error.message}
             />
-          </Portal>
-        )}
-        {!!error && (
-          <ErrorScreen
-            icon="briefcase-off"
-            title={error.code}
-            text={error.message}
-          />
-        )}
-      </ScrollView>
-    </ThemedView>
+          )}
+        </ScrollView>
+      </ThemedView>
     </>
   );
 }

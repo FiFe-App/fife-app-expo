@@ -206,7 +206,7 @@ INSERT INTO public.buziness (
     )
 VALUES (
         2001,
-        'Helyi Pékseg',
+        'Helyi Pékseg $ kovaszos $ pékség $ kenyér',
         'Kovászos kenyér és péksütik minden nap.',
         'a3f8b9f2-3b1a-4a49-9a27-3e7f0e9d1c01',
         ARRAY ['https://picsum.photos/seed/bread1/400','https://picsum.photos/seed/bread2/400'],
@@ -218,7 +218,7 @@ VALUES (
     ),
     (
         2002,
-        'Kávé Sarki',
+        'Kávé Sarki $ kávé $ kávézó $ süti',
         'Specialty kávék és sütemények.',
         'b6d1e2c3-4f5a-6b7c-8d9e-0f1a2b3c4d5e',
         ARRAY ['https://picsum.photos/seed/coffee1/400'],
@@ -230,7 +230,7 @@ VALUES (
     ),
     (
         2003,
-        'Zöld Piac',
+        'Zöld Piac $ piac $ zöldség $ helyi',
         'Hétvégi termelői piac helyi árusokkal.',
         'c7e8f9a0-1b2c-3d4e-5f60-7a8b9c0d1e2f',
         ARRAY ['https://picsum.photos/seed/market/400'],
@@ -242,7 +242,7 @@ VALUES (
     ),
     (
         2004,
-        'Kézműves Műhely',
+        'Kézműves Műhely $ kézműves $ kerámia $ tárgyak',
         'Egyedi kerámia és kézműves tárgyak.',
         'a3f8b9f2-3b1a-4a49-9a27-3e7f0e9d1c01',
         ARRAY ['https://picsum.photos/seed/craft/400'],
@@ -254,7 +254,7 @@ VALUES (
     ),
     (
         2005,
-        'Futó Klub',
+        'Futó Klub $ sport $ futás $ közösség',
         'Heti közösségi futások a Dunaparton.',
         'b6d1e2c3-4f5a-6b7c-8d9e-0f1a2b3c4d5e',
         ARRAY ['https://picsum.photos/seed/run/400'],
