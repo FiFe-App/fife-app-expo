@@ -133,7 +133,7 @@ export default function UserPage() {
 
   return (
     <>
-      <Stack.Screen options={{ header: () => <MyAppbar style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> }} />
+      {<Stack.Screen options={{ title:myProfile ? "Profilod" : "" }} />}
       <ThemedView style={{ flex: 1 }}>
         {!!data && !!uid && (
           <>

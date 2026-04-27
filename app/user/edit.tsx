@@ -249,11 +249,9 @@ export default function Index() {
     return upload;
   };
   const containerStyle = {
-    backgroundColor: theme.colors.surface,
-    padding: 20,
-    margin: 20,
+    margin: 8,
     borderRadius: 16,
-    height: 400
+    height: "90%"
   };
 
   if (myUid)
@@ -437,12 +435,6 @@ export default function Index() {
           <Modal
             visible={locationMenuVisible}
             onDismiss={() => setLocationMenuVisible(false)}
-            contentContainerStyle={[
-              {
-                height: "auto",
-                borderRadius: 16,
-              },
-            ]}
           >
             <ThemedView style={containerStyle}>
               <MapSelector

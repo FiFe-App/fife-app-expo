@@ -73,7 +73,7 @@ const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
                 source={require("@/assets/images/img-prof.png")}
                 style={{ height: 200, width: 200 }}
               />
-              <View style={{ alignItems: "center", justifyContent: "center", flex: 1, gap: 16 }}>
+              <View style={{ alignItems: "center", justifyContent: "center", gap: 16 }}>
                 <ThemedText type="subtitle">
                   {myProfile
                     ? "Itt fognak megjelenni a saját bizniszeid."

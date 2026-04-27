@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Image } from "expo-image";
 import Smiley from "@/components/Smiley";
 
-export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewStyle }) => {
+export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?: string, style?: ViewStyle }) => {
   const navigation = useNavigation();
   const theme = useTheme();
   const { options } = useSelector((state: RootState) => state.info);
@@ -45,17 +45,18 @@ export const MyAppbar = ({ center, style }: { center?: ReactNode, style?: ViewSt
       <View style={{ width: 48 }} >
         {navigation.canGoBack() && pathname !== "/home" && pathname !== "/" && <Appbar.BackAction onPress={navigation.goBack} />}
       </View>
-      {center ? <View style={{ flex: 1 }}>{center}</View> : 
-        <Link href="/" style={{ flex: 1 }} asChild>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
-            <Smiley />
-            <Image
-              source={require("@/assets/Logo.png")}
-              style={{ width: 180, height: 30, zIndex: 20 }}
-              contentFit="contain"
-            />
-          </View>
-        </Link>}
+      {center ? <View style={{ flex: 1 }}>{center}</View>
+        : title ? <Appbar.Content titleStyle={{ fontFamily: "Piazzolla-ExtraBold", fontSize: 28 }} title={title} style={{ flex: 1 }} />
+          : <Link href="/" style={{ flex: 1 }} asChild>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+              <Smiley />
+              <Image
+                source={require("@/assets/Logo.png")}
+                style={{ width: 180, height: 30, zIndex: 20 }}
+                contentFit="contain"
+              />
+            </View>
+          </Link>}
       {options.length > 0 ? (
         <>
           {options?.length <= 2 ? options.map((o)=>

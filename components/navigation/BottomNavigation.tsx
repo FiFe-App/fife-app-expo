@@ -12,6 +12,7 @@ import { ThemedView } from "../ThemedView";
 const BottomNavigation = () => {
   const segment = useSegments();
   const { functions } = useSelector((state: RootState) => state.tutorial);
+
   const bizniszActive = segment[0]?.includes("biznisz");
   const profilActive = segment[0]?.includes("user");
   const homeActive = segment[0]?.includes("home");
