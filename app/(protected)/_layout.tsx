@@ -1,12 +1,21 @@
+import BuzinessSearchInput from "@/components/BuzinessSearchInput";
+import { MyAppbar } from "@/components/MyAppBar";
+import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 import { RootState } from "@/redux/store";
-import { Slot, usePathname, useRouter } from "expo-router";
-import { useEffect } from "react";
-import { useSelector } from "react-redux";
+import { Slot, Stack, usePathname, useRouter } from "expo-router";
+import { useCallback, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function ProtectedLayout() {
   const uid = useSelector((state: RootState) => state.user.uid);
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useDispatch();
+
+  const handleSearch = useCallback(() => {
+    dispatch(storeBuzinesses([]));
+    router.push("/biznisz");
+  }, [dispatch]);
 
   useEffect(() => {
     if (!uid) {
@@ -16,5 +25,7 @@ export default function ProtectedLayout() {
 
   if (!uid) return null;
 
-  return <Slot />;
+  return <>
+    <Slot />
+  </>;
 }

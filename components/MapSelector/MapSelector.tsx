@@ -150,14 +150,14 @@ const MapSelector = ({
   };
 
   return (
-    <View style={[{ flex: 1, overflow: "hidden" }, style]}>
+    <View style={[{ flex: 1, overflow: "hidden", borderRadius: 16 }, style]}>
       <View
-        style={{ width: "100%", height: "100%" }}
+        style={{ width: "100%", height: "100%", borderRadius: 16 }}
         onLayout={(e) => {
           setMapHeight(e.nativeEvent.layout.height);
         }}
       >
-        <View style={{ zIndex: 10, padding: 10, position: "absolute", width: "100%" }}>
+        <View style={{ zIndex: 10, position: "absolute", width: "100%" }}>
           <TextInput
             inputMode="search"
             mode="outlined"
@@ -294,7 +294,7 @@ const MapSelector = ({
             )}
 
           </MapView>
-          <View style={{position:"absolute",bottom:32,width:"100%",alignItems:"center"}}>          
+          <View style={{position:"absolute",top:80,width:"100%",alignItems:"center"}}>          
             <Chip icon="map-marker"><ThemedText variant="labelSmall">Kattints a térképre hogy kiválassz egy pontot!</ThemedText></Chip>
           </View>
           {!!circleSize && <View style={[styles.circleFixed, {
@@ -331,7 +331,7 @@ const MapSelector = ({
           </View>
           {!!myLocation && (
             <FAB
-              style={[styles.myLocationButton, { top: 80 }]}
+              style={[styles.myLocationButton, { top: 130 }]}
               icon={myLocation ? "map-marker" : "map-marker-question"}
               onPress={panToMyLocation}
             />

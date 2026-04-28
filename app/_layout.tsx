@@ -24,10 +24,31 @@ import RedHatTextLight from "@/assets/fonts/RedHatText-Light.ttf";
 import RedHatTextMedium from "@/assets/fonts/RedHatText-Medium.ttf";
 import RedHatTextBold from "@/assets/fonts/RedHatText-Bold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
+import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
+import BuzinessSearchInput from "@/components/BuzinessSearchInput";
+import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
+import { router } from "expo-router";
 import { RootState } from "@/redux/store";
 import { setLocation } from "@/redux/reducers/userReducer";
 import { supabase } from "@/lib/supabase/supabase";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
+
+function HomeHeader() {
+  const dispatch = useDispatch();
+  return (
+    <MyAppbar
+      center={
+        <BuzinessSearchInput
+          onSearch={() => {
+            dispatch(storeBuzinesses([]));
+            router.push("/biznisz");
+          }}
+        />
+      }
+      style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }}
+    />
+  );
+}
 
 function RootContent() {
   const pathname = usePathname();
@@ -97,45 +118,57 @@ function RootContent() {
           <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
             <InfoLayer />
             <Stack
-              screenOptions={{ header: () => <MyAppbar /> }}
+              screenOptions={{ header: (props: NativeStackHeaderProps) => <MyAppbar title={props.options.title} /> }}
             >
               <Stack.Screen name="index" />
-              <Stack.Screen
-                name="login/index"
-                options={{ title: "Bejelentkezés" }}
-              />
-              <Stack.Screen
-                name="biznisz/index"
-                options={{ title: "Biznisz" }}
-              />
-              <Stack.Screen
-                name="csatlakozom"
-                options={{ headerShown: false, animation: "slide_from_right" }}
-              />
-              <Stack.Screen
-                name="(protected)/biznisz/new"
-                options={{ title: "Új Biznisz" }}
-              />
-              <Stack.Screen
-                name="(protected)/biznisz/[id]"
-                options={{ title: "FiFe Biznisz" }}
-              />
-              <Stack.Screen
-                name="(protected)/biznisz/edit/[editId]"
-                options={{ title: "FiFe Biznisz" }}
-              />
-              <Stack.Screen
-                name="(protected)/user/[uid]"
-                options={{ title: "FiFe Profil" }}
-              />
-              <Stack.Screen
-                name="(protected)/user/edit"
-                options={{ title: "Profil Szerkesztése" }}
-              />
-              <Stack.Screen
-                name="user/password-reset"
-                options={{ title: "Jelszó visszaállítás" }}
-              />
+              <Stack.Protected guard={!!uid}>
+                <Stack.Screen
+                  name="home"
+                  options={{ header: () => <HomeHeader /> }}
+                />
+                <Stack.Screen
+                  name="biznisz/index"
+                  options={{ title: "Biznisz" }}
+                />
+
+                <Stack.Screen
+                  name="biznisz/new"
+                  options={{ title: "Új Biznisz" }}
+                />
+                <Stack.Screen
+                  name="biznisz/[id]"
+                  options={{ title: "FiFe Biznisz" }}
+                />
+                <Stack.Screen
+                  name="biznisz/edit/[editId]"
+                  options={{ title: "FiFe Biznisz" }}
+                />
+                <Stack.Screen
+                  name="user/[uid]"
+                  options={{ title: "FiFe Profil" }}
+                />
+                <Stack.Screen
+                  name="user/edit"
+                  options={{ title: "Profil Szerkesztése" }}
+                />
+              </Stack.Protected>
+
+              <Stack.Protected guard={!uid}>
+
+                <Stack.Screen
+                  name="login/index"
+                  options={{ title: "Bejelentkezés" }}
+                />
+                <Stack.Screen
+                  name="csatlakozom"
+                  options={{ headerShown: false, animation: "slide_from_right" }}
+                />
+                <Stack.Screen
+                  name="user/password-reset"
+                  options={{ title: "Jelszó visszaállítás" }}
+                />
+
+              </Stack.Protected>
             </Stack>
             {pathname !== "/" && !pathname.includes("projekt") &&
               !pathname.includes("login") &&
