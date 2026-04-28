@@ -44,7 +44,7 @@ export default function Index() {
   const redirectTo = makeRedirectUri();
 
   useEffect(() => {
-    navigation.setOptions({"title": "Bejelentkezés"});
+    navigation.setOptions({ "title": "Bejelentkezés" });
     if (token_data) {
       console.log(token_data);
 
@@ -98,6 +98,8 @@ export default function Index() {
       password: "fifewok42",
     });
 
+    console.log(data, error);
+
     if (error) {
       setError(error.message);
     } else {
@@ -149,10 +151,10 @@ export default function Index() {
         : undefined;
 
       console.log("user-data", { ...userData, ...profile });
-      dispatch(setUserData({ 
-        ...userData, 
-        ...profile, 
-        ...(locationData ? { location: locationData } : {}) 
+      dispatch(setUserData({
+        ...userData,
+        ...profile,
+        ...(locationData ? { location: locationData } : {})
       }));
       if (profile?.viewed_functions)
         dispatch(loadViewedFunctions(profile?.viewed_functions));
