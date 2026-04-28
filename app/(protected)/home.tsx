@@ -7,27 +7,29 @@ import {
   storeUserSearchParams
 } from "@/redux/reducers/usersReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
+import { dismissHomeAddBuzinessCard } from "@/redux/reducers/appReducer";
 import { RootState } from "@/redux/store";
-import { router, Stack, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useNavigation } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import style from "@/components/styles";
 import {
+  Card,
+  IconButton,
   Icon, Modal,
   Portal, Text
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { MyAppbar } from "@/components/MyAppBar";
 import Smiley from "@/components/Smiley";
-import BuzinessSearchInput from "@/components/BuzinessSearchInput";
 import WhatToDo from "@/components/WhatToDo";
 import { Button } from "@/components/Button";
-import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 import { useFifeSearch } from "@/hooks/useFifeSearch";
 import { useProfileSearch } from "@/hooks/useProfileSearch";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
+  const { homeAddBuzinessCardDismissed } = useSelector((state: RootState) => state.app);
+  const navigation = useNavigation();
   const { userSearchParams } = useSelector(
     (state: RootState) => state.users,
   );
@@ -36,6 +38,9 @@ export default function Index() {
 
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [whatVisible, setWhatVisible] = useState(false);
+  const [userHasBuzinesses, setUserHasBuzinesses] = useState<boolean | null>(null);
+  const [showCtaCard, setShowCtaCard] = useState(false);
+
   const { fetch, data, fetchNextPage, hasMore } = useFifeSearch();
   const { results: newestUsers, search: fetchNewest } = useProfileSearch();
 
@@ -43,6 +48,11 @@ export default function Index() {
   useEffect(() => {
     fetch();
   }, [searchCircle]);
+
+  const handleDismissCtaCard = () => {
+    dispatch(dismissHomeAddBuzinessCard());
+    setShowCtaCard(false);
+  };
 
 
   useFocusEffect(
@@ -80,10 +90,39 @@ export default function Index() {
             <Button
               icon={searchCircle ? "map-marker" : "map-marker-outline"}
               mode="contained-tonal"
-              labelStyle={{marginVertical: 4}}
+              labelStyle={{ marginVertical: 4 }}
               onPress={() => setLocationMenuVisible(true)}
             >Hol keresel?</Button>
           </ThemedView>
+          {showCtaCard && (
+            <Card
+              mode="elevated"
+              style={{
+                marginHorizontal: 16,
+                marginVertical: 8,
+              }}
+            >
+              <Card.Content style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Text variant="titleMedium">Hozd létre a bizniszed!</Text>
+                  <Text variant="bodySmall" style={{ marginTop: 4 }}>
+                    Oszd meg a tudásodat és képességeidet másokkal.
+                  </Text>
+                </View>
+                <IconButton
+                  icon="plus"
+                  mode="contained"
+                  size={24}
+                  onPress={() => router.push("/biznisz/new")}
+                />
+                <IconButton
+                  icon="close"
+                  size={20}
+                  onPress={handleDismissCtaCard}
+                />
+              </Card.Content>
+            </Card>
+          )}
           <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} />
           <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />
           <Portal>
@@ -106,7 +145,7 @@ export default function Index() {
                   setData={(sC) => {
                     if (
                       (sC && "location" in sC && "radius" in sC) ||
-                    sC == undefined
+                      sC == undefined
                     ) {
                       dispatch(storeUserSearchParams({ searchCircle: sC }));
                       setLocationMenuVisible(false);

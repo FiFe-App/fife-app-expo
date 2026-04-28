@@ -11,7 +11,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Chip, Icon, IconButton, Surface, Text } from "react-native-paper";
+import { Icon, IconButton, Surface, Text } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "../ThemedText";
@@ -25,7 +25,6 @@ interface BuzinessItemProps {
 
 const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
   const { author, title: titleAndCats, description, id } = data;
-  console.log(data?.recommendations?.[0]?.count, data.recommendations);
 
   const recommendations = typeof data?.recommendations?.[0]?.count === "number" ? data?.recommendations?.[0]?.count : data.recommendations;
   const { uid } = useSelector((state: RootState) => state.user);
@@ -81,13 +80,13 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
               <ThemedText variant="titleMedium" type="title" style={{}}>{title}</ThemedText>
               <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4, marginTop: 4 }}>
                 {!!isNew && <ThemedView type="card" key={"category-new"} style={{ paddingHorizontal: 4, borderRadius: 6, paddingVertical: 2, backgroundColor: theme.colors.tertiary }}>
-                  <Text>új</Text>
+                  <ThemedText style={{ color: theme.colors.onTertiary }}>új</ThemedText>
                 </ThemedView>}
                 {categories?.map((e, i) => {
                   if (e.trim())
                     return (
                       <ThemedView type="card" key={"category" + i} style={{ paddingHorizontal: 4, borderRadius: 6, paddingVertical: 2 }}>
-                        <Text>{e}</Text>
+                        <ThemedText>{e}</ThemedText>
                       </ThemedView>
                     );
                 })}

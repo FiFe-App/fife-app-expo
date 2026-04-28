@@ -8,6 +8,7 @@ import buzinessReducer from "./reducers/buzinessReducer";
 import infoReducer from "./reducers/infoReducer";
 import tutorialReducer from "./reducers/tutorialReducer";
 import usersReducer from "./reducers/usersReducer";
+import appReducer from "./reducers/appReducer";
 
 export const rootReducer = combineReducers({
   comments: commentsReducer,
@@ -16,6 +17,7 @@ export const rootReducer = combineReducers({
   buziness: buzinessReducer.reducer,
   info: infoReducer,
   tutorial: tutorialReducer.reducer,
+  app: appReducer.reducer,
 });
 
 export type RootReducer = ReturnType<typeof rootReducer>;

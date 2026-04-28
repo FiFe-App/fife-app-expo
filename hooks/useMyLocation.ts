@@ -3,16 +3,16 @@ import { addDialog } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { router } from "expo-router";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+
+let locationDialogDispatched = false;
 
 export function useMyLocation() {
   const dispatch = useDispatch();
   const { uid, userData, locationAlertDismissed } = useSelector(
     (state: RootState) => state.user,
   );
-
-  const dialogShown = useRef(false);
 
   const myLocation = useMemo(() => {
     if (!userData?.location) return null;
@@ -25,8 +25,15 @@ export function useMyLocation() {
   }, [userData?.location]);
 
   useEffect(() => {
-    if (uid && !myLocation && !locationAlertDismissed && !dialogShown.current) {
-      dialogShown.current = true;
+    if (!uid) {
+      locationDialogDispatched = false;
+    }
+  }, [uid]);
+
+  useEffect(() => {
+    if (uid && userData !== null && !myLocation && !locationAlertDismissed && !locationDialogDispatched) {
+      locationDialogDispatched = true;
+      dispatch(dismissLocationAlert());
       dispatch(
         addDialog({
           title: "Nincs megadva a helyzeted",
@@ -42,7 +49,7 @@ export function useMyLocation() {
         }),
       );
     }
-  }, [myLocation, locationAlertDismissed, dispatch]);
+  }, [userData, myLocation, locationAlertDismissed, dispatch]);
 
   return { myLocation };
 }

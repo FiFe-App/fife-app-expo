@@ -192,8 +192,9 @@ export default function Index() {
                 }}
               >
                 {!!isNew && (
-                  <ThemedView type="card" key={"category-new"} style={{ paddingHorizontal: 4, borderRadius: 6, paddingVertical: 2, backgroundColor: theme.colors.tertiary }}>
-                    <Text>új</Text>
+                  <ThemedView type="card" key={"category-new"}
+                    style={{ paddingHorizontal: 4, borderRadius: 6, paddingVertical: 2, backgroundColor: theme.colors.tertiary }}>
+                    <ThemedText style={{ color: theme.colors.onTertiary }}>új</ThemedText>
                   </ThemedView>
                 )}
                 {categories?.slice(1).map((e, i) => {

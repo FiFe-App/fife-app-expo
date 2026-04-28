@@ -79,7 +79,6 @@ const TagInput = ({
     <Card
       mode="contained"
       contentStyle={{
-        width: "100%",
         flexDirection: "row",
         flexWrap: "wrap",
         alignItems: "center",

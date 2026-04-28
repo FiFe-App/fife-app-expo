@@ -26,6 +26,14 @@
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkenV2Zmtrcmh0cnJyY2Nrd3pqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjI5MzQ5NDcsImV4cCI6MjAzODUxMDk0N30.N2CBbhzVSXMjMo6yzjAZ78rwGCK_ABbYiP49nxVTlYk",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyAgSEWGmTLsQmNzEd_6SHrwtuJkpHFJaMU"
       }
+    },
+    "development-simulator": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "environment": "development"
     }
   },
   "submit": {

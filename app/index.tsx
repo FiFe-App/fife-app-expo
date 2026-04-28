@@ -440,7 +440,7 @@ export default function App() {
   return (
     <ScrollView contentContainerStyle={{ backgroundColor: theme.colors.background }} style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ThemedView type="default" style={{ alignItems: "center" }}>
-        <View style={{ flex: 1, gap: 16, maxWidth: 1000, width:"100%" }}>
+        <View style={{ flex: 1, gap: 16, maxWidth: 1000, width: "100%" }}>
           <Hero />
           <HowItWorks />
           <Trust />

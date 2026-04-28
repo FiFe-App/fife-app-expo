@@ -80,7 +80,7 @@ VALUES (
         '00000000-0000-0000-0000-000000000000',
         'authenticated',
         'authenticated',
-        'macos.acos@gmail.com',
+        'test@fife.hu',
         extensions.crypt('fifewok42', extensions.gen_salt('bf')),
         NOW(),
         '{"provider":"email","providers":["email"]}',

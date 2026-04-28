@@ -7,10 +7,11 @@ import {
   clearOptions,
   hideLoading,
   setOptions,
-  showLoading
+  showLoading,
+  addSnack
 } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { ImageDataType, UserState } from "@/redux/store.type";
+import { CircleType, ImageDataType, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { router, Stack, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -21,6 +22,7 @@ import {
   Headline,
   Icon,
   IconButton,
+  List,
   MD3DarkTheme,
   Modal,
   Portal,
@@ -47,6 +49,10 @@ import { Image } from "expo-image";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 import BuzinessItem from "./BuzinessItem";
 import { Button } from "../Button";
+import ContactEditScreen from "./ContactEditScreen";
+import { PostgrestSingleResponse } from "@supabase/supabase-js";
+import { Tables } from "@/database.types";
+import { theme } from "@/assets/theme";
 
 interface NewBuzinessInterface {
   title: string;
@@ -55,6 +61,10 @@ interface NewBuzinessInterface {
 interface BuzinessEditScreenProps {
   editId?: number;
 }
+
+type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+// Default radius in km for location-based buziness
+const DEFAULT_RADIUS = 20;
 
 export default function BuzinessEditScreen({
   editId,
@@ -67,25 +77,36 @@ export default function BuzinessEditScreen({
     description: "",
   });
   const [myContacts, setMyContacts] = useState<Option[]>([]);
+  const [contacts, setContacts] = useState<Optional<Tables<"contacts">, "id">[]>([]);
   const [defaultContact, setDefaultContact] = useState<number | undefined>();
 
   const [images, setImages] = useState<ImageDataType[]>([]);
   const imagesUploadRef = useRef<BuzinessImageUploadHandle | null>(null);
+  const contactEditRef = useRef<{
+    saveContacts: () => Promise<
+      | PostgrestSingleResponse<unknown>
+      | {
+        error: string;
+      }
+      | undefined
+    >;
+    getContacts: () => Optional<Tables<"contacts">, "id">[];
+  }>(null);
   const { myLocation } = useMyLocation();
-  const [circle, setCircle] = useState<MapLocationType | undefined>(undefined);
+  const [circle, setCircle] = useState<CircleType | undefined>(undefined);
   const selectedLocation = circle?.location || myLocation?.coords;
-  const selectedAddress = "";
   const [loading, setLoading] = useState(false);
+  const [contactsExpanded, setContactsExpanded] = useState(false);
 
   const [mapModalVisible, setMapModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(true);
-  const [locationTutorialVisible, setLocationTutorialVisible] = useState(false);
 
   const title = newBuziness.title + " $ " + categories;
   const canSubmit = !!(
     newBuziness.title &&
     categories &&
-    newBuziness.description
+    newBuziness.description &&
+    contacts.some((c) => !!c && !!c.data && c.data.length > 0)
   );
   useEffect(() => {
     console.log("images", images);
@@ -94,6 +115,34 @@ export default function BuzinessEditScreen({
   const save = useCallback(async () => {
     setLoading(true);
     if (!uid) return;
+
+    // First save contacts
+    const contactResponse = await contactEditRef.current?.saveContacts();
+    console.log("Contact save response:", contactResponse);
+
+    if (contactResponse?.error) {
+      console.log("Error saving contacts:", contactResponse.error);
+      dispatch(addSnack({
+        title: "Hiba az elérhetőségek mentése során. Ellenőrizd a mezőket.",
+      }));
+      setLoading(false);
+      return;
+    }
+
+    // Verify at least one contact exists
+    const contactsCheck = await supabase
+      .from("contacts")
+      .select("id")
+      .eq("author", uid);
+
+    if (!contactsCheck.data || contactsCheck.data.length === 0) {
+      console.log("No contacts found for user");
+      dispatch(addSnack({
+        title: "Legalább egy elérhetőséget kötelező megadni a biznisz létrehozásához.",
+      }));
+      setLoading(false);
+      return;
+    }
 
     console.log(selectedLocation);
 
@@ -111,9 +160,10 @@ export default function BuzinessEditScreen({
         },
       })
       .then(async (res) => {
-        console.log(res, images.length, editId);
-        if (images.length && editId) {
-          const newImages = await imagesUploadRef.current?.uploadImages(editId);
+        const buzinessId = editId ?? res.data?.id;
+        console.log(res, images.length, buzinessId);
+        if (images.length && buzinessId) {
+          const newImages = await imagesUploadRef.current?.uploadImages(buzinessId);
           console.log("uploadRes", newImages);
           if (uid && newImages)
             await supabase
@@ -129,7 +179,7 @@ export default function BuzinessEditScreen({
                     }),
                   ) as string[],
               })
-              .eq("id", editId)
+              .eq("id", buzinessId)
               .then((res) => {
                 console.log("images upsert", res);
               });
@@ -139,12 +189,15 @@ export default function BuzinessEditScreen({
         setLoading(false);
         if (res.error) {
           console.log(res.error);
+          dispatch(addSnack({
+            title: "Hiba történt a biznisz mentése során.",
+          }));
           return;
         }
         console.log(res);
         router.navigate("/user");
       });
-  }, [defaultContact, editId, images.length, newBuziness, selectedLocation, title, uid]);
+  }, [defaultContact, dispatch, editId, images.length, newBuziness, selectedLocation, title, uid]);
 
   const saveRef = useRef(save);
   useEffect(() => { saveRef.current = save; }, [save]);
@@ -154,6 +207,30 @@ export default function BuzinessEditScreen({
       setMapModalVisible(false);
     }
   }, [circle]);
+
+  // Function to reload contacts after saving
+  const reloadContacts = useCallback(() => {
+    if (uid) {
+      supabase
+        .from("contacts")
+        .select("*")
+        .eq("author", uid)
+        .then((res) => {
+          if (res.data) {
+            setContacts(res.data as Optional<Tables<"contacts">, "id">[]);
+            setMyContacts(
+              res.data.map((contact) => {
+                return {
+                  label: contact.data,
+                  value: contact.id.toString(),
+                };
+              }),
+            );
+          }
+        });
+    }
+  }, [uid]);
+
   useEffect(() => {
     dispatch(
       setOptions([
@@ -170,6 +247,7 @@ export default function BuzinessEditScreen({
             );
             await saveRef.current();
             dispatch(hideLoading());
+            reloadContacts();
           },
         },
       ]),
@@ -177,8 +255,12 @@ export default function BuzinessEditScreen({
     return () => {
       dispatch(clearOptions());
     };
-  }, [canSubmit, dispatch, loading]);
+  }, [canSubmit, dispatch, save, loading, reloadContacts]);
 
+  useEffect(() => {
+    console.log("contacts", contacts);
+
+  }, [contacts]);
   useFocusEffect(
     useCallback(() => {
       if (editId && uid) {
@@ -214,16 +296,21 @@ export default function BuzinessEditScreen({
 
                 setCircle({
                   location: { latitude: cords[1], longitude: cords[0] },
+                  radius: editingBuziness.radius || DEFAULT_RADIUS,
                 });
               }
             }
           });
+      }
+      if (uid) {
+
         supabase
           .from("contacts")
-          .select("id, data")
+          .select("*")
           .eq("author", uid)
           .then((res) => {
             if (res.data) {
+              setContacts(res.data as Optional<Tables<"contacts">, "id">[]);
               setMyContacts(
                 res.data.map((contact) => {
                   return {
@@ -232,6 +319,10 @@ export default function BuzinessEditScreen({
                   };
                 }),
               );
+              // If no contacts exist, expand the contacts section by default
+              if (res.data.length === 0) {
+                setContactsExpanded(true);
+              }
             }
           });
       }
@@ -241,277 +332,298 @@ export default function BuzinessEditScreen({
       };
     }, [editId, navigation, uid]),
   );
-
   return (
     <>
-    {editId && <Stack.Screen options={{ title: "Biznisz szerkesztése" }} />}
-    <ThemedView style={{ flex: 1 }}>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{}}>
-        {tutorialVisible && (
-          <Card
-            mode="elevated"
-            style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
-          >
-            <Card.Title
-              title={"Mihez értesz?"}
-              right={() => (
-                <IconButton
-                  icon="close"
-                  onPress={() => setTutorialVisible(false)}
+      {editId && <Stack.Screen options={{ title: "Biznisz szerkesztése" }} />}
+      <ThemedView style={{ flex: 1 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{}}>
+          {tutorialVisible && (
+            <Card
+              mode="elevated"
+              style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+            >
+              <Card.Title
+                title={"Mihez értesz?"}
+                right={() => (
+                  <IconButton
+                    icon="close"
+                    onPress={() => setTutorialVisible(false)}
+                  />
+                )}
+              />
+              <Card.Content>
+                {tutorialVisible && (
+                  <Text>
+                    Ezen az oldalon fel tudsz venni egy új bizniszt a profilodba.
+                    {"\n"}A te bizniszeid azon hobbijaid, képességeid vagy
+                    szakmáid listája, amelyeket meg szeretnél osztani másokkal is.{" "}
+                    {"\n"}Ha, mondjuk, futószalagon gyártod a sütiket, és
+                    ezt felveszed a bizniszeid közé, a Biznisz oldalon
+                    megtalálható leszel a süti kulcsszóval.
+                  </Text>
+                )}
+              </Card.Content>
+            </Card>
+          )}
+          <View style={{}}>
+            <TextInput
+              placeholder="Bizniszem neve"
+              value={newBuziness.title}
+              onChangeText={(t) => setNewBuziness({ ...newBuziness, title: t })}
+            />
+            <TagInput
+              placeholder="Kategóriák, nyomj entert a hozzáadásukhoz"
+              onChange={setCategories}
+              value={categories}
+            />
+            <TextInput
+              placeholder="Fejtsd ki bővebben"
+              value={newBuziness.description}
+              multiline
+              onChangeText={(t) =>
+                setNewBuziness({ ...newBuziness, description: t })
+              }
+            />
+            <Dropdown
+              label="Kiemelt elérhetőséged"
+              options={myContacts}
+              value={defaultContact?.toString() ?? ""}
+              CustomDropdownInput={({
+                placeholder,
+                selectedLabel,
+                label,
+                rightIcon,
+              }: DropdownInputProps) => (
+                <TextInput
+                  placeholder={placeholder}
+                  label={label}
+                  value={selectedLabel ?? ""}
+                  right={rightIcon}
                 />
               )}
-            />
-            <Card.Content>
-              {tutorialVisible && (
-                <Text>
-                  Ezen az oldalon fel tudsz venni egy új bizniszt a profilodba.
-                  {"\n"}A te bizniszeid azon hobbijaid, képességeid vagy
-                  szakmáid listája, amelyeket meg szeretnél osztani másokkal is.{" "}
-                  {"\n"}Ha, mondjuk, futószalagon gyártod a sütiket, és
-                  ezt felveszed a bizniszeid közé, a Biznisz oldalon
-                  megtalálható leszel a süti kulcsszóval.
-                </Text>
-              )}
-            </Card.Content>
-          </Card>
-        )}
-        <View style={{}}>
-          <TextInput
-            placeholder="Bizniszem neve"
-            value={newBuziness.title}
-            onChangeText={(t) => setNewBuziness({ ...newBuziness, title: t })}
-          />
-          <TagInput
-            placeholder="Kategóriák, nyomj entert a hozzáadásukhoz"
-            onChange={setCategories}
-            value={categories}
-          />
-          <TextInput
-            placeholder="Fejtsd ki bővebben"
-            value={newBuziness.description}
-            multiline
-            onChangeText={(t) =>
-              setNewBuziness({ ...newBuziness, description: t })
-            }
-          />
-          <Dropdown
-            label="Kiemelt elérhetőséged"
-            options={myContacts}
-            value={defaultContact?.toString()}
-            CustomDropdownInput={({
-              placeholder,
-              selectedLabel,
-              label,
-              rightIcon,
-            }: DropdownInputProps) => (
-              <TextInput
-                placeholder={placeholder}
-                label={label}
-                value={selectedLabel}
-                right={rightIcon}
-              />
-            )}
-            CustomDropdownItem={({
-              width,
-              option,
-              value,
-              onSelect,
-              toggleMenu,
-              isLast,
-            }) => {
-              return (
-                <>
-                  <TouchableRipple
-                    onPress={() => {
-                      onSelect?.(option.value);
-                      toggleMenu();
-                    }}
-                  >
-                    <Headline
-                      style={{
-                        color:
-                          value === option.value
-                            ? MD3DarkTheme.colors.onPrimary
-                            : MD3DarkTheme.colors.primary,
-                        alignItems: "center",
-                        display: "flex",
-                        padding: 8,
+              CustomDropdownItem={({
+                option,
+                value,
+                onSelect,
+                toggleMenu,
+                isLast,
+              }) => {
+                return (
+                  <>
+                    <TouchableRipple
+                      onPress={() => {
+                        onSelect?.(option.value);
+                        toggleMenu();
                       }}
                     >
-                      <Icon source={typeToIcon(option.label) || "dots-horizontal"} size={22} />
-                      <ThemedText style={{ marginLeft: 8 }}>
-                        {option.label}
-                      </ThemedText>
-                    </Headline>
-                  </TouchableRipple>
-                  {!isLast && <Divider />}
-                </>
-              );
-            }}
-            hideMenuHeader
-            onSelect={(e) => {
-              setDefaultContact(Number(e));
-            }}
-          />
-          <BuzinessImageUpload
-            images={images}
-            setImages={setImages}
-            buzinessId={editId}
-            ref={imagesUploadRef}
-          />
-          {(
-            <View
-              style={{
-                flexDirection: "row",
-                flexWrap: "wrap",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: 8,
+                      <Headline
+                        style={{
+                          color:
+                            value === option.value
+                              ? MD3DarkTheme.colors.onPrimary
+                              : MD3DarkTheme.colors.primary,
+                          alignItems: "center",
+                          display: "flex",
+                          padding: 8,
+                        }}
+                      >
+                        <Icon source={typeToIcon(option.label) || "dots-horizontal"} size={22} />
+                        <ThemedText style={{ marginLeft: 8 }}>
+                          {option.label}
+                        </ThemedText>
+                      </Headline>
+                    </TouchableRipple>
+                    {!isLast && <Divider />}
+                  </>
+                );
               }}
-            >
-              <ThemedText>A bizniszed helyzete</ThemedText>
-
-              <SegmentedButtons
-                value={!circle ? "net" : "map"}
-                style={{ width: 300 }}
-                onValueChange={
-                  (v) => {
-                    v == "net" ?
-                      setCircle(undefined) :
-                      setMapModalVisible(true);
-                  }}
-                buttons={[
-                  {
-                    value: "net",
-                    label: "Bárhol",
-                    icon: "wifi"
-                  },
-                  {
-                    value: "map",
-                    label: "Térképen",
-                    icon: "map-marker"
-                  },
-                ]}
-              />
+              hideMenuHeader
+              onSelect={(e) => {
+                setDefaultContact(Number(e));
+              }}
+            />
+            <List.Item
+              title="Elérhetőségek"
+              style={{ marginTop: 8 }}
+              description="Legalább egy elérhetőség megadása kötelező"
+              onPress={() => setContactsExpanded(!contactsExpanded)}
+              left={(props) => <List.Icon {...props} icon="contacts" />}
+              right={() =>
+                !contacts.some((c) => !!c && !!c.data && c.data.length > 0) ? (
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Icon source="alert-circle" size={20} color={theme.colors.error} />
+                  </View>
+                ) : <List.Icon icon={contactsExpanded ? "chevron-up" : "chevron-down"} />
+              }
+            />
+            <View style={{ display: contactsExpanded ? "flex" : "none" }}>
+              <ContactEditScreen ref={contactEditRef} onContactsChange={(newContacts) => setContacts(newContacts)} style={{ padding: 16, paddingRight: 0, }} />
             </View>
-          )}
-          <View style={{ minHeight: circle ? 300 : 100 }}>
-            {circle ? (
-              <MapView
-                // @ts-expect-error options error
-                options={{
-                  mapTypeControl: false,
-                  fullscreenControl: false,
-                  streetViewControl: false,
+            <Divider style={{ marginTop: 8, marginBottom: 8 }} />
+            <BuzinessImageUpload
+              images={images}
+              setImages={setImages}
+              buzinessId={editId}
+              ref={imagesUploadRef}
+            />
+            {(
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: 8,
                 }}
-                zoomControlEnabled={false}
-                initialCamera={{
-                  altitude: 10,
-                  center: selectedLocation ||
-                    myLocation?.coords || {
-                    latitude: 47.4979,
-                    longitude: 19.0402,
-                  },
-                  heading: 0,
-                  pitch: 0,
-                  zoom: 12,
-                }}
-                style={{}}
-                provider="google"
-                googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
-                pitchEnabled={false}
-                rotateEnabled={false}
-                toolbarEnabled={false}
-                moveOnMarkerPress
               >
-                {(!!selectedLocation || !!myLocation) && (
-                  <Marker
-                    coordinate={
-                      selectedLocation ||
-                      myLocation?.coords || {
-                        latitude: 47.4979,
-                        longitude: 19.0402,
-                      }
-                    }
-                    anchor={{ x: 0.5, y: 0.5 }}
-                  >
-                    <NewMarkerIcon width={24} height={24} />
-                  </Marker>
-                )}
-              </MapView>
-            ) : (
-              <View style={{ alignItems: "center", gap: 8, padding: 16 }}>
-                <Image
-                  style={{ width: 100, height: 100 }}
-                  source={require("@/assets/images/img-map.png")}
+                <ThemedText>A bizniszed helyzete</ThemedText>
+
+                <SegmentedButtons
+                  value={!circle ? "net" : "map"}
+                  style={{ width: 300 }}
+                  onValueChange={
+                    (v) => {
+                      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                      v == "net" ?
+                        setCircle(undefined) :
+                        setMapModalVisible(true);
+                    }}
+                  buttons={[
+                    {
+                      value: "net",
+                      label: "Bárhol",
+                      icon: "wifi"
+                    },
+                    {
+                      value: "map",
+                      label: "Térképen",
+                      icon: "map-marker"
+                    },
+                  ]}
                 />
-                <ThemedText type="subtitle">
-                  Találjanak meg a helyiek
-                </ThemedText>
-                <Button
-                  onPress={() => setMapModalVisible(true)}
-                  mode={"contained-tonal"}
-                >
-                  Válassz környéket
-                </Button>
               </View>
             )}
+            <View style={{ minHeight: circle ? 300 : 100 }}>
+              {circle ? (
+                <MapView
+                  options={{
+                    mapTypeControl: false,
+                    fullscreenControl: false,
+                    streetViewControl: false,
+                  }}
+                  zoomControlEnabled={false}
+                  initialCamera={{
+                    altitude: 10,
+                    center: selectedLocation ||
+                      myLocation?.coords || {
+                      latitude: 47.4979,
+                      longitude: 19.0402,
+                    },
+                    heading: 0,
+                    pitch: 0,
+                    zoom: 12,
+                  }}
+                  style={{ width: "100%", height: 300 }}
+                  provider="google"
+                  googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
+                  pitchEnabled={false}
+                  rotateEnabled={false}
+                  toolbarEnabled={false}
+                  moveOnMarkerPress
+                >
+                  {(!!selectedLocation || !!myLocation) && (
+                    <Marker
+                      coordinate={
+                        selectedLocation ||
+                        myLocation?.coords || {
+                          latitude: 47.4979,
+                          longitude: 19.0402,
+                        }
+                      }
+                      anchor={{ x: 0.5, y: 0.5 }}
+                    >
+                      <NewMarkerIcon width={24} height={24} />
+                    </Marker>
+                  )}
+                </MapView>
+              ) : (
+                <View style={{ alignItems: "center", gap: 8, padding: 16 }}>
+                  <Image
+                    style={{ width: 100, height: 100 }}
+                    source={require("@/assets/images/img-map.png")}
+                  />
+                  <ThemedText type="subtitle">
+                    Találjanak meg a helyiek
+                  </ThemedText>
+                  <Button
+                    onPress={() => setMapModalVisible(true)}
+                    mode={"contained-tonal"}
+                  >
+                    Válassz környéket
+                  </Button>
+                </View>
+              )}
+            </View>
           </View>
-        </View>
-        <ThemedView
-          type="default"
-          style={{
-            padding: 8,
-            bottom: 0,
-            width: "100%",
-            gap: 16
-          }}
-        >
-          <ThemedText>Így fog megjelenni a bizniszed:</ThemedText>
-          <BuzinessItem
-            data={{
-              title: ((newBuziness.title || "A biznisz címe") + (categories ? " $ " + categories : " $ Egy kategória $ Egy másik kategória")),
-              description: newBuziness.description || "Hosszabb leírás hogy miről szól a bizniszed.",
-              images: images,
-              location: circle
-                ? `POINT(${circle.location.longitude} ${circle.location.latitude})`
-                : null,
-              defaultContact,
-              recommendations: 0,
+          <ThemedView
+            type="default"
+            style={{
+              padding: 8,
+              bottom: 0,
+              width: "100%",
+              gap: 16
             }}
-          />
-          <View style={{ alignItems: "flex-end" }}>
-            <Button mode="contained" onPress={save}
-              disabled={!canSubmit || loading}>Mentés</Button>
-          </View>
-        </ThemedView>
-      </ScrollView>
-      <Portal>
-        <Modal
-          visible={mapModalVisible}
-          onDismiss={() => {
-            setMapModalVisible(false);
-          }}
-          style={{ alignItems: "center" }}
-          contentContainerStyle={[
-            {
-              width: "90%",
-              height: "90%",
-            }]}
-          dismissableBackButton
-        >
-          <ThemedView style={containerStyle.containerStyle}>
-            <MapSelector
-              data={circle}
-              setData={setCircle}
-              setOpen={setMapModalVisible}
-              searchEnabled
-              markerOnly
+          >
+            <ThemedText>Így fog megjelenni a bizniszed:</ThemedText>
+            <BuzinessItem
+              data={{
+                id: editId || 0,
+                author: uid || "",
+                title: ((newBuziness.title || "A biznisz címe") + (categories ? " $ " + categories : " $ Egy kategória $ Egy másik kategória")),
+                description: newBuziness.description || "Hosszabb leírás hogy miről szól a bizniszed.",
+                images: images,
+                location: circle
+                  ? `POINT(${circle.location.longitude} ${circle.location.latitude})`
+                  : null,
+                recommendations: 0,
+              }}
             />
+            <View style={{ alignItems: "flex-end" }}>
+              <Button mode="contained" onPress={async () => {
+                dispatch(showLoading({ dismissable: false, title: "Kérlek várj, amíg a bizniszed feltöltődik" }));
+                await saveRef.current();
+                dispatch(hideLoading());
+                reloadContacts();
+              }} disabled={!canSubmit || loading}>Mentés</Button>
+            </View>
           </ThemedView>
-        </Modal>
-      </Portal>
-    </ThemedView>
+        </ScrollView>
+        <Portal>
+          <Modal
+            visible={mapModalVisible}
+            onDismiss={() => {
+              setMapModalVisible(false);
+            }}
+            style={{ alignItems: "center" }}
+            contentContainerStyle={[
+              {
+                width: "90%",
+                height: "90%",
+              }]}
+            dismissableBackButton
+          >
+            <ThemedView style={containerStyle.containerStyle}>
+              <MapSelector
+                data={circle}
+                setData={setCircle}
+                setOpen={setMapModalVisible}
+                searchEnabled
+                markerOnly
+              />
+            </ThemedView>
+          </Modal>
+        </Portal>
+      </ThemedView>
     </>
   );
 }
