@@ -119,8 +119,15 @@ const CHIP_PALETTE = [
 
 const BusinessScrollSection = () => {
   const { colors } = useTheme();
+  const { isDesktop } = useBreakpoint();
   const translateX = useSharedValue(0);
   const hasStarted = useRef(false);
+
+  // Pre-assign colors per item so the duplicated list tiles seamlessly
+  const coloredItems = SCROLL_BUSINESSES.map((name, i) => ({
+    name,
+    ...CHIP_PALETTE[i % CHIP_PALETTE.length],
+  }));
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
@@ -140,29 +147,38 @@ const BusinessScrollSection = () => {
     );
   };
 
+  const chip = (name: string, bg: keyof typeof colors, fg: keyof typeof colors, key: number) => (
+    <View
+      key={key}
+      style={{
+        backgroundColor: colors[bg],
+        marginHorizontal: 8,
+        paddingHorizontal: 18,
+        paddingVertical: 10,
+        borderRadius: 999,
+      }}
+    >
+      <Text variant="titleMedium" style={{ color: colors[fg] }}>{name}</Text>
+    </View>
+  );
+
+  if (isDesktop) {
+    return (
+      <View style={{ paddingVertical: 20, paddingHorizontal: 16, backgroundColor: colors.surfaceVariant }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+          {coloredItems.map(({ name, bg, fg }, i) => chip(name, bg, fg, i))}
+        </View>
+      </View>
+    );
+  }
+
   return (
-    <View style={{ overflow: "hidden", paddingVertical: 20, backgroundColor: theme.colors.surfaceVariant }}>
+    <View style={{ overflow: "hidden", paddingVertical: 20, backgroundColor: colors.surfaceVariant }}>
       <Animated.View
-        style={[{ flexDirection: "row", alignItems: "center" }, animatedStyle]}
+        style={[{ flexDirection: "row", alignItems: "center", flexShrink: 0 }, animatedStyle]}
         onLayout={onLayout}
       >
-        {[...SCROLL_BUSINESSES, ...SCROLL_BUSINESSES].map((name, i) => {
-          const { bg, fg } = CHIP_PALETTE[i % CHIP_PALETTE.length];
-          return (
-            <View
-              key={i}
-              style={{
-                backgroundColor: colors[bg],
-                marginHorizontal: 8,
-                paddingHorizontal: 18,
-                paddingVertical: 10,
-                borderRadius: 999,
-              }}
-            >
-              <Text variant="titleMedium" style={{ color: colors[fg] }}>{name}</Text>
-            </View>
-          );
-        })}
+        {[...coloredItems, ...coloredItems].map(({ name, bg, fg }, i) => chip(name, bg, fg, i))}
       </Animated.View>
     </View>
   );
