@@ -6,12 +6,19 @@ import { Text } from "react-native-paper";
 import { ThemedInput as TextInput } from "@/components/ThemedInput";
 import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 import { Link, Redirect } from "expo-router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { useSelector } from "react-redux";
 import Smiley from "@/components/Smiley";
 import { theme } from "@/assets/theme";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
 
 export const Header = () => {
   return (
@@ -89,86 +96,61 @@ const Hero = () => {
   );
 };
 
-// A single step in the "Hogyan működik?" section
-const StepItem = ({
-  image,
-  title,
-  description,
-}: {
-  image: ImageSource;
-  title: string;
-  description: string;
-}) => {
-  const { isDesktop } = useBreakpoint();
-  return (
-    <ThemedView
-      style={[
-        styles.stepCard,
-        isDesktop ? styles.stepCol : styles.stepRow,
-        isDesktop ? {} : { alignItems: "flex-start" },
-      ]}
-    >
-      <Image
-        source={image}
-        contentFit="contain"
-        style={
-          isDesktop
-            ? { width: "100%", height: 260 }
-            : { height: 100, width: 100, marginRight: 12 }
-        }
-      />
-      <View
-        style={{
-          flex: 1,
-          alignItems: isDesktop ? "center" : "stretch",
-          paddingTop: isDesktop ? 0 : 8,
-        }}
-      >
-        <Text
-          variant="headlineSmall"
-          style={{
-            textAlign: isDesktop ? "center" : "left",
-          }}
-        >
-          {title}
-        </Text>
-        <Text
-          variant="bodyMedium"
-          style={{ marginTop: 6, textAlign: isDesktop ? "center" : "left" }}
-        >
-          {description}
-        </Text>
-      </View>
-    </ThemedView>
-  );
-};
+const SCROLL_BUSINESSES = [
+  { name: "Visszaviszem a 50 forintos palackokat", color: "#5A7A5A" },
+  { name: "Dalolászás", color: "#7A5EA7" },
+  { name: "Taxi", color: "#B85450" },
+  { name: "Kézműves Tecno", color: "#4472A8" },
+  { name: "Kerti kisegítő", color: "#C47A2A" },
+  { name: "Házi főzőnő", color: "#A65E7A" },
+  { name: "Kutya sétáltatás", color: "#3A8A9E" },
+  { name: "Bicigli javítás", color: "#6A8040" },
+  { name: "Angolóra", color: "#7A5E48" },
+];
 
-const HowItWorks = () => {
-  const { isDesktop, screenPadding } = useBreakpoint();
+const BusinessScrollSection = () => {
+  const translateX = useSharedValue(0);
+  const hasStarted = useRef(false);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const onLayout = (e: any) => {
+    if (hasStarted.current) return;
+    hasStarted.current = true;
+    const halfWidth = e.nativeEvent.layout.width / 2;
+    translateX.value = withRepeat(
+      withTiming(-halfWidth, {
+        duration: halfWidth * 14,
+        easing: Easing.linear,
+      }),
+      -1,
+      false,
+    );
+  };
+
   return (
-    <View style={{ marginHorizontal: screenPadding }}>
-      <Text variant="displayMedium">Hogyan működik?</Text>
-      <View style={{ paddingHorizontal: isDesktop ? 64 : 4 }}>
-        <View
-          style={[{ gap: 16 }, isDesktop ? styles.rowWrap : styles.colStack]}
-        >
-          <StepItem
-            image={require("@/assets/images/Funkcio1.png")}
-            title="Csatlakozz hozzánk!"
-            description="Hozd létre a profilod, és oszd meg az erőforrásaidat."
-          />
-          <StepItem
-            image={require("@/assets/images/Funkcio 2.png")}
-            title="Keress segítséget!"
-            description="Találj a környékeden tevékenykedő fiféket."
-          />
-          <StepItem
-            image={require("@/assets/images/Funkcio1.png")}
-            title="Építs kapcsolatokat!"
-            description="Jelöld meg, kiket tartasz megbízhatónak."
-          />
-        </View>
-      </View>
+    <View style={{ overflow: "hidden", paddingVertical: 20, backgroundColor: theme.colors.surfaceVariant }}>
+      <Animated.View
+        style={[{ flexDirection: "row", alignItems: "center" }, animatedStyle]}
+        onLayout={onLayout}
+      >
+        {[...SCROLL_BUSINESSES, ...SCROLL_BUSINESSES].map((b, i) => (
+          <View
+            key={i}
+            style={{
+              backgroundColor: b.color,
+              marginHorizontal: 8,
+              paddingHorizontal: 18,
+              paddingVertical: 10,
+              borderRadius: 999,
+            }}
+          >
+            <Text variant="titleMedium" style={{ color: "#fff" }}>{b.name}</Text>
+          </View>
+        ))}
+      </Animated.View>
     </View>
   );
 };
@@ -442,7 +424,7 @@ export default function App() {
       <ThemedView type="default" style={{ alignItems: "center" }}>
         <View style={{ flex: 1, gap: 16, maxWidth: 1000, width: "100%" }}>
           <Hero />
-          <HowItWorks />
+          <BusinessScrollSection />
           <Trust />
           <About />
           <Banner />
@@ -488,28 +470,5 @@ const styles = StyleSheet.create({
   loginButton: {
     borderRadius: 12,
     width: "100%",
-  },
-  rowWrap: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    justifyContent: "space-between",
-  },
-  colStack: {
-    flexDirection: "column",
-  },
-  stepCard: {
-    flex: 1,
-    borderRadius: 16,
-    gap: 8,
-  },
-  stepRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 4,
-  },
-  stepCol: {
-    flexDirection: "column",
-    alignItems: "center",
-    textAlign: "center",
   },
 });
