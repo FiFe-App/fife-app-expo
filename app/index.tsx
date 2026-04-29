@@ -2,7 +2,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
 import { ScrollView, Platform, StyleSheet, View } from "react-native";
 import { Image, ImageSource } from "expo-image";
-import { Text } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import { ThemedInput as TextInput } from "@/components/ThemedInput";
 import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 import { Link, Redirect } from "expo-router";
@@ -97,18 +97,28 @@ const Hero = () => {
 };
 
 const SCROLL_BUSINESSES = [
-  { name: "Visszaviszem a 50 forintos palackokat", color: "#5A7A5A" },
-  { name: "Dalolászás", color: "#7A5EA7" },
-  { name: "Taxi", color: "#B85450" },
-  { name: "Kézműves Tecno", color: "#4472A8" },
-  { name: "Kerti kisegítő", color: "#C47A2A" },
-  { name: "Házi főzőnő", color: "#A65E7A" },
-  { name: "Kutya sétáltatás", color: "#3A8A9E" },
-  { name: "Bicigli javítás", color: "#6A8040" },
-  { name: "Angolóra", color: "#7A5E48" },
+  "Visszaviszem a 50 forintos palackokat",
+  "Dalolászás",
+  "Taxi",
+  "Kézműves Tecno",
+  "Kerti kisegítő",
+  "Házi főzőnő",
+  "Kutya sétáltatás",
+  "Bicigli javítás",
+  "Angolóra",
+];
+
+const CHIP_PALETTE = [
+  { bg: "secondary" as const, fg: "onSecondary" as const },
+  { bg: "tertiary" as const, fg: "onTertiary" as const },
+  { bg: "primary" as const, fg: "onPrimary" as const },
+  { bg: "secondaryContainer" as const, fg: "onSecondaryContainer" as const },
+  { bg: "tertiaryContainer" as const, fg: "onTertiaryContainer" as const },
+  { bg: "error" as const, fg: "onError" as const },
 ];
 
 const BusinessScrollSection = () => {
+  const { colors } = useTheme();
   const translateX = useSharedValue(0);
   const hasStarted = useRef(false);
 
@@ -136,20 +146,23 @@ const BusinessScrollSection = () => {
         style={[{ flexDirection: "row", alignItems: "center" }, animatedStyle]}
         onLayout={onLayout}
       >
-        {[...SCROLL_BUSINESSES, ...SCROLL_BUSINESSES].map((b, i) => (
-          <View
-            key={i}
-            style={{
-              backgroundColor: b.color,
-              marginHorizontal: 8,
-              paddingHorizontal: 18,
-              paddingVertical: 10,
-              borderRadius: 999,
-            }}
-          >
-            <Text variant="titleMedium" style={{ color: "#fff" }}>{b.name}</Text>
-          </View>
-        ))}
+        {[...SCROLL_BUSINESSES, ...SCROLL_BUSINESSES].map((name, i) => {
+          const { bg, fg } = CHIP_PALETTE[i % CHIP_PALETTE.length];
+          return (
+            <View
+              key={i}
+              style={{
+                backgroundColor: colors[bg],
+                marginHorizontal: 8,
+                paddingHorizontal: 18,
+                paddingVertical: 10,
+                borderRadius: 999,
+              }}
+            >
+              <Text variant="titleMedium" style={{ color: colors[fg] }}>{name}</Text>
+            </View>
+          );
+        })}
       </Animated.View>
     </View>
   );

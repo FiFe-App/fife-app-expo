@@ -77,7 +77,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
         <Surface style={styles.container} elevation={2} mode="flat">
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1 }}>
-              <ThemedText variant="titleLarge" type="title" style={{}}>{title}</ThemedText>
+              <ThemedText variant="titleLarge" type="title" style={{ fontWeight: "bold" }}>{title}</ThemedText>
               <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4, marginTop: 4 }}>
                 {!!isNew && <ThemedView type="card" key={"category-new"} style={{ paddingHorizontal: 4, borderRadius: 6, paddingVertical: 2, backgroundColor: theme.colors.tertiary }}>
                   <ThemedText style={{ color: theme.colors.onTertiary }}>új</ThemedText>
