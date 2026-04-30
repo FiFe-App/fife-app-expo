@@ -175,8 +175,8 @@ export default function Index() {
       <Stack.Screen options={{
         header: () => <MyAppbar
           center={data?.title ?
-            <Text variant="titleLarge">{title}</Text> : undefined}
-          style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0, backgroundColor: "transparent" }} />
+            <ThemedText variant="titleLarge">{title}</ThemedText> : undefined}
+          style={{ }} />
       }} />
       <ThemedView style={{ flex: 1 }}>
         <ScrollView >

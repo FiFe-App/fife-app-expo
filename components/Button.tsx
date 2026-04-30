@@ -65,12 +65,12 @@ export function Button({
       textColor={textColor}
       labelStyle={[
         big && theme.fonts.headlineSmall,
+        big && { paddingVertical: 8, paddingHorizontal: 16 },
         compact && theme.fonts.labelMedium,
         { fontFamily: "Piazzolla-ExtraBold" },
       ]}
       style={[
         ButtonPStyle,
-        big && { paddingVertical: 12, paddingHorizontal: 16 },
         compact && {
           maxHeight: 12,
           paddingVertical: 12,

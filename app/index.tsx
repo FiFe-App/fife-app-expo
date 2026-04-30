@@ -15,9 +15,7 @@ import { theme } from "@/assets/theme";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withRepeat,
-  withTiming,
-  Easing,
+  useFrameCallback,
 } from "react-native-reanimated";
 
 export const Header = () => {
@@ -60,16 +58,16 @@ const Hero = () => {
           ]}
         >
           <Text variant="headlineMedium">
-            Építs magad köré segítői hálózatot ebben az új, közösségi
+            Építs magad köré segítői hálózatot ebben a közösségi
             alkalmazásban.
           </Text>
           <Link asChild href="/csatlakozom">
-            <Button style={styles.loginButton} type="secondary">
+            <Button style={styles.loginButton} type="secondary" big>
               Regisztrálok
             </Button>
           </Link>
           <Link asChild href="/login">
-            <Button style={styles.loginButton} mode="contained">
+            <Button style={styles.loginButton} mode="contained" big>
               Bejelentkezem
             </Button>
           </Link>
@@ -97,31 +95,26 @@ const Hero = () => {
 };
 
 const SCROLL_BUSINESSES = [
-  "Visszaviszem a 50 forintos palackokat",
-  "Dalolászás",
+  "Hangosítás",
   "Taxi",
   "Kézműves Tecno",
-  "Kerti kisegítő",
-  "Házi főzőnő",
   "Kutya sétáltatás",
-  "Bicigli javítás",
-  "Angolóra",
+  "Önkéntesség",
+  "Sminkes",
+  "Fodrász",
 ];
 
 const CHIP_PALETTE = [
-  { bg: "secondary" as const, fg: "onSecondary" as const },
   { bg: "tertiary" as const, fg: "onTertiary" as const },
-  { bg: "primary" as const, fg: "onPrimary" as const },
   { bg: "secondaryContainer" as const, fg: "onSecondaryContainer" as const },
   { bg: "tertiaryContainer" as const, fg: "onTertiaryContainer" as const },
-  { bg: "error" as const, fg: "onError" as const },
 ];
 
 const BusinessScrollSection = () => {
   const { colors } = useTheme();
   const { isDesktop } = useBreakpoint();
-  const translateX = useSharedValue(0);
-  const hasStarted = useRef(false);
+  const offset = useSharedValue(0);       // monotonically increasing pixels
+  const halfWidth = useSharedValue(0);    // set once on layout
 
   // Pre-assign colors per item so the duplicated list tiles seamlessly
   const coloredItems = SCROLL_BUSINESSES.map((name, i) => ({
@@ -129,22 +122,24 @@ const BusinessScrollSection = () => {
     ...CHIP_PALETTE[i % CHIP_PALETTE.length],
   }));
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
+  // Runs on the UI thread every frame — no JS bridge, no reset frames
+  useFrameCallback((frame) => {
+    if (halfWidth.value === 0) return;
+    offset.value += (frame.timeSincePreviousFrame ?? 16) * 0.05; // px per ms
+    if (offset.value >= halfWidth.value) {
+      offset.value -= halfWidth.value; // keep value small, no float drift
+    }
+  });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    if (halfWidth.value === 0) return {};
+    return {
+      transform: [{ translateX: -offset.value }],
+    };
+  });
 
   const onLayout = (e: any) => {
-    if (hasStarted.current) return;
-    hasStarted.current = true;
-    const halfWidth = e.nativeEvent.layout.width / 2;
-    translateX.value = withRepeat(
-      withTiming(-halfWidth, {
-        duration: halfWidth * 14,
-        easing: Easing.linear,
-      }),
-      -1,
-      false,
-    );
+    halfWidth.value = e.nativeEvent.layout.width / 2;
   };
 
   const chip = (name: string, bg: keyof typeof colors, fg: keyof typeof colors, key: number) => (
@@ -164,8 +159,8 @@ const BusinessScrollSection = () => {
 
   if (isDesktop) {
     return (
-      <View style={{ paddingVertical: 20, paddingHorizontal: 16, backgroundColor: colors.surfaceVariant }}>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+      <View style={{ paddingVertical: 20, paddingHorizontal: 16 }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent:"center", gap: 12 }}>
           {coloredItems.map(({ name, bg, fg }, i) => chip(name, bg, fg, i))}
         </View>
       </View>
@@ -173,9 +168,9 @@ const BusinessScrollSection = () => {
   }
 
   return (
-    <View style={{ overflow: "hidden", paddingVertical: 20, backgroundColor: colors.surfaceVariant }}>
+    <View style={{ overflow: "hidden", paddingVertical: 20 }}>
       <Animated.View
-        style={[{ flexDirection: "row", alignItems: "center", flexShrink: 0 }, animatedStyle]}
+        style={[{ flexDirection: "row", alignItems: "center", flexShrink: 0, alignSelf: "flex-start" }, animatedStyle]}
         onLayout={onLayout}
       >
         {[...coloredItems, ...coloredItems].map(({ name, bg, fg }, i) => chip(name, bg, fg, i))}
@@ -189,7 +184,7 @@ const Trust = () => {
   return (
     <View style={{ marginHorizontal: screenPadding }}>
       <ThemedView
-        style={[{ paddingVertical: 16, alignItems: "flex-start" }]}
+        style={[{ paddingVertical: 16, alignItems: "center" }]}
         responsive={800}
       >
         <View
@@ -199,7 +194,7 @@ const Trust = () => {
           ]}
         >
           <Text variant="displayMedium">
-            Találj megbízható embereket a környékeden!
+            Ismerd meg a körülötted élő embereket!
           </Text>
           <Text variant="bodyLarge">
             A FiFe App bizalmi láncot épít fel. Ha valakiben megbíznak a
@@ -390,7 +385,7 @@ const AboutMe = () => {
             közösségért és egy szebb jövőért dolgozom. Ha neked is fontosak
             ezek, kérlek, támogasd a FiFe Appot!
           </Text>
-          <ThemedView responsive={1000} style={{ gap: 16, zIndex: 10 }}>
+          <ThemedView responsive={500} style={{ gap: 16, zIndex: 10, width:"100%" }}>
             <Link href="/projekt" asChild>
               <Button type="secondary" big>
                 Beszállnál a projektbe?
