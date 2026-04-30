@@ -1,6 +1,6 @@
-import React from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
-import { Divider, ActivityIndicator, Button } from "react-native-paper";
+import React, { useRef } from "react";
+import { View, StyleSheet, ScrollView, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+import { Divider, ActivityIndicator } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import BuzinessItem from "./BuzinessItem";
 import { RootState } from "@/redux/store";
@@ -29,7 +29,11 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
   const skip = searchParams?.skip || 0;
   const loading = searchParams?.loading || false;
   const take = 5;
+  const isFetching = useRef(false);
+
   const loadNext = () => {
+    if (isFetching.current || !canLoadMore || loading) return;
+    isFetching.current = true;
     dispatch(
       loadBuzinesses([
         {
@@ -46,25 +50,31 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
     );
     dispatch(storeBuzinessSearchParams({ skip: skip + take }));
     load(skip + take);
+    setTimeout(() => { isFetching.current = false; }, 500);
+  };
+
+  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+    const nearBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 150;
+    if (nearBottom) loadNext();
   };
 
   return (
     <View style={styles.container}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{
-          gap: 8,
-          marginVertical: 8,
-        }}
+        contentContainerStyle={{ gap: 8, marginVertical: 8 }}
+        onScroll={handleScroll}
+        scrollEventThrottle={200}
       >
-        {buzinesses.map((buzinessItem,ind) =>
+        {buzinesses.map((buzinessItem, ind) =>
           buzinessItem.id === -1 ? (
             <Divider
               key={Math.random() * 100000 + 100000 + "div"}
               style={{ marginVertical: 16 }}
             />
           ) : (
-            <Measure key={buzinessItem.id} name={ind==0 ? "first-biznisz" : null }>
+            <Measure key={buzinessItem.id} name={ind == 0 ? "first-biznisz" : null}>
               <View>
                 <BuzinessItem data={buzinessItem} />
               </View>
@@ -73,26 +83,26 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
         )}
         {!searchParams?.searchCircle &&
           !myLocation &&
-          !buzinesses.length &&
-          (<ThemedText style={{ alignSelf: "center" }}>
-            Válassz környéket a kereséshez
-          </ThemedText>)}
-        <View style={{ padding: 16 }}>
-          {!loading &&
-            (!!buzinesses.length && canLoadMore ? (
-              <Button onPress={loadNext} style={{ alignSelf: "center" }}>
-                További bizniszek
-              </Button>
-            ) : (
+          !buzinesses.length && (
+            <ThemedText style={{ alignSelf: "center" }}>
+              Válassz környéket a kereséshez
+            </ThemedText>
+          )}
+        <View style={{ paddingVertical: 16, alignItems: "center" }}>
+          {loading ? (
+            <ActivityIndicator />
+          ) : (
+            !canLoadMore && !!buzinesses.length && (
               <ThemedText style={{ alignSelf: "center" }}>
                 Nem található több biznisz
               </ThemedText>
-            ))}
+            )
+          )}
         </View>
       </ScrollView>
 
-      {searchParams?.loading && !buzinesses.length && (
-        <View style={{ flex: 1 }}>
+      {loading && !buzinesses.length && (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <ActivityIndicator />
         </View>
       )}
@@ -104,9 +114,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  businessItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
 });
+

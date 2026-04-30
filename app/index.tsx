@@ -2,16 +2,21 @@ import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
 import { ScrollView, Platform, StyleSheet, View } from "react-native";
 import { Image, ImageSource } from "expo-image";
-import { Text } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import { ThemedInput as TextInput } from "@/components/ThemedInput";
 import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 import { Link, Redirect } from "expo-router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { useSelector } from "react-redux";
 import Smiley from "@/components/Smiley";
 import { theme } from "@/assets/theme";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  useFrameCallback,
+} from "react-native-reanimated";
 
 export const Header = () => {
   return (
@@ -53,16 +58,16 @@ const Hero = () => {
           ]}
         >
           <Text variant="headlineMedium">
-            Építs magad köré segítői hálózatot ebben az új, közösségi
+            Építs magad köré segítői hálózatot ebben a közösségi
             alkalmazásban.
           </Text>
           <Link asChild href="/csatlakozom">
-            <Button style={styles.loginButton} type="secondary">
+            <Button style={styles.loginButton} type="secondary" big>
               Regisztrálok
             </Button>
           </Link>
           <Link asChild href="/login">
-            <Button style={styles.loginButton} mode="contained">
+            <Button style={styles.loginButton} mode="contained" big>
               Bejelentkezem
             </Button>
           </Link>
@@ -89,86 +94,87 @@ const Hero = () => {
   );
 };
 
-// A single step in the "Hogyan működik?" section
-const StepItem = ({
-  image,
-  title,
-  description,
-}: {
-  image: ImageSource;
-  title: string;
-  description: string;
-}) => {
-  const { isDesktop } = useBreakpoint();
-  return (
-    <ThemedView
-      style={[
-        styles.stepCard,
-        isDesktop ? styles.stepCol : styles.stepRow,
-        isDesktop ? {} : { alignItems: "flex-start" },
-      ]}
-    >
-      <Image
-        source={image}
-        contentFit="contain"
-        style={
-          isDesktop
-            ? { width: "100%", height: 260 }
-            : { height: 100, width: 100, marginRight: 12 }
-        }
-      />
-      <View
-        style={{
-          flex: 1,
-          alignItems: isDesktop ? "center" : "stretch",
-          paddingTop: isDesktop ? 0 : 8,
-        }}
-      >
-        <Text
-          variant="headlineSmall"
-          style={{
-            textAlign: isDesktop ? "center" : "left",
-          }}
-        >
-          {title}
-        </Text>
-        <Text
-          variant="bodyMedium"
-          style={{ marginTop: 6, textAlign: isDesktop ? "center" : "left" }}
-        >
-          {description}
-        </Text>
-      </View>
-    </ThemedView>
-  );
-};
+const SCROLL_BUSINESSES = [
+  "Hangosítás",
+  "Taxi",
+  "Kézműves Tecno",
+  "Kutya sétáltatás",
+  "Önkéntesség",
+  "Sminkes",
+  "Fodrász",
+];
 
-const HowItWorks = () => {
-  const { isDesktop, screenPadding } = useBreakpoint();
-  return (
-    <View style={{ marginHorizontal: screenPadding }}>
-      <Text variant="displayMedium">Hogyan működik?</Text>
-      <View style={{ paddingHorizontal: isDesktop ? 64 : 4 }}>
-        <View
-          style={[{ gap: 16 }, isDesktop ? styles.rowWrap : styles.colStack]}
-        >
-          <StepItem
-            image={require("@/assets/images/Funkcio1.png")}
-            title="Csatlakozz hozzánk!"
-            description="Hozd létre a profilod, és oszd meg az erőforrásaidat."
-          />
-          <StepItem
-            image={require("@/assets/images/Funkcio 2.png")}
-            title="Keress segítséget!"
-            description="Találj a környékeden tevékenykedő fiféket."
-          />
-          <StepItem
-            image={require("@/assets/images/Funkcio1.png")}
-            title="Építs kapcsolatokat!"
-            description="Jelöld meg, kiket tartasz megbízhatónak."
-          />
+const CHIP_PALETTE = [
+  { bg: "tertiary" as const, fg: "onTertiary" as const },
+  { bg: "secondaryContainer" as const, fg: "onSecondaryContainer" as const },
+  { bg: "tertiaryContainer" as const, fg: "onTertiaryContainer" as const },
+];
+
+const BusinessScrollSection = () => {
+  const { colors } = useTheme();
+  const { isDesktop } = useBreakpoint();
+  const offset = useSharedValue(0);       // monotonically increasing pixels
+  const halfWidth = useSharedValue(0);    // set once on layout
+
+  // Pre-assign colors per item so the duplicated list tiles seamlessly
+  const coloredItems = SCROLL_BUSINESSES.map((name, i) => ({
+    name,
+    ...CHIP_PALETTE[i % CHIP_PALETTE.length],
+  }));
+
+  // Runs on the UI thread every frame — no JS bridge, no reset frames
+  useFrameCallback((frame) => {
+    if (halfWidth.value === 0) return;
+    offset.value += (frame.timeSincePreviousFrame ?? 16) * 0.05; // px per ms
+    if (offset.value >= halfWidth.value) {
+      offset.value -= halfWidth.value; // keep value small, no float drift
+    }
+  });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    if (halfWidth.value === 0) return {};
+    return {
+      transform: [{ translateX: -offset.value }],
+    };
+  });
+
+  const onLayout = (e: any) => {
+    halfWidth.value = e.nativeEvent.layout.width / 2;
+  };
+
+  const chip = (name: string, bg: keyof typeof colors, fg: keyof typeof colors, key: number) => (
+    <View
+      key={key}
+      style={{
+        backgroundColor: colors[bg],
+        marginHorizontal: 8,
+        paddingHorizontal: 18,
+        paddingVertical: 10,
+        borderRadius: 999,
+      }}
+    >
+      <Text variant="titleMedium" style={{ color: colors[fg] }}>{name}</Text>
+    </View>
+  );
+
+  if (isDesktop) {
+    return (
+      <View style={{ paddingVertical: 20, paddingHorizontal: 16 }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent:"center", gap: 12 }}>
+          {coloredItems.map(({ name, bg, fg }, i) => chip(name, bg, fg, i))}
         </View>
       </View>
+    );
+  }
+
+  return (
+    <View style={{ overflow: "hidden", paddingVertical: 20 }}>
+      <Animated.View
+        style={[{ flexDirection: "row", alignItems: "center", flexShrink: 0, alignSelf: "flex-start" }, animatedStyle]}
+        onLayout={onLayout}
+      >
+        {[...coloredItems, ...coloredItems].map(({ name, bg, fg }, i) => chip(name, bg, fg, i))}
+      </Animated.View>
     </View>
   );
 };
@@ -178,7 +184,7 @@ const Trust = () => {
   return (
     <View style={{ marginHorizontal: screenPadding }}>
       <ThemedView
-        style={[{ paddingVertical: 16, alignItems: "flex-start" }]}
+        style={[{ paddingVertical: 16, alignItems: "center" }]}
         responsive={800}
       >
         <View
@@ -188,7 +194,7 @@ const Trust = () => {
           ]}
         >
           <Text variant="displayMedium">
-            Találj megbízható embereket a környékeden!
+            Ismerd meg a körülötted élő embereket!
           </Text>
           <Text variant="bodyLarge">
             A FiFe App bizalmi láncot épít fel. Ha valakiben megbíznak a
@@ -379,7 +385,7 @@ const AboutMe = () => {
             közösségért és egy szebb jövőért dolgozom. Ha neked is fontosak
             ezek, kérlek, támogasd a FiFe Appot!
           </Text>
-          <ThemedView responsive={1000} style={{ gap: 16, zIndex: 10 }}>
+          <ThemedView responsive={500} style={{ gap: 16, zIndex: 10, width:"100%" }}>
             <Link href="/projekt" asChild>
               <Button type="secondary" big>
                 Beszállnál a projektbe?
@@ -442,7 +448,7 @@ export default function App() {
       <ThemedView type="default" style={{ alignItems: "center" }}>
         <View style={{ flex: 1, gap: 16, maxWidth: 1000, width: "100%" }}>
           <Hero />
-          <HowItWorks />
+          <BusinessScrollSection />
           <Trust />
           <About />
           <Banner />
@@ -488,28 +494,5 @@ const styles = StyleSheet.create({
   loginButton: {
     borderRadius: 12,
     width: "100%",
-  },
-  rowWrap: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    justifyContent: "space-between",
-  },
-  colStack: {
-    flexDirection: "column",
-  },
-  stepCard: {
-    flex: 1,
-    borderRadius: 16,
-    gap: 8,
-  },
-  stepRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 4,
-  },
-  stepCol: {
-    flexDirection: "column",
-    alignItems: "center",
-    textAlign: "center",
   },
 });
