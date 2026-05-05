@@ -80,7 +80,19 @@ export default {
           "useFrameworks": "static"
         }
       }
-    ],
+    ], 
+    [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#fff5e0",
+          "image": "./assets/simple.png",
+          "dark": {
+            "image": "./assets/simple.png",
+            "backgroundColor": "#232323"
+          },
+          "imageWidth": 80
+        }
+      ]
   ],
   experiments: {
     typedRoutes: true,
