@@ -31,7 +31,7 @@ const FILES: (ImageSource|null)[][] = [
 const COLS = DELAYS.length;
 
 // Total time until the whole splash fades out
-const LAST_START = 8000;
+const LAST_START = 8000000;
 const DISMISS_AFTER = LAST_START + FADE_DURATION + 500; // ≈ 3360 ms
 
 interface SplashCellProps {
@@ -99,7 +99,7 @@ export function SplashAnimation({ onFinished }: SplashAnimationProps) {
   const colorScheme = useColorScheme(); 
   
   // Cell fills the larger dimension so the grid always covers the screen
-  const cellSize = Math.min(Math.max(width, height) / COLS, 100);
+  const cellSize = Math.min(Math.max(width, height) / COLS, 80);
 
   const containerOpacity = useSharedValue(1);
   const [webContainerVisible, setWebContainerVisible] = React.useState(true);
@@ -133,7 +133,7 @@ export function SplashAnimation({ onFinished }: SplashAnimationProps) {
     opacity: containerOpacity.value,
   }));
 
-  const bgColor = colorScheme === "dark" ? "#1e1b16" : "#fff5e0";
+  const bgColor = colorScheme == "dark" ? "#1e1b16" : colorScheme == "light" ? "#fff5e0" : "transparent";
 
   if (Platform.OS === "web") {
     return (
@@ -182,15 +182,20 @@ const styles = StyleSheet.create({
   webContainer: {
     ...StyleSheet.absoluteFillObject,
     flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
     overflow: "hidden",
+    gap: 8,
     zIndex: 999,
   },
   webRow: {
-    flex: 1,
+    height: 80,
+    gap: 8,
     flexDirection: "row",
   },
   webCell: {
-    flex: 1,
+    width: 80,
+    height: 80,
     overflow: "hidden",
   },
   webCellImage: {
