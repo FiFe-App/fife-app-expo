@@ -64,14 +64,16 @@ function SplashCell({ delay, size, file }: SplashCellProps) {
   const animStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   if (Platform.OS === "web") {
+
     return (
       <View style={[
-        { width: size, height: size, opacity: webVisible ? 1 : 0 },
+        styles.webCell,
+        { opacity: webVisible ? 1 : 0 },
         // @ts-expect-error – web-only CSS property
         { transition: `opacity ${FADE_DURATION}ms ease-in-out` },
       ]}>
         {file != null && (
-          <Image source={file} style={{ width: size, height: size }} contentFit="contain" autoplay />
+          <Image source={file} style={styles.webCellImage} contentFit="contain" autoplay />
         )}
       </View>
     );
@@ -98,7 +100,7 @@ export function SplashAnimation({ onFinished }: SplashAnimationProps) {
   const colorScheme = useColorScheme(); 
   
   // Cell fills the larger dimension so the grid always covers the screen
-  const cellSize = Math.min(Math.max(width, height) / COLS, 100);
+  const cellSize = Math.min(Math.max(width, height) / COLS, 80);
 
   const containerOpacity = useSharedValue(1);
   const [webContainerVisible, setWebContainerVisible] = React.useState(true);
@@ -132,19 +134,20 @@ export function SplashAnimation({ onFinished }: SplashAnimationProps) {
     opacity: containerOpacity.value,
   }));
 
-  const bgColor = colorScheme === "dark" ? "#232323" : "#fff5e0";
+  const bgColor = colorScheme == "dark" ? "#1e1b16" : colorScheme == "light" ? "#fff5e0" : "transparent";
 
   if (Platform.OS === "web") {
+    const darkModeMql = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
     return (
       <View style={[
-        styles.container,
-        { backgroundColor: bgColor, opacity: webContainerVisible ? 1 : 0 },
+        styles.webContainer,
+        { backgroundColor: darkModeMql && darkModeMql.matches ? "#1e1b16" : "#fff5e0", opacity: webContainerVisible ? 1 : 0 },
         // @ts-expect-error – web-only CSS property
         { transition: "opacity 400ms ease-in-out" },
       ]}>
         <Pressable style={[StyleSheet.absoluteFill, { zIndex: 100 }]} onPress={dismiss} />
         {DELAYS.map((row, rowIndex) => (
-          <View key={rowIndex} style={styles.row}>
+          <View key={rowIndex} style={styles.webRow}>
             {row.map((delay, colIndex) => (
               <SplashCell key={colIndex} delay={delay} file={FILES[rowIndex][colIndex]} size={cellSize} />
             ))}
@@ -175,10 +178,34 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
     zIndex: 999,
-    gap: 8
+    gap: 8,
+  },
+  // Web uses flex-fill layout so cellSize=0 during SSR doesn't break anything
+  webContainer: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    gap: 8,
+    zIndex: 999,
+  },
+  webRow: {
+    height: 80,
+    gap: 8,
+    flexDirection: "row",
+  },
+  webCell: {
+    width: 80,
+    height: 80,
+    overflow: "hidden",
+  },
+  webCellImage: {
+    width: "100%",
+    height: "100%",
   },
   row: {
     flexDirection: "row",
-    gap: 8
+    gap: 8,
   },
 });
