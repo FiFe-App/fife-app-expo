@@ -31,7 +31,7 @@ const FILES: (ImageSource|null)[][] = [
 const COLS = DELAYS.length;
 
 // Total time until the whole splash fades out
-const LAST_START = 8000000;
+const LAST_START = 8000;
 const DISMISS_AFTER = LAST_START + FADE_DURATION + 500; // ≈ 3360 ms
 
 interface SplashCellProps {
@@ -64,6 +64,7 @@ function SplashCell({ delay, size, file }: SplashCellProps) {
   const animStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   if (Platform.OS === "web") {
+
     return (
       <View style={[
         styles.webCell,
@@ -136,10 +137,11 @@ export function SplashAnimation({ onFinished }: SplashAnimationProps) {
   const bgColor = colorScheme == "dark" ? "#1e1b16" : colorScheme == "light" ? "#fff5e0" : "transparent";
 
   if (Platform.OS === "web") {
+    const darkModeMql = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
     return (
       <View style={[
         styles.webContainer,
-        { backgroundColor: bgColor, opacity: webContainerVisible ? 1 : 0 },
+        { backgroundColor: darkModeMql && darkModeMql.matches ? "#1e1b16" : "#fff5e0", opacity: webContainerVisible ? 1 : 0 },
         // @ts-expect-error – web-only CSS property
         { transition: "opacity 400ms ease-in-out" },
       ]}>
