@@ -1,4 +1,5 @@
 import InfoLayer from "@/components/InfoLayer";
+import { SplashAnimation } from "@/components/SplashAnimation";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { persistor, store } from "@/redux/store";
 import { Stack, usePathname } from "expo-router";
@@ -182,6 +183,7 @@ function RootContent() {
 }
 
 export default function RootLayout() {
+  const [splashDone, setSplashDone] = React.useState(false);
   const [loaded] = useFonts({
     Piazzolla,
     "Piazzolla-Regular": PiazzollaRegular,
@@ -205,6 +207,9 @@ export default function RootLayout() {
             </PersistGate>
           </Provider>
         </SafeAreaProvider>
+        {!splashDone && (
+          <SplashAnimation onFinished={() => setSplashDone(true)} />
+        )}
       </GestureHandlerRootView>
     );
 }

@@ -48,7 +48,7 @@ export function SavedProfiles({ uid, myProfile, name }: ContactListProps) {
     <>
       <ThemedView style={{ flex: 1 }}>
         {contacts.length > 0 && <ThemedText variant="labelLarge" style={{ padding: 6, color: theme.colors.secondary, fontWeight: "bold" }}>{myProfile ? "Őket jelölted megbízhatónak" : `Őket jelölte ${name} megbízhatónak`}</ThemedText>
-        }<ScrollView contentContainerStyle={{ flex: 1 }}>
+        }<ScrollView>
           {loading && (
             <View
               style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
