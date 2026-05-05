@@ -185,6 +185,7 @@ function RootContent() {
 export default function RootLayout() {
   const [splashDone, setSplashDone] = React.useState(false);
   const colorScheme = useColorScheme(); 
+  const bgColor = colorScheme == "dark" ? "#1e1b16" : colorScheme == "light" ? "#fff5e0" : "transparent";
   const [loaded] = useFonts({
     Piazzolla,
     "Piazzolla-Regular": PiazzollaRegular,
@@ -200,7 +201,7 @@ export default function RootLayout() {
 
   if (loaded)
     return (
-      <GestureHandlerRootView style={{ flex: 1, backgroundColor: colorScheme == "dark" ? "#232323" : "#fff5e0" }}>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: bgColor }}>
         <SafeAreaProvider>
           <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>

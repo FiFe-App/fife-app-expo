@@ -88,7 +88,7 @@ export default {
           "image": "./assets/simple.png",
           "dark": {
             "image": "./assets/simple.png",
-            "backgroundColor": "#232323"
+            "backgroundColor": "#1e1b16"
           },
           "imageWidth": 80
         }

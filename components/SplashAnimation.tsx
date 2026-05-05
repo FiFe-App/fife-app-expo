@@ -132,7 +132,7 @@ export function SplashAnimation({ onFinished }: SplashAnimationProps) {
     opacity: containerOpacity.value,
   }));
 
-  const bgColor = colorScheme === "dark" ? "#232323" : "#fff5e0";
+  const bgColor = colorScheme === "dark" ? "#1e1b16" : "#fff5e0";
 
   if (Platform.OS === "web") {
     return (
