@@ -11,11 +11,11 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Chip, Icon, IconButton, Surface, Text, useTheme } from "react-native-paper";
+import { IconButton, Surface, Text, useTheme } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
-import { ThemedText } from "../ThemedText";
 import CategoryChip from "../CategoryChip";
+import MetaStat from "../MetaStat";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 
@@ -79,7 +79,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
         <Surface style={styles.container} elevation={2} mode="flat">
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1 }}>
-              <ThemedText variant="titleMedium" type="bold" >{title}</ThemedText>
+              <Text variant="titleLarge" style={{ fontSize: 18, lineHeight: 24 }}>{title}</Text>
               <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.xs, marginTop: Spacing.xs }}>
                 {!!isNew && <CategoryChip key="category-new" style={{ backgroundColor: theme.colors.tertiary }} textStyle={{ color: theme.colors.onTertiary }}>új</CategoryChip>}
                 {categories?.map((e, i) => {
@@ -91,29 +91,14 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
               </View>
             </View>
           </View>
-          <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.xs }}>
-            <View style={{ flexDirection: "row" }}>
-              <Text>
-                <Icon size={16} source="account-group" color={theme.colors.primary} />
-                <Text style={{ marginLeft: Spacing.xs }}>{recommendations} ember ajánlja</Text>
-              </Text>
-            </View>
-            {data.images?.length && <View style={{ flexDirection: "row" }}>
-              <Text>
-                <Icon size={16} source="image" color={theme.colors.primary} />
-                <Text style={{ marginLeft: Spacing.xs }}>{data?.images?.length || 0} kép</Text>
-              </Text>
-            </View>}
-            {!!distanceText && <View style={{ flexDirection: "row" }}>
-              <Text>
-                <Icon size={16} source="map-marker" color={theme.colors.primary} />
-                <Text style={{ marginLeft: Spacing.xs }}>{distanceText}</Text>
-              </Text>
-            </View>}
+          <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.sm }}>
+            <MetaStat icon="account-group">{recommendations} ember ajánlja</MetaStat>
+            {!!data.images?.length && <MetaStat icon="image">{data?.images?.length || 0} kép</MetaStat>}
+            {!!distanceText && <MetaStat icon="map-marker">{distanceText}</MetaStat>}
           </View>
-          <ThemedText numberOfLines={4} ellipsizeMode="tail" style={{ flex: 1 }}>
+          <Text variant="bodyMedium" numberOfLines={4} ellipsizeMode="tail" style={{ flex: 1 }}>
             {description}
-          </ThemedText>
+          </Text>
 
           {showOptions && myBuziness && (
             <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: -Spacing.xs, marginBottom: -Spacing.xs }}>
@@ -145,7 +130,7 @@ const styles = StyleSheet.create({
   container: {
     overflow: "hidden",
     borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
+    padding: Spacing.md,
     gap: Spacing.sm,
   },
 });
