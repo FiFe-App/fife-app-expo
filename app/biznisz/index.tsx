@@ -33,6 +33,7 @@ export default function Index() {
   );
   const searchType = searchParams?.searchType;
   const searchCircle = searchParams?.searchCircle;
+  const listTitle = searchParams?.text ? "Találatok: " + searchParams?.text : "Új bizniszek";
   const dispatch = useDispatch();
 
   const { canLoadMore, search, loadNext } = useBuzinessSearch();
@@ -57,7 +58,7 @@ export default function Index() {
       <ThemedView style={{ flex: 1 }} type="default">
         <ThemedView type="card" style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
 
-          <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Találatok</ThemedText>
+          <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>{listTitle}</ThemedText>
           <Measure name="filter">
             <View><Button icon='filter' mode="text" onPress={() => setLocationMenuVisible(true)}>Finomítás</Button></View>
           </Measure>

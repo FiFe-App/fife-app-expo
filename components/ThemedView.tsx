@@ -4,7 +4,7 @@ import { useTheme } from "react-native-paper";
 export type ThemedViewProps = ViewProps & {
   lightColor?: string;
   darkColor?: string;
-  type?: "default" | "card";
+  type?: "default" | "card" | "error";
   responsive?: number;
   reverseOnCol?: boolean;
 };
@@ -24,6 +24,11 @@ export function ThemedView({
     card: {
       backgroundColor: theme.colors.surface,
     },
+    error: {
+      backgroundColor: theme.colors.errorContainer,
+      borderRadius: 8,
+      padding: 6
+    },
     default: {
       backgroundColor: theme.colors.background,
     },
@@ -41,6 +46,7 @@ export function ThemedView({
           backgroundColor: theme.colors.background,
         },
         type === "card" ? styles.card : undefined,
+        type === "error" ? styles.error : undefined,
         style,
         responsive ? (!isCol ? styles.flexRow : styles.flexCol) : undefined,
       ]}

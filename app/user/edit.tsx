@@ -265,7 +265,7 @@ export default function Index() {
 
   if (myUid)
     return (
-      <ThemedView style={{ flex: 1 }}>
+      <ThemedView style={{ flex: 1,  paddingBottom: 24 }}>
         <ScrollView style={{ flex: 1, padding: 8 }}>
           <View style={{ alignItems: "center", marginBottom: 16 }}>
             <View style={{ width: 200 }}>
@@ -296,6 +296,10 @@ export default function Index() {
               )}
             </View>
           </View>
+
+          <ThemedText variant="bodyLarge" type="bold" style={{ marginBottom: 8 }}>
+            Általános infóid
+          </ThemedText>
           <TextInput
             label="Név* (kötelező)"
             value={profile?.full_name || ""}
@@ -315,12 +319,12 @@ export default function Index() {
             onChangeText={(t) => setProfile({ ...profile, username: t })}
             style={{ marginTop: 8 }}
           />
-          <View style={{ padding: 16 }}>
+          <View style={{ padding: 8 }}>
             <ThemedText type="label">Email, amivel regisztráltál:</ThemedText>
             <ThemedText>{userData?.email}</ThemedText>
           </View>
           <Divider />
-          <View style={{ padding: 16 }}>
+          <View style={{ padding: 8 }}>
             <Menu
               visible={themeMenuVisible}
               onDismiss={() => setThemeMenuVisible(false)}
@@ -377,8 +381,8 @@ export default function Index() {
           </View>
           <Divider />
           <View style={{ paddingVertical: 16 }}>
-            <ThemedText type="subtitle" style={{ marginBottom: 8 }}>
-              Lakhelyed
+            <ThemedText variant="bodyLarge" type="bold" style={{ marginBottom: 8 }}>
+              Lakhelyed környéke
             </ThemedText>
             <ThemedText type="label" style={{ marginBottom: 8 }}>
               Add meg a lakhelyedet, hogy lásd a fiféket a környékeden.
@@ -411,7 +415,7 @@ export default function Index() {
           </View>
           <Divider />
           <View style={{ paddingVertical: 16, gap: 12 }}>
-            <ThemedText type="subtitle">Értesítések</ThemedText>
+            <ThemedText variant="bodyLarge" type="bold">Értesítések</ThemedText>
             {Platform.OS !== "web" && (
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <View style={{ flex: 1 }}>
@@ -437,8 +441,8 @@ export default function Index() {
             </View>
           </View>
           <Divider />
-          <View style={{ gap: 8, paddingTop: 8 }}>
-            <ThemedText type="subtitle">Elérhetőségeid</ThemedText>
+          <View style={{ gap: 8, paddingTop: 8, paddingBottom: 48 }}>
+            <ThemedText variant="bodyLarge" type="bold">Elérhetőségeid</ThemedText>
             <View style={{ alignItems: "center" }}>
               <Icon source="alert" size={24} color={theme.colors.error} />
               <HelperText type="error" style={{ textAlign: "center" }}>
@@ -462,6 +466,7 @@ export default function Index() {
                   setUserLocation(location);
                 }}
                 searchEnabled
+                markerOnly
                 setOpen={setLocationMenuVisible}
               />
             </ThemedView>

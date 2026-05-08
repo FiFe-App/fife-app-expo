@@ -1,16 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Platform, View, StyleSheet, Pressable, Alert } from "react-native";
+import { View, StyleSheet } from "react-native";
 import BuzinessItem from "./BuzinessItem";
 import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Camera,
-  Circle,
   Details,
-  MapView,
   Marker,
   Region,
 } from "../mapView/mapView";
+import FiFeMap from "../mapView/FiFeMap";
 import MyLocationIcon from "@/assets/images/myLocationIcon";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 import { useMyLocation } from "@/hooks/useMyLocation";
@@ -19,8 +18,6 @@ import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { Button, FAB, IconButton } from "react-native-paper";
 import mapStyles from "../mapView/style";
 import { addDialog } from "@/redux/reducers/infoReducer";
-import { darkMapStyle, lightMapStyle } from "../MapSelector/mapStyles";
-import { theme } from "@/assets/theme";
 
 interface BuzinessBuzinessMapProps {
   load: (arg0?: number) => void;
@@ -102,16 +99,8 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
 
   return (
     <View style={styles.container}>
-      <MapView
+      <FiFeMap
         ref={mapRef}
-        {...(Platform.OS === "web" ? {
-          options: {
-            mapTypeControl: false,
-            fullscreenControl: false,
-            streetViewControl: false,
-            zoomControl: false,
-          },
-        } : {})}
         style={StyleSheet.absoluteFillObject}
         onMapLoaded={(e) => {
           //Alert.alert(JSON.stringify(e));
@@ -126,23 +115,13 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
           setSelectedBuzinessId(null);
         }}
         initialCamera={{
-          altitude: 10,
           center: {
             latitude: myLocation?.coords.latitude || 47.4979,
             longitude: myLocation?.coords.longitude || 19.0402,
           },
-          heading: 0,
-          pitch: 0,
-          zoom: 12,
         }}
-        customMapStyle={theme.dark ? darkMapStyle : lightMapStyle}
-        provider="google"
-        googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
-        pitchEnabled={false}
-        showsPointsOfInterest={false}
+        showsPointsOfInterests={false}
         showsUserLocation
-        rotateEnabled={false}
-        toolbarEnabled={false}
         onRegionChangeComplete={onRegionChange}
       >
         {buzinesses.map((buziness) => {
@@ -155,15 +134,9 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
               title={buziness.title}
               key={buziness.id}
               anchor={{ x: 0.5, y: 0.5 }}
+              onPress={() => setSelectedBuzinessId(buziness.id)}
             >
-              <Pressable
-                onPress={() => {
-                  setSelectedBuzinessId(buziness.id);
-                  //panToCoords(Number(cords[1]), Number(cords[0]));
-                }}
-              >
-                <NewMarkerIcon />
-              </Pressable>
+              <NewMarkerIcon />
             </Marker>
           );
         })}
@@ -178,7 +151,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
             <MyLocationIcon style={{ width: 20, height: 20 }} />
           </Marker>
         )}
-      </MapView>
+      </FiFeMap>
       <FAB
         style={mapStyles.myLocationButton}
         icon={myLocation ? "map-marker" : "map-marker-question"}

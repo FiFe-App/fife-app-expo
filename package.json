@@ -74,7 +74,7 @@
     "react-native-gesture-handler": "~2.30.0",
     "react-native-get-random-values": "~1.11.0",
     "react-native-image-modal": "^3.0.11",
-    "react-native-maps": "1.18.0",
+    "react-native-maps": "1.27.2",
     "react-native-open-maps": "^0.4.3",
     "react-native-pager-view": "8.0.0",
     "react-native-paper": "^5.15.0",

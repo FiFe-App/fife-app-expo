@@ -21,10 +21,10 @@ import {
   Marker,
   Region,
 } from "../mapView/mapView";
+import FiFeMap from "../mapView/FiFeMap";
 import styles from "../mapView/style";
 import { MapSelectorProps } from "./MapSelector.types";
 import { CircleType } from "@/redux/store.type";
-import { lightMapStyle, darkMapStyle } from "./mapStyles";
 import { ThemedText } from "../ThemedText";
 
 const defaultMapLocation = {
@@ -49,12 +49,13 @@ const MapSelector = ({
   const circleSize = mapHeight / 3;
   const [circleRadiusText, setCircleRadiusText] = useState("");
   const [circle, setCircle] = useState<CircleType>(data || defaultMapLocation);
+  interface GeoResult {
+    formatted_address: string;
+    geometry: { location: { lat: () => number; lng: () => number } };
+  }
   const [search, setSearch] = useState("");
-  const [addressList, setAddressList] = useState<google.maps.GeocoderResult[]>(
-    [],
-  );
-  const [selectedAddress, setSelectedAddress] =
-    useState<google.maps.GeocoderResult | null>(null);
+  const [addressList, setAddressList] = useState<GeoResult[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<GeoResult | null>(null);
   const [searchFocused, setSearchFocused] = useState(false);
   const showList = addressList && selectedAddress?.formatted_address !== search && searchFocused;
   const [approxLocation, setApproxLocation] = useState(false);
@@ -64,7 +65,6 @@ const MapSelector = ({
 
   // Determine if we're using dark theme
   const isDarkTheme = theme.dark;
-  const mapStyle = isDarkTheme ? darkMapStyle : lightMapStyle;
 
   const onRegionChange:
     | ((region: Region, details: Details) => void)
@@ -115,13 +115,28 @@ const MapSelector = ({
 
   const turnToAddress = async (address: string) => {
     if (address.length < 4) return;
-    const geocoder = new google.maps.Geocoder();
-    const coded = await geocoder.geocode({
-      address,
-      componentRestrictions: { country: "HU" },
-    });
-
-    return coded;
+    if (Platform.OS === "web") {
+      const geocoder = new google.maps.Geocoder();
+      const coded = await geocoder.geocode({
+        address,
+        componentRestrictions: { country: "HU" },
+      });
+      return { results: coded.results.map((r) => ({
+        formatted_address: r.formatted_address,
+        geometry: { location: { lat: () => r.geometry.location.lat(), lng: () => r.geometry.location.lng() } },
+      })) };
+    } else {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&components=country:HU&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+      const response = await fetch(url);
+      const json = await response.json();
+      if (json.status !== "OK") return { results: [] };
+      return {
+        results: (json.results as Array<{ formatted_address: string; geometry: { location: { lat: number; lng: number } } }>).map((r) => ({
+          formatted_address: r.formatted_address,
+          geometry: { location: { lat: () => r.geometry.location.lat, lng: () => r.geometry.location.lng } },
+        })),
+      };
+    }
   };
   const debounce = <T,>(func: (param: T) => void, wait: number) => {
     let timeout: NodeJS.Timeout;
@@ -166,6 +181,8 @@ const MapSelector = ({
               setSearch(text);
               debouncedSearch(text);
             }}
+            outlineStyle={{borderRadius: 999}}
+            style={{margin: 6}}
             onFocus={() => setSearchFocused(true)}
             value={search}
           />
@@ -207,16 +224,8 @@ const MapSelector = ({
         <View
           style={{ width: "100%", flex: 1, zIndex: 0 }}
         >
-          <MapView
+          <FiFeMap
             ref={mapRef}
-            {...(Platform.OS === "web" ? {
-              options: {
-                mapTypeControl: false,
-                fullscreenControl: false,
-                streetViewControl: false,
-                zoomControl: false,
-              },
-            } : {})}
             onPoiClick={() => {
               // no-op: suppress default POI behavior
             }}
@@ -226,22 +235,12 @@ const MapSelector = ({
             }}
             style={{ width: "100%", height: "100%" }}
             initialCamera={{
-              altitude: 10,
               center: {
                 latitude: circle?.location?.latitude,
                 longitude: circle?.location?.longitude,
               },
-              heading: 0,
-              pitch: 0,
-              zoom: 12,
             }}
-            provider="google"
-            googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
-            pitchEnabled={false}
-            rotateEnabled={false}
-            toolbarEnabled={false}
             //onRegionChangeComplete={onRegionChange}
-            customMapStyle={mapStyle}
           >
             {data?.location && data.location.latitude !== myLocation?.coords.latitude && data.location.longitude !== myLocation?.coords.longitude && (markerOnly ?
               <Marker
@@ -293,7 +292,7 @@ const MapSelector = ({
               </Marker>
             )}
 
-          </MapView>
+          </FiFeMap>
           <View style={{position:"absolute",top:80,width:"100%",alignItems:"center"}}>          
             <Chip icon="map-marker"><ThemedText variant="labelSmall">Kattints a térképre hogy kiválassz egy pontot!</ThemedText></Chip>
           </View>

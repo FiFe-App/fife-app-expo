@@ -32,7 +32,8 @@ import {
   TouchableRipple,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { MapView, Marker } from "../mapView/mapView";
+import { Marker } from "../mapView/mapView";
+import FiFeMap from "../mapView/FiFeMap";
 import { ThemedView } from "../ThemedView";
 import {
   Dropdown,
@@ -505,30 +506,13 @@ export default function BuzinessEditScreen({
             )}
             <View style={{ minHeight: circle ? 300 : 100 }}>
               {circle ? (
-                <MapView
-                  options={{
-                    mapTypeControl: false,
-                    fullscreenControl: false,
-                    streetViewControl: false,
-                  }}
+                <FiFeMap
                   zoomControlEnabled={false}
                   initialCamera={{
-                    altitude: 10,
                     center: selectedLocation ||
-                      myLocation?.coords || {
-                      latitude: 47.4979,
-                      longitude: 19.0402,
-                    },
-                    heading: 0,
-                    pitch: 0,
-                    zoom: 12,
+                      myLocation?.coords || undefined,
                   }}
                   style={{ width: "100%", height: 300 }}
-                  provider="google"
-                  googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
-                  pitchEnabled={false}
-                  rotateEnabled={false}
-                  toolbarEnabled={false}
                   moveOnMarkerPress
                 >
                   {(!!selectedLocation || !!myLocation) && (
@@ -545,7 +529,7 @@ export default function BuzinessEditScreen({
                       <NewMarkerIcon width={24} height={24} />
                     </Marker>
                   )}
-                </MapView>
+                </FiFeMap>
               ) : (
                 <View style={{ alignItems: "center", gap: 8, padding: 16 }}>
                   <Image

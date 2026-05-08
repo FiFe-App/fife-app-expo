@@ -45,6 +45,13 @@ export default {
   },
   plugins: [
     [
+      "react-native-maps",
+      {
+        "androidGoogleMapsApiKey": process.env.YOUR_GOOGLE_MAPS_API_KEY,
+        "iosGoogleMapsApiKey": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+      }
+    ],
+    [
       "expo-notifications",
       {
         icon: "./assets/images/Slimey.png",

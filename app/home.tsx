@@ -8,7 +8,7 @@ import {
 } from "@/redux/reducers/usersReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
-import { router, Stack, useFocusEffect } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import style from "@/components/styles";
@@ -17,12 +17,9 @@ import {
   Portal, Text
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { MyAppbar } from "@/components/MyAppBar";
 import Smiley from "@/components/Smiley";
-import BuzinessSearchInput from "@/components/BuzinessSearchInput";
 import WhatToDo from "@/components/WhatToDo";
 import { Button } from "@/components/Button";
-import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 import { useFifeSearch } from "@/hooks/useFifeSearch";
 import { useProfileSearch } from "@/hooks/useProfileSearch";
 
@@ -36,7 +33,7 @@ export default function Index() {
 
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [whatVisible, setWhatVisible] = useState(false);
-  const { fetch, data, fetchNextPage, hasMore } = useFifeSearch();
+  const { fetch, data, fetchNextPage, hasMore, error } = useFifeSearch();
   const { results: newestUsers, search: fetchNewest } = useProfileSearch();
 
 
@@ -64,7 +61,7 @@ export default function Index() {
           <ThemedView style={{ width: "100%", alignItems: "center", zIndex: 100 }} type="card">
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
               <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
-              <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, flex: 1 }}>
+              <View style={{ paddingHorizontal: 8, paddingTop: 8, paddingBottom: 4, flex: 1, alignItems:"flex-start" }}>
                 <Text variant="titleMedium">Üdvözöllek a FiFe Appban!</Text>
                 <Button icon="help-circle" onPress={() => setWhatVisible(true)} style={{ padding: 0 }}>
                   <Text variant="labelMedium">Mit lehet itt csinálni?</Text>
@@ -74,7 +71,7 @@ export default function Index() {
           </ThemedView>
           <ThemedView type="card" style={{ paddingHorizontal: 16, paddingTop: 0, paddingBottom: 8, flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
             <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 4 }}>
-              <ThemedText variant="labelLarge" style={{ color: theme.colors.secondary, fontWeight: "bold" }}>Fife Radar</ThemedText>
+              <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>Fife Radar</ThemedText>
               <Icon size={18} color={theme.colors.secondary} source="wifi" />
             </View>
             <Button
@@ -84,7 +81,7 @@ export default function Index() {
               onPress={() => setLocationMenuVisible(true)}
             >Hol keresel?</Button>
           </ThemedView>
-          <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} />
+          <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} error={error}/>
           <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />
           <Portal>
             <Modal

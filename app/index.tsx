@@ -2,7 +2,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
 import { ScrollView, Platform, StyleSheet, View } from "react-native";
 import { Image, ImageSource } from "expo-image";
-import { Text } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import { ThemedInput as TextInput } from "@/components/ThemedInput";
 import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 import { Link, Redirect } from "expo-router";
@@ -11,7 +11,6 @@ import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { useSelector } from "react-redux";
 import Smiley from "@/components/Smiley";
-import { theme } from "@/assets/theme";
 
 export const Header = () => {
   return (
@@ -262,7 +261,6 @@ const About = () => {
 
 const Banner = () => {
   const { isDesktop } = useBreakpoint();
-  const [height, setHeight] = useState(20);
 
   return (
     <ThemedView
@@ -436,6 +434,7 @@ export const Footer = () => {
 
 export default function App() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
+  const theme = useTheme();
   if (uid) return <Redirect href="/home" />;
   return (
     <ScrollView contentContainerStyle={{ backgroundColor: theme.colors.background }} style={{ flex: 1, backgroundColor: theme.colors.background }}>

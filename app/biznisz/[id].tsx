@@ -7,7 +7,8 @@ import { ThemedView } from "@/components/ThemedView";
 import BuzinessRecommendationsModal from "@/components/buziness/BuzinessRecommendationsModal";
 import { ContactList } from "@/components/buziness/ContactList";
 import Comments from "@/components/comments/Comments";
-import { LatLng, MapView, Marker } from "@/components/mapView/mapView";
+import { LatLng, Marker } from "@/components/mapView/mapView";
+import FiFeMap from "@/components/mapView/FiFeMap";
 import { Tables } from "@/database.types";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
@@ -51,6 +52,7 @@ import { MyAppbar } from "@/components/MyAppBar";
 import typeToIcon from "@/lib/functions/typeToIcon";
 import UrlText from "@/components/comments/UrlText";
 import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
+import CategoryChip from "@/components/CategoryChip";
 
 export default function Index() {
   const theme = useTheme();
@@ -64,7 +66,6 @@ export default function Index() {
   const [data, setData] = useState<BuzinessItemInterface | undefined>();
   const [defaultContact, setDefaultContact] =
     useState<Tables<"contacts"> | null>();
-  const [requestContanct, setRequestContanct] = useState(false);
   const [error, setError] = useState<null | Partial<PostgrestError>>(null);
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
@@ -137,8 +138,6 @@ export default function Index() {
               if (data.defaultContact) {
                 if (data.contacts) {
                   setDefaultContact(data.contacts);
-                } else {
-                  setRequestContanct(true);
                 }
               }
 
@@ -176,7 +175,7 @@ export default function Index() {
         header: () => <MyAppbar
           center={data?.title ?
             <Text variant="titleLarge">{title}</Text> : undefined}
-          style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0, backgroundColor: "transparent" }} />
+          style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0, backgroundColor: theme.colors.background }} />
       }} />
       <ThemedView style={{ flex: 1 }}>
         <ScrollView >
@@ -192,19 +191,12 @@ export default function Index() {
                 }}
               >
                 {!!isNew && (
-                  <ThemedView type="card" key={"category-new"}
-                    style={{ paddingHorizontal: 4, borderRadius: 6, paddingVertical: 2, backgroundColor: theme.colors.tertiary }}>
-                    <ThemedText style={{ color: theme.colors.onTertiary }}>új</ThemedText>
-                  </ThemedView>
+                  <CategoryChip key="category-new" style={{ backgroundColor: theme.colors.tertiary }} textStyle={{ color: theme.colors.onTertiary }}>új</CategoryChip>
                 )}
                 {categories?.slice(1).map((e, i) => {
                   if (e.trim())
                     return (
-                      <ThemedView type="card" key={"category" + i} style={{ paddingHorizontal: 4, borderRadius: 6, paddingVertical: 2 }}
-
-                      >
-                        <ThemedText>{e}</ThemedText>
-                      </ThemedView>
+                      <CategoryChip key={"category" + i}>{e}</CategoryChip>
                     );
                 })}
               </View>
@@ -263,18 +255,13 @@ export default function Index() {
                   </Text>
                 </TouchableRipple>
               </View>
-              <View style={{ flexWrap: "wrap", gap: 4, padding: 4 }}>
+              <View style={{ gap: 4, padding: 4 }}>
                 {defaultContact && (
-                  <Link asChild href={getLinkForContact(defaultContact)}>
-                    <Button style={{ flex: 1 }} mode="contained-tonal" icon={typeToIcon(defaultContact.type)}>
+                  <Link asChild href={getLinkForContact(defaultContact)} style={{ width: "100%" }}>
+                    <Button mode="contained-tonal" icon={typeToIcon(defaultContact.type)}>
                       {defaultContact.title || defaultContact?.data}
                     </Button>
                   </Link>
-                )}
-                {requestContanct && (
-                  <Button style={{ flex: 1 }} mode="contained">
-                    Kérd el a kontaktját
-                  </Button>
                 )}
 
                 {!myBuziness && (
@@ -305,32 +292,9 @@ export default function Index() {
                 <View style={{ marginTop: 8 }}>
                   <Text variant="titleMedium" style={{ marginHorizontal: 8, marginBottom: 6 }}>Helyzete</Text>
                   <View style={{ minHeight: 200, flex: 1 }}>
-                    <MapView
-                      // @ts-expect-error options type are colliding in different mapViews
-                      options={{
-                        mapTypeControl: false,
-                        fullscreenControl: false,
-                        streetViewControl: false,
-                        zoomControl: false,
-                      }}
+                    <FiFeMap
                       style={{ width: "100%", height: 240 }}
-                      initialCamera={{
-                        altitude: 10,
-                        center: location || {
-                          latitude: 47.4979,
-                          longitude: 19.0402,
-                        },
-                        heading: 0,
-                        pitch: 0,
-                        zoom: 12,
-                      }}
-                      provider="google"
-                      googleMapsApiKey={
-                        process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
-                      }
-                      pitchEnabled={false}
-                      rotateEnabled={false}
-                      toolbarEnabled={false}
+                      initialCamera={location ? { center: location } : undefined}
                     >
                       {location && <Marker coordinate={location} />}
                       {myLocation && (
@@ -342,7 +306,7 @@ export default function Index() {
                           <MyLocationIcon style={{ width: 20, height: 20 }} />
                         </Marker>
                       )}
-                    </MapView>
+                    </FiFeMap>
                     {location && (
                       <IconButton
                         icon="directions"

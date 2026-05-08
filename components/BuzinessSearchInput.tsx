@@ -30,11 +30,18 @@ const BuzinessSearchInput = ({ onSearch }: { onSearch: (query: string) => void }
     placeholderTextColor={theme.colors.onSurfaceVariant}
     placeholder="Mire van szükséged?"
     right={
-      <TextInput.Icon
-        icon="magnify"
-        onPress={() => onSearch(searchText)}
-        disabled={!canSearch}
-      />
+      searchText ? (
+        <TextInput.Icon
+          icon="close"
+          onPress={() => dispatch(storeBuzinessSearchParams({ text: "" }))}
+        />
+      ) : (
+        <TextInput.Icon
+          icon="magnify"
+          onPress={() => onSearch(searchText)}
+          disabled={!canSearch}
+        />
+      )
     }
   />);
 };

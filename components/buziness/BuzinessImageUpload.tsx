@@ -70,21 +70,43 @@ const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessIma
     image: ExpoImagePicker.ImagePickerAsset,
     buzinessId: number,
   ) => {
-    if (!buzinessId || !image || !image.fileName) return;
+    if (!buzinessId || !image) return;
 
-    const response = await fetch(image.uri);
-    const blob = await response.blob();
-    const arrayBuffer = await new Response(blob).arrayBuffer();
+    const fileName =
+      image.fileName ||
+      image.uri.split("/").pop() ||
+      `image_${Date.now()}.jpg`;
+    const mimeType = image.mimeType || "image/jpeg";
+
+    let uploadData: Uint8Array | Blob;
+    if (image.base64) {
+      // Use base64 directly — avoids fetch failures on iOS temp file URIs.
+      // Pass Uint8Array (ArrayBufferView), not .buffer — ArrayBuffer can be
+      // detached crossing the Hermes JSI bridge on iOS.
+      const b64 = image.base64.replace(/\s/g, ""); // strip any line breaks
+      const binaryString = atob(b64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      uploadData = bytes;
+    } else {
+      const response = await fetch(image.uri);
+      uploadData = await response.blob();
+    }
+
     const upload = await supabase.storage
       .from("buzinessImages")
-      .upload(myUid + "/" + buzinessId + "/" + image.fileName, arrayBuffer, {
-        contentType: image.mimeType,
+      .upload(myUid + "/" + buzinessId + "/" + fileName, uploadData, {
+        contentType: mimeType,
+        upsert: true,
       })
       .then(async (res) => {
-        console.log(res);
+        console.log("storage upload result:", res);
         return res;
       })
       .catch((error) => {
+        console.error("Upload error:", error);
         return error;
       });
 

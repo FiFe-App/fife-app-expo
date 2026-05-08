@@ -11,12 +11,12 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Icon, IconButton, Surface, Text } from "react-native-paper";
+import { Button, Icon, IconButton, Surface, Text } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "../ThemedText";
-import { ThemedView } from "../ThemedView";
 import { theme } from "@/assets/theme";
+import CategoryChip from "../CategoryChip";
 
 interface BuzinessItemProps {
   data: BuzinessItemInterface;
@@ -50,7 +50,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
     e.preventDefault();
     dispatch(
       addDialog({
-        title: categories?.[0] + " Törlése?",
+        title: title + " Törlése?",
         text: "Nem fogod tudni visszavonni!",
         onSubmit: () => {
           trackPromise(
@@ -77,17 +77,13 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
         <Surface style={styles.container} elevation={2} mode="flat">
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1 }}>
-              <ThemedText variant="titleMedium" type="title" style={{}}>{title}</ThemedText>
+              <ThemedText variant="titleMedium" type="bold" >{title}</ThemedText>
               <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4, marginTop: 4 }}>
-                {!!isNew && <ThemedView type="card" key={"category-new"} style={{ paddingHorizontal: 4, borderRadius: 6, paddingVertical: 2, backgroundColor: theme.colors.tertiary }}>
-                  <ThemedText style={{ color: theme.colors.onTertiary }}>új</ThemedText>
-                </ThemedView>}
+                {!!isNew && <CategoryChip key="category-new" style={{ backgroundColor: theme.colors.tertiary }} textStyle={{ color: theme.colors.onTertiary }}>új</CategoryChip>}
                 {categories?.map((e, i) => {
                   if (e.trim())
                     return (
-                      <ThemedView type="card" key={"category" + i} style={{ paddingHorizontal: 4, borderRadius: 6, paddingVertical: 2 }}>
-                        <ThemedText>{e}</ThemedText>
-                      </ThemedView>
+                      <CategoryChip key={"category" + i}>{e}</CategoryChip>
                     );
                 })}
               </View>
@@ -97,15 +93,15 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
             <View style={{ flexDirection: "row" }}>
               <Text>
                 <Icon size={16} source="account-group" />
-                <Text style={{ marginLeft: 4 }}>{recommendations} ember ajánlja</Text>
+                <Text style={{ marginLeft: 4 }}> {recommendations} ember ajánlja</Text>
               </Text>
             </View>
-            <View style={{ flexDirection: "row" }}>
+            {data.images?.length && <View style={{ flexDirection: "row" }}>
               <Text>
                 <Icon size={16} source="image" />
-                <Text style={{ marginLeft: 4 }}>{data?.images?.length || 0} kép</Text>
+                <Text style={{ marginLeft: 4 }}> {data?.images?.length || 0} kép</Text>
               </Text>
-            </View>
+            </View>}
             {!!distanceText && <View style={{ flexDirection: "row" }}>
               <Text>
                 <Icon size={16} source="map-marker" />
@@ -113,14 +109,15 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
               </Text>
             </View>}
           </View>
-          <Text numberOfLines={4} ellipsizeMode="tail" style={{ flex: 1 }}>
+          <ThemedText numberOfLines={4} ellipsizeMode="tail" style={{ flex: 1 }}>
             {description}
-          </Text>
+          </ThemedText>
 
           {showOptions && myBuziness && (
-            <View style={{ flexDirection: "row" }}>
-              <IconButton
+            <View style={{ flexDirection: "row", alignItems:"flex-end", gap: 4 }}>
+              <Button
                 icon="pencil-circle"
+                mode="text"
                 onPress={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -129,8 +126,10 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
                     params: { editId: id },
                   });
                 }}
-              />
-              <IconButton icon="delete-circle" onPress={showDelete} />
+              >Szerkesztés</Button>
+              <Button textColor={theme.colors.error} mode="text" icon="delete-circle" onPress={showDelete} >
+                Törlés
+              </Button>
             </View>
           )}
         </Surface>

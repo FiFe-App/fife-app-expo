@@ -6,10 +6,12 @@ import UserItem from "./UserItem";
 import { RootState } from "@/redux/store";
 import { useSelector } from "react-redux";
 import { NearestProfile, User } from "@/redux/store.type";
+import { ThemedView } from "../ThemedView";
 
 interface UsersListProps {
   load: () => void;
   data: NearestProfile[];
+  error: string | null;
   canLoadMore: boolean;
   footerContent?: React.ReactNode;
 }
@@ -19,6 +21,7 @@ export const UsersList: React.FC<UsersListProps> = ({
   data,
   canLoadMore,
   footerContent,
+  error,
 }) => {
   const { userSearchParams } = useSelector(
     (state: RootState) => state.users,
@@ -27,6 +30,9 @@ export const UsersList: React.FC<UsersListProps> = ({
 
   return (
     <View style={styles.container}>
+      {!!error && <ThemedView style={{margin:6}} type="error">
+      <ThemedText type="error">{error}</ThemedText> 
+      </ThemedView>}
       <FlatList
         data={data}
         keyExtractor={(item, index) => item.id === "-1" ? `divider-${index}` : item.id}

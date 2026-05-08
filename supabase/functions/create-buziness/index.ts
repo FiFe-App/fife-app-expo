@@ -102,9 +102,9 @@ Deno.serve(async (req)=>{
     embedding_text: completion.choices[0].message.content,
   }, {
     onConflict: "id"
-  });
+  }).select().single();
   console.log(res);
-  if (!res.error) return new Response(JSON.stringify(res), {
+  if (!res.error) return new Response(JSON.stringify(res.data), {
     headers: {
       ...corsHeaders,
       "Content-Type": "application/json"

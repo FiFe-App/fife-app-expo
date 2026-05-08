@@ -8,6 +8,7 @@ export type ThemedTextProps = TextProps<Text> & {
   | "default"
   | "title"
   | "defaultSemiBold"
+  | "bold"
   | "subtitle"
   | "link"
   | "error"
@@ -29,6 +30,7 @@ export function ThemedText({
         type === "link" ? styles.link : undefined,
         type === "error" ? styles.error : undefined,
         type === "defaultSemiBold" ? styles.defaultSemiBold : undefined,
+        type === "bold" ? { fontFamily: "RedHatText-Bold"} : undefined,
         type === "none" && undefined,
         style,
       ]}
@@ -64,7 +66,7 @@ const styles = StyleSheet.create({
   error: {
     lineHeight: 30,
     fontSize: 16,
-    color: theme.colors.error,
+    color: theme.colors.onError,
   },
   link: {
     color: theme.colors.secondary,

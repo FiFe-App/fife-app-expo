@@ -1,7 +1,7 @@
 import { clearOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { Link, useGlobalSearchParams, useNavigation, usePathname, useSegments } from "expo-router";
-import React, { ReactNode } from "react";
+import { Link, useNavigation, usePathname, useSegments } from "expo-router";
+import React, { ReactNode, useRef } from "react";
 import { useEffect, useState } from "react";
 import { useWindowDimensions, View, ViewStyle } from "react-native";
 import { Appbar, Menu, useTheme } from "react-native-paper";
@@ -18,13 +18,15 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
   const dispatch = useDispatch();
   const segments = useSegments();
   const pathname = usePathname();
-  const { searchParams } = useGlobalSearchParams();
+  const prevSegmentsKey = useRef<string | null>(null);
 
   useEffect(() => {
-    console.log("cleared");
-
-    dispatch(clearOptions());
-  }, [dispatch, segments, searchParams]);
+    const key = segments.join("/");
+    if (prevSegmentsKey.current !== null && prevSegmentsKey.current !== key) {
+      dispatch(clearOptions());
+    }
+    prevSegmentsKey.current = key;
+  }, [dispatch, segments]);
 
   return (
     <Appbar.Header
@@ -46,7 +48,8 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
         {navigation.canGoBack() && pathname !== "/home" && pathname !== "/" && <Appbar.BackAction onPress={navigation.goBack} />}
       </View>
       {center ? <View style={{ flex: 1 }}>{center}</View>
-        : title ? <Appbar.Content titleStyle={{ fontFamily: "Piazzolla-ExtraBold", fontSize: 28 }} title={title} style={{ flex: 1 }} />
+        : title ? 
+          <Appbar.Content titleStyle={{ fontFamily: "Piazzolla-ExtraBold", fontSize: 26 }} title={title} style={{ flex: 1 }} />
           : <Link href="/" style={{ flex: 1 }} asChild>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
               <Smiley />
