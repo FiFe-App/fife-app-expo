@@ -28,33 +28,31 @@ export function useFifeSearch() {
   const [skip, setSkip] = useState(0);
 
   const getSearchLocation = useCallback(() => {
+    const DEFAULT_LOCATION = { lat: 47.4979, long: 19.0402, distance: 100000 };
+
     // Priority: 1) User-selected location, 2) GPS location, 3) profile location, 4) Budapest default
-    if (searchCircle) {
+    if (searchCircle?.location?.latitude != null && searchCircle?.location?.longitude != null) {
       return {
         lat: searchCircle.location.latitude,
         long: searchCircle.location.longitude,
         distance: 100000,
       };
     }
-    if (myLocation) {
+    if (myLocation?.coords?.latitude != null && myLocation?.coords?.longitude != null) {
       return {
         lat: myLocation.coords.latitude,
         long: myLocation.coords.longitude,
-        distance: 100000, // 100km in meters
+        distance: 100000,
       };
     }
-    if (profileLocation) {
+    if (profileLocation?.lat != null && profileLocation?.lng != null) {
       return {
         lat: profileLocation.lat,
         long: profileLocation.lng,
         distance: 100000,
       };
     }
-    return {
-      lat: 47.4979, // Default Budapest coordinates
-      long: 19.0402,
-      distance: 100000,
-    };
+    return DEFAULT_LOCATION;
   }, [searchCircle, myLocation, profileLocation]);
 
   const fetch = useCallback(async () => {

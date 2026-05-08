@@ -6,10 +6,9 @@ interface CategoryChipProps {
   children: string;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
-  textVariant?: 
 }
 
-const CategoryChip = ({ children, style, textStyle, textVariant }: CategoryChipProps) => (
+const CategoryChip = ({ children, style, textStyle }: CategoryChipProps) => (
   <ThemedView
     type="card"
     style={[{ paddingHorizontal: 4, borderRadius: 6, paddingVertical: 2, justifyContent: "center" }, style]}

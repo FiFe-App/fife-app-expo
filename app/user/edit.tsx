@@ -258,9 +258,9 @@ export default function Index() {
     return upload;
   };
   const containerStyle = {
-    margin: 8,
-    borderRadius: 16,
-    height: "90%"
+    flex:1,
+    height: "100%",
+    borderRadius:8,
   };
 
   if (myUid)
@@ -457,6 +457,13 @@ export default function Index() {
           <Modal
             visible={locationMenuVisible}
             onDismiss={() => setLocationMenuVisible(false)}
+            style={{alignItems:"center"}}
+              contentContainerStyle={[
+                {
+                  width: "90%",
+                  height: "90%",
+                },
+              ]}
           >
             <ThemedView style={containerStyle}>
               <MapSelector

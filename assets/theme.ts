@@ -183,7 +183,7 @@ export const darkTheme: MD3Theme = {
       onTertiaryContainer: "#e7deff",
       error: "#ffb4ab",
       onError: "#690005",
-      errorContainer: "#93000a72",
+      errorContainer: "#93000a",
       onErrorContainer: "#ffdad6",
       background: "#1e1b16",
       onBackground: "#e8e2d9",
