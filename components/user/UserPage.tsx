@@ -33,8 +33,8 @@ import {
   Button,
   Icon,
   IconButton,
-  List,
   Portal,
+  Surface,
   Text,
   TouchableRipple,
   useTheme,
@@ -152,125 +152,183 @@ export default function UserPage() {
       <ThemedView style={{ flex: 1 }}>
         {data && uid && (
           <ScrollView>
-            <ThemedView style={{ padding: Spacing.lg, paddingBottom: Spacing.sm, gap: Spacing.sm }}>
-              {/* Hero: Avatar left, name + stats right */}
-              <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.lg, position: "relative" }}>
-                {!myProfile && (
-                  <IconButton
-                    icon="alert-octagon"
-                    size={20}
-                    onPress={() => setShowReportModal(true)}
-                    style={{ position: "absolute", right: -Spacing.sm, top: -Spacing.sm, zIndex: 1 }}
-                  />
-                )}
-                <ProfileImage
-                  modal
-                  uid={uid}
-                  avatar_url={data.avatar_url}
-                  style={{ width: 80, height: 80, borderRadius: BorderRadius.full }}
+            <ThemedView style={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.xxl, paddingBottom: Spacing.lg, gap: Spacing.lg }}>
+              {/* Report button */}
+              {!myProfile && (
+                <IconButton
+                  icon="alert-octagon"
+                  size={20}
+                  onPress={() => setShowReportModal(true)}
+                  style={{ position: "absolute", right: Spacing.sm, top: Spacing.sm, zIndex: 1 }}
                 />
-                <View style={{ flex: 1 }}>
-                  <Text variant="titleLarge">{data?.full_name}</Text>
-                  {/* Stats row */}
-                  <View style={{ flexDirection: "row", marginTop: Spacing.xs }}>
-                    <TouchableRipple
-                      onPress={() => {
-                        if (uid)
-                          dispatch(viewFunction({ key: "friendsProfile", uid }));
-                        setShowRecommendsModal(true);
-                      }}
-                      style={{ flex: 1, borderRadius: BorderRadius.md }}
-                    >
-                      <View style={{ paddingVertical: Spacing.xs }}>
-                        <View style={{ flexDirection: "row", alignItems: "center" }}>
-                          <Text variant="titleMedium" style={{ fontWeight: "700" }}>
-                            {recommendations.length}
-                          </Text>
-                          {functions.includes("friendsProfile") && (
-                            <Badge style={globStyles.badge}>ÚJ</Badge>
-                          )}
-                        </View>
-                        <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                          Támogatók
-                        </Text>
-                      </View>
-                    </TouchableRipple>
+              )}
 
-                    <TouchableRipple
-                      onPress={() => router.push({ pathname: "/user/[uid]/connections", params: { uid } })}
-                      style={{ flex: 1, borderRadius: BorderRadius.md }}
-                    >
-                      <View style={{ paddingVertical: Spacing.xs }}>
-                        <Text variant="titleMedium" style={{ fontWeight: "700" }}>
-                          {connectionsCount}
-                        </Text>
-                        <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                          Kapcsolatok
-                        </Text>
-                      </View>
-                    </TouchableRipple>
-
-                    {data?.created_at && (
-                      <View style={{ flex: 1, paddingVertical: Spacing.xs }}>
-                        <Text variant="titleMedium" style={{ fontWeight: "700" }}>
-                          {elapsedTime(Date.parse(data.created_at.toString()))}
-                        </Text>
-                        <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                          Fife
-                        </Text>
-                      </View>
-                    )}
-                  </View>
+              {/* Centered avatar with gold ring */}
+              <View style={{ alignItems: "center", gap: Spacing.md }}>
+                <View style={{
+                  borderRadius: BorderRadius.full,
+                  borderWidth: 3,
+                  borderColor: theme.colors.primary,
+                  padding: 3,
+                }}>
+                  <ProfileImage
+                    modal
+                    uid={uid}
+                    avatar_url={data.avatar_url}
+                    style={{ width: 100, height: 100, borderRadius: BorderRadius.full }}
+                  />
                 </View>
+                <Text variant="headlineMedium" style={{ textAlign: "center" }}>
+                  {data?.full_name}
+                </Text>
+
+                {/* Username */}
+                {!!data?.username && (
+                  <TouchableRipple
+                    onPress={() => {
+                      Clipboard.setStringAsync(`www.fifeapp.hu/@${data.username}`).then(() => {
+                        dispatch(addSnack({ title: "Vágólapra másolva!" }));
+                      });
+                    }}
+                    style={{ borderRadius: BorderRadius.xs }}
+                  >
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.xs }}>
+                      <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+                        @{data.username}
+                      </Text>
+                      <Icon source="content-copy" size={14} color={theme.colors.onSurfaceVariant} />
+                    </View>
+                  </TouchableRipple>
+                )}
               </View>
 
-              {/* Username */}
-              {!!data?.username && (
+              {/* Stats card */}
+              <Surface
+                style={{
+                  flexDirection: "row",
+                  borderRadius: BorderRadius.lg,
+                  paddingVertical: Spacing.md,
+                  paddingHorizontal: Spacing.lg,
+                  width: "100%",
+                }}
+                elevation={1}
+              >
                 <TouchableRipple
                   onPress={() => {
-                    Clipboard.setStringAsync(`www.fifeapp.hu/@${data.username}`).then(() => {
-                      dispatch(addSnack({ title: "Vágólapra másolva!" }));
-                    });
+                    if (uid)
+                      dispatch(viewFunction({ key: "friendsProfile", uid }));
+                    setShowRecommendsModal(true);
                   }}
-                  style={{ borderRadius: BorderRadius.xs, alignSelf: "flex-start" }}
+                  style={{ flex: 1, alignItems: "center", borderRadius: BorderRadius.md }}
                 >
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.xs }}>
-                    <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                      @{data.username}
+                  <View style={{ alignItems: "center", paddingVertical: Spacing.xs }}>
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                      <Text variant="headlineSmall" style={{ fontWeight: "700", color: theme.colors.primary }}>
+                        {recommendations.length}
+                      </Text>
+                      {functions.includes("friendsProfile") && (
+                        <Badge style={globStyles.badge}>ÚJ</Badge>
+                      )}
+                    </View>
+                    <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                      Támogatók
                     </Text>
-                    <Icon source="content-copy" size={14} color={theme.colors.onSurfaceVariant} />
                   </View>
                 </TouchableRipple>
-              )}
+
+                <View style={{ width: 1, backgroundColor: theme.colors.outlineVariant, marginVertical: Spacing.xs }} />
+
+                <TouchableRipple
+                  onPress={() => router.push({ pathname: "/user/[uid]/connections", params: { uid } })}
+                  style={{ flex: 1, alignItems: "center", borderRadius: BorderRadius.md }}
+                >
+                  <View style={{ alignItems: "center", paddingVertical: Spacing.xs }}>
+                    <Text variant="headlineSmall" style={{ fontWeight: "700", color: theme.colors.primary }}>
+                      {connectionsCount}
+                    </Text>
+                    <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                      Kapcsolatok
+                    </Text>
+                  </View>
+                </TouchableRipple>
+
+                <View style={{ width: 1, backgroundColor: theme.colors.outlineVariant, marginVertical: Spacing.xs }} />
+
+                {data?.created_at && (
+                  <View style={{ flex: 1, alignItems: "center", paddingVertical: Spacing.xs }}>
+                    <Text variant="headlineSmall" style={{ fontWeight: "700", color: theme.colors.primary }}>
+                      {elapsedTime(Date.parse(data.created_at.toString()))}
+                    </Text>
+                    <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                      Fife
+                    </Text>
+                  </View>
+                )}
+              </Surface>
 
               {/* Contacts */}
               {contacts.length > 0 && (
-                <View style={{ width: "100%" }}>
-                  {contacts.map((contact) => (
-                    <TouchableRipple
-                      key={contact.id}
-                      onPress={() => {
-                        const link = getLinkForContact(contact);
-                        if (link) Linking.openURL(String(link));
-                      }}
-                      onLongPress={() => {
-                        Clipboard.setStringAsync(contact.data).then(() => {
-                          dispatch(addSnack({ title: "Vágólapra másolva!" }));
-                        });
-                      }}
-                    >
-                      <List.Item
-                        title={contact.data}
-                        description={contact.title || typeToValueLabel(contact.type)}
-                        left={(props) => (
-                          <List.Icon {...props} icon={typeToIcon(contact.type)} />
+                <View style={{ width: "100%", gap: Spacing.sm }}>
+                  <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant, paddingLeft: Spacing.xs }}>
+                    Elérhetőségek
+                  </Text>
+                  <Surface
+                    style={{
+                      borderRadius: BorderRadius.lg,
+                      overflow: "hidden",
+                      width: "100%",
+                    }}
+                    elevation={1}
+                  >
+                    {contacts.map((contact, index) => (
+                      <React.Fragment key={contact.id}>
+                        {index > 0 && (
+                          <View style={{
+                            height: 1,
+                            backgroundColor: theme.colors.outlineVariant,
+                            marginHorizontal: Spacing.lg,
+                          }} />
                         )}
-                        right={(props) => (
-                          <List.Icon {...props} icon="open-in-new" />
-                        )}
-                      />
-                    </TouchableRipple>
-                  ))}
+                        <TouchableRipple
+                          onPress={() => {
+                            const link = getLinkForContact(contact);
+                            if (link) Linking.openURL(String(link));
+                          }}
+                          onLongPress={() => {
+                            Clipboard.setStringAsync(contact.data).then(() => {
+                              dispatch(addSnack({ title: "Vágólapra másolva!" }));
+                            });
+                          }}
+                        >
+                          <View style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            paddingVertical: Spacing.md,
+                            paddingHorizontal: Spacing.lg,
+                            gap: Spacing.md,
+                          }}>
+                            <View style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: BorderRadius.full,
+                              backgroundColor: theme.colors.surfaceVariant,
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}>
+                              <Icon source={typeToIcon(contact.type)} size={20} color={theme.colors.primary} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text variant="bodyMedium" numberOfLines={1}>{contact.data}</Text>
+                              <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                                {contact.title || typeToValueLabel(contact.type)}
+                              </Text>
+                            </View>
+                            <Icon source="open-in-new" size={16} color={theme.colors.outline} />
+                          </View>
+                        </TouchableRipple>
+                      </React.Fragment>
+                    ))}
+                  </Surface>
                 </View>
               )}
               {myProfile && contacts.length === 0 && (
@@ -293,7 +351,9 @@ export default function UserPage() {
                       style={{ width: "100%" }}
                       href={{ pathname: "/user/edit" }}
                     >
-                      <Button mode="contained-tonal">Profilom szerkesztése</Button>
+                      <Button mode="contained-tonal" style={{ borderRadius: BorderRadius.pill }}>
+                        Profilom szerkesztése
+                      </Button>
                     </Link>
                   </Measure>
                 ) : (
@@ -315,9 +375,10 @@ export default function UserPage() {
                 )}
               </View>
             </ThemedView>
-            <View style={{ height: 1, backgroundColor: theme.colors.surfaceVariant, marginHorizontal: Spacing.lg }} />
 
-            {/* Businesses inline */}
+            <View style={{ height: Spacing.sm, backgroundColor: theme.colors.background }} />
+
+            {/* Businesses */}
             <Measure name="user-biznisz-tabs">
               <MyBuzinesses uid={uid} myProfile={myProfile} name={data.full_name ?? undefined} />
             </Measure>

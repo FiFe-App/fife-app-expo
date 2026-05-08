@@ -67,6 +67,7 @@ export const UsersList: React.FC<UsersListProps> = ({
         contentContainerStyle={{
           gap: Spacing.sm,
           marginVertical: Spacing.sm,
+          paddingHorizontal: Spacing.md,
         }}
       />
 

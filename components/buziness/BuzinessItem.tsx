@@ -11,11 +11,10 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Button, Icon, IconButton, Surface, Text } from "react-native-paper";
+import { Chip, Icon, IconButton, Surface, Text, useTheme } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "../ThemedText";
-import { theme } from "@/assets/theme";
 import CategoryChip from "../CategoryChip";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
@@ -30,6 +29,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
 
   const recommendations = typeof data?.recommendations?.[0]?.count === "number" ? data?.recommendations?.[0]?.count : data.recommendations;
   const { uid } = useSelector((state: RootState) => state.user);
+  const theme = useTheme();
   const myBuziness = author === uid;
   const dispatch = useDispatch();
 
@@ -94,19 +94,19 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
           <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.xs }}>
             <View style={{ flexDirection: "row" }}>
               <Text>
-                <Icon size={16} source="account-group" />
-                <Text style={{ marginLeft: Spacing.xs }}> {recommendations} ember ajánlja</Text>
+                <Icon size={16} source="account-group" color={theme.colors.primary} />
+                <Text style={{ marginLeft: Spacing.xs }}>{recommendations} ember ajánlja</Text>
               </Text>
             </View>
             {data.images?.length && <View style={{ flexDirection: "row" }}>
               <Text>
-                <Icon size={16} source="image" />
-                <Text style={{ marginLeft: Spacing.xs }}> {data?.images?.length || 0} kép</Text>
+                <Icon size={16} source="image" color={theme.colors.primary} />
+                <Text style={{ marginLeft: Spacing.xs }}>{data?.images?.length || 0} kép</Text>
               </Text>
             </View>}
             {!!distanceText && <View style={{ flexDirection: "row" }}>
               <Text>
-                <Icon size={16} source="map-marker" />
+                <Icon size={16} source="map-marker" color={theme.colors.primary} />
                 <Text style={{ marginLeft: Spacing.xs }}>{distanceText}</Text>
               </Text>
             </View>}
@@ -116,10 +116,11 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
           </ThemedText>
 
           {showOptions && myBuziness && (
-            <View style={{ flexDirection: "row", alignItems:"flex-end", gap: 4 }}>
-              <Button
+            <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: -Spacing.xs, marginBottom: -Spacing.xs }}>
+              <IconButton
                 icon="pencil-circle"
-                mode="text"
+                iconColor={theme.colors.onSurfaceVariant}
+                size={22}
                 onPress={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -128,10 +129,8 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
                     params: { editId: id },
                   });
                 }}
-              >Szerkesztés</Button>
-              <Button textColor={theme.colors.error} mode="text" icon="delete-circle" onPress={showDelete} >
-                Törlés
-              </Button>
+              />
+              <IconButton icon="delete-circle" iconColor={theme.colors.error} size={22} onPress={showDelete} />
             </View>
           )}
         </Surface>
@@ -145,9 +144,8 @@ export default BuzinessItem;
 const styles = StyleSheet.create({
   container: {
     overflow: "hidden",
-    borderRadius: BorderRadius.md,
-    marginHorizontal: Spacing.xs,
-    padding: Spacing.sm,
-    gap: Spacing.xs,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    gap: Spacing.sm,
   },
 });

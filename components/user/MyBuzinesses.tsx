@@ -5,12 +5,13 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { ActivityIndicator, FAB, Text } from "react-native-paper";
+import { ActivityIndicator, FAB, Text, useTheme } from "react-native-paper";
 import { useDispatch } from "react-redux";
 import BuzinessItem from "../buziness/BuzinessItem";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 
 interface MyBuzinessesProps {
   uid: string;
@@ -20,6 +21,7 @@ interface MyBuzinessesProps {
 
 const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
   const dispatch = useDispatch();
+  const theme = useTheme();
   const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>(
     [],
   );
@@ -52,13 +54,16 @@ const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
       });
   }, [dispatch, uid]);
   return (
-    <View style={{ padding: Spacing.xs, gap: Spacing.sm }}>
+    <View style={{ paddingHorizontal: Spacing.md, paddingVertical: Spacing.lg, gap: Spacing.md }}>
       {loading ? (
         <View style={{ padding: Spacing.xxxl, alignItems: "center" }}>
           <ActivityIndicator />
         </View>
       ) : buzinesses.length ? (
         <>
+          <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant, paddingLeft: Spacing.xs }}>
+            {myProfile ? "Bizniszeim" : `${name} bizniszei`}
+          </Text>
           {buzinesses.map((buzinessItem) => (
             <BuzinessItem
               data={buzinessItem}
@@ -70,7 +75,7 @@ const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
             <FAB
               icon={"plus"}
               label={"Új biznisz"}
-              style={{ alignSelf: "center", marginVertical: Spacing.sm }}
+              style={{ alignSelf: "center", marginVertical: Spacing.lg, borderRadius: BorderRadius.pill }}
               onPress={() => router.push("/biznisz/new")}
             />
           )}

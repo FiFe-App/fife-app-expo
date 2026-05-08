@@ -76,8 +76,7 @@ export default UserItem;
 const styles = StyleSheet.create({
   container: {
     overflow: "hidden",
-    borderRadius: BorderRadius.md,
-    marginHorizontal: Spacing.xs,
+    borderRadius: BorderRadius.lg,
     padding: Spacing.sm,
   },
 });

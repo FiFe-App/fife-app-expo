@@ -56,6 +56,7 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
         contentContainerStyle={{
           gap: Spacing.sm,
           marginVertical: Spacing.sm,
+          paddingHorizontal: Spacing.md,
         }}
       >
         {buzinesses.map((buzinessItem,ind) =>
