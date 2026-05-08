@@ -41,7 +41,7 @@ export default function Index() {
   const [userHasBuzinesses, setUserHasBuzinesses] = useState<boolean | null>(null);
   const [showCtaCard, setShowCtaCard] = useState(false);
 
-  const { fetch, data, fetchNextPage, hasMore } = useFifeSearch();
+  const { fetch, data, fetchNextPage, hasMore, error } = useFifeSearch();
   const { results: newestUsers, search: fetchNewest } = useProfileSearch();
 
 
@@ -123,7 +123,7 @@ export default function Index() {
               </Card.Content>
             </Card>
           )}
-          <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} />
+          <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} error={error} />
           <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />
           <Portal>
             <Modal
