@@ -167,15 +167,20 @@ CREATE OR REPLACE FUNCTION "public"."hybrid_buziness_search"("query_text" "text"
   FROM public.buziness b 
   LEFT OUTER JOIN public."buzinessRecommendations" br
   ON b.id = br.buziness_id
-  where 
-    case when query_text = '' then true else b.embedding <#> query_embedding < -match_threshold end and    
-    case when location = NULL then true else true end
+  WHERE
+    CASE
+      WHEN query_text = '' THEN true
+      ELSE (
+        b.embedding <#> query_embedding < -match_threshold
+        OR b.embedding_text &@~ query_text
+      )
+    END
   GROUP BY b.id
-  order by case when query_text != '' then (b.embedding <#> query_embedding) end, st_distance(location, st_point(long, lat)::geography) asc
-  OFFSET     CASE WHEN skip>=0 THEN skip 
-      END ROWS       -- skip 10 rows
-  LIMIT CASE WHEN take>=0 THEN take 
-      END
+  ORDER BY
+    CASE WHEN query_text != '' THEN (b.embedding <#> query_embedding) END,
+    st_distance(location, st_point(long, lat)::geography) ASC
+  OFFSET CASE WHEN skip >= 0 THEN skip END ROWS
+  LIMIT  CASE WHEN take >= 0 THEN take END
 $$;
 
 
@@ -633,6 +638,10 @@ CREATE INDEX "comments_key_idx" ON "public"."comments" USING "hash" ("key");
 
 
 CREATE INDEX "ix_memos_content" ON "public"."buziness" USING "pgroonga" ("title");
+
+
+
+CREATE INDEX "ix_buziness_embedding_text" ON "public"."buziness" USING "pgroonga" ("embedding_text");
 
 
 

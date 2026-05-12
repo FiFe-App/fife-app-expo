@@ -24,6 +24,7 @@ import WhatToDo from "@/components/WhatToDo";
 import { Button } from "@/components/Button";
 import { useFifeSearch } from "@/hooks/useFifeSearch";
 import { useProfileSearch } from "@/hooks/useProfileSearch";
+import { PatreonModal } from "@/components/PatreonModal";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);

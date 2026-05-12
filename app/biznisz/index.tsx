@@ -11,7 +11,7 @@ import {
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
 import { useFocusEffect, useNavigation } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import {
   FAB,
@@ -34,10 +34,13 @@ export default function Index() {
   );
   const searchType = searchParams?.searchType;
   const searchCircle = searchParams?.searchCircle;
-  const listTitle = searchParams?.text ? "Találatok: " + searchParams?.text : "Új bizniszek";
+
+  const { canLoadMore, search, loadNext, error } = useBuzinessSearch();
+  console.log(buzinesses.map(b=>b.id));
+  
+  const listTitle = useMemo(()=>searchParams?.text ? "Találatok: " + searchParams?.text : "Új bizniszek",[searchParams?.loading]);
   const dispatch = useDispatch();
 
-  const { canLoadMore, search, loadNext } = useBuzinessSearch();
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
 
   useEffect(() => {
@@ -65,7 +68,7 @@ export default function Index() {
           </Measure>
         </ThemedView>
         {searchType === "list" || !searchType ? (
-          <BuzinessList load={loadNext} canLoadMore={canLoadMore} />
+          <BuzinessList load={loadNext} canLoadMore={canLoadMore} error={error} />
         ) : (
           <BuzinessMap load={search} />
         )}

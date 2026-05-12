@@ -35,13 +35,6 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
         mode="center-aligned"
         style={[{
           backgroundColor: theme.colors.surface,
-          shadowColor: theme.colors.shadow,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.06,
-          shadowRadius: 4,
-          elevation: 2,
-          borderBottomColor: theme.colors.outlineVariant,
-          borderBottomWidth: 0.5,
           alignItems: "center",
           width: "100%"
         }, style]}

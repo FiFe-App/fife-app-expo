@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
       messages: [
         {
           role: "system",
-          content: "Írd körül röviden azt az embert, aki ezekhez ért: " + query,
+          content: "Írd fel vesszővel elválasztva az összes szinonimát, rokon értelmű szót és kapcsolódó kifejezést (magyarul és angolul is) erre: " + query,
         },
       ],
     });

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { Spacing } from "@/constants/spacing";
-import { Divider, ActivityIndicator, Button } from "react-native-paper";
+import { Divider, ActivityIndicator, Button, useTheme } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import BuzinessItem from "./BuzinessItem";
 import { RootState } from "@/redux/store";
@@ -16,13 +16,17 @@ import Measure from "../tutorial/Measure";
 interface BuzinessListProps {
   load: (arg0: number) => void;
   canLoadMore: boolean;
+  error: string | null;
 }
 
 export const BuzinessList: React.FC<BuzinessListProps> = ({
   load,
   canLoadMore,
+  error,
 }) => {
   const dispatch = useDispatch();
+  const theme = useTheme();
+
   const { buzinesses, searchParams } = useSelector(
     (state: RootState) => state.buziness,
   );
@@ -62,7 +66,7 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
         {buzinesses.map((buzinessItem,ind) =>
           buzinessItem.id === -1 ? (
             <Divider
-              key={Math.random() * 100000 + 100000 + "div"}
+              key={buzinessItem.id+"-divider"}
               style={{ marginVertical: Spacing.lg }}
             />
           ) : (
@@ -80,7 +84,8 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
             Válassz környéket a kereséshez
           </ThemedText>)}
         <View style={{ padding: Spacing.lg }}>
-          {!loading &&
+          {error ? <ThemedText style={{color: theme.colors.error, textAlign:"center"}}>{error}</ThemedText> :
+          !loading &&
             (!!buzinesses.length && canLoadMore ? (
               <Button onPress={loadNext} style={{ alignSelf: "center" }}>
                 További bizniszek

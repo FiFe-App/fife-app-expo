@@ -1,6 +1,8 @@
 import { Spacing } from "@/constants/spacing";
 import { StyleProp, TextStyle, ViewStyle } from "react-native";
-import { Chip, Text } from "react-native-paper";
+import { ThemedText } from "./ThemedText";
+import { ThemedView } from "./ThemedView";
+import { BorderRadius } from "@/constants/borderRadius";
 
 interface CategoryChipProps {
   children: string;
@@ -9,9 +11,12 @@ interface CategoryChipProps {
 }
 
 const CategoryChip = ({ children, style, textStyle }: CategoryChipProps) => (
-  <Chip style={style} textStyle={[{ margin: Spacing.xs }, textStyle]}>
-    <Text variant="labelMedium">{children}</Text>
-  </Chip>
+    <ThemedView
+    type="card"
+    style={[{ padding: Spacing.xs, margin: Spacing.none, borderRadius: BorderRadius.md }, style]}
+  >
+    <ThemedText variant="labelMedium" style={textStyle}>{children}</ThemedText>
+  </ThemedView>
 );
 
 export default CategoryChip;
