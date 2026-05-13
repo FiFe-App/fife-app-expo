@@ -27,16 +27,17 @@ import {
   Portal,
   Switch,
   TextInput,
-  useTheme,
+   
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
+import { useAppTheme } from "@/assets/theme";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const { uid: myUid, userData, themePreference }: UserState = useSelector(
     (state: RootState) => state.user,
   );

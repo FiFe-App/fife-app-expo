@@ -1,11 +1,12 @@
 import { StyleSheet } from "react-native";
-import { useTheme, TextInputProps, TextInput } from "react-native-paper";
+import {   TextInputProps, TextInput } from "react-native-paper";
 import { BorderRadius } from "@/constants/borderRadius";
+import { useAppTheme } from "@/assets/theme";
 
 export type ThemedTextInputProps = TextInputProps & {};
 
 export function ThemedInput({ style, ...otherProps }: ThemedTextInputProps) {
-  const theme = useTheme();
+  const theme = useAppTheme();
 
   const styles = StyleSheet.create({
     card: {

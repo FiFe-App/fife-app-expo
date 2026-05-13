@@ -11,13 +11,14 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { IconButton, Surface, Text, useTheme } from "react-native-paper";
+import { IconButton, Surface, Text } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import CategoryChip from "../CategoryChip";
 import MetaStat from "../MetaStat";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
+import { useAppTheme } from "@/assets/theme";
 
 interface BuzinessItemProps {
   data: BuzinessItemInterface;
@@ -29,7 +30,9 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
 
   const recommendations = typeof data?.recommendations?.[0]?.count === "number" ? data?.recommendations?.[0]?.count : data.recommendations;
   const { uid } = useSelector((state: RootState) => state.user);
-  const theme = useTheme();
+  const theme = useAppTheme();
+  console.log("theme",theme);
+  
   const myBuziness = author === uid;
   const dispatch = useDispatch();
 
@@ -82,7 +85,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
               <Text variant="titleLarge" style={{ fontSize: 18, lineHeight: 24 }}>{title}</Text>
               <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.xs, marginTop: Spacing.xs }}>
                 {!!isNew && <CategoryChip key="category-new" style={{ backgroundColor: theme.colors.tertiary }} textStyle={{ color: theme.colors.onTertiary }}>új</CategoryChip>}
-                {!!data.ingyen && <CategoryChip key="category-ingyen" style={{ backgroundColor: "#4caf50" }} textStyle={{ color: "#fff" }}>ingyenes</CategoryChip>}
+                {!!data.ingyen && <CategoryChip key="category-ingyen" style={{ backgroundColor: theme.colors.nature }} textStyle={{ color: theme.colors.onNature }}>ingyenes</CategoryChip>}
                 {categories?.map((e, i) => {
                   if (e.trim())
                     return (

@@ -12,10 +12,11 @@ import { AppState, View } from "react-native";
 
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { makeRedirectUri } from "expo-auth-session";
-import { Button, Checkbox, HelperText, Icon, TextInput, useTheme } from "react-native-paper";
+import { Button, Checkbox, HelperText, Icon, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import UsernameInput from "@/components/UsernameInput";
 import { Spacing } from "@/constants/spacing";
+import { useAppTheme } from "@/assets/theme";
 
 // Type for signup metadata
 interface SignupMetadata {
@@ -37,7 +38,7 @@ AppState.addEventListener("change", (state) => {
 });
 
 export default function Index() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const dispatch = useDispatch();
 
   const [name, setName] = useState("");

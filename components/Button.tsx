@@ -1,9 +1,10 @@
 import * as React from "react";
 import { ViewStyle } from "react-native";
-import { Button as ButtonP, useTheme } from "react-native-paper";
+import { Button as ButtonP } from "react-native-paper";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import type { ButtonProps } from "react-native-paper";
+import { useAppTheme } from "@/assets/theme";
 
 export type ThemedButtonPProps = ButtonProps & {
   lightColor?: string;
@@ -21,7 +22,7 @@ export function Button({
   children,
   ...otherProps
 }: ThemedButtonPProps) {
-  const theme = useTheme();
+  const theme = useAppTheme();
 
   const getButtonPColors = () => {
     if (type === "secondary") {

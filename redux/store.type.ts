@@ -110,6 +110,7 @@ export interface SearchParams {
   loading?: boolean;
   searchType?: string;
   skip?: number;
+  ingyen?: boolean;
 }
 export interface BuzinessState {
   buzinesses: BuzinessSearchItemInterface[];

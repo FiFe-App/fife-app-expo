@@ -30,7 +30,7 @@ const InfoLayer = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (Math.random() < 1 / 50) {
+      if (Math.random() < 1 / 30) {
         setShowPatreon(true);
       }
     }, 1500);
@@ -113,13 +113,9 @@ const InfoLayer = () => {
           </Dialog>
         )}
       </Portal>
-      <PatreonModal
-        visible={showPatreon}
-        onClose={() => setShowPatreon(false)}
-        onDismiss={() => {
-          setShowPatreon(false);
-        }}
-      />
+      <PatreonModal visible={showPatreon} onDismiss={()=>{
+        setShowPatreon(false);
+      }} />
     </>
   );
 };

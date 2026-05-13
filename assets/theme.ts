@@ -4,6 +4,8 @@ import {
   MD3LightTheme as DefaultTheme,
   MD3DarkTheme,
   MD3Theme,
+  useTheme,
+   
 } from "react-native-paper";
 import { MD3Type } from "react-native-paper/lib/typescript/types";
 
@@ -113,7 +115,15 @@ const fontConfig: Record<string, Partial<MD3Type>> = {
   },
 };
 
-export const lightTheme: MD3Theme = {
+interface MyTheme extends MD3Theme {
+  colors: MD3Theme["colors"] & {
+    nature: string;
+    onNature: string;
+  };
+}
+export const useAppTheme = () => useTheme<MyTheme>();
+
+export const lightTheme: MyTheme = {
   ...DefaultTheme,
   ...{
     colors: {
@@ -130,6 +140,8 @@ export const lightTheme: MD3Theme = {
       onTertiary: "#ffffffff",
       tertiaryContainer: "#e7deff",
       onTertiaryContainer: "#463D66",
+      nature: "#0F995D",
+      onNature: "#ffffff",
       error: "#ba1a1a",
       onError: "#ffffff",
       errorContainer: "#ffdad6",
@@ -164,7 +176,7 @@ export const lightTheme: MD3Theme = {
   fonts: configureFonts({ config: fontConfig }),
 };
 
-export const darkTheme: MD3Theme = {
+export const darkTheme: MyTheme = {
   ...MD3DarkTheme,
   ...{
     colors: {
@@ -181,6 +193,8 @@ export const darkTheme: MD3Theme = {
       onTertiary: "#1e1b16",
       tertiaryContainer: "#463D66",
       onTertiaryContainer: "#e7deff",
+      nature: "#0F995D",
+      onNature: "#1e1b16",
       error: "#ffb4ab",
       onError: "#690005",
       errorContainer: "#93000a",
@@ -221,5 +235,5 @@ export const getTheme = (isDark: boolean): MD3Theme => {
 };
 
 // Default export for static imports (defaults to light theme)
-// Components should use this with useTheme() from react-native-paper
+// Components should use this with useAppTheme() from react-native-paper
 export const theme = lightTheme;

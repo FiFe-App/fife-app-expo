@@ -39,7 +39,7 @@ export function useBuzinessSearch() {
     dispatch(storeBuzinessSearchParams({ loading }));
   }, [dispatch, loading]);
 
-  const search = useCallback(async (query?: string) => {
+  const search = useCallback(async (query?: string, overrides?: { ingyen?: boolean }) => {
     console.log("searching for", query);
 
     dispatch(storeBuzinesses([]));
@@ -73,6 +73,7 @@ export function useBuzinessSearch() {
           query: query || "",
           take: searchParams?.searchType === "map" ? -1 : PAGE_SIZE,
           skip: 0,
+          ingyen: overrides?.ingyen ?? searchParams?.ingyen ?? false,
           ...searchLocation,
         },
       });
@@ -126,6 +127,7 @@ export function useBuzinessSearch() {
           query: lastQuery.current || "",
           take: PAGE_SIZE,
           skip: nextSkip,
+          ingyen: searchParams?.ingyen || false,
           ...searchLocation,
         },
       });

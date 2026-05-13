@@ -1,7 +1,7 @@
-import { theme } from "@/assets/theme";
+import { theme, useAppTheme } from "@/assets/theme";
 import { StyleSheet } from "react-native";
 
-import { useTheme, Text, type TextProps } from "react-native-paper";
+import {   Text, type TextProps } from "react-native-paper";
 
 export type ThemedTextProps = TextProps<Text> & {
   type?:
@@ -21,7 +21,7 @@ export function ThemedText({
   type = "default",
   ...rest
 }: ThemedTextProps) {
-  const theme = useTheme();
+  const theme = useAppTheme();
 
   return (
     <Text

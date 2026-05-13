@@ -6,18 +6,16 @@ import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { Spacing } from "@/constants/spacing";
 import { ThemedView } from "./ThemedView";
+import { Image } from "expo-image";
 
 const PATREON_URL = "https://www.patreon.com/c/fifeapp";
 
 type PatreonModalProps = {
   visible: boolean;
-  /** Called on explicit button press (X or Köszi, nem) — marks as permanently shown */
   onDismiss: () => void;
-  /** Called on hardware back / system close — does NOT mark as shown */
-  onClose: () => void;
 };
 
-export function PatreonModal({ visible, onDismiss, onClose }: PatreonModalProps) {
+export function PatreonModal({ visible, onDismiss }: PatreonModalProps) {
   const theme = useTheme();
 
   const handleOpen = async () => {
@@ -33,7 +31,7 @@ export function PatreonModal({ visible, onDismiss, onClose }: PatreonModalProps)
       visible={visible}
       animationType="slide"
       transparent={false}
-      onRequestClose={onClose}
+      onRequestClose={onDismiss}
     >
         <ThemedView style={{alignItems: "center",flex:1}}>
             <IconButton
@@ -50,14 +48,17 @@ export function PatreonModal({ visible, onDismiss, onClose }: PatreonModalProps)
             ]}
             >
             <View style={styles.content}>
+                <Image
+                  source={require("@/assets/images/Trust.png")}
+                  contentFit="contain"
+                  style={{ width: "100%", minHeight: 200, zIndex: 5 }}
+                />
                 <ThemedText type="title" style={styles.title}>
                 Támogasd a FiFe Appot!
                 </ThemedText>
                 <ThemedText style={styles.description}>
-                Ez egy nonprofit kezdeményezés, célja egy összetartóbb és jobban működő társadalom.{"\n\n"}
-                Sajnos az üzemeltetése a szolgáltatásnak nem ingyenes, ezért kérlek, ha megteheted támogass egy pár forinttal Patreonon keresztül! 
-                {"\n\n"}
-                Köszi szépen{"\n"}Ákos
+                Mi egy teljesen nonprofit kezdeményezés vagyunk, célunk, egy összetartóbb és jobban működő társadalom.
+                Sajnos az üzemeltetése nem ingyenes, ezért kérlek, ha megteheted támogas egy pár forinttal Patreonon keresztül!
                 </ThemedText>
             </View>
             <View style={styles.bottom}>

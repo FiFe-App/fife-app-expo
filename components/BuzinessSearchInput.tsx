@@ -5,12 +5,13 @@ import {
   storeBuzinessSearchParams
 } from "@/redux/reducers/buzinessReducer";
 import { RootState } from "@/redux/store";
-import { TextInput, useTheme } from "react-native-paper";
+import { TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { useAppTheme } from "@/assets/theme";
 
 const BuzinessSearchInput = ({ onSearch }: { onSearch: (query: string) => void }) => {
   const dispatch = useDispatch();
-  const theme = useTheme();
+  const theme = useAppTheme();
 
   const canSearch = true;
   const { searchParams } = useSelector(

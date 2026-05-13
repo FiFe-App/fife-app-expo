@@ -93,10 +93,6 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
       }),
     );
   };
-  useEffect(() => {
-    console.log(searchParams?.searchCircle);
-    //load(skip + take);
-  }, [searchParams?.searchCircle]);
 
   return (
     <View style={styles.container}>

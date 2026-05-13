@@ -4,16 +4,17 @@ import { Link, useNavigation, usePathname, useSegments } from "expo-router";
 import React, { ReactNode, useRef } from "react";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View, ViewStyle } from "react-native";
-import { Appbar, Divider, Icon, Portal, Surface, Text, useTheme } from "react-native-paper";
+import { Appbar, Divider, Icon, Portal, Surface, Text } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { Image } from "expo-image";
 import Smiley from "@/components/Smiley";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
+import { useAppTheme } from "@/assets/theme";
 
 export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?: string, style?: ViewStyle }) => {
   const navigation = useNavigation();
-  const theme = useTheme();
+  const theme = useAppTheme();
   const { options } = useSelector((state: RootState) => state.info);
   const [showMenu, setShowMenu] = useState(false);
   const dispatch = useDispatch();

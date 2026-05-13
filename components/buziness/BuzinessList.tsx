@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet, FlatList } from "react-native";
 import { Spacing } from "@/constants/spacing";
-import { Divider, ActivityIndicator, useTheme } from "react-native-paper";
+import { Divider, ActivityIndicator } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import BuzinessItem from "./BuzinessItem";
 import { RootState } from "@/redux/store";
@@ -12,6 +12,7 @@ import {
 } from "@/redux/reducers/buzinessReducer";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import Measure from "../tutorial/Measure";
+import { useAppTheme } from "@/assets/theme";
 
 interface BuzinessListProps {
   load: (arg0: number) => void;
@@ -25,7 +26,7 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
   error,
 }) => {
   const dispatch = useDispatch();
-  const theme = useTheme();
+  const theme = useAppTheme();
 
   const { buzinesses, searchParams } = useSelector(
     (state: RootState) => state.buziness,
