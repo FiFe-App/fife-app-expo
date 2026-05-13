@@ -195,6 +195,9 @@ export default function Index() {
                 {!!isNew && (
                   <CategoryChip key="category-new" style={{ backgroundColor: theme.colors.tertiary }} textStyle={{ color: theme.colors.onTertiary }}>új</CategoryChip>
                 )}
+                {!!data.ingyen && (
+                  <CategoryChip key="category-ingyen" style={{ backgroundColor: theme.colors.nature }} textStyle={{ color: "#fff" }}>ingyenes</CategoryChip>
+                )}
                 {categories?.slice(1).map((e, i) => {
                   if (e.trim())
                     return (

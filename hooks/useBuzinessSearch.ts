@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { loadBuzinesses, storeBuzinesses, storeBuzinessLoading, storeBuzinessSearchParams, storeBuzinessHasMore } from "@/redux/reducers/buzinessReducer";
+import { loadBuzinesses, removeTrailingDivider, storeBuzinesses, storeBuzinessLoading, storeBuzinessSearchParams, storeBuzinessHasMore } from "@/redux/reducers/buzinessReducer";
 import { supabase } from "@/lib/supabase/supabase";
 import { Dimensions } from "react-native";
 import { RootState } from "@/redux/store";
@@ -132,11 +132,16 @@ export function useBuzinessSearch() {
 
       if (error) {
         setError(error.message);
+        dispatch(removeTrailingDivider());
         dispatch(storeBuzinessLoading(false));
         return;
       }
 
-      dispatch(loadBuzinesses((data || [])));
+      if (!data || data.length === 0) {
+        dispatch(removeTrailingDivider());
+      } else {
+        dispatch(loadBuzinesses(data));
+      }
       dispatch(storeBuzinessHasMore((data?.length || 0) === PAGE_SIZE));
       dispatch(storeBuzinessSearchParams({ skip: nextSkip }));
       dispatch(storeBuzinessLoading(false));

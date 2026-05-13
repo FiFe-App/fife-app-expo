@@ -82,6 +82,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
               <Text variant="titleLarge" style={{ fontSize: 18, lineHeight: 24 }}>{title}</Text>
               <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.xs, marginTop: Spacing.xs }}>
                 {!!isNew && <CategoryChip key="category-new" style={{ backgroundColor: theme.colors.tertiary }} textStyle={{ color: theme.colors.onTertiary }}>új</CategoryChip>}
+                {!!data.ingyen && <CategoryChip key="category-ingyen" style={{ backgroundColor: "#4caf50" }} textStyle={{ color: "#fff" }}>ingyenes</CategoryChip>}
                 {categories?.map((e, i) => {
                   if (e.trim())
                     return (

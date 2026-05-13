@@ -69,6 +69,12 @@ const buzinessReducer = createSlice({
         (buziness) => buziness.id !== payload,
       );
     },
+    removeTrailingDivider: (state) => {
+      const list = state.buzinesses ?? [];
+      if (list.length > 0 && list[list.length - 1].id === -1) {
+        state.buzinesses = list.slice(0, -1);
+      }
+    },
     clearBuziness: (state: BuzinessState) => {
       state.buzinesses = [];
     },
@@ -79,6 +85,7 @@ export const {
   storeBuzinesses,
   storeBuzinessHasMore,
   loadBuzinesses,
+  removeTrailingDivider,
   clearBuziness,
   storeBuzinessSearchParams,
   storeBuzinessSearchType,

@@ -2,6 +2,8 @@
 CREATE INDEX IF NOT EXISTS ix_buziness_embedding_text
   ON public.buziness USING pgroonga (embedding_text);
 
+ALTER TABLE public.buziness ADD COLUMN IF NOT EXISTS "ingyen" boolean NOT NULL DEFAULT false;
+
 -- Update hybrid_buziness_search to also match via full-text on embedding_text
 CREATE OR REPLACE FUNCTION public.hybrid_buziness_search(
   query_text text,
@@ -13,8 +15,9 @@ CREATE OR REPLACE FUNCTION public.hybrid_buziness_search(
   take integer,
   full_text_weight double precision DEFAULT 0,
   semantic_weight double precision DEFAULT 1,
-  match_threshold double precision DEFAULT 0.6,
-  rrf_k integer DEFAULT 50
+  match_threshold double precision DEFAULT 0.5,
+  rrf_k integer DEFAULT 50,
+  filter_ingyen boolean DEFAULT false
 )
 RETURNS TABLE(
   id bigint,
@@ -29,7 +32,8 @@ RETURNS TABLE(
   long double precision,
   distance double precision,
   relevance double precision,
-  defaultcontact bigint
+  defaultcontact bigint,
+  ingyen boolean
 )
 LANGUAGE sql
 AS $function$
@@ -41,7 +45,8 @@ AS $function$
     st_x(location::geometry) as long,
     st_distance(location, st_point(long, lat)::geography) as distance,
     b.embedding <#> query_embedding as relevance,
-    b."defaultContact"
+    b."defaultContact",
+    b.ingyen
   FROM public.buziness b
   LEFT OUTER JOIN public."buzinessRecommendations" br
     ON b.id = br.buziness_id
@@ -53,6 +58,7 @@ AS $function$
         OR b.embedding_text &@~ query_text
       )
     END
+    AND (NOT filter_ingyen OR b.ingyen = true)
   GROUP BY b.id
   ORDER BY
     CASE WHEN query_text != '' THEN (b.embedding <#> query_embedding) END,
