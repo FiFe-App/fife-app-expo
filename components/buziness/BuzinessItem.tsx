@@ -31,7 +31,6 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
   const recommendations = typeof data?.recommendations?.[0]?.count === "number" ? data?.recommendations?.[0]?.count : data.recommendations;
   const { uid } = useSelector((state: RootState) => state.user);
   const theme = useAppTheme();
-  console.log("theme",theme);
   
   const myBuziness = author === uid;
   const dispatch = useDispatch();

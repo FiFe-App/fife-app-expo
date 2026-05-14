@@ -27,6 +27,7 @@ import Measure from "@/components/tutorial/Measure";
 import { MyAppbar } from "@/components/MyAppBar";
 import { Spacing } from "@/constants/spacing";
 import { useAppTheme } from "@/assets/theme";
+import { BorderRadius } from "@/constants/borderRadius";
 
 export default function Index() {
   const theme = useAppTheme();
@@ -41,10 +42,6 @@ export default function Index() {
   const [ingyenLocal,setIngyenLocal] = useState(ingyen);
 
   const { canLoadMore, search, loadNext, error } = useBuzinessSearch();
-
-  useEffect(() => {
-     search(searchParams?.text, { ingyen });
-  }, [ingyen]);
   
   const listTitle = useMemo(()=>searchParams?.text ? "Találatok: " + searchParams?.text : "Új bizniszek",[searchParams?.loading]);
   const dispatch = useDispatch();
@@ -53,7 +50,8 @@ export default function Index() {
 
   useFocusEffect(
     useCallback(() => {
-      if (buzinesses.length === 0)
+      console.log("search bc of init");
+      if (buzinesses.length === 0 && !searchParams?.loading)
         search();
       if (uid) dispatch(viewFunction({ key: "buzinessPage", uid }));
       navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={search} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
@@ -98,6 +96,7 @@ export default function Index() {
               {
                 width: "90%",
                 height: "90%",
+                borderRadius: BorderRadius.md
               },
             ]}
           >
@@ -105,7 +104,10 @@ export default function Index() {
               <MapSelector
                 data={searchCircle}
                 setData={(sC) => {
-                  dispatch(storeBuzinessSearchParams({ ingyen: ingyenLocal }));
+                  if (ingyenLocal != ingyen) {
+                    dispatch(storeBuzinessSearchParams({ ingyen: ingyenLocal }));
+                    search(searchParams?.text, { ingyen: ingyenLocal });
+                  }
                   if (
                     (sC && "location" in sC && "radius" in sC) ||
                     sC == undefined
@@ -118,6 +120,7 @@ export default function Index() {
                 <List.Item
                   title="Csak ingyenes bizniszek"
                   description="Ingyenes vagy önkéntes bizniszeket mutass"
+                  titleStyle={{fontFamily:"Piazzolla-ExtraBold"}}
                   left={(props) => <List.Icon {...props} color={theme.colors.primary} icon="charity" />}
                   right={() => (
                     <Switch

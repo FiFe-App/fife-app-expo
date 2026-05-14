@@ -10,13 +10,12 @@ import {
   TextInput as TIRN,
   View,
 } from "react-native";
-import { Icon, Text, TextInput } from "react-native-paper";
+import { Checkbox, Icon, Text, TextInput } from "react-native-paper";
 import { Spacing } from "@/constants/spacing";
 
 const Register = () => {
   const textInput = useRef<TIRN>(null);
-  const [text, setText] = useState("");
-  const textToType = "Nem leszek rosszindulatú";
+  const [text, setText] = useState("");  const [ageConfirmed, setAgeConfirmed] = useState(false);  const textToType = "Nem leszek rosszindulatú";
   const handleTextInput = (input: string) => {
     if (
       textToType.slice(0, input.length).toLowerCase().replaceAll(" ", "") ===
@@ -31,7 +30,7 @@ const Register = () => {
     )
       setText(textToType.slice(0, input.length + 1));
   };
-  const accepted = text === textToType;
+  const accepted = text === textToType && ageConfirmed;
 
   useFocusEffect(
     useCallback(() => {
@@ -69,6 +68,18 @@ const Register = () => {
           )}
         />
       </View>
+      <Pressable
+        style={styles.ageCheckbox}
+        onPress={() => setAgeConfirmed((v) => !v)}
+      >
+        <Checkbox
+          status={ageConfirmed ? "checked" : "unchecked"}
+          onPress={() => setAgeConfirmed((v) => !v)}
+        />
+        <Text style={styles.ageCheckboxLabel}>
+          Nyilatkozom, hogy elmúltam 16 éves.
+        </Text>
+      </Pressable>
       <View style={{ marginVertical: Spacing.xl }}>
         <ThemedText>
           Ha be fogod tartani ezeket, gépeld be a következő szöveget:
@@ -141,6 +152,15 @@ const styles = StyleSheet.create({
     ...Platform.select({
       web: { userSelect: "none", cursor: "text" },
     }),
+  },
+  ageCheckbox: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: Spacing.md,
+  },
+  ageCheckboxLabel: {
+    flex: 1,
+    fontSize: 15,
   },
 });
 export default Register;

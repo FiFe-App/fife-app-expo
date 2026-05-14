@@ -1,16 +1,16 @@
 import { clearOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { Link, useNavigation, usePathname, useSegments } from "expo-router";
+import { router, useNavigation, usePathname, useSegments } from "expo-router";
 import React, { ReactNode, useRef } from "react";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View, ViewStyle } from "react-native";
-import { Appbar, Divider, Icon, Portal, Surface, Text } from "react-native-paper";
+import { Appbar, Icon, Portal, Surface, Text } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { Image } from "expo-image";
-import Smiley from "@/components/Smiley";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
+import BuzinessSearchInput from "./BuzinessSearchInput";
+import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 
 export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?: string, style?: ViewStyle }) => {
   const navigation = useNavigation();
@@ -30,6 +30,7 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
     prevSegmentsKey.current = key;
   }, [dispatch, segments]);
 
+
   return (
     <>
       <Appbar.Header
@@ -41,21 +42,19 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
         }, style]}
       >
         <View style={{ width: 48 }} >
-          {navigation.canGoBack() && pathname !== "/home" && pathname !== "/" && <Appbar.BackAction onPress={navigation.goBack} />}
+          {
+            navigation.canGoBack() && pathname !== "/home" && pathname !== "/" 
+            && <Appbar.BackAction onPress={navigation.goBack} />
+          }
         </View>
         {center ? <View style={{ flex: 1 }}>{center}</View>
           : title ?
             <Appbar.Content titleStyle={{ fontFamily: "Piazzolla-ExtraBold", fontSize: 26 }} title={title} style={{ flex: 1 }} />
-            : <Link href="/" style={{ flex: 1 }} asChild>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
-                <Smiley />
-                <Image
-                  source={require("@/assets/Logo.png")}
-                  style={{ width: 180, height: 30, zIndex: 20 }}
-                  contentFit="contain"
-                />
-              </View>
-            </Link>}
+            : <BuzinessSearchInput 
+            onSearch={() => {
+              dispatch(storeBuzinesses([]));
+              router.push("/biznisz");
+            }} /> }
         {options.length > 0 ? (
           <>
             {options?.length === 1 && <Appbar.Action {...options[0]} />}

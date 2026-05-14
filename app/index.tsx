@@ -7,13 +7,14 @@ import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { ThemedInput as TextInput } from "@/components/ThemedInput";
 import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
-import { Link, Redirect } from "expo-router";
+import { Link, Redirect, useNavigation } from "expo-router";
 import { useState } from "react";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { useSelector } from "react-redux";
 import Smiley from "@/components/Smiley";
 import { useAppTheme } from "@/assets/theme";
+import { ThemedText } from "@/components/ThemedText";
 
 export const Header = () => {
   const theme = useAppTheme();
@@ -39,8 +40,8 @@ const Hero = () => {
   const { isDesktop, screenPadding } = useBreakpoint();
   return (
     <View style={{ paddingTop: Spacing.xxxl, marginHorizontal: screenPadding }}>
-      <Text variant="displayMedium">
-        Találj megbízható embereket a környékeden!
+      <Text variant="displayMedium" style={{textAlign:"left"}}>
+        Találj megbízható társakat a környékeden!
       </Text>
       <ThemedView
         style={[{ paddingVertical: Spacing.lg, alignItems: "center" }]}
@@ -56,8 +57,7 @@ const Hero = () => {
           ]}
         >
           <Text variant="headlineMedium">
-            Építs magad köré segítői hálózatot ebben az új, közösségi
-            alkalmazásban.
+            Fedezd fel a segítői hálózatot a zsebedben
           </Text>
           <Link asChild href="/csatlakozom">
             <Button style={styles.loginButton} type="secondary">
@@ -191,7 +191,7 @@ const Trust = () => {
           ]}
         >
           <Text variant="displayMedium">
-            Találj megbízható embereket a környékeden!
+            Bizalom és biztonság
           </Text>
           <Text variant="bodyLarge">
             A FiFe App bizalmi láncot épít fel. Ha valakiben megbíznak a
@@ -439,13 +439,23 @@ export const Footer = () => {
 export default function App() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   const theme = useAppTheme();
+  const navigation = useNavigation();
+  navigation.setOptions({ header: () => <ThemedView style={{flexDirection:"row",alignItems:"center",justifyContent:"center",padding:Spacing.xxxl,gap:Spacing.md}}>
+        <Smiley style={{width:50,height:50}}/>
+        <Image
+          source={require("@/assets/Logo.png")}
+          style={{ minWidth: 200, minHeight: 55, zIndex: 20 }}
+          contentFit="contain"
+        />
+      </ThemedView> });
+
   if (uid) return <Redirect href="/home" />;
   return (
     <ScrollView contentContainerStyle={{ backgroundColor: theme.colors.background }} style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      
       <ThemedView type="default" style={{ alignItems: "center" }}>
         <View style={{ flex: 1, gap: Spacing.lg, maxWidth: 1000, width: "100%" }}>
           <Hero />
-          <HowItWorks />
           <Trust />
           <About />
           <Banner />

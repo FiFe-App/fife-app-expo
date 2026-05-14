@@ -24,6 +24,7 @@ import { MapSelectorProps } from "./MapSelector.types";
 import { CircleType } from "@/redux/store.type";
 import { lightMapStyle, darkMapStyle } from "./mapStyles";
 import { useAppTheme } from "@/assets/theme";
+import { BorderRadius } from "@/constants/borderRadius";
 
 const defaultMapLocation = {
   location: {
@@ -149,7 +150,7 @@ const MapSelector = ({
   };
 
   return (
-    <View style={[{ flex: 1, overflow: "hidden" }, style]}>
+    <View style={[{ flex: 1, overflow: "hidden", borderRadius: BorderRadius.md }, style]}>
       <View
         style={{ width: "100%", height: "100%" }}
         onLayout={(e) => {
@@ -160,6 +161,7 @@ const MapSelector = ({
           <TextInput
             inputMode="search"
             placeholder="Keress címre..."
+            mode="outlined"
             onChangeText={(text) => {
               setSearch(text);
               debouncedSearch(text);

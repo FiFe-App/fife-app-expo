@@ -5,8 +5,9 @@ import { login, setUserData } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Link, Redirect, router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import { openBrowserAsync } from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
 
@@ -245,12 +246,24 @@ export default function Index() {
             onPress={() => setAcceptConditions(!acceptConditions)}
             status={acceptConditions ? "checked" : "unchecked"}
           />
-          <ThemedText variant="labelLarge" onPress={() => setAcceptConditions(!acceptConditions)}>
-            Elfogadom a
-            <ThemedText variant="labelLarge" type="link">
-              <Link href="/csatlakozom/iranyelvek"> feltételeket</Link>
+          <ThemedText variant="labelLarge" style={{ flex: 1, flexWrap: "wrap" }} onPress={() => setAcceptConditions(!acceptConditions)}>
+            {"Elolvastam és elfogadom a "}
+            <ThemedText
+              variant="labelLarge"
+              type="link"
+              onPress={(e) => { e.stopPropagation?.(); openBrowserAsync("https://fifeapp.hu/terms.html"); }}
+            >
+              Felhasználási feltételeket
             </ThemedText>
-            .
+            {" és az "}
+            <ThemedText
+              variant="labelLarge"
+              type="link"
+              onPress={(e) => { e.stopPropagation?.(); openBrowserAsync("https://fifeapp.hu/privacy.html"); }}
+            >
+              Adatkezelési tájékoztatót
+            </ThemedText>
+            {"."}          
           </ThemedText>
         </View>
         <Button
