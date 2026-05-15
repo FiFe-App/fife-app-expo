@@ -25,3 +25,10 @@ declare module "*.ttf" {
   const value: unknown;
   export default value;
 }
+
+declare module "react-native-paper" {
+  interface MD3Colors {
+    nature: string;
+    onNature: string;
+  }
+}

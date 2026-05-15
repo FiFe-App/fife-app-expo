@@ -37,7 +37,7 @@ import {
   Surface,
   Text,
   TouchableRipple,
-  useTheme,
+   
 } from "react-native-paper";
 import * as Clipboard from "expo-clipboard";
 
@@ -50,6 +50,7 @@ import {
   viewFunction,
 } from "@/redux/reducers/tutorialReducer";
 import Measure from "@/components/tutorial/Measure";
+import { useAppTheme } from "@/assets/theme";
 
 type UserInfo = Tables<"profiles">;
 
@@ -62,7 +63,7 @@ export default function UserPage() {
   const { functions }: TutorialState = useSelector(
     (state: RootState) => state.tutorial,
   );
-  const theme = useTheme();
+  const theme = useAppTheme();
 
   const dispatch = useDispatch();
   const myProfile = myUid === uid;

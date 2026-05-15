@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   hideLoading,
   popSnack,
@@ -16,29 +17,40 @@ import { usePromiseTracker } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "./ThemedText";
 import { Spacing } from "@/constants/spacing";
+import { PatreonModal } from "./PatreonModal";
 
 const InfoLayer = () => {
   const { dialogs, snacks, loading } = useSelector(
     (state: RootState) => state.info,
   );
+  const [showPatreon, setShowPatreon] = useState(false);
   const dialog = dialogs?.[0];
   const { promiseInProgress } = usePromiseTracker({ area: "dialog" });
-  const dispath = useDispatch();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (Math.random() < 1 / 30) {
+        setShowPatreon(true);
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
   function cancelDialog() {
     if (dialog?.onCancel) {
       dialog.onCancel();
     }
-    dispath(slicepopDialog());
+    dispatch(slicepopDialog());
   }
 
   function submitDialog() {
     if (dialog?.onSubmit) {
       dialog.onSubmit();
     }
-    dispath(slicepopDialog());
+    dispatch(slicepopDialog());
   }
   function dismissLoading() {
-    dispath(hideLoading());
+    dispatch(hideLoading());
   }
 
   return (
@@ -49,6 +61,7 @@ const InfoLayer = () => {
             visible={!!dialog}
             onDismiss={cancelDialog}
             dismissable={dialog.dismissable}
+            style={{maxWidth:400}}
           >
             <Dialog.Title>{dialog?.title}</Dialog.Title>
             <Dialog.Content>
@@ -73,7 +86,7 @@ const InfoLayer = () => {
             key={"snack" + ind}
             visible={true}
             onDismiss={() => {
-              dispath(popSnack());
+              dispatch(popSnack());
             }}
             action={snack.buttonText ? {
               label: snack.buttonText,
@@ -81,7 +94,7 @@ const InfoLayer = () => {
             } : undefined}
             duration={3000}
             onIconPress={() => {
-              dispath(popSnack());
+              dispatch(popSnack());
             }}
           >
             {snack.title}
@@ -100,6 +113,9 @@ const InfoLayer = () => {
           </Dialog>
         )}
       </Portal>
+      <PatreonModal visible={showPatreon} onDismiss={()=>{
+        setShowPatreon(false);
+      }} />
     </>
   );
 };

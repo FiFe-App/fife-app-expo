@@ -78,14 +78,14 @@ Deno.serve(async (req)=>{
   const openai = new OpenAI({
     apiKey: openaiApiKey
   });
-  const input = "Categories: " + buziness.title.replace(/(\s\$\s)+/g, ", ") + (buziness.description ? " | Description: " + buziness.description : "");
+  const input = buziness.title.replace(/(\s\$\s)+/g, ", ") + (buziness.description ? " | Description: " + buziness.description : "");
   console.log("run embedding with input", input);
   const completion = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     messages: [
       {
         role: "system",
-        content: "Írd körül röviden azt az embert, aki ezekhez ért: " + input
+        content: "Írd fel vesszővel elválasztva az összes szinonimát, rokon értelmű szót és kapcsolódó kifejezést (magyarul és angolul is) erre: " + input
       }
     ]
   });

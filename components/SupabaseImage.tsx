@@ -1,9 +1,10 @@
+import { useAppTheme } from "@/assets/theme";
 import { supabase } from "@/lib/supabase/supabase";
 import { Image, ImageContentFit } from "expo-image";
 import { useEffect, useState } from "react";
 import { ImageStyle, StyleProp, StyleSheet, View } from "react-native";
 import ImageModal from "react-native-image-modal";
-import { ActivityIndicator, useTheme } from "react-native-paper";
+import { ActivityIndicator } from "react-native-paper";
 
 interface SupabaseImageProps {
   bucket: string;
@@ -22,7 +23,7 @@ const SupabaseImage = ({
   propLoading = false,
   modal = false,
 }: SupabaseImageProps) => {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const [source, setSource] = useState("");
   const [loading, setLoading] = useState(true);
 

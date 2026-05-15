@@ -11,7 +11,7 @@ import { User } from "@supabase/auth-js";
 import { Link, Redirect, router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
-import { Divider, Text, TextInput, useTheme } from "react-native-paper";
+import { Divider, Text, TextInput } from "react-native-paper";
 import { Spacing } from "@/constants/spacing";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -20,6 +20,7 @@ import * as WebBrowser from "expo-web-browser";
 import { loadViewedFunctions } from "@/redux/reducers/tutorialReducer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "@/components/Button";
+import { useAppTheme } from "@/assets/theme";
 
 AppState.addEventListener("change", (state) => {
   if (state === "active") {
@@ -31,7 +32,7 @@ AppState.addEventListener("change", (state) => {
 
 export default function Index() {
   const navigation = useNavigation();
-  const theme = useTheme();
+  const theme = useAppTheme();
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

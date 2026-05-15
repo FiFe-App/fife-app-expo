@@ -6,15 +6,16 @@ import { setLocation } from "@/redux/reducers/userReducer";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { View } from "react-native";
-import { Modal, Portal, useTheme } from "react-native-paper";
+import { Modal, Portal } from "react-native-paper";
 import { CircleType } from "@/redux/store.type";
 import { Button } from "@/components/Button";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
+import { useAppTheme } from "@/assets/theme";
 
 const Register = () => {
   const dispatch = useDispatch();
-  const theme = useTheme();
+  const theme = useAppTheme();
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [myLocation, setMyLocation] = useState<CircleType | undefined>();
   const [searchCircle, setSearchCircle] = useState<CircleType | undefined>();

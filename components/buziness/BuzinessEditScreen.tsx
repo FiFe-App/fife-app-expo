@@ -27,6 +27,7 @@ import {
   Modal,
   Portal,
   SegmentedButtons,
+  Switch,
   Text,
   TextInput,
   TouchableRipple,
@@ -83,6 +84,7 @@ export default function BuzinessEditScreen({
   const [contacts, setContacts] = useState<Optional<Tables<"contacts">, "id">[]>([]);
   const [defaultContact, setDefaultContact] = useState<number | undefined>();
 
+  const [ingyen, setIngyen] = useState(false);
   const [images, setImages] = useState<ImageDataType[]>([]);
   const imagesUploadRef = useRef<BuzinessImageUploadHandle | null>(null);
   const contactEditRef = useRef<{
@@ -154,8 +156,7 @@ export default function BuzinessEditScreen({
         body: {
           id: editId,
           ...newBuziness,
-          title,
-          author: uid,
+          title,          ingyen,          author: uid,
           location: selectedLocation
             ? `POINT(${selectedLocation?.longitude} ${selectedLocation?.latitude})`
             : null,
@@ -288,6 +289,7 @@ export default function BuzinessEditScreen({
                   .reduce((partialSum, a) => partialSum + " $ " + a, "") +
                 " $ ",
               );
+              setIngyen(!!editingBuziness.ingyen);
               if (editingBuziness.defaultContact)
                 setDefaultContact(editingBuziness.defaultContact);
               if (editingBuziness.images)
@@ -444,6 +446,14 @@ export default function BuzinessEditScreen({
               onSelect={(e) => {
                 setDefaultContact(Number(e));
               }}
+            />
+            <List.Item
+              title="Ingyenes / önkéntes biznisz"
+              description="Jelöld be, ha ingyenesen vagy önkéntesen végzed"
+              style={{ marginTop: Spacing.sm }}
+              right={() => (
+                <Switch value={ingyen} onValueChange={setIngyen} />
+              )}
             />
             <List.Item
               title="Elérhetőségek"

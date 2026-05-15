@@ -1,7 +1,7 @@
 import React from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import { View, StyleSheet, FlatList } from "react-native";
 import { Spacing } from "@/constants/spacing";
-import { Divider, ActivityIndicator, Button } from "react-native-paper";
+import { Divider, ActivityIndicator } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import BuzinessItem from "./BuzinessItem";
 import { RootState } from "@/redux/store";
@@ -12,17 +12,22 @@ import {
 } from "@/redux/reducers/buzinessReducer";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import Measure from "../tutorial/Measure";
+import { useAppTheme } from "@/assets/theme";
 
 interface BuzinessListProps {
   load: (arg0: number) => void;
   canLoadMore: boolean;
+  error: string | null;
 }
 
 export const BuzinessList: React.FC<BuzinessListProps> = ({
   load,
   canLoadMore,
+  error,
 }) => {
   const dispatch = useDispatch();
+  const theme = useAppTheme();
+
   const { buzinesses, searchParams } = useSelector(
     (state: RootState) => state.buziness,
   );
@@ -51,53 +56,54 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        style={{ flex: 1 }}
+      <FlatList
+        data={buzinesses}
+        keyExtractor={(item, index) =>
+          item.id === -1 ? `${item.id}-divider-${index}` : String(item.id)
+        }
         contentContainerStyle={{
           gap: Spacing.sm,
           marginVertical: Spacing.sm,
           paddingHorizontal: Spacing.md,
         }}
-      >
-        {buzinesses.map((buzinessItem,ind) =>
+        renderItem={({ item: buzinessItem, index: ind }) =>
           buzinessItem.id === -1 ? (
-            <Divider
-              key={Math.random() * 100000 + 100000 + "div"}
-              style={{ marginVertical: Spacing.lg }}
-            />
+            <Divider style={{ marginVertical: Spacing.lg }} />
           ) : (
-            <Measure key={buzinessItem.id} name={ind==0 ? "first-biznisz" : null }>
+            <Measure name={ind === 0 ? "first-biznisz" : null}>
               <View>
                 <BuzinessItem data={buzinessItem} />
               </View>
             </Measure>
-          ),
-        )}
-        {!searchParams?.searchCircle &&
-          !myLocation &&
-          !buzinesses.length &&
-          (<ThemedText style={{ alignSelf: "center" }}>
-            Válassz környéket a kereséshez
-          </ThemedText>)}
-        <View style={{ padding: Spacing.lg }}>
-          {!loading &&
-            (!!buzinesses.length && canLoadMore ? (
-              <Button onPress={loadNext} style={{ alignSelf: "center" }}>
-                További bizniszek
-              </Button>
-            ) : (
+          )
+        }
+        onEndReached={() => {
+          if (canLoadMore && !loading) loadNext();
+        }}
+        onEndReachedThreshold={0.3}
+        ListEmptyComponent={
+          !loading && !searchParams?.searchCircle && !myLocation ? (
+            <ThemedText style={{ alignSelf: "center" }}>
+              Válassz környéket a kereséshez
+            </ThemedText>
+          ) : null
+        }
+        ListFooterComponent={
+          <View style={{ padding: Spacing.lg }}>
+            {error ? (
+              <ThemedText style={{ color: theme.colors.error, textAlign: "center" }}>
+                {error}
+              </ThemedText>
+            ) : loading ? (
+              <ActivityIndicator />
+            ) : !buzinesses.length ? (
               <ThemedText style={{ alignSelf: "center" }}>
                 Nem található több biznisz
               </ThemedText>
-            ))}
-        </View>
-      </ScrollView>
-
-      {searchParams?.loading && !buzinesses.length && (
-        <View style={{ flex: 1 }}>
-          <ActivityIndicator />
-        </View>
-      )}
+            ) : null}
+          </View>
+        }
+      />
     </View>
   );
 };

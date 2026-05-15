@@ -5,10 +5,11 @@ import * as ExpoImagePicker from "expo-image-picker";
 import { useImperativeHandle, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import ImageModal from "react-native-image-modal";
-import { IconButton, TextInput, useTheme } from "react-native-paper";
+import { IconButton, TextInput } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { ThemedText } from "../ThemedText";
 import { Spacing } from "@/constants/spacing";
+import { useAppTheme } from "@/assets/theme";
 
 export interface BuzinessImageUploadHandle {
   uploadImages: (buziessId: number) => Promise<ImageDataType[]>;
@@ -21,7 +22,7 @@ interface BuzinessImageUploadProps {
 }
 
 const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessImageUploadProps) => {
-  const theme = useTheme();
+  const theme = useAppTheme();
   useImperativeHandle(ref, () => ({
     uploadImages: async (buzinessId: number) => {
       const uploadPromises = images.map(async (i) => {

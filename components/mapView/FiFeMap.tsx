@@ -1,6 +1,6 @@
 import React, { forwardRef } from "react";
 import { Platform } from "react-native";
-import { useTheme } from "react-native-paper";
+import  { useAppTheme } from "@/assets/theme";
 import { Camera, MapView } from "./mapView";
 import { darkMapStyle, lightMapStyle } from "../MapSelector/mapStyles";
 
@@ -17,7 +17,7 @@ const DEFAULT_CENTER = {
 
 const FiFeMap = forwardRef<MapView, FiFeMapProps>(
   ({ initialCamera, customMapStyle, children, ...props }, ref) => {
-    const theme = useTheme();
+    const theme = useAppTheme();
     const isDarkTheme = theme.dark;
     const mapStyle = customMapStyle ?? (isDarkTheme ? darkMapStyle : lightMapStyle);
 

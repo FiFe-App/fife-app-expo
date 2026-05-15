@@ -3,12 +3,13 @@ import { ThemedView } from "@/components/ThemedView";
 import { Image } from "expo-image";
 import { View, Modal, Platform, StyleSheet, Pressable, TextInput } from "react-native";
 import { useState, useRef, useCallback } from "react";
-import { Icon, Text, useTheme } from "react-native-paper";
+import { Icon, Text } from "react-native-paper";
 import { Button } from "@/components/Button";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useFocusEffect, router } from "expo-router";
 import { ThemedInput } from "@/components/ThemedInput";
+import { useAppTheme } from "@/assets/theme";
 
 const iranyelvekList = [
   "Nem leszek rosszindulatú senkivel!",
@@ -19,7 +20,7 @@ const iranyelvekList = [
 const textToType = "Nem leszek rosszindulatú";
 
 const Megbizhatosag = () => {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [typed, setTyped] = useState("");

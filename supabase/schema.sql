@@ -152,36 +152,6 @@ $$;
 
 ALTER FUNCTION "public"."check_author_different"() OWNER TO "postgres";
 
-
-CREATE OR REPLACE FUNCTION "public"."hybrid_buziness_search"("query_text" "text", "query_embedding" "extensions"."vector", "lat" double precision, "long" double precision, "distance" double precision, "skip" integer, "take" integer, "full_text_weight" double precision DEFAULT 0, "semantic_weight" double precision DEFAULT 1, "match_threshold" double precision DEFAULT 0.6, "rrf_k" integer DEFAULT 50) RETURNS TABLE("id" bigint, "title" "text", "description" character varying, "author" "uuid", "created_at" timestamp with time zone, "images" "text"[], "location" "extensions"."geography", "recommendations" integer, "lat" double precision, "long" double precision, "distance" double precision, "relevance" double precision, "defaultcontact" bigint)
-    LANGUAGE "sql"
-    AS $$
-  SET search_path TO public; 
-  SELECT 
-    b.id, b.title, b.description, b.author, b.created_at, b.images, b.location, count(br.id) as recommendations, 
-  st_y(location::geometry) as lat,
-  st_x(location::geometry) as long,
-  st_distance(location, st_point(long, lat)::geography) as distance,
-  b.embedding <#> query_embedding as relevance,
-  b."defaultContact"
-  FROM public.buziness b 
-  LEFT OUTER JOIN public."buzinessRecommendations" br
-  ON b.id = br.buziness_id
-  where 
-    case when query_text = '' then true else b.embedding <#> query_embedding < -match_threshold end and    
-    case when location = NULL then true else true end
-  GROUP BY b.id
-  order by case when query_text != '' then (b.embedding <#> query_embedding) end, st_distance(location, st_point(long, lat)::geography) asc
-  OFFSET     CASE WHEN skip>=0 THEN skip 
-      END ROWS       -- skip 10 rows
-  LIMIT CASE WHEN take>=0 THEN take 
-      END
-$$;
-
-
-ALTER FUNCTION "public"."hybrid_buziness_search"("query_text" "text", "query_embedding" "extensions"."vector", "lat" double precision, "long" double precision, "distance" double precision, "skip" integer, "take" integer, "full_text_weight" double precision, "semantic_weight" double precision, "match_threshold" double precision, "rrf_k" integer) OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."nearby_buziness"("lat" double precision, "long" double precision, "maxdistance" double precision, "search" character varying, "take" integer, "skip" integer) RETURNS TABLE("id" bigint, "title" "text", "description" character varying, "author" "uuid", "created_at" timestamp with time zone, "location" "extensions"."geography", "recommendations" integer, "lat" double precision, "long" double precision, "distance" double precision)
     LANGUAGE "sql"
     AS $$
@@ -633,6 +603,10 @@ CREATE INDEX "comments_key_idx" ON "public"."comments" USING "hash" ("key");
 
 
 CREATE INDEX "ix_memos_content" ON "public"."buziness" USING "pgroonga" ("title");
+
+
+
+CREATE INDEX "ix_buziness_embedding_text" ON "public"."buziness" USING "pgroonga" ("embedding_text");
 
 
 

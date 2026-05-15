@@ -5,13 +5,14 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { ActivityIndicator, FAB, Text, useTheme } from "react-native-paper";
+import { ActivityIndicator, FAB, Text } from "react-native-paper";
 import { useDispatch } from "react-redux";
 import BuzinessItem from "../buziness/BuzinessItem";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
+import { useAppTheme } from "@/assets/theme";
 
 interface MyBuzinessesProps {
   uid: string;
@@ -21,7 +22,7 @@ interface MyBuzinessesProps {
 
 const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
   const dispatch = useDispatch();
-  const theme = useTheme();
+  const theme = useAppTheme();
   const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>(
     [],
   );

@@ -5,17 +5,19 @@ import { login, setUserData } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Link, Redirect, router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import { openBrowserAsync } from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
 
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { makeRedirectUri } from "expo-auth-session";
-import { Button, Checkbox, HelperText, Icon, TextInput, useTheme } from "react-native-paper";
+import { Button, Checkbox, HelperText, Icon, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import UsernameInput from "@/components/UsernameInput";
 import { Spacing } from "@/constants/spacing";
+import { useAppTheme } from "@/assets/theme";
 
 // Type for signup metadata
 interface SignupMetadata {
@@ -37,7 +39,7 @@ AppState.addEventListener("change", (state) => {
 });
 
 export default function Index() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const dispatch = useDispatch();
 
   const [name, setName] = useState("");
@@ -244,12 +246,24 @@ export default function Index() {
             onPress={() => setAcceptConditions(!acceptConditions)}
             status={acceptConditions ? "checked" : "unchecked"}
           />
-          <ThemedText variant="labelLarge" onPress={() => setAcceptConditions(!acceptConditions)}>
-            Elfogadom a
-            <ThemedText variant="labelLarge" type="link">
-              <Link href="/csatlakozom/iranyelvek"> feltételeket</Link>
+          <ThemedText variant="labelLarge" style={{ flex: 1, flexWrap: "wrap" }} onPress={() => setAcceptConditions(!acceptConditions)}>
+            {"Elolvastam és elfogadom a "}
+            <ThemedText
+              variant="labelLarge"
+              type="link"
+              onPress={(e) => { e.stopPropagation?.(); openBrowserAsync("https://fifeapp.hu/terms.html"); }}
+            >
+              Felhasználási feltételeket
             </ThemedText>
-            .
+            {" és az "}
+            <ThemedText
+              variant="labelLarge"
+              type="link"
+              onPress={(e) => { e.stopPropagation?.(); openBrowserAsync("https://fifeapp.hu/privacy.html"); }}
+            >
+              Adatkezelési tájékoztatót
+            </ThemedText>
+            {"."}          
           </ThemedText>
         </View>
         <Button

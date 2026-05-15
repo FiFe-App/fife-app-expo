@@ -30,7 +30,7 @@ const usersReducer = createSlice({
       state,
       action: PayloadAction<User[]>,
     ) => {
-      state.users = [...state.users, ...action.payload];
+      state.users = [...(state.users ?? []), ...action.payload];
     },
     storeUserSearchParams: (
       state,

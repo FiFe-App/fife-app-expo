@@ -24,6 +24,7 @@ import WhatToDo from "@/components/WhatToDo";
 import { Button } from "@/components/Button";
 import { useFifeSearch } from "@/hooks/useFifeSearch";
 import { useProfileSearch } from "@/hooks/useProfileSearch";
+import { PatreonModal } from "@/components/PatreonModal";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
@@ -60,17 +61,6 @@ export default function Index() {
     <>
       {uid && (
         <ThemedView style={{ flex: 1, zIndex: 100 }} type="default">
-          <ThemedView style={{ width: "100%", alignItems: "center", zIndex: 100 }} type="card">
-            <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm, paddingBottom: Spacing.xs }}>
-              <Smiley style={{ width: 40, height: 40, borderRadius: BorderRadius.sm, zIndex: 100000 }} />
-              <View style={{ paddingHorizontal: Spacing.sm, paddingTop: Spacing.sm, paddingBottom: Spacing.xs, flex: 1, alignItems:"flex-start" }}>
-                <Text variant="titleMedium">Üdvözöllek a FiFe Appban!</Text>
-                <Button icon="help-circle" onPress={() => setWhatVisible(true)} style={{ padding: 0 }}>
-                  <Text variant="labelMedium">Mit lehet itt csinálni?</Text>
-                </Button>
-              </View>
-            </View>
-          </ThemedView>
           <ThemedView type="card" style={{ paddingHorizontal: Spacing.lg, paddingTop: 0, paddingBottom: Spacing.sm, flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
             <View style={{ flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
               <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>Fife Radar</ThemedText>
@@ -78,7 +68,7 @@ export default function Index() {
             </View>
             <Button
               icon={searchCircle ? "map-marker" : "map-marker-outline"}
-              mode="contained-tonal"
+              mode="text"
               labelStyle={{marginVertical: Spacing.xs}}
               onPress={() => setLocationMenuVisible(true)}
             >Hol keresel?</Button>

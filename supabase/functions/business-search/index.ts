@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
       headers: corsHeaders,
     });
   }
-  const { query, skip, take, lat, long, maxdistance } = await req.json();
+  const { query, skip, take, lat, long, maxdistance, ingyen } = await req.json();
 
   // Instantiate OpenAI client
   const openai = new OpenAI({ apiKey: openaiApiKey });
@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
       messages: [
         {
           role: "system",
-          content: "Írd körül röviden azt az embert, aki ezekhez ért: " + query,
+          content: "Írd fel vesszővel elválasztva az összes szinonimát, rokon értelmű szót és kapcsolódó kifejezést (magyarul és angolul is) erre: " + query,
         },
       ],
     });
@@ -86,13 +86,16 @@ Deno.serve(async (req) => {
       long,
       query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),
       query_text: query,
+      filter_ingyen: ingyen || false,
     });
   } else {
     console.log("no query, normal search");
     
-    res = await supabase
+    let q = supabase
       .from("buziness")
-      .select("*, recommendations: buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(count)")
+      .select("*, recommendations: buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(count)");
+    if (ingyen) q = q.eq("ingyen", true);
+    res = await q
       .range(skip || 0, (skip || 0) + (take < 1 ? 20 : take) - 1)
       .order("created_at", { ascending: false });
   }

@@ -4,13 +4,11 @@ import { FlatList, Platform, Text, View } from "react-native";
 import {
   Button,
   Card,
-  Chip,
   FAB,
   Icon,
   IconButton,
   List,
-  TextInput,
-  useTheme
+  TextInput
 } from "react-native-paper";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 import {
@@ -21,11 +19,12 @@ import {
   Marker,
   Region,
 } from "../mapView/mapView";
-import FiFeMap from "../mapView/FiFeMap";
 import styles from "../mapView/style";
 import { MapSelectorProps } from "./MapSelector.types";
 import { CircleType } from "@/redux/store.type";
-import { ThemedText } from "../ThemedText";
+import { lightMapStyle, darkMapStyle } from "./mapStyles";
+import { useAppTheme } from "@/assets/theme";
+import { BorderRadius } from "@/constants/borderRadius";
 
 const defaultMapLocation = {
   location: {
@@ -43,19 +42,19 @@ const MapSelector = ({
   setData,
   setOpen,
   markerOnly,
+  children,
 }: MapSelectorProps) => {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const [mapHeight, setMapHeight] = useState<number>(0);
   const circleSize = mapHeight / 3;
   const [circleRadiusText, setCircleRadiusText] = useState("");
   const [circle, setCircle] = useState<CircleType>(data || defaultMapLocation);
-  interface GeoResult {
-    formatted_address: string;
-    geometry: { location: { lat: () => number; lng: () => number } };
-  }
   const [search, setSearch] = useState("");
-  const [addressList, setAddressList] = useState<GeoResult[]>([]);
-  const [selectedAddress, setSelectedAddress] = useState<GeoResult | null>(null);
+  const [addressList, setAddressList] = useState<google.maps.GeocoderResult[]>(
+    [],
+  );
+  const [selectedAddress, setSelectedAddress] =
+    useState<google.maps.GeocoderResult | null>(null);
   const [searchFocused, setSearchFocused] = useState(false);
   const showList = addressList && selectedAddress?.formatted_address !== search && searchFocused;
   const [approxLocation, setApproxLocation] = useState(false);
@@ -65,6 +64,7 @@ const MapSelector = ({
 
   // Determine if we're using dark theme
   const isDarkTheme = theme.dark;
+  const mapStyle = isDarkTheme ? darkMapStyle : lightMapStyle;
 
   const onRegionChange:
     | ((region: Region, details: Details) => void)
@@ -115,28 +115,13 @@ const MapSelector = ({
 
   const turnToAddress = async (address: string) => {
     if (address.length < 4) return;
-    if (Platform.OS === "web") {
-      const geocoder = new google.maps.Geocoder();
-      const coded = await geocoder.geocode({
-        address,
-        componentRestrictions: { country: "HU" },
-      });
-      return { results: coded.results.map((r) => ({
-        formatted_address: r.formatted_address,
-        geometry: { location: { lat: () => r.geometry.location.lat(), lng: () => r.geometry.location.lng() } },
-      })) };
-    } else {
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&components=country:HU&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
-      const response = await fetch(url);
-      const json = await response.json();
-      if (json.status !== "OK") return { results: [] };
-      return {
-        results: (json.results as Array<{ formatted_address: string; geometry: { location: { lat: number; lng: number } } }>).map((r) => ({
-          formatted_address: r.formatted_address,
-          geometry: { location: { lat: () => r.geometry.location.lat, lng: () => r.geometry.location.lng } },
-        })),
-      };
-    }
+    const geocoder = new google.maps.Geocoder();
+    const coded = await geocoder.geocode({
+      address,
+      componentRestrictions: { country: "HU" },
+    });
+
+    return coded;
   };
   const debounce = <T,>(func: (param: T) => void, wait: number) => {
     let timeout: NodeJS.Timeout;
@@ -165,24 +150,22 @@ const MapSelector = ({
   };
 
   return (
-    <View style={[{ flex: 1, overflow: "hidden", borderRadius: 16 }, style]}>
+    <View style={[{ flex: 1, overflow: "hidden", borderRadius: BorderRadius.md }, style]}>
       <View
-        style={{ width: "100%", height: "100%", borderRadius: 16 }}
+        style={{ width: "100%", height: "100%" }}
         onLayout={(e) => {
           setMapHeight(e.nativeEvent.layout.height);
         }}
       >
-        <View style={{ zIndex: 10, position: "absolute", width: "100%" }}>
+        <View style={{ zIndex: 10, padding: 10, position: "absolute", width: "100%" }}>
           <TextInput
             inputMode="search"
-            mode="outlined"
             placeholder="Keress címre..."
+            mode="outlined"
             onChangeText={(text) => {
               setSearch(text);
               debouncedSearch(text);
             }}
-            outlineStyle={{borderRadius: 999}}
-            style={{margin: 6}}
             onFocus={() => setSearchFocused(true)}
             value={search}
           />
@@ -224,27 +207,52 @@ const MapSelector = ({
         <View
           style={{ width: "100%", flex: 1, zIndex: 0 }}
         >
-          <FiFeMap
+          <MapView
             ref={mapRef}
+            {...(Platform.OS === "web" ? {
+              options: {
+                mapTypeControl: false,
+                fullscreenControl: false,
+                streetViewControl: false,
+                zoomControl: false,
+              },
+            } : {})}
             onPoiClick={() => {
               // no-op: suppress default POI behavior
             }}
-            onPress={(e) => {
-              setCircle({...circle,location: e.nativeEvent.coordinate});
+            onPress={() => {
               setSearchFocused(false);
             }}
             style={{ width: "100%", height: "100%" }}
             initialCamera={{
+              altitude: 10,
               center: {
                 latitude: circle?.location?.latitude,
                 longitude: circle?.location?.longitude,
               },
+              heading: 0,
+              pitch: 0,
+              zoom: 12,
             }}
-            //onRegionChangeComplete={onRegionChange}
+            provider="google"
+            googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
+            pitchEnabled={false}
+            rotateEnabled={false}
+            toolbarEnabled={false}
+            onRegionChangeComplete={onRegionChange}
+            customMapStyle={mapStyle}
           >
-            {data?.location && data.location.latitude !== myLocation?.coords.latitude && data.location.longitude !== myLocation?.coords.longitude && (markerOnly ?
+            {myLocation && (
               <Marker
-                zIndex={data.location.longitude}
+                coordinate={myLocation?.coords}
+                anchor={{ x: 0.5, y: 0.5 }}
+              >
+                <Icon source="home-map-marker" size={28} color={theme.colors.primary} />
+              </Marker>
+            )}
+
+            {data?.location && (markerOnly ?
+              <Marker
                 coordinate={
                   data?.location
                 }
@@ -253,7 +261,6 @@ const MapSelector = ({
                 <NewMarkerIcon style={{ opacity: 0.5 }} />
               </Marker>
               : <Circle
-                zIndex={50}
                 center={
                   data?.location
                 }
@@ -280,22 +287,7 @@ const MapSelector = ({
                 radius={circle?.radius}
               >
               </Circle>)}
-
-            {myLocation && (
-              <Marker
-                zIndex={myLocation.coords.longitude}
-                
-                coordinate={myLocation?.coords}
-                anchor={{ x: 0.5, y: 1 }}
-              >
-                <Icon source="map-marker" size={28} color={theme.colors.tertiary} />
-              </Marker>
-            )}
-
-          </FiFeMap>
-          <View style={{position:"absolute",top:80,width:"100%",alignItems:"center"}}>          
-            <Chip icon="map-marker"><ThemedText variant="labelSmall">Kattints a térképre hogy kiválassz egy pontot!</ThemedText></Chip>
-          </View>
+          </MapView>
           {!!circleSize && <View style={[styles.circleFixed, {
             width: circleSize,
             height: circleSize,
@@ -315,7 +307,6 @@ const MapSelector = ({
               }}
               onPress={() => zoom(1)}
               mode="contained-tonal"
-              
             />
             <IconButton
               icon="minus"
@@ -330,12 +321,13 @@ const MapSelector = ({
           </View>
           {!!myLocation && (
             <FAB
-              style={[styles.myLocationButton, { top: 130 }]}
+              style={[styles.myLocationButton, { top: 80 }]}
               icon={myLocation ? "map-marker" : "map-marker-question"}
               onPress={panToMyLocation}
             />
           )}
         </View>
+        {children}
         <View style={{ padding: 8 }}>
 
           <View

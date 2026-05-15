@@ -1,4 +1,3 @@
-import { theme } from "@/assets/theme";
 import { BuzinessList } from "@/components/buziness/BuzinessList";
 import { BuzinessMap } from "@/components/buziness/BuzinessMap";
 import MapSelector from "@/components/MapSelector/MapSelector";
@@ -11,12 +10,14 @@ import {
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
 import { useFocusEffect, useNavigation } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import {
   FAB,
+  List,
   Modal,
-  Portal
+  Portal,
+  Switch,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import BuzinessSearchInput from "@/components/BuzinessSearchInput";
@@ -25,8 +26,11 @@ import { useBuzinessSearch } from "@/hooks/useBuzinessSearch";
 import Measure from "@/components/tutorial/Measure";
 import { MyAppbar } from "@/components/MyAppBar";
 import { Spacing } from "@/constants/spacing";
+import { useAppTheme } from "@/assets/theme";
+import { BorderRadius } from "@/constants/borderRadius";
 
 export default function Index() {
+  const theme = useAppTheme();
   const { uid } = useSelector((state: RootState) => state.user);
   const navigation = useNavigation();
   const { searchParams, buzinesses } = useSelector(
@@ -34,19 +38,20 @@ export default function Index() {
   );
   const searchType = searchParams?.searchType;
   const searchCircle = searchParams?.searchCircle;
-  const listTitle = searchParams?.text ? "Találatok: " + searchParams?.text : "Új bizniszek";
+  const ingyen = searchParams?.ingyen || false;
+  const [ingyenLocal,setIngyenLocal] = useState(ingyen);
+
+  const { canLoadMore, search, loadNext, error } = useBuzinessSearch();
+  
+  const listTitle = useMemo(()=>searchParams?.text ? "Találatok: " + searchParams?.text : "Új bizniszek",[searchParams?.loading]);
   const dispatch = useDispatch();
 
-  const { canLoadMore, search, loadNext } = useBuzinessSearch();
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
-
-  useEffect(() => {
-    console.log(searchParams?.searchCircle);
-  }, [searchParams?.searchCircle]);
 
   useFocusEffect(
     useCallback(() => {
-      if (buzinesses.length === 0)
+      console.log("search bc of init");
+      if (buzinesses.length === 0 && !searchParams?.loading)
         search();
       if (uid) dispatch(viewFunction({ key: "buzinessPage", uid }));
       navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={search} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
@@ -65,7 +70,7 @@ export default function Index() {
           </Measure>
         </ThemedView>
         {searchType === "list" || !searchType ? (
-          <BuzinessList load={loadNext} canLoadMore={canLoadMore} />
+          <BuzinessList load={loadNext} canLoadMore={canLoadMore} error={error} />
         ) : (
           <BuzinessMap load={search} />
         )}
@@ -91,6 +96,7 @@ export default function Index() {
               {
                 width: "90%",
                 height: "90%",
+                borderRadius: BorderRadius.md
               },
             ]}
           >
@@ -98,6 +104,10 @@ export default function Index() {
               <MapSelector
                 data={searchCircle}
                 setData={(sC) => {
+                  if (ingyenLocal != ingyen) {
+                    dispatch(storeBuzinessSearchParams({ ingyen: ingyenLocal }));
+                    search(searchParams?.text, { ingyen: ingyenLocal });
+                  }
                   if (
                     (sC && "location" in sC && "radius" in sC) ||
                     sC == undefined
@@ -106,7 +116,24 @@ export default function Index() {
                 }}
                 searchEnabled
                 setOpen={setLocationMenuVisible}
-              />
+              >
+                <List.Item
+                  title="Csak ingyenes bizniszek"
+                  description="Ingyenes vagy önkéntes bizniszeket mutass"
+                  titleStyle={{fontFamily:"Piazzolla-ExtraBold"}}
+                  left={(props) => <List.Icon {...props} color={theme.colors.primary} icon="charity" />}
+                  right={() => (
+                    <Switch
+                    color={theme.colors.nature}
+                      value={ingyenLocal}
+                      onValueChange={(v) => {
+                        setIngyenLocal(v);
+                      }}
+                    />
+                  )}
+                />
+              </MapSelector>
+
             </ThemedView>
           </Modal>
         </Portal>

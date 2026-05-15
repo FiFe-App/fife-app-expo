@@ -1,5 +1,5 @@
 import { StyleSheet, View, useWindowDimensions, type ViewProps } from "react-native";
-import { useTheme } from "react-native-paper";
+import  { useAppTheme } from "@/assets/theme";
 
 export type ThemedViewProps = ViewProps & {
   lightColor?: string;
@@ -16,7 +16,7 @@ export function ThemedView({
   reverseOnCol,
   ...otherProps
 }: ThemedViewProps) {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const { width } = useWindowDimensions();
   const isCol = responsive ? width <= responsive : false;
   

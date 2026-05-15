@@ -39,12 +39,11 @@ import openMap from "react-native-open-maps";
 import {
   ActivityIndicator,
   Button,
-  Chip,
   IconButton,
   Portal,
   Text,
   TouchableRipple,
-  useTheme,
+   
 } from "react-native-paper";
 // Removed tabs; sections will be stacked vertically
 import { useDispatch, useSelector } from "react-redux";
@@ -55,9 +54,10 @@ import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
 import CategoryChip from "@/components/CategoryChip";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
+import { useAppTheme } from "@/assets/theme";
 
 export default function Index() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const { id: paramId } = useGlobalSearchParams();
   const { width } = useWindowDimensions();
   const dispatch = useDispatch();
@@ -194,6 +194,9 @@ export default function Index() {
               >
                 {!!isNew && (
                   <CategoryChip key="category-new" style={{ backgroundColor: theme.colors.tertiary }} textStyle={{ color: theme.colors.onTertiary }}>új</CategoryChip>
+                )}
+                {!!data.ingyen && (
+                  <CategoryChip key="category-ingyen" style={{ backgroundColor: theme.colors.nature }} textStyle={{ color: theme.colors.onNature }}>ingyenes</CategoryChip>
                 )}
                 {categories?.slice(1).map((e, i) => {
                   if (e.trim())

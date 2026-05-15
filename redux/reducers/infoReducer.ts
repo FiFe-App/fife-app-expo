@@ -31,20 +31,20 @@ const infoReducer = createSlice({
       ];
     },
     popDialog: (state) => {
-      state.dialogs = state.dialogs.slice(1);
+      state.dialogs = (state.dialogs ?? []).slice(1);
     },
     addSnack: (state, action: PayloadAction<SnackProps>) => {
       state.snacks = [...(state.snacks || []), action.payload];
     },
     popSnack: (state) => {
-      state.snacks = state.snacks.slice(1);
+      state.snacks = (state.snacks ?? []).slice(1);
     },
     setOptions: (state, action: PayloadAction<OptionProps[]>) => {
       state.options = action.payload;
     },
     updateOption: (state, action: PayloadAction<Partial<OptionProps>>) => {
       console.log("update", action.payload);
-
+      if (!state.options) return;
       const toUpdate = state.options.findIndex(
         (opt) => opt.title === action.payload.title,
       );
