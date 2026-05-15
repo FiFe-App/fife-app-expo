@@ -12,6 +12,7 @@ import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { RootState } from "@/redux/store";
 import { Button } from "../Button";
 import { theme } from "@/assets/theme";
+import { Spacing } from "@/constants/spacing";
 import Smiley from "../Smiley";
 import { Text } from "react-native-paper";
 
@@ -256,8 +257,8 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
             pointerEvents="auto"
             style={{
               alignItems: "center",
-              backgroundColor: "#000000Cf",
-              padding: 16,
+              backgroundColor: theme.colors.backdrop,
+              padding: Spacing.lg,
               position: "absolute",
               // Place text below highlight if highlight is in top half, otherwise above
               top:
@@ -276,7 +277,7 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
             {currentStep.description && <ThemedText style={[styles.message, { color: theme.colors.onSecondary }]} variant="headlineSmall">{currentStep.description}</ThemedText>
             }
             {/* Next button */}
-            <View style={{ flexDirection: "row", gap: 24 }}>
+            <View style={{ flexDirection: "row", gap: Spacing.xxl }}>
               <Button
                 mode="elevated"
                 onPress={handlePrev}>
@@ -289,7 +290,7 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
                   ? "Következő"
                   : "Kész!"}
 
-              </Button> : <Text style={{ color: "white" }}>Kattints a kiemelt részre</Text>}
+              </Button> : <Text style={{ color: theme.colors.onSecondary }}>Kattints a kiemelt részre</Text>}
             </View>
           </View>}
         </Animated.View>
@@ -303,8 +304,8 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
         pointerEvents="auto"
         style={{
           alignItems: "center",
-          backgroundColor: "#000000Cf",
-          padding: 16,
+          backgroundColor: theme.colors.backdrop,
+          padding: Spacing.lg,
           position: "absolute",
           // Place text below highlight if highlight is in top half, otherwise above
           top:
@@ -323,7 +324,7 @@ const TutorialOverlay = ({ children }: { children?: ReactNode }) => {
         {currentStep.description && <ThemedText style={[styles.message, { color: theme.colors.onSecondary }]} variant="headlineSmall">{currentStep.description}</ThemedText>
         }
         {/* Next button */}
-        <View style={{ flexDirection: "row", gap: 24 }}>
+        <View style={{ flexDirection: "row", gap: Spacing.xxl }}>
           <Button
             mode="elevated"
             onPress={handlePrev}>
@@ -358,24 +359,15 @@ const styles = StyleSheet.create({
     overflow: "hidden"
   },
   dimmed: {
-    backgroundColor: "#00000015",
+    backgroundColor: "rgba(0, 0, 0, 0.08)",
   },
   absolute: {
     position: "absolute",
   },
   message: {
     textAlign: "center",
-    marginBottom: 20,
-    paddingHorizontal: 16,
-  },
-  button: {
-    backgroundColor: "#ff0033",
-    padding: 10,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 22,
+    marginBottom: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
   },
 });
 

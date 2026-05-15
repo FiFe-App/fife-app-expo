@@ -15,6 +15,7 @@ import { makeRedirectUri } from "expo-auth-session";
 import { Button, Checkbox, HelperText, Icon, TextInput, useTheme } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import UsernameInput from "@/components/UsernameInput";
+import { Spacing } from "@/constants/spacing";
 
 // Type for signup metadata
 interface SignupMetadata {
@@ -145,13 +146,13 @@ export default function Index() {
 
   if (uid) return <Redirect href="/" />;
   return (
-    <ThemedView style={{ flex: 1, padding: 16, alignItems: "center" }}>
-      <View style={{ justifyContent: "center", marginBottom: 16 }}></View>
+    <ThemedView style={{ flex: 1, padding: Spacing.lg, alignItems: "center" }}>
+      <View style={{ justifyContent: "center", marginBottom: Spacing.lg }}></View>
       <View
         style={{
           maxWidth: 400,
           width: "100%",
-          gap: 8,
+          gap: Spacing.sm,
           flex: 3,
           justifyContent: "center",
         }}
@@ -178,7 +179,7 @@ export default function Index() {
           onChangeText={setUsername}
           onAvailabilityChange={setUsernameAvailable}
           label="Felhasználónév"
-          style={{ marginTop: 8 }}
+          style={{ marginTop: Spacing.sm }}
         />
         <TextInput
           mode="outlined"
@@ -208,7 +209,7 @@ export default function Index() {
           }
         />
         <View style={{ flexDirection: "row" }}>
-          <View style={{ marginRight: 4, justifyContent: "center" }}>
+          <View style={{ marginRight: Spacing.xs, justifyContent: "center" }}>
             <Icon
               source={isPasswordWeak ? "check-circle-outline" : "check-circle"}
               color={theme.colors.onSurface}
@@ -238,7 +239,7 @@ export default function Index() {
             />
           }
         />
-        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginTop: Spacing.lg }}>
           <Checkbox
             onPress={() => setAcceptConditions(!acceptConditions)}
             status={acceptConditions ? "checked" : "unchecked"}

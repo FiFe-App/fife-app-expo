@@ -1,9 +1,13 @@
 import { Link } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Chip, Icon, Surface, Text } from "react-native-paper";
+import { Surface, Text } from "react-native-paper";
+import CategoryChip from "../CategoryChip";
+import MetaStat from "../MetaStat";
 import ProfileImage from "../ProfileImage";
 import { NearestProfile, User } from "@/redux/store.type";
 import toDistanceText from "@/lib/functions/distanceText";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 
 interface UserItemProps {
   data: NearestProfile | User;
@@ -21,45 +25,28 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
     <Link href={{ pathname: "/user/[uid]", params: { uid: id } }} asChild>
       <Pressable>
         <Surface style={styles.container} elevation={2} mode="flat">
-        <View style={{ flexDirection: "row", gap: 12 }}>
+        <View style={{ flexDirection: "row", gap: Spacing.md }}>
           <ProfileImage
             modal
             uid={id}
             size={50}
             avatar_url={avatar_url}
-            style={{ width: 80, height: 80, borderRadius: 6 }}
+            style={{ width: 80, height: 80, borderRadius: BorderRadius.sm }}
           />
-          <View style={{ flex: 1, gap: 4 }}>
-            <Text variant="titleLarge">{full_name || "Nincs név"}</Text>
-            <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4 }}>
-              {buzinesses?.map((buziness, i) => {
-                return (
-                  <Chip key={"buziness" + i} textStyle={{ margin: 4 }}>
-                    <Text variant="labelMedium">{buziness}</Text>
-                  </Chip>
-                );
-              })}
+          <View style={{ flex: 1, gap: Spacing.xs }}>
+            <Text variant="titleLarge" style={{ fontSize: 18, lineHeight: 24 }}>{full_name || "Nincs név"}</Text>
+            <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.xs }}>
+              {buzinesses?.map((buziness, i) => (
+                <CategoryChip key={"buziness" + i}>{buziness}</CategoryChip>
+              ))}
             </View>
-            <View
-              style={{
-                marginRight: 8,
-                flexDirection: "row",
-                flexWrap: "wrap",
-                gap: 16
-              }}
-            >
-              <View style={{}}>
-                {!showOptions && !!created_at && distance != null && (
-                  <Text>
-                    <Icon size={16} source="map-marker" /><Text> {toDistanceText(distance / 1000)} távolságra</Text>
-                  </Text>
-                )}
-              </View>
-              {recommendations > 0 && <View style={{ flexDirection: "row" }}>
-                <Text>
-                  <Icon size={16} source="account-group" /> <Text>{recommendations ? <Text>{recommendations} ember ajánlja</Text> : <Text>Még senki sem ajánlotta</Text>}</Text>
-                </Text>
-              </View>}
+            <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.sm }}>
+              {!showOptions && !!created_at && distance != null && (
+                <MetaStat icon="map-marker">{toDistanceText(distance / 1000)} távolságra</MetaStat>
+              )}
+              {recommendations > 0 && (
+                <MetaStat icon="account-group">{recommendations} ember ajánlja</MetaStat>
+              )}
             </View>
           </View>
         </View>
@@ -74,8 +61,8 @@ export default UserItem;
 const styles = StyleSheet.create({
   container: {
     overflow: "hidden",
-    borderRadius: 8,
-    marginHorizontal: 4,
-    padding: 8,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    gap: Spacing.sm,
   },
 });

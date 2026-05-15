@@ -1,5 +1,7 @@
 import { theme } from "@/assets/theme";
 import { UsersList } from "@/components/user/UsersList";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 import MapSelector from "@/components/MapSelector/MapSelector";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -59,9 +61,9 @@ export default function Index() {
       {uid && (
         <ThemedView style={{ flex: 1, zIndex: 100 }} type="default">
           <ThemedView style={{ width: "100%", alignItems: "center", zIndex: 100 }} type="card">
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
-              <Smiley style={{ width: 40, height: 40, borderRadius: 6, zIndex: 100000 }} />
-              <View style={{ paddingHorizontal: 8, paddingTop: 8, paddingBottom: 4, flex: 1, alignItems:"flex-start" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm, paddingBottom: Spacing.xs }}>
+              <Smiley style={{ width: 40, height: 40, borderRadius: BorderRadius.sm, zIndex: 100000 }} />
+              <View style={{ paddingHorizontal: Spacing.sm, paddingTop: Spacing.sm, paddingBottom: Spacing.xs, flex: 1, alignItems:"flex-start" }}>
                 <Text variant="titleMedium">Üdvözöllek a FiFe Appban!</Text>
                 <Button icon="help-circle" onPress={() => setWhatVisible(true)} style={{ padding: 0 }}>
                   <Text variant="labelMedium">Mit lehet itt csinálni?</Text>
@@ -69,15 +71,15 @@ export default function Index() {
               </View>
             </View>
           </ThemedView>
-          <ThemedView type="card" style={{ paddingHorizontal: 16, paddingTop: 0, paddingBottom: 8, flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
-            <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 4 }}>
+          <ThemedView type="card" style={{ paddingHorizontal: Spacing.lg, paddingTop: 0, paddingBottom: Spacing.sm, flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
+            <View style={{ flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
               <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>Fife Radar</ThemedText>
               <Icon size={18} color={theme.colors.secondary} source="wifi" />
             </View>
             <Button
               icon={searchCircle ? "map-marker" : "map-marker-outline"}
               mode="contained-tonal"
-              labelStyle={{marginVertical: 4}}
+              labelStyle={{marginVertical: Spacing.xs}}
               onPress={() => setLocationMenuVisible(true)}
             >Hol keresel?</Button>
           </ThemedView>

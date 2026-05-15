@@ -4,6 +4,7 @@ import { StyleSheet, View } from "react-native";
 import { Badge, Icon, TouchableRipple } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import { useSelector } from "react-redux";
+import { Spacing } from "@/constants/spacing";
 import { RootState } from "@/redux/store";
 import globStyles from "@/constants/Styles";
 import { theme } from "@/assets/theme";
@@ -79,7 +80,7 @@ const BottomNavigation = () => {
 const styles = StyleSheet.create({
   button: {
     flex: 1,
-    padding: 8,
+    padding: Spacing.sm,
     alignItems: "center",
     justifyContent: "center",
   },

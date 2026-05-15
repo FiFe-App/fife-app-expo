@@ -9,6 +9,8 @@ import { View } from "react-native";
 import { Modal, Portal, useTheme } from "react-native-paper";
 import { CircleType } from "@/redux/store.type";
 import { Button } from "@/components/Button";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 
 const Register = () => {
   const dispatch = useDispatch();
@@ -18,26 +20,25 @@ const Register = () => {
   const [searchCircle, setSearchCircle] = useState<CircleType | undefined>();
 
   const containerStyle = {
-    padding: 20,
-    margin: 20,
+    padding: Spacing.xl,
+    margin: Spacing.xl,
     flex: 1,
     height: 200
   };
 
   return (
-    <ThemedView style={{ flex: 1, padding: 8,paddingTop: 36 }}>
+    <ThemedView style={{ flex: 1, padding: Spacing.sm, paddingTop: 36 }}>
       <View style={{ justifyContent: "center" }}>
-        <ThemedText type="title" style={{ marginBottom: 16 }}>
+        <ThemedText type="title" style={{ marginBottom: Spacing.lg }}>
           FiFe Radar
         </ThemedText>
-        <ThemedText type="subtitle" style={{ marginBottom: 16 }}>
+        <ThemedText type="subtitle" style={{ marginBottom: Spacing.lg }}>
           Ha megadod a hozzávetőleges lakhelyed, láthatod a környéken élő fiféket!{"\n\n"}
           Elég nagyjából bejelölnöd a térképen a környékedet!
         </ThemedText>
       </View>
-      <View style={{ flex: 1, marginVertical: 20, gap: 12 }}>
+      <View style={{ flex: 1, marginVertical: Spacing.xl, gap: Spacing.md }}>
         <Button icon={myLocation ? "check-circle" : undefined} mode={myLocation ? "contained-tonal" : "contained"} onPress={() => setLocationMenuVisible(true)}>
-          
           {myLocation ? "Környék módosítása" : "Megadom a környékemet"}
         </Button>
         {myLocation && <View style={{ alignItems: "flex-end", }}>
@@ -56,7 +57,7 @@ const Register = () => {
           contentContainerStyle={[
             {
               height: 500,
-              borderRadius: 16,
+              borderRadius: BorderRadius.xl,
             },
           ]}
         >

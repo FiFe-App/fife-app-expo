@@ -24,6 +24,7 @@ import { Button } from "@/components/Button";
 import { useBuzinessSearch } from "@/hooks/useBuzinessSearch";
 import Measure from "@/components/tutorial/Measure";
 import { MyAppbar } from "@/components/MyAppBar";
+import { Spacing } from "@/constants/spacing";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);
@@ -56,7 +57,7 @@ export default function Index() {
   if (uid)
     return (
       <ThemedView style={{ flex: 1 }} type="default">
-        <ThemedView type="card" style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <ThemedView type="card" style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm, paddingBottom: Spacing.sm, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
 
           <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>{listTitle}</ThemedText>
           <Measure name="filter">
@@ -71,7 +72,7 @@ export default function Index() {
         <Measure name="map-switch">
           <FAB
             icon={searchType === "map" ? "format-list-bulleted" : "map"}
-            style={{ position: "absolute", bottom: 16, right: 16 }}
+            style={{ position: "absolute", bottom: Spacing.lg, right: Spacing.lg }}
             variant="tertiary"
             customSize={80}
             onPress={() => {

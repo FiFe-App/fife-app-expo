@@ -12,6 +12,7 @@ import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import UserItem from "../user/UserItem";
 import { RootState } from "@/redux/store";
 import { theme } from "@/assets/theme";
+import { Spacing } from "@/constants/spacing";
 
 export interface ContactListProps {
   uid: string;
@@ -47,7 +48,7 @@ export function SavedProfiles({ uid, myProfile, name }: ContactListProps) {
   return (
     <>
       <ThemedView style={{ flex: 1 }}>
-        {contacts.length > 0 && <ThemedText variant="labelLarge" style={{ padding: 6, color: theme.colors.secondary, fontWeight: "bold" }}>{myProfile ? "Őket jelölted megbízhatónak" : `Őket jelölte ${name} megbízhatónak`}</ThemedText>
+        {contacts.length > 0 && <ThemedText variant="labelLarge" style={{ padding: Spacing.xs, color: theme.colors.secondary, fontWeight: "bold" }}>{myProfile ? "Őket jelölted megbízhatónak" : `Őket jelölte ${name} megbízhatónak`}</ThemedText>
         }<ScrollView>
           {loading && (
             <View
@@ -56,14 +57,14 @@ export function SavedProfiles({ uid, myProfile, name }: ContactListProps) {
               <ActivityIndicator />
             </View>
           )}
-          <List.Section style={{ gap: 8 }}>
+          <List.Section style={{ gap: Spacing.sm }}>
             {!loading &&
               (contacts.length ? (
                 contacts.map((contact) => (
                   <UserItem key={contact.id} data={contact} />
                 ))
               ) : (
-                <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
+                <View style={{ alignItems: "center", gap: Spacing.lg, padding: Spacing.sm }}>
                   <Image
                     source={require("@/assets/images/HeroImage.png")}
                     style={{ height: 200, width: "100%" }}
@@ -86,8 +87,8 @@ export function SavedProfiles({ uid, myProfile, name }: ContactListProps) {
 
 const styles = StyleSheet.create({
   fabStyle: {
-    bottom: 16,
-    right: 16,
+    bottom: Spacing.lg,
+    right: Spacing.lg,
     position: "absolute",
   },
 });

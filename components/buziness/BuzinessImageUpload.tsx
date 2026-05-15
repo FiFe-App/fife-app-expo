@@ -5,9 +5,10 @@ import * as ExpoImagePicker from "expo-image-picker";
 import { useImperativeHandle, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import ImageModal from "react-native-image-modal";
-import { IconButton, TextInput } from "react-native-paper";
+import { IconButton, TextInput, useTheme } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { ThemedText } from "../ThemedText";
+import { Spacing } from "@/constants/spacing";
 
 export interface BuzinessImageUploadHandle {
   uploadImages: (buziessId: number) => Promise<ImageDataType[]>;
@@ -20,6 +21,7 @@ interface BuzinessImageUploadProps {
 }
 
 const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessImageUploadProps) => {
+  const theme = useTheme();
   useImperativeHandle(ref, () => ({
     uploadImages: async (buzinessId: number) => {
       const uploadPromises = images.map(async (i) => {
@@ -136,10 +138,10 @@ const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessIma
   };
   return (
     <View>
-      <ThemedText style={{ padding: 8 }}>Képek feltöltése</ThemedText>
+      <ThemedText style={{ padding: Spacing.sm }}>Képek feltöltése</ThemedText>
       <ScrollView
         horizontal
-        contentContainerStyle={{ alignItems: "center", gap: 4 }}
+        contentContainerStyle={{ alignItems: "center", gap: Spacing.xs }}
       >
         {images.map((image, ind) => {
           return (
@@ -148,7 +150,7 @@ const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessIma
               style={{
                 width: width,
                 backgroundColor:
-                  image.status === "toDelete" ? "red" : "transparent",
+                  image.status === "toDelete" ? theme.colors.error : "transparent",
               }}
             >
               {image.status === "toDelete" && (
@@ -160,7 +162,7 @@ const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessIma
                       width,
                       zIndex: 10,
                       textAlign: "center",
-                      color: "white",
+                      color: theme.colors.onError,
                     }}
                   >
                     Törlésre kijelölve
@@ -173,7 +175,8 @@ const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessIma
                       width,
                       height: 200,
                       zIndex: 1,
-                      backgroundColor: "#ff000066",
+                      backgroundColor: theme.colors.error,
+                      opacity: 0.4,
                     }}
                   />
                 </>
@@ -209,7 +212,7 @@ const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessIma
             </View>
           );
         })}
-        <IconButton icon="plus" onPress={pickImage} mode="contained" iconColor="black" />
+        <IconButton icon="plus" onPress={pickImage} mode="contained" iconColor={theme.colors.onSurface} />
       </ScrollView>
     </View>
   );

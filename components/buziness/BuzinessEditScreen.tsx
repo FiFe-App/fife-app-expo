@@ -54,6 +54,8 @@ import ContactEditScreen from "./ContactEditScreen";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { Tables } from "@/database.types";
 import { theme } from "@/assets/theme";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 
 interface NewBuzinessInterface {
   title: string;
@@ -425,11 +427,11 @@ export default function BuzinessEditScreen({
                               : MD3DarkTheme.colors.primary,
                           alignItems: "center",
                           display: "flex",
-                          padding: 8,
+                          padding: Spacing.sm,
                         }}
                       >
                         <Icon source={typeToIcon(option.label) || "dots-horizontal"} size={22} />
-                        <ThemedText style={{ marginLeft: 8 }}>
+                        <ThemedText style={{ marginLeft: Spacing.sm }}>
                           {option.label}
                         </ThemedText>
                       </Headline>
@@ -445,7 +447,7 @@ export default function BuzinessEditScreen({
             />
             <List.Item
               title="Elérhetőségek"
-              style={{ marginTop: 8 }}
+              style={{ marginTop: Spacing.sm }}
               description="Legalább egy elérhetőség megadása kötelező"
               onPress={() => setContactsExpanded(!contactsExpanded)}
               left={(props) => <List.Icon {...props} icon="contacts" />}
@@ -458,9 +460,9 @@ export default function BuzinessEditScreen({
               }
             />
             <View style={{ display: contactsExpanded ? "flex" : "none" }}>
-              <ContactEditScreen ref={contactEditRef} onContactsChange={(newContacts) => setContacts(newContacts)} style={{ padding: 16, paddingRight: 0, }} />
+              <ContactEditScreen ref={contactEditRef} onContactsChange={(newContacts) => setContacts(newContacts)} style={{ padding: Spacing.lg, paddingRight: 0, }} />
             </View>
-            <Divider style={{ marginTop: 8, marginBottom: 8 }} />
+            <Divider style={{ marginTop: Spacing.sm, marginBottom: Spacing.sm }} />
             <BuzinessImageUpload
               images={images}
               setImages={setImages}
@@ -474,7 +476,7 @@ export default function BuzinessEditScreen({
                   flexWrap: "wrap",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  padding: 8,
+                  padding: Spacing.sm,
                 }}
               >
                 <ThemedText>A bizniszed helyzete</ThemedText>
@@ -531,7 +533,7 @@ export default function BuzinessEditScreen({
                   )}
                 </FiFeMap>
               ) : (
-                <View style={{ alignItems: "center", gap: 8, padding: 16 }}>
+                <View style={{ alignItems: "center", gap: Spacing.sm, padding: Spacing.lg }}>
                   <Image
                     style={{ width: 100, height: 100 }}
                     source={require("@/assets/images/img-map.png")}
@@ -552,10 +554,10 @@ export default function BuzinessEditScreen({
           <ThemedView
             type="default"
             style={{
-              padding: 8,
+              padding: Spacing.sm,
               bottom: 0,
               width: "100%",
-              gap: 16
+              gap: Spacing.lg
             }}
           >
             <ThemedText>Így fog megjelenni a bizniszed:</ThemedText>

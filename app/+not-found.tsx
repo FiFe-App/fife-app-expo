@@ -4,6 +4,7 @@ import { StyleSheet } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Button } from "react-native-paper";
+import { Spacing } from "@/constants/spacing";
 
 export default function NotFoundScreen() {
   return (
@@ -24,7 +25,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 20,
+    padding: Spacing.xl,
   },
   link: {
     marginTop: 15,

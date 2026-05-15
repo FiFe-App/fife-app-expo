@@ -15,6 +15,7 @@ import {
 import { usePromiseTracker } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "./ThemedText";
+import { Spacing } from "@/constants/spacing";
 
 const InfoLayer = () => {
   const { dialogs, snacks, loading } = useSelector(
@@ -92,7 +93,7 @@ const InfoLayer = () => {
             onDismiss={dismissLoading}
             dismissable={true}
           >
-            <Dialog.Content style={{ alignItems: "center", gap: 16 }}>
+            <Dialog.Content style={{ alignItems: "center", gap: Spacing.lg }}>
               <ActivityIndicator size="large" />
               <ThemedText style={{textAlign:"center"}}>{loading?.title || "Kérlek várj..."}</ThemedText>
             </Dialog.Content>

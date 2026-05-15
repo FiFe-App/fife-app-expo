@@ -11,7 +11,8 @@ import { User } from "@supabase/auth-js";
 import { Link, Redirect, router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
 import { AppState, View } from "react-native";
-import { Divider, Text, TextInput } from "react-native-paper";
+import { Divider, Text, TextInput, useTheme } from "react-native-paper";
+import { Spacing } from "@/constants/spacing";
 import { useDispatch, useSelector } from "react-redux";
 
 import { makeRedirectUri } from "expo-auth-session";
@@ -30,6 +31,7 @@ AppState.addEventListener("change", (state) => {
 
 export default function Index() {
   const navigation = useNavigation();
+  const theme = useTheme();
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -174,7 +176,7 @@ export default function Index() {
 
   return (
     <ThemedView style={{ flex: 1 }} type="default">
-      <View style={{ maxWidth: 300, width: "100%", gap: 8, margin: "auto" }}>
+      <View style={{ maxWidth: 300, width: "100%", gap: Spacing.sm, margin: "auto" }}>
         <Button onPress={autoLogin} mode="contained">
           Próba felhasználó
         </Button>
@@ -194,7 +196,7 @@ export default function Index() {
         >
           Google bejelentkezés
         </Button>
-        <Divider style={{ marginVertical: 16 }} />
+        <Divider style={{ marginVertical: Spacing.lg }} />
         <TextInput
           mode="outlined"
           onChangeText={setEmail}
@@ -238,7 +240,7 @@ export default function Index() {
             <Button>Elfelejtettem a jelszavam</Button>
           </Link>
         </View>
-        <Text style={{ color: "red" }}>{error}</Text>
+        <Text style={{ color: theme.colors.error }}>{error}</Text>
       </View>
     </ThemedView>
   );

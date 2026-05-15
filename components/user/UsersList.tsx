@@ -1,5 +1,6 @@
 import React from "react";
 import { View, StyleSheet, FlatList } from "react-native";
+import { Spacing } from "@/constants/spacing";
 import { Divider, ActivityIndicator } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import UserItem from "./UserItem";
@@ -38,14 +39,14 @@ export const UsersList: React.FC<UsersListProps> = ({
         keyExtractor={(item, index) => item.id === "-1" ? `divider-${index}` : item.id}
         renderItem={({ item }) =>
           item.id === "-1" ? (
-            <Divider style={{ marginVertical: 16 }} />
+            <Divider style={{ marginVertical: Spacing.lg }} />
           ) : (
             <UserItem data={item} />
           )
         }
         ListFooterComponent={
           <>
-            <View style={{ padding: 16 }}>
+            <View style={{ padding: Spacing.lg }}>
               {(!!data.length && canLoadMore ? (
                 <ActivityIndicator />
               ) : (
@@ -64,8 +65,9 @@ export const UsersList: React.FC<UsersListProps> = ({
         }}
         onEndReachedThreshold={0.7}
         contentContainerStyle={{
-          gap: 8,
-          marginVertical: 8,
+          gap: Spacing.sm,
+          marginVertical: Spacing.sm,
+          paddingHorizontal: Spacing.md,
         }}
       />
 
@@ -81,10 +83,5 @@ export const UsersList: React.FC<UsersListProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  businessItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
   },
 });

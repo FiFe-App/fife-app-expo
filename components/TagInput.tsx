@@ -7,6 +7,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { Card, Chip, TextInput } from "react-native-paper";
+import { Spacing } from "@/constants/spacing";
 
 interface TagInputType {
   onChange: React.SetStateAction<any>;
@@ -63,7 +64,7 @@ const TagInput = ({
             <Chip
               key={"tags" + i}
               mode="flat"
-              style={{ margin: 4 }}
+              style={{ margin: Spacing.xs }}
               onClose={() => {
                 onChange(toString(list.filter((el, ind) => ind !== i)) + " $ ");
               }}
@@ -97,7 +98,7 @@ const TagInput = ({
         style={{
           flexGrow: 1,
           fontSize: 17,
-          padding: 4,
+          padding: Spacing.xs,
           borderRadius: 0,
         }}
         ref={inputRef}

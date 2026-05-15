@@ -4,6 +4,7 @@ import { router, useGlobalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { Text } from "react-native-paper";
+import { Spacing } from "@/constants/spacing";
 
 export default function UsernameRedirect() {
   const { username: raw } = useGlobalSearchParams();
@@ -35,11 +36,11 @@ export default function UsernameRedirect() {
   }, [username]);
 
   return (
-    <ThemedView style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 16 }}>
+    <ThemedView style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: Spacing.lg }}>
       {status === "loading" && (
         <View style={{ alignItems: "center" }}>
           <ActivityIndicator />
-          <Text style={{ marginTop: 8 }}>Betöltés…</Text>
+          <Text style={{ marginTop: Spacing.sm }}>Betöltés…</Text>
         </View>
       )}
       {status === "not-found" && (

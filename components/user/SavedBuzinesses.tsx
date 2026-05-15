@@ -7,6 +7,7 @@ import { ActivityIndicator, Text } from "react-native-paper";
 import { useSelector } from "react-redux";
 import BuzinessItem from "../buziness/BuzinessItem";
 import { ThemedText } from "../ThemedText";
+import { Spacing } from "@/constants/spacing";
 
 interface SavedBuzinessesProps {
   uid: string;
@@ -54,8 +55,8 @@ const SavedBuzinesses = ({ uid }: SavedBuzinessesProps) => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, padding: 4 }}>
-      <ScrollView contentContainerStyle={{ gap: 8, flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, padding: Spacing.xs }}>
+      <ScrollView contentContainerStyle={{ gap: Spacing.sm, flex: 1 }}>
         {loading ? (
           <View style={{ flex: 1, justifyContent: "center" }}>
             <ActivityIndicator />
@@ -69,7 +70,7 @@ const SavedBuzinesses = ({ uid }: SavedBuzinessesProps) => {
             />
           ))
         ) : (
-          <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
+          <View style={{ alignItems: "center", gap: Spacing.lg, padding: Spacing.sm }}>
             <ThemedText type="subtitle">
               Itt fognak megjelenni az elmentett bizniszek.
             </ThemedText>

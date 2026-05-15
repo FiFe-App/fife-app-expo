@@ -18,6 +18,7 @@ import React, {
 import { StyleProp, View, ViewStyle } from "react-native";
 import { Icon, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { Spacing } from "@/constants/spacing";
 
 const types: {
   label: string;
@@ -170,7 +171,7 @@ const ContactEditScreen = forwardRef<{
     },
   }));
   return (
-    <View style={[{ flex: 1, gap: 8 }, props?.style]}>
+    <View style={[{ flex: 1, gap: Spacing.sm }, props?.style]}>
       {!loading &&
         types.map((type, ind) => {
           const current = {
@@ -183,8 +184,8 @@ const ContactEditScreen = forwardRef<{
               <View
                 style={{
                   flexDirection: "row",
-                  gap: 4,
-                  paddingLeft: 16,
+                  gap: Spacing.xs,
+                  paddingLeft: Spacing.lg,
                   alignItems: "center",
                 }}
               >
@@ -210,7 +211,7 @@ const ContactEditScreen = forwardRef<{
                 />
               )}
               {error?.type === type.value && (
-                <ThemedText type="error" style={{ marginLeft: 16 }}>
+                <ThemedText type="error" style={{ marginLeft: Spacing.lg }}>
                   {error?.text}
                 </ThemedText>
               )}
