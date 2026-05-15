@@ -23,9 +23,10 @@ import { useAppTheme } from "@/assets/theme";
 interface BuzinessItemProps {
   data: BuzinessItemInterface;
   showOptions?: boolean;
+  preview?: boolean;
 }
 
-const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
+const BuzinessItem = ({ data, showOptions, preview }: BuzinessItemProps) => {
   const { author, title: titleAndCats, description, id } = data;
 
   const recommendations = typeof data?.recommendations?.[0]?.count === "number" ? data?.recommendations?.[0]?.count : data.recommendations;
@@ -75,10 +76,8 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
     );
   };
 
-  return (
-    <Link href={{ pathname: "/biznisz/[id]", params: { id: id } }} asChild>
-      <Pressable>
-        <Surface style={styles.container} elevation={2} mode="flat">
+  const card = (
+    <Surface style={styles.container} elevation={2} mode="flat">
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1 }}>
               <Text variant="titleLarge" style={{ fontSize: 18, lineHeight: 24 }}>{title}</Text>
@@ -122,7 +121,13 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
             </View>
           )}
         </Surface>
-      </Pressable>
+  );
+
+  if (preview) return card;
+
+  return (
+    <Link href={{ pathname: "/biznisz/[id]", params: { id: id } }} asChild>
+      <Pressable>{card}</Pressable>
     </Link>
   );
 };

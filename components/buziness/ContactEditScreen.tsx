@@ -16,9 +16,11 @@ import React, {
   forwardRef,
 } from "react";
 import { StyleProp, View, ViewStyle } from "react-native";
-import { Icon, TextInput } from "react-native-paper";
+import { Button, IconButton, Menu, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
+import { useAppTheme } from "@/assets/theme";
 
 const types: {
   label: string;
@@ -40,6 +42,9 @@ type IContact = Optional<Tables<"contacts">, "id">;
 type ContactEditScreenProps = {
   onContactsChange?: (contacts: IContact[]) => void;
   style?: StyleProp<ViewStyle>;
+  defaultContactId?: number;
+  onDefaultContactChange?: (id: number | undefined) => void;
+  showFeaturedToggle?: boolean;
 };
 
 const ContactEditScreen = forwardRef<{
@@ -54,29 +59,38 @@ const ContactEditScreen = forwardRef<{
     text: string;
   } | null>(null);
   const { uid } = useSelector((state: RootState) => state.user);
+  const theme = useAppTheme();
 
   const dispatch = useDispatch();
   const [contacts, setContacts] = useState<IContact[]>([]);
   const [buzinessCount, setBuzinessCount] = useState(0);
+  const [revealedTypes, setRevealedTypes] = useState<Enums<"contact_type">[]>([
+    "TEL",
+  ]);
+  const [addMenuVisible, setAddMenuVisible] = useState(false);
   const loadContacts = () => {
-    if (uid) {
-      supabase
-        .from("contacts")
-        .select("*")
-        .eq("author", uid)
-        .then((res) => {
-          if (res.data?.length) setContacts(res.data);
-          setLoading(false);
-        });
-
+    if (!uid) return;
+    Promise.all([
+      supabase.from("contacts").select("*").eq("author", uid),
       supabase
         .from("buziness")
         .select("id", { count: "exact", head: true })
-        .eq("author", uid).then((res) => {
-          // If no buziness exists, prefill with one empty contact
-          setBuzinessCount(res.count || 0);
+        .eq("author", uid),
+    ]).then(([contactsRes, buzinessRes]) => {
+      if (contactsRes.data?.length) {
+        setContacts(contactsRes.data);
+        setRevealedTypes((prev) => {
+          const next = new Set<Enums<"contact_type">>(prev);
+          next.add("TEL");
+          contactsRes.data.forEach((c) => {
+            if (c.data && c.data.length > 0) next.add(c.type);
+          });
+          return Array.from(next);
         });
-    }
+      }
+      setBuzinessCount(buzinessRes.count || 0);
+      setLoading(false);
+    });
   };
 
   useEffect(() => {
@@ -170,54 +184,140 @@ const ContactEditScreen = forwardRef<{
       return contacts;
     },
   }));
+  const hiddenTypes = types.filter((t) => !revealedTypes.includes(t.value));
+
   return (
-    <View style={[{ flex: 1, gap: Spacing.sm }, props?.style]}>
+    <View style={[{ flex: 1, gap: Spacing.md }, props?.style]}>
       {!loading &&
-        types.map((type, ind) => {
+        types
+          .filter((type) => revealedTypes.includes(type.value))
+          .map((type, ind) => {
           const current = {
             title: "",
             data: "",
             ...contacts.find((c) => c?.type === type.value),
           };
+          const filled = !!current.data;
+          const isFeatured =
+            props.showFeaturedToggle &&
+            typeof current.id === "number" &&
+            props.defaultContactId === current.id;
+          // saveContact still expects an index into the full `types` array
+          const typeIndex = types.findIndex((t) => t.value === type.value);
           return (
-            <View key={ind}>
+            <View key={type.value} style={{ gap: Spacing.xs }}>
               <View
                 style={{
                   flexDirection: "row",
-                  gap: Spacing.xs,
-                  paddingLeft: Spacing.lg,
                   alignItems: "center",
+                  gap: Spacing.sm,
                 }}
               >
-                <Icon size={16} source={typeToIcon(type?.value)} />
-                <ThemedText>{type.label} elérhetőséged</ThemedText>
+                <View
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: BorderRadius.full,
+                    backgroundColor: theme.colors.surfaceVariant,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <IconButton
+                    icon={typeToIcon(type?.value)}
+                    size={16}
+                    iconColor={theme.colors.primary}
+                    style={{ margin: 0 }}
+                  />
+                </View>
+                <ThemedText
+                  variant="bodyMedium"
+                  style={{ flex: 1, color: theme.colors.onSurfaceVariant }}
+                >
+                  {type.label}
+                </ThemedText>
+                {props.showFeaturedToggle &&
+                  filled &&
+                  typeof current.id === "number" && (
+                    <IconButton
+                      icon={isFeatured ? "star" : "star-outline"}
+                      size={20}
+                      iconColor={
+                        isFeatured
+                          ? theme.colors.primary
+                          : theme.colors.onSurfaceVariant
+                      }
+                      onPress={() => {
+                        if (typeof current.id === "number") {
+                          props.onDefaultContactChange?.(
+                            isFeatured ? undefined : current.id,
+                          );
+                        }
+                      }}
+                      accessibilityLabel={
+                        isFeatured
+                          ? "Kiemelt elérhetőség eltávolítása"
+                          : "Beállítás kiemelt elérhetőségként"
+                      }
+                    />
+                  )}
               </View>
               <TextInput
+                mode="outlined"
                 label={typeToValueLabel(type?.value)}
                 value={current?.data}
                 disabled={loading || !type.label}
                 left={typeToPrefix(type.value)}
                 placeholder={typeToPlaceholder(type.value)}
-                onChangeText={(t) => saveContact(ind, { data: t })}
+                onChangeText={(t) => saveContact(typeIndex, { data: t })}
                 error={error?.type === type.value}
               />
               {(!!current.data || !!current.title) && (
                 <TextInput
+                  mode="outlined"
                   value={current?.title || ""}
                   disabled={loading}
                   label="Egyéb információ"
                   placeholder="Munkanapokon keress / csak hétvégén"
-                  onChangeText={(t) => saveContact(ind, { title: t })}
+                  onChangeText={(t) => saveContact(typeIndex, { title: t })}
                 />
               )}
               {error?.type === type.value && (
-                <ThemedText type="error" style={{ marginLeft: Spacing.lg }}>
+                <ThemedText type="error" style={{ marginLeft: Spacing.xs }}>
                   {error?.text}
                 </ThemedText>
               )}
             </View>
           );
         })}
+      {!loading && hiddenTypes.length > 0 && (
+        <Menu
+          visible={addMenuVisible}
+          onDismiss={() => setAddMenuVisible(false)}
+          anchor={
+            <Button
+              icon="plus"
+              mode="text"
+              onPress={() => setAddMenuVisible(true)}
+              style={{ alignSelf: "flex-start" }}
+            >
+              Új elérhetőség
+            </Button>
+          }
+        >
+          {hiddenTypes.map((t) => (
+            <Menu.Item
+              key={t.value}
+              leadingIcon={typeToIcon(t.value)}
+              title={t.label}
+              onPress={() => {
+                setRevealedTypes((prev) => [...prev, t.value]);
+                setAddMenuVisible(false);
+              }}
+            />
+          ))}
+        </Menu>
+      )}
     </View>
   );
 });
