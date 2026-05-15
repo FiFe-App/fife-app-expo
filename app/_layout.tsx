@@ -34,6 +34,9 @@ import { setLocation } from "@/redux/reducers/userReducer";
 import { supabase } from "@/lib/supabase/supabase";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 
+// Resets on hard reload (new JS execution), survives React remounts within the same page load
+let splashAlreadyShown = false;
+
 function HomeHeader() {
   const dispatch = useDispatch();
   return (
@@ -183,7 +186,7 @@ function RootContent() {
 }
 
 export default function RootLayout() {
-  const [splashDone, setSplashDone] = React.useState(false);
+  const [splashDone, setSplashDone] = React.useState(splashAlreadyShown);
   const colorScheme = useColorScheme(); 
   const bgColor = colorScheme == "dark" ? "#1e1b16" : colorScheme == "light" ? "#fff5e0" : "transparent";
   const [loaded] = useFonts({
@@ -210,7 +213,10 @@ export default function RootLayout() {
           </Provider>
         </SafeAreaProvider>
         {!splashDone && (
-          <SplashAnimation onFinished={() => setSplashDone(true)} />
+          <SplashAnimation onFinished={() => {
+            splashAlreadyShown = true;
+            setSplashDone(true);
+          }} />
         )}
       </GestureHandlerRootView>
     );

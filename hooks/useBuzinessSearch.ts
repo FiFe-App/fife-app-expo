@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loadBuzinesses, removeTrailingDivider, storeBuzinesses, storeBuzinessLoading, storeBuzinessSearchParams, storeBuzinessHasMore } from "@/redux/reducers/buzinessReducer";
 import { supabase } from "@/lib/supabase/supabase";
@@ -12,12 +12,11 @@ export function useBuzinessSearch() {
 
   const { myLocation: location } = useMyLocation();
 
-  const { searchParams, myLocation, searchCircle, buzinesses, loading } = useSelector(
+  const { searchParams, myLocation, searchCircle, loading } = useSelector(
     (state: RootState) => ({
       searchParams: state.buziness.searchParams,
       myLocation: location,
       searchCircle: state.buziness.searchParams?.searchCircle,
-      buzinesses: state.buziness.buzinesses,
       loading: state.buziness.searchParams?.loading || false,
     }),
   );
@@ -27,17 +26,7 @@ export function useBuzinessSearch() {
 
   const [error, setError] = useState<string | null>(null);
   const hasMore = useSelector((state: RootState) => state.buziness.hasMore ?? true);
-  const lastQuery = useRef<string | undefined>("");
   const dispatch = useDispatch();
-
-  // Store buziness in Redux whenever results change
-  useEffect(() => {
-    dispatch(storeBuzinesses(buzinesses));
-  }, [buzinesses, dispatch]);
-
-  useEffect(() => {
-    dispatch(storeBuzinessSearchParams({ loading }));
-  }, [dispatch, loading]);
 
   const search = useCallback(async (query?: string, overrides?: { ingyen?: boolean }) => {
     console.log("searching for", query);
@@ -46,7 +35,6 @@ export function useBuzinessSearch() {
     dispatch(storeBuzinessLoading(true));
     setError(null);
     dispatch(storeBuzinessSearchParams({ skip: 0 }));
-    lastQuery.current = query;
     dispatch(storeBuzinessHasMore(true));
 
     const searchLocation = searchCircle
@@ -124,7 +112,7 @@ export function useBuzinessSearch() {
     try {
       const { data, error } = await supabase.functions.invoke("business-search", {
         body: {
-          query: lastQuery.current || "",
+          query: searchParams?.text ?? "",
           take: PAGE_SIZE,
           skip: nextSkip,
           ingyen: searchParams?.ingyen || false,
@@ -151,7 +139,7 @@ export function useBuzinessSearch() {
       setError(err instanceof Error ? err.message : "Unknown error");
       dispatch(storeBuzinessLoading(false));
     }
-  }, [hasMore, loading, searchParams?.searchType, searchParams?.skip, dispatch, PAGE_SIZE, searchCircle, myLocation]);
+  }, [hasMore, loading, searchParams?.searchType, searchParams?.skip, searchParams?.text, searchParams?.ingyen, dispatch, PAGE_SIZE, searchCircle, myLocation]);
 
   return { error, canLoadMore: hasMore, search, loadNext };
 }

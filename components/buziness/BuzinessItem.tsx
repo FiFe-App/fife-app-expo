@@ -11,7 +11,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { IconButton, Surface, Text } from "react-native-paper";
+import { Button, IconButton, Surface, Text } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import CategoryChip from "../CategoryChip";
@@ -54,7 +54,7 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
     e.preventDefault();
     dispatch(
       addDialog({
-        title: title + " Törlése?",
+        title: title + " törlése?",
         text: "Nem fogod tudni visszavonni!",
         onSubmit: () => {
           trackPromise(
@@ -104,11 +104,10 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
           </Text>
 
           {showOptions && myBuziness && (
-            <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: -Spacing.xs, marginBottom: -Spacing.xs }}>
-              <IconButton
+            <View style={{ flexDirection: "row", alignItems:"flex-end", gap: 4 }}>
+              <Button
                 icon="pencil-circle"
-                iconColor={theme.colors.onSurfaceVariant}
-                size={22}
+                mode="text"
                 onPress={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -117,8 +116,10 @@ const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
                     params: { editId: id },
                   });
                 }}
-              />
-              <IconButton icon="delete-circle" iconColor={theme.colors.error} size={22} onPress={showDelete} />
+              >Szerkesztés</Button>
+              <Button textColor={theme.colors.error} mode="text" icon="delete-circle" onPress={showDelete} >
+                Törlés
+              </Button>
             </View>
           )}
         </Surface>

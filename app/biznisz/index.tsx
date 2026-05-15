@@ -43,7 +43,7 @@ export default function Index() {
 
   const { canLoadMore, search, loadNext, error } = useBuzinessSearch();
   
-  const listTitle = useMemo(()=>searchParams?.text ? "Találatok: " + searchParams?.text : "Új bizniszek",[searchParams?.loading]);
+  const listTitle = useMemo(() => searchParams?.text ? "Találatok: " + searchParams?.text : "Új bizniszek", [searchParams?.text]);
   const dispatch = useDispatch();
 
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
@@ -72,7 +72,7 @@ export default function Index() {
         {searchType === "list" || !searchType ? (
           <BuzinessList load={loadNext} canLoadMore={canLoadMore} error={error} />
         ) : (
-          <BuzinessMap load={search} />
+          <BuzinessMap load={() => search()} />
         )}
         <Measure name="map-switch">
           <FAB

@@ -8,14 +8,13 @@ import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import {
   loadBuzinesses,
-  storeBuzinessSearchParams,
 } from "@/redux/reducers/buzinessReducer";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import Measure from "../tutorial/Measure";
 import { useAppTheme } from "@/assets/theme";
 
 interface BuzinessListProps {
-  load: (arg0: number) => void;
+  load: () => void;
   canLoadMore: boolean;
   error: string | null;
 }
@@ -32,9 +31,7 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
     (state: RootState) => state.buziness,
   );
   const { myLocation } = useMyLocation();
-  const skip = searchParams?.skip || 0;
   const loading = searchParams?.loading || false;
-  const take = 5;
   const loadNext = () => {
     dispatch(
       loadBuzinesses([
@@ -50,8 +47,7 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
         },
       ]),
     );
-    dispatch(storeBuzinessSearchParams({ skip: skip + take }));
-    load(skip + take);
+    load();
   };
 
   return (

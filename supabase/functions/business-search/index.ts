@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
       headers: corsHeaders,
     });
   }
-  const { query, skip, take, lat, long, maxdistance, ingyen } = await req.json();
+  const { query, skip, take, lat, long, maxdistance, ingyen, match_threshold, query_weight, distance_weight, recommendation_weight } = await req.json();
 
   // Instantiate OpenAI client
   const openai = new OpenAI({ apiKey: openaiApiKey });
@@ -32,21 +32,19 @@ Deno.serve(async (req) => {
   let embedding = null;
   if (query && query.length > 0) {
     console.log("query", query);
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: "Írd fel vesszővel elválasztva az összes szinonimát, rokon értelmű szót és kapcsolódó kifejezést (magyarul és angolul is) erre: " + query,
-        },
-      ],
+    const completion = await openai.responses.create({
+      model: "gpt-4.1-mini",
+      temperature: 0,
+      instructions: "Írd fel vesszővel elválasztva az összes különböző szinonimát, rokon értelmű szót és kapcsolódó témát. Ne írj semmit, ha nincs értelme",
+      input: query
     });
+    const embedding_text = completion.output_text;
 
-    console.log("embedding input", completion.choices[0].message.content);
+    console.log("embedding input", embedding_text);
 
     const embeddingResponse = await openai.embeddings.create({
       model: "text-embedding-3-large",
-      input: completion.choices[0].message.content,
+      input: embedding_text,
       dimensions: 512,
     });
     embedding = embeddingResponse.data[0].embedding;
@@ -57,12 +55,11 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
   console.log("params", {
-    distance: maxdistance,
     skip,
     take,
     lat,
     long,
-    query_embedding: embedding || Array.from({ length: 1536 }, (_, i) => i),
+    query_embedding: embedding ? "[...512 dims]" : "none",
     query_text: query,
   });
 
@@ -79,7 +76,6 @@ Deno.serve(async (req) => {
   if (query && query.length > 0) {
   // Call hybrid_search Postgres function via RPC
     res = await supabase.rpc("hybrid_buziness_search", {
-      distance: maxdistance,
       skip,
       take,
       lat,
@@ -87,6 +83,10 @@ Deno.serve(async (req) => {
       query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),
       query_text: query,
       filter_ingyen: ingyen || false,
+      match_threshold: match_threshold ?? 0.5,
+      query_weight: query_weight ?? 1.0,
+      distance_weight: distance_weight ?? 1.0,
+      recommendation_weight: recommendation_weight ?? 0.3,
     });
   } else {
     console.log("no query, normal search");

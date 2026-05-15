@@ -5,6 +5,7 @@ CREATE INDEX IF NOT EXISTS ix_buziness_embedding_text
 ALTER TABLE public.buziness ADD COLUMN IF NOT EXISTS "ingyen" boolean NOT NULL DEFAULT false;
 
 -- Update hybrid_buziness_search to also match via full-text on embedding_text
+SET search_path = public, extensions;
 CREATE OR REPLACE FUNCTION public.hybrid_buziness_search(
   query_text text,
   query_embedding extensions.vector,
@@ -37,7 +38,6 @@ RETURNS TABLE(
 )
 LANGUAGE sql
 AS $function$
-  SET search_path TO public;
   SELECT
     b.id, b.title, b.description, b.author, b.created_at, b.images, b.location,
     count(br.id) as recommendations,

@@ -25,28 +25,23 @@ Deno.serve(async (req) => {
     for (const business of businesses) {
       console.log("id", business.id, business.title);
 
-      if (business.title) {
+      if (business.title && !business.embedding_text) {
         const input =
-          "Categories: " +
           business.title.replace(/(\s\$\s)+/g, ", ") +
           (business.description
-            ? " | Description: " + business.description
+            ? business.description
             : "");
         console.log("run embedding with input", input);
 
-        const completion = await openai.chat.completions.create({
-          model: "gpt-3.5-turbo",
-          messages: [
-            {
-              role: "system",
-              content:
-                "Írd fel vesszővel elválasztva az összes szinonimát, rokon értelmű szót és kapcsolódó kifejezést (magyarul és angolul is) erre: " + input,
-            },
-          ],
+        const completion = await openai.responses.create({
+          model: "gpt-4.1-mini",
+          temperature: 0.3,
+          instructions: "Írd fel vesszővel elválasztva az összes különböző szinonimát, rokon értelmű szót és kapcsolódó témát. Ne írj semmit, ha nincs értelme",
+          input
         });
 
-        const embeddingText = completion.choices[0].message.content!;
-        console.log("embedding_text", embeddingText);
+
+        const embeddingText = completion.output_text;
 
         const embeddingResponse = await openai.embeddings.create({
           model: "text-embedding-3-large",

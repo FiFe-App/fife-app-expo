@@ -194,7 +194,7 @@ export default function BuzinessEditScreen({
         if (res.error) {
           console.log(res.error);
           dispatch(addSnack({
-            title: "Hiba történt a biznisz mentése során.",
+            title: res.error || "Hiba történt a biznisz mentése során.",
           }));
           return;
         }
@@ -582,6 +582,7 @@ export default function BuzinessEditScreen({
                   ? `POINT(${circle.location.longitude} ${circle.location.latitude})`
                   : null,
                 recommendations: 0,
+                ingyen: ingyen,
               }}
             />
             <View style={{ alignItems: "flex-end" }}>
