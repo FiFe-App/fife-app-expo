@@ -5,9 +5,10 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { ActivityIndicator, FAB, Text } from "react-native-paper";
+import { ActivityIndicator, Button, Text } from "react-native-paper";
 import { useDispatch } from "react-redux";
 import BuzinessItem from "../buziness/BuzinessItem";
+import SectionLabel from "../buziness/SectionLabel";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 import { Spacing } from "@/constants/spacing";
@@ -55,16 +56,14 @@ const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
       });
   }, [dispatch, uid]);
   return (
-    <View style={{ paddingHorizontal: Spacing.md, paddingVertical: Spacing.lg, gap: Spacing.md }}>
+    <View style={{ paddingHorizontal: Spacing.md, paddingBottom: Spacing.lg, gap: Spacing.md }}>
       {loading ? (
         <View style={{ padding: Spacing.xxxl, alignItems: "center" }}>
           <ActivityIndicator />
         </View>
       ) : buzinesses.length ? (
         <>
-          <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant, paddingLeft: Spacing.xs }}>
-            {myProfile ? "Bizniszeim" : `${name} bizniszei`}
-          </Text>
+          <SectionLabel label={myProfile ? "Bizniszeim" : `${name} bizniszei`} />
           {buzinesses.map((buzinessItem) => (
             <BuzinessItem
               data={buzinessItem}
@@ -72,14 +71,6 @@ const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
               showOptions
             />
           ))}
-          {myProfile && (
-            <FAB
-              icon={"plus"}
-              label={"Új biznisz"}
-              style={{ alignSelf: "center", marginVertical: Spacing.lg, borderRadius: BorderRadius.pill }}
-              onPress={() => router.push("/biznisz/new")}
-            />
-          )}
         </>
       ) : (
         <View style={{ alignItems: "center", gap: Spacing.lg, padding: Spacing.sm }}>
@@ -94,12 +85,16 @@ const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
                   ? "Itt fognak megjelenni a saját bizniszeid."
                   : `${name} még nem adott meg bizniszt.`}
               </ThemedText>
-              <FAB
-                icon={"plus"}
-                label={"Új biznisz"}
-                visible={myProfile}
-                onPress={() => router.push("/biznisz/new")}
-              />
+              {myProfile && (
+                <Button
+                  mode="contained"
+                  icon="plus"
+                  style={{ borderRadius: BorderRadius.pill }}
+                  onPress={() => router.push("/biznisz/new")}
+                >
+                  Új biznisz
+                </Button>
+              )}
             </View>
           </ThemedView>
           <Text>

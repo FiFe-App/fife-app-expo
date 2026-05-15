@@ -3,13 +3,21 @@ import { RootState } from "@/redux/store";
 import { ImageDataType, UserState } from "@/redux/store.type";
 import * as ExpoImagePicker from "expo-image-picker";
 import { useImperativeHandle, useState } from "react";
-import { ScrollView, useWindowDimensions, View } from "react-native";
-import ImageModal from "react-native-image-modal";
-import { IconButton, TextInput } from "react-native-paper";
+import { Image, Pressable, ScrollView, View } from "react-native";
+import {
+  Button,
+  IconButton,
+  Modal,
+  Portal,
+  Text,
+  TextInput,
+} from "react-native-paper";
 import { useSelector } from "react-redux";
-import { ThemedText } from "../ThemedText";
 import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
+
+const TILE_SIZE = 110;
 
 export interface BuzinessImageUploadHandle {
   uploadImages: (buziessId: number) => Promise<ImageDataType[]>;
@@ -21,8 +29,15 @@ interface BuzinessImageUploadProps {
   ref?: React.Ref<BuzinessImageUploadHandle>;
 }
 
-const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessImageUploadProps) => {
+const BuzinessImageUpload = ({
+  images,
+  setImages,
+  buzinessId,
+  ref,
+}: BuzinessImageUploadProps) => {
   const theme = useAppTheme();
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
   useImperativeHandle(ref, () => ({
     uploadImages: async (buzinessId: number) => {
       const uploadPromises = images.map(async (i) => {
@@ -37,15 +52,12 @@ const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessIma
       return Promise.all(uploadPromises);
     },
   }));
-  const { width: w } = useWindowDimensions();
-  const width = w * 0.8;
+
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
-  const [loading, setLoading] = useState(false);
 
   const pickImage = async () => {
-    setLoading(true);
     const result = await ExpoImagePicker.launchImageLibraryAsync({
       mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -56,7 +68,6 @@ const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessIma
     });
 
     if (result && !result?.canceled) {
-      console.log(result);
       setImages([
         ...images,
         {
@@ -66,9 +77,9 @@ const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessIma
           status: "toUpload",
         },
       ]);
-    } else console.log("cancelled");
-    setLoading(false);
+    }
   };
+
   const uploadImage = async (
     image: ExpoImagePicker.ImagePickerAsset,
     buzinessId: number,
@@ -83,10 +94,7 @@ const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessIma
 
     let uploadData: Uint8Array | Blob;
     if (image.base64) {
-      // Use base64 directly — avoids fetch failures on iOS temp file URIs.
-      // Pass Uint8Array (ArrayBufferView), not .buffer — ArrayBuffer can be
-      // detached crossing the Hermes JSI bridge on iOS.
-      const b64 = image.base64.replace(/\s/g, ""); // strip any line breaks
+      const b64 = image.base64.replace(/\s/g, "");
       const binaryString = atob(b64);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
@@ -115,6 +123,7 @@ const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessIma
 
     return upload?.data?.path;
   };
+
   const deleteImage = async (image: ImageDataType, buzinessId: number) => {
     const deleteRes = await supabase.storage
       .from("buzinessImages")
@@ -124,98 +133,234 @@ const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessIma
       setImages(images.filter((i) => i.path !== image.path));
     return;
   };
-  const toDeleteImage = async (ind: number, undo?: boolean) => {
-    console.log("delete", buzinessId, images[ind], ind);
 
-    if (buzinessId) {
-      setImages(
-        images
-          .filter((i, ind2) => i.path || ind2 !== ind)
-          .map((i, ind2) =>
-            ind2 !== ind ? i : { ...i, status: undo ? "uploaded" : "toDelete" },
-          ) as ImageDataType[],
-      );
+  const toggleDelete = (ind: number) => {
+    if (!buzinessId) {
+      setImages(images.filter((_, ind2) => ind2 !== ind));
+      return;
     }
+    const target = images[ind];
+    if (!target) return;
+    if (target.status === "toUpload") {
+      setImages(images.filter((_, ind2) => ind2 !== ind));
+      return;
+    }
+    setImages(
+      images.map((i, ind2) =>
+        ind2 !== ind
+          ? i
+          : {
+              ...i,
+              status: i.status === "toDelete" ? "uploaded" : "toDelete",
+            },
+      ) as ImageDataType[],
+    );
   };
+
+  const setDescription = (ind: number, text: string) => {
+    setImages(
+      images.map((i, ind2) =>
+        ind2 === ind ? { ...i, description: text } : i,
+      ),
+    );
+  };
+
+  const editingImage = editingIndex !== null ? images[editingIndex] : null;
+
   return (
     <View>
-      <ThemedText style={{ padding: Spacing.sm }}>Képek feltöltése</ThemedText>
       <ScrollView
         horizontal
-        contentContainerStyle={{ alignItems: "center", gap: Spacing.xs }}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: Spacing.sm, paddingVertical: Spacing.xs }}
       >
         {images.map((image, ind) => {
+          const isMarkedForDeletion = image.status === "toDelete";
           return (
-            <View
-              key={"image-" + ind}
-              style={{
-                width: width,
-                backgroundColor:
-                  image.status === "toDelete" ? theme.colors.error : "transparent",
-              }}
-            >
-              {image.status === "toDelete" && (
-                <>
-                  <ThemedText
-                    style={{
-                      position: "absolute",
-                      top: 100,
-                      width,
-                      zIndex: 10,
-                      textAlign: "center",
-                      color: theme.colors.onError,
-                    }}
-                  >
-                    Törlésre kijelölve
-                  </ThemedText>
+            <View key={"image-" + ind} style={{ width: TILE_SIZE, gap: Spacing.xs }}>
+              <Pressable
+                onPress={() => setEditingIndex(ind)}
+                style={{
+                  width: TILE_SIZE,
+                  height: TILE_SIZE,
+                  borderRadius: BorderRadius.lg,
+                  overflow: "hidden",
+                  backgroundColor: theme.colors.surfaceVariant,
+                }}
+              >
+                <Image
+                  source={{ uri: image.url }}
+                  style={{
+                    width: TILE_SIZE,
+                    height: TILE_SIZE,
+                    opacity: isMarkedForDeletion ? 0.35 : 1,
+                  }}
+                  resizeMode="cover"
+                />
+                {isMarkedForDeletion && (
                   <View
                     style={{
                       position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width,
-                      height: 200,
-                      zIndex: 1,
-                      backgroundColor: theme.colors.error,
-                      opacity: 0.4,
+                      inset: 0,
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
+                  >
+                    <Text
+                      variant="labelSmall"
+                      style={{
+                        color: theme.colors.onError,
+                        backgroundColor: theme.colors.error,
+                        paddingHorizontal: Spacing.sm,
+                        paddingVertical: Spacing.xs,
+                        borderRadius: BorderRadius.xs,
+                        overflow: "hidden",
+                      }}
+                    >
+                      Törlésre kijelölve
+                    </Text>
+                  </View>
+                )}
+                <View
+                  style={{
+                    position: "absolute",
+                    top: Spacing.xs,
+                    right: Spacing.xs,
+                    borderRadius: BorderRadius.full,
+                    backgroundColor: theme.colors.surface,
+                  }}
+                >
+                  <IconButton
+                    icon={isMarkedForDeletion ? "delete-off" : "close"}
+                    size={14}
+                    onPress={(e) => {
+                      e.stopPropagation?.();
+                      toggleDelete(ind);
+                    }}
+                    style={{ margin: 0 }}
+                    accessibilityLabel={
+                      isMarkedForDeletion
+                        ? "Törlés visszavonása"
+                        : "Kép eltávolítása"
+                    }
                   />
-                </>
+                </View>
+              </Pressable>
+              {!!image.description && (
+                <Text
+                  variant="labelSmall"
+                  numberOfLines={2}
+                  style={{ color: theme.colors.onSurfaceVariant }}
+                >
+                  {image.description}
+                </Text>
               )}
-              <ImageModal
-                resizeMode="cover"
-                modalImageResizeMode="contain"
-                overlayBackgroundColor="#00000066"
-                source={{ uri: image.url }}
-                style={{ width: width, height: 200 }}
-              />
-              <TextInput
-                style={{ width: width }}
-                value={images[ind]?.description || ""}
-                multiline
-                placeholder="Mesélj erről a képről"
-                onChangeText={(text) => {
-                  setImages(
-                    images.map((i, ind2) => {
-                      return ind2 === ind ? { ...i, description: text } : i;
-                    }),
-                  );
-                }}
-              />
-              <IconButton
-                mode="contained-tonal"
-                icon={image.status === "toDelete" ? "delete-off" : "delete"}
-                onPress={() => {
-                  toDeleteImage(ind, image.status === "toDelete");
-                }}
-                style={{ position: "absolute", zIndex: 2, top: 0, right: 0 }}
-              />
             </View>
           );
         })}
-        <IconButton icon="plus" onPress={pickImage} mode="contained" iconColor={theme.colors.onSurface} />
+
+        <Pressable
+          onPress={pickImage}
+          style={{
+            width: TILE_SIZE,
+            height: TILE_SIZE,
+            borderRadius: BorderRadius.lg,
+            borderWidth: 1.5,
+            borderStyle: "dashed",
+            borderColor: theme.colors.outline,
+            alignItems: "center",
+            justifyContent: "center",
+            gap: Spacing.xs,
+            backgroundColor: theme.colors.surfaceVariant,
+          }}
+          accessibilityLabel="Kép hozzáadása"
+        >
+          <IconButton
+            icon="plus"
+            size={28}
+            iconColor={theme.colors.onSurfaceVariant}
+            style={{ margin: 0 }}
+            disabled
+          />
+          <Text
+            variant="labelSmall"
+            style={{ color: theme.colors.onSurfaceVariant }}
+          >
+            Hozzáadás
+          </Text>
+        </Pressable>
       </ScrollView>
+
+      <Portal>
+        <Modal
+          visible={editingIndex !== null}
+          onDismiss={() => setEditingIndex(null)}
+          contentContainerStyle={{
+            backgroundColor: theme.colors.surface,
+            marginHorizontal: Spacing.lg,
+            borderRadius: BorderRadius.lg,
+            padding: Spacing.lg,
+            gap: Spacing.md,
+          }}
+        >
+          {editingImage && editingIndex !== null && (
+            <>
+              <Image
+                source={{ uri: editingImage.url }}
+                style={{
+                  width: "100%",
+                  height: 240,
+                  borderRadius: BorderRadius.md,
+                  backgroundColor: theme.colors.surfaceVariant,
+                }}
+                resizeMode="contain"
+              />
+              <TextInput
+                mode="outlined"
+                label="Leírás"
+                placeholder="Mesélj erről a képről"
+                value={editingImage.description || ""}
+                onChangeText={(t) =>
+                  setDescription(editingIndex, t.replace(/\r?\n/g, " "))
+                }
+              />
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "flex-end",
+                  gap: Spacing.sm,
+                }}
+              >
+                <Button
+                  mode="outlined"
+                  textColor={theme.colors.error}
+                  icon={
+                    editingImage.status === "toDelete"
+                      ? "delete-off"
+                      : "delete"
+                  }
+                  onPress={() => {
+                    toggleDelete(editingIndex);
+                    setEditingIndex(null);
+                  }}
+                >
+                  {editingImage.status === "toDelete"
+                    ? "Visszaállítás"
+                    : "Törlés"}
+                </Button>
+                <Button
+                  mode="contained"
+                  onPress={() => setEditingIndex(null)}
+                >
+                  Kész
+                </Button>
+              </View>
+            </>
+          )}
+        </Modal>
+      </Portal>
     </View>
   );
 };
+
 export default BuzinessImageUpload;

@@ -177,7 +177,9 @@ function RootContent() {
             {pathname !== "/" && !pathname.includes("projekt") &&
               !pathname.includes("login") &&
               !pathname.includes("password") &&
-              !pathname.includes("csatlakozom") && <BottomNavigation />}
+              !pathname.includes("csatlakozom") &&
+              pathname !== "/biznisz/new" &&
+              !pathname.startsWith("/biznisz/edit") && <BottomNavigation />}
           </View>
         </ThemedView>
       </SafeAreaView>
