@@ -49,7 +49,7 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
         </View>
         {center ? <View style={{ flex: 1 }}>{center}</View>
           : title ?
-            <Appbar.Content titleStyle={{ fontFamily: "Piazzolla-ExtraBold", fontSize: 26 }} title={title} style={{ flex: 1 }} />
+            <Appbar.Content titleStyle={{ fontFamily: "Piazzolla-ExtraBold", fontSize: 20 }} title={title} style={{ flex: 1 }} />
             : <BuzinessSearchInput 
             onSearch={() => {
               dispatch(storeBuzinesses([]));

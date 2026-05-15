@@ -31,13 +31,14 @@ import { Linking, ScrollView, View } from "react-native";
 import {
   Badge,
   Button,
+  FAB,
   Icon,
   IconButton,
   Portal,
   Surface,
   Text,
   TouchableRipple,
-   
+
 } from "react-native-paper";
 import * as Clipboard from "expo-clipboard";
 
@@ -50,6 +51,7 @@ import {
   viewFunction,
 } from "@/redux/reducers/tutorialReducer";
 import Measure from "@/components/tutorial/Measure";
+import SectionLabel from "@/components/buziness/SectionLabel";
 import { useAppTheme } from "@/assets/theme";
 
 type UserInfo = Tables<"profiles">;
@@ -152,8 +154,8 @@ export default function UserPage() {
       {<Stack.Screen options={{ title:myProfile ? "Profilod" : "" }} />}
       <ThemedView style={{ flex: 1 }}>
         {data && uid && (
-          <ScrollView>
-            <ThemedView style={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.xxl, paddingBottom: Spacing.lg, gap: Spacing.lg }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: myProfile ? 96 : 0 }}>
+            <ThemedView style={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.xxl, paddingBottom: Spacing.xl, gap: Spacing.xl }}>
               {/* Report button */}
               {!myProfile && (
                 <IconButton
@@ -270,9 +272,7 @@ export default function UserPage() {
               {/* Contacts */}
               {contacts.length > 0 && (
                 <View style={{ width: "100%", gap: Spacing.sm }}>
-                  <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant, paddingLeft: Spacing.xs }}>
-                    Elérhetőségek
-                  </Text>
+                  <SectionLabel label="Elérhetőségek" />
                   <Surface
                     style={{
                       borderRadius: BorderRadius.lg,
@@ -377,13 +377,24 @@ export default function UserPage() {
               </View>
             </ThemedView>
 
-            <View style={{ height: Spacing.sm, backgroundColor: theme.colors.background }} />
-
             {/* Businesses */}
             <Measure name="user-biznisz-tabs">
               <MyBuzinesses uid={uid} myProfile={myProfile} name={data.full_name ?? undefined} />
             </Measure>
           </ScrollView>
+        )}
+        {myProfile && (
+          <FAB
+            icon="plus"
+            label="Új biznisz"
+            onPress={() => router.push("/biznisz/new")}
+            style={{
+              position: "absolute",
+              right: Spacing.md,
+              bottom: Spacing.md,
+              borderRadius: BorderRadius.pill,
+            }}
+          />
         )}
       </ThemedView>
       {!!data?.full_name && (
