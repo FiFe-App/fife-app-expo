@@ -1,47 +1,48 @@
-import { useCallback, useEffect } from "react";
-import { useState } from "react";
 import { Linking, Pressable, Text } from "react-native";
-import  { useAppTheme } from "@/assets/theme";
+import { useAppTheme } from "@/assets/theme";
 import { ThemedText } from "../ThemedText";
-import { theme } from "@/assets/theme";
 
 const UrlText = ({ text = "" }: { text: string }) => {
   const theme = useAppTheme();
-  // Matches URLs (http/https, with/without www), emails, and phone numbers
+
+  // Matches URLs (must start with http/https or www) and phone numbers (7+ digits)
   const regex =
-    /((https?:\/\/)?(www\.)?[a-zA-Z0-9\-._~%]+(\.[a-zA-Z]{2,})+([\/?#][^\s]*)?)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})|(\+?\d{1,3}[\s.-]?\(?\d{1,4}\)?[\s.-]?\d{1,4}[\s.-]?\d{1,9})/g;
-  const arr = text.match(regex);
+    /(https?:\/\/[^\s]+|www\.[a-zA-Z0-9\-._~%]+(\/[^\s]*)?|\+?[\d][\d\s\-\.()]{5,}\d)/g;
 
-  const [result, setResult] = useState<any[] | null>(null);
-  const makeText = useCallback(() => {
-    const list: any[] = [];
-    let pre = 0;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
 
-    if (arr?.length)
-      arr.map((link, ind) => {
-        const start = text.indexOf(link);
-        const end = start + link?.length;
-        list.push(<Text key={ind + "s"}>{text.slice(pre, start)}</Text>);
-        list.push(
-          <Pressable key={ind + "k"}
-            onPress={() => {
-              Linking.openURL(text.slice(start, end));
-            }}
-          >
-            <ThemedText style={{ color: theme.colors.secondary, }}>{text.slice(start, end)}</ThemedText>
-          </Pressable>,
-        );
-        pre += end;
-      });
-    list.push(<Text key={"e"}>{text.slice(pre, text.length)}</Text>);
-    setResult(list);
-  }, [arr, text]);
+  while ((match = regex.exec(text)) !== null) {
+    const { index } = match;
+    const matched = match[0];
+    const end = index + matched.length;
 
-  useEffect(() => {
-    makeText();
-  }, [text]);
+    if (index > lastIndex) {
+      parts.push(<Text key={`t-${lastIndex}`}>{text.slice(lastIndex, index)}</Text>);
+    }
 
-  return <ThemedText>{result}</ThemedText>;
+    const isPhone = /^\+?[\d][\d\s\-\.()]{5,}\d$/.test(matched);
+    const href = isPhone
+      ? `tel:${matched.replace(/[\s\-\.()]/g, "")}`
+      : matched.startsWith("http")
+      ? matched
+      : `https://${matched}`;
+
+    parts.push(
+      <Pressable key={`l-${index}`} onPress={() => Linking.openURL(href)}>
+        <ThemedText style={{ color: theme.colors.secondary }}>{matched}</ThemedText>
+      </Pressable>,
+    );
+
+    lastIndex = end;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(<Text key={`t-${lastIndex}`}>{text.slice(lastIndex)}</Text>);
+  }
+
+  return <ThemedText>{parts}</ThemedText>;
 };
 
 export default UrlText;

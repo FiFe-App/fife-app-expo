@@ -8,7 +8,7 @@ import { BorderRadius } from "@/constants/borderRadius";
 import { ThemedInput as TextInput } from "@/components/ThemedInput";
 import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 import { Link, Redirect, useNavigation } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { useSelector } from "react-redux";
@@ -440,14 +440,18 @@ export default function App() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   const theme = useAppTheme();
   const navigation = useNavigation();
-  navigation.setOptions({ header: () => <ThemedView style={{flexDirection:"row",alignItems:"center",justifyContent:"center",padding:Spacing.xxxl,gap:Spacing.md}}>
-        <Smiley style={{width:50,height:50}}/>
-        <Image
-          source={require("@/assets/Logo.png")}
-          style={{ minWidth: 200, minHeight: 55, zIndex: 20 }}
-          contentFit="contain"
-        />
-      </ThemedView> });
+
+  useEffect(() => {
+    
+    navigation.setOptions({ header: () => <ThemedView style={{flexDirection:"row",alignItems:"center",justifyContent:"center",padding:Spacing.xxxl,gap:Spacing.md}}>
+          <Smiley style={{width:50,height:50}}/>
+          <Image
+            source={require("@/assets/Logo.png")}
+            style={{ minWidth: 200, minHeight: 55, zIndex: 20 }}
+            contentFit="contain"
+          />
+        </ThemedView> });
+  }, []);
 
   if (uid) return <Redirect href="/home" />;
   return (

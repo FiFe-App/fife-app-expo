@@ -98,7 +98,7 @@ export function ContactList({ uid, edit, name }: ContactListProps) {
                     source={require("@/assets/images/img-map.png")}
                     style={{ height: 200, width: 200 }}
                   />
-                  <ThemedText type="subtitle">
+                  <ThemedText type="subtitle" style={{textAlign:"center"}}>
                     {edit
                       ? "Itt fognak megjelenni az elérhetőségeid, hogy könnyebben elérjenek."
                       : `${name} még nem adott meg elérhetőséget.`}

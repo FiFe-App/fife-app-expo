@@ -5,6 +5,7 @@ import { addDialog } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { BuzinessItemInterface } from "@/redux/store.type";
 import { Link, router } from "expo-router";
+import React, { memo } from "react";
 import {
   GestureResponderEvent,
   Pressable,
@@ -26,11 +27,11 @@ interface BuzinessItemProps {
   preview?: boolean;
 }
 
-const BuzinessItem = ({ data, showOptions, preview }: BuzinessItemProps) => {
+const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) => {
   const { author, title: titleAndCats, description, id } = data;
 
   const recommendations = typeof data?.recommendations?.[0]?.count === "number" ? data?.recommendations?.[0]?.count : data.recommendations;
-  const { uid } = useSelector((state: RootState) => state.user);
+  const uid = useSelector((state: RootState) => state.user.uid);
   const theme = useAppTheme();
   
   const myBuziness = author === uid;
@@ -131,7 +132,9 @@ const BuzinessItem = ({ data, showOptions, preview }: BuzinessItemProps) => {
       <Pressable>{card}</Pressable>
     </Link>
   );
-};
+});
+
+BuzinessItem.displayName = "BuzinessItem";
 
 export default BuzinessItem;
 

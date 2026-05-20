@@ -49,7 +49,7 @@ const TagInput = ({
     if (text.includes(",")) {
       const parts = text.split(",");
       const toCommit = parts.slice(0, -1);
-      let next = [...value];
+      const next = [...value];
       for (const p of toCommit) {
         const t = p.trim();
         if (t && !next.includes(t)) next.push(t);

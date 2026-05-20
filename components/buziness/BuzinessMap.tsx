@@ -42,6 +42,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
   const mapRef = useRef<any>(null);
 
   const { myLocation } = useMyLocation();
+  const regionChangeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const panToMyLocation = () => {
     if (!myLocation) {
@@ -84,14 +85,17 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
   };
 
   const onRegionChange = (region: Region, details: Details) => {
-    dispatch(
-      storeBuzinessSearchParams({
-        searchCircle: {
-          location: { latitude: region.latitude, longitude: region.longitude },
-          radius: region.longitudeDelta * 50000,
-        },
-      }),
-    );
+    if (regionChangeTimeout.current) clearTimeout(regionChangeTimeout.current);
+    regionChangeTimeout.current = setTimeout(() => {
+      dispatch(
+        storeBuzinessSearchParams({
+          searchCircle: {
+            location: { latitude: region.latitude, longitude: region.longitude },
+            radius: region.latitudeDelta * 55660,
+          },
+        }),
+      );
+    }, 300);
   };
 
   return (

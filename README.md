@@ -1,3 +1,4 @@
+
 # Üdvözöllek a FiFe app repójában!
 Nonprofit, open-source Expo (React Native) app, Supabase backenddel.
 

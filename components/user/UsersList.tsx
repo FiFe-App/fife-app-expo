@@ -31,7 +31,7 @@ export const UsersList: React.FC<UsersListProps> = ({
 
   return (
     <View style={styles.container}>
-      {!!error && <ThemedView style={{margin:6}} type="error">
+      {!!error && <ThemedView style={{margin:6, alignItems:"center"}} type="error">
       <ThemedText type="error">{error}</ThemedText> 
       </ThemedView>}
       <FlatList

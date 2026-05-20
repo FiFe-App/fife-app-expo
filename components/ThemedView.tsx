@@ -25,7 +25,7 @@ export function ThemedView({
       backgroundColor: theme.colors.surface,
     },
     error: {
-      backgroundColor: theme.colors.errorContainer,
+      backgroundColor: theme.colors.error,
       borderRadius: 8,
       padding: 6
     },

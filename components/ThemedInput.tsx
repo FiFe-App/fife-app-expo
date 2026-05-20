@@ -23,11 +23,11 @@ export function ThemedInput({ style, ...otherProps }: ThemedTextInputProps) {
     <TextInput
       placeholderTextColor={theme.colors.onSurfaceVariant}
       style={[styles.default, style]}
-      outlineStyle={{
+      outlineStyle={[{
         borderWidth: 1,
         borderRadius: BorderRadius.md,
         borderColor: theme.colors.onSurface,
-      }}
+      },otherProps.outlineStyle]}
       {...otherProps}
     />
   );

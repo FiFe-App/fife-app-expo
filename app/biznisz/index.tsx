@@ -104,15 +104,9 @@ export default function Index() {
               <MapSelector
                 data={searchCircle}
                 setData={(sC) => {
-                  if (ingyenLocal != ingyen) {
-                    dispatch(storeBuzinessSearchParams({ ingyen: ingyenLocal }));
-                    search(searchParams?.text, { ingyen: ingyenLocal });
-                  }
-                  if (
-                    (sC && "location" in sC && "radius" in sC) ||
-                    sC == undefined
-                  )
-                    dispatch(storeBuzinessSearchParams({ searchCircle: sC }));
+                  const newCircle = sC && "location" in sC && "radius" in sC ? sC : undefined;
+                  dispatch(storeBuzinessSearchParams({ searchCircle: newCircle, ingyen: ingyenLocal }));
+                  search(searchParams?.text, { ingyen: ingyenLocal, searchCircle: newCircle });
                 }}
                 searchEnabled
                 setOpen={setLocationMenuVisible}

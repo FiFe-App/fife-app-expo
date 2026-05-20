@@ -364,7 +364,7 @@ export default function Index() {
 
               <View style={{ marginTop: Spacing.lg }}>
                 <Text variant="titleMedium" style={{ marginHorizontal: Spacing.sm, marginBottom: 6 }}>Elérhetőségek</Text>
-                <ContactList uid={data.author} />
+                <ContactList uid={data.author} name={data.authorName} />
               </View>
 
               <View style={{ marginTop: Spacing.lg }}>

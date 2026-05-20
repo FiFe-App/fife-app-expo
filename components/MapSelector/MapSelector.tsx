@@ -267,8 +267,7 @@ const MapSelector = ({
                 strokeColor={isDarkTheme ? "#ffffff18" : "#00000088"}
                 fillColor={isDarkTheme ? "#ffffff38" : "#00000038"}
                 radius={data?.radius}
-              >
-              </Circle>)}
+              />)}
             {circle?.location && (markerOnly ?
               <Marker
                 coordinate={
@@ -285,8 +284,7 @@ const MapSelector = ({
                 strokeColor={isDarkTheme ? "#ffffffaa" : "#00000044"}
                 fillColor={isDarkTheme ? "#ffffff44" : "#00000028"}
                 radius={circle?.radius}
-              >
-              </Circle>)}
+              />)}
           </MapView>
           {!!circleSize && <View style={[styles.circleFixed, {
             width: circleSize,

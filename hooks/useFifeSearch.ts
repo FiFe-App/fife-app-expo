@@ -76,6 +76,7 @@ export function useFifeSearch() {
       });
 
       if (error) {
+        console.log(error);
         setError(error.message);
         setData([]);
         setLoading(false);
@@ -109,8 +110,11 @@ export function useFifeSearch() {
         skip: nextSkip,
         take: PAGE_SIZE,
       });
-
+      
       if (error) {
+        
+        console.error(error);
+        
         setError(error.message);
         setLoading(false);
         return;
