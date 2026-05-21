@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
       const completion = await openai.responses.create({
         model: "gpt-4.1-mini",
         temperature: 0,
-        instructions: "Írd fel vesszővel elválasztva az összes különböző szinonimát, rokon értelmű szót és kapcsolódó témát. Ne írj semmit, ha nincs értelme",
+        instructions: "Írd fel vesszővel elválasztva az összes hasonló és különböző szinonimát, rokon értelmű szót és kapcsolódó témát. Ne írj semmit, ha nincs értelme",
         input: query,
       });
       const embedding_text = completion.output_text;
@@ -144,9 +144,8 @@ Deno.serve(async (req) => {
   // Call hybrid_search Postgres function via RPC
     res = await supabase.rpc("hybrid_buziness_search", {
       skip,
-      take,
-      lat,
-      long,
+      lat: lat || 47.4979,
+      long: long || 19.0402,
       query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),
       query_text: query,
       filter_ingyen: ingyen || false,

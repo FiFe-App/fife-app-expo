@@ -1,1 +1,5 @@
-assets/marketing
+marketing
+dist
+ios
+android
+node_modules
