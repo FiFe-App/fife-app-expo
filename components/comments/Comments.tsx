@@ -315,7 +315,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                             }}
                           >
                             <ThemedText style={{ fontWeight: "bold" }}>
-                              {comment?.profiles?.full_name}
+                              {comment?.profiles?.full_name ?? "Törölt felhasználó"}
                             </ThemedText>
                           </Pressable>
                           <ThemedText style={{ marginLeft: Spacing.sm }}>
@@ -413,17 +413,25 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             </>
           ) : (
             <>
-              <Menu.Item
-                onPress={() => {
-                  navigation.navigate({
-                    pathname: "/user/[uid]",
-                    params: { uid: menuAnchor.comment.author },
-                  });
-                  setMenuAnchor(null);
-                }}
-                title={menuAnchor?.comment?.profiles?.full_name + " profilja"}
-                leadingIcon="account"
-              />
+              {menuAnchor?.comment?.author ? (
+                <Menu.Item
+                  onPress={() => {
+                    navigation.navigate({
+                      pathname: "/user/[uid]",
+                      params: { uid: menuAnchor.comment.author },
+                    });
+                    setMenuAnchor(null);
+                  }}
+                  title={(menuAnchor?.comment?.profiles?.full_name ?? "Törölt felhasználó") + " profilja"}
+                  leadingIcon="account"
+                />
+              ) : (
+                <Menu.Item
+                  title="Törölt felhasználó"
+                  leadingIcon="account-off"
+                  disabled
+                />
+              )}
               <Menu.Item
                 onPress={() => { }}
                 title="Problémám van ezzel a kommenttel."

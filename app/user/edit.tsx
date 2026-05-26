@@ -524,7 +524,8 @@ export default function Index() {
           </View>
           <Divider style={{ marginTop: 16, marginBottom: 16 }} />
           <View style={{ gap: 8, paddingBottom: 32 }}>
-            <ThemedText type="subtitle">Veszélyzóna</ThemedText>
+
+            <ThemedText variant="bodyLarge" type="bold">Veszélyes szekció</ThemedText>
             <HelperText type="error">
               A profil törlése végleges és nem visszavonható.
             </HelperText>
@@ -571,6 +572,7 @@ export default function Index() {
                 </Button>
                 <Button
                   mode="contained"
+                  style={{paddingHorizontal: Spacing.sm}}
                   buttonColor={theme.colors.error}
                   textColor={theme.colors.onError}
                   onPress={confirmDelete}

@@ -1,3 +1,4 @@
+import ErrorScreen from "@/components/ErrorScreen";
 import ProfileImage from "@/components/ProfileImage";
 import { ThemedView } from "@/components/ThemedView";
 import MyBuzinesses from "@/components/user/MyBuzinesses";
@@ -75,6 +76,7 @@ export default function UserPage() {
   const [connectionsCount, setConnectionsCount] = useState(0);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [notFound, setNotFound] = useState(false);
   const iRecommended = recommendations.includes(myUid || "");
 
   useFocusEffect(
@@ -90,17 +92,21 @@ export default function UserPage() {
             "id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions, profileRecommendations!profileRecommendations_profile_id_fkey(*)",
           )
           .eq("id", uid)
-          .single()
+          .maybeSingle()
           .then(({ data, error }) => {
             if (error) {
               console.log("err", error.message);
+              setNotFound(true);
               return;
             }
             if (data) {
               setData(data);
+              setNotFound(false);
               setRecommendations(
                 data.profileRecommendations.map((pr) => pr.author),
               );
+            } else {
+              setNotFound(true);
             }
           });
 
@@ -142,12 +148,27 @@ export default function UserPage() {
             },
           ]),
         );
+      setData(null);
+      setNotFound(false);
       return () => {
         setShowRecommendsModal(false);
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [uid]),
   );
+
+  if (notFound) {
+    return (
+      <>
+        <Stack.Screen options={{ title: "" }} />
+        <ErrorScreen
+          icon="account-off"
+          title="Nem található"
+          text="Ez a felhasználó nem létezik vagy törölte fiókját."
+        />
+      </>
+    );
+  }
 
   return (
     <>

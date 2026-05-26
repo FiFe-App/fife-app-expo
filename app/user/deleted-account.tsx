@@ -12,11 +12,11 @@ export default function DeletedAccount() {
       <Icon source="emoticon-sad-outline" size={80} color={theme.colors.onSurfaceVariant} />
       <View style={{ height: 16 }} />
       <ThemedText type="title" style={{ textAlign: "center" }}>
-        A fiókodat töröltük
+        A fiókod törlésre került
       </ThemedText>
       <View style={{ height: 8 }} />
       <ThemedText style={{ textAlign: "center", opacity: 0.8 }}>
-        Sajnáljuk, hogy mész. Ha meggondolod magad, bármikor visszavárunk.
+        Minden jót!
       </ThemedText>
       <View style={{ height: 24 }} />
       <Link href="/" asChild>
