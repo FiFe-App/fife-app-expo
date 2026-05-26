@@ -16,6 +16,7 @@ import {
   DropdownInputProps,
 } from "react-native-paper-dropdown";
 import { theme } from "@/assets/theme";
+import { Spacing } from "@/constants/spacing";
 
 interface ReportProfileModalProps {
   show: boolean;
@@ -84,12 +85,12 @@ const ReportProfileModal = ({
     <Modal visible={show} onDismiss={handleDismiss}>
       <ThemedView
         style={{
-          padding: 20,
-          margin: 30,
+          padding: Spacing.xl,
+          margin: Spacing.xxxl,
         }}
       >
         {submitted ? (
-          <View style={{ alignItems: "center", gap: 16 }}>
+          <View style={{ alignItems: "center", gap: Spacing.lg }}>
             <ThemedText type="subtitle">
               Köszönjük, hogy visszajeleztél!
             </ThemedText>
@@ -97,11 +98,11 @@ const ReportProfileModal = ({
           </View>
         ) : (
           <ScrollView>
-            <ThemedText type="subtitle" style={{ marginBottom: 16 }}>
+            <ThemedText type="subtitle" style={{ marginBottom: Spacing.lg }}>
               Feljelented őt: {profileName}?
             </ThemedText>
 
-            <View style={{ gap: 16 }}>
+            <View style={{ gap: Spacing.lg }}>
               <Dropdown
                 label="Miért jelented fel?*"
                 placeholder="Válassz okot"
@@ -125,7 +126,7 @@ const ReportProfileModal = ({
                 disabled={loading}
               />
 
-              <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
+              <View style={{ flexDirection: "row", gap: Spacing.sm, marginTop: Spacing.sm }}>
                 <Button
                   mode="outlined"
                   onPress={handleDismiss}

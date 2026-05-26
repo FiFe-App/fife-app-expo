@@ -6,6 +6,7 @@ import { ThemedText } from "./ThemedText";
 import features from "./whatToDoFeatures.json";
 import style from "./styles";
 import { Link } from "expo-router";
+import { Spacing } from "@/constants/spacing";
 
 interface FeatureItem {
   title: string;
@@ -47,7 +48,7 @@ function renderMarkdown(md: string) {
     if (remaining) parts.push({ text: remaining, key: `${i}-r` });
 
     return (
-      <Text key={i} style={{ marginBottom: 8, lineHeight: 20 }}>
+      <Text key={i} style={{ marginBottom: Spacing.sm, lineHeight: 20 }}>
         {parts.map((part) => (
           <Text key={part.key} style={part.style}>{part.text}</Text>
         ))}
@@ -72,10 +73,10 @@ export const WhatToDo: React.FC<WhatToDoProps> = ({ visible, onDismiss }) => {
           setSelected(null);
           onDismiss();
         }}
-        style={{ alignItems: "center" }}
-        contentContainerStyle={[{ width: "92%", maxHeight: "90%" }]}
+        style={{ alignItems: "center", justifyContent: "center" }}
+        contentContainerStyle={[{ width: "92%", maxHeight: "90%", minHeight: 300 }]}
       >
-        <ThemedView style={[style.containerStyle, { padding: 0, overflow: "hidden" }]}>          
+        <ThemedView style={[style.containerStyle, { padding: 0, overflow: "hidden", flex: undefined }]}>          
           <Appbar.Header elevated={false} style={{ backgroundColor: "transparent" }}>
             {selected && (
               <Appbar.BackAction onPress={() => setSelected(null)} />
@@ -92,7 +93,7 @@ export const WhatToDo: React.FC<WhatToDoProps> = ({ visible, onDismiss }) => {
                 <Pressable
                   onPress={() => setSelected(item)}
                   style={({ pressed }) => ({
-                    paddingHorizontal: 16,
+                    paddingHorizontal: Spacing.lg,
                     paddingVertical: 14,
                     backgroundColor: pressed ? "rgba(0,0,0,0.05)" : "transparent",
                   })}
@@ -101,14 +102,14 @@ export const WhatToDo: React.FC<WhatToDoProps> = ({ visible, onDismiss }) => {
                 </Pressable>
               )}
               ItemSeparatorComponent={() => <Divider />}
-              contentContainerStyle={{ paddingBottom: 8 }}
+              contentContainerStyle={{ paddingBottom: Spacing.sm }}
             />
           )}
           {selected && (
-            <View style={{ paddingHorizontal: 16, paddingVertical: 20 }}>
-              <View style={{ marginBottom: 12 }}>{renderMarkdown(selected.description)}</View>
+            <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.xl }}>
+              <View style={{ marginBottom: Spacing.md }}>{renderMarkdown(selected.description)}</View>
               {selected.links && selected.links.length > 0 && (
-                <View style={{ marginBottom: 16, flexWrap:"wrap" }}>
+                <View style={{ marginBottom: Spacing.lg, flexWrap:"wrap" }}>
                   {selected.links.map((l) => 
                     (<Link asChild key={l.url} href={l.url} style={{ marginBottom: 6 }}>
                       <Button onPress={()=>onDismiss()}

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Dimensions, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import type { ViewProps } from "react-native";
-import React, { useContext } from "react";
+import React, { use } from "react";
 import { TutorialContext } from "./TutorialOverlay";
 import { RootState } from "@/redux/store";
 
@@ -19,7 +19,7 @@ const Measure = ({ children, name, ...viewProps }: MeasureProps) => {
   const dimensions = Dimensions.get("window");
   const childRef = useRef<View>(null);
   const dispatch = useDispatch();
-  const tutorialContext = useContext(TutorialContext);
+  const tutorialContext = use(TutorialContext);
   const handleNext = tutorialContext?.handleNextTutorialStep;
   const { isTutorialActive, isTutorialStarted } = useSelector(
     (state: RootState) => state.tutorial

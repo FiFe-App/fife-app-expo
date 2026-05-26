@@ -1,116 +1,186 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   NativeSyntheticEvent,
   StyleProp,
+  TextInput as RNTextInput,
   TextInputKeyPressEventData,
-  TextInputSubmitEditingEventData,
+  View,
   ViewStyle,
 } from "react-native";
-import { Card, Chip, TextInput } from "react-native-paper";
+import { Chip, IconButton, TextInput } from "react-native-paper";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
+import { useAppTheme } from "@/assets/theme";
 
-interface TagInputType {
-  onChange: React.SetStateAction<any>;
-  value?: string;
-  defaultValue?: string;
-  style?: StyleProp<ViewStyle>;
+interface TagInputProps {
+  value: string[];
+  onChange: (next: string[]) => void;
   placeholder?: string;
+  style?: StyleProp<ViewStyle>;
 }
 
 const TagInput = ({
-  onChange,
-  defaultValue,
-  style,
-  placeholder,
   value,
-}: TagInputType) => {
-  const inputRef = useRef(null);
-  const list = (value || "")
-    .split(" $ ")
-    .slice(0, -1)
-    .filter((e) => e.length);
-  const text = (value || "").split(" $ ").slice(-1)[0];
+  onChange,
+  placeholder = "Új kulcsszó…",
+  style,
+}: TagInputProps) => {
+  const theme = useAppTheme();
+  const inputRef = useRef<RNTextInput>(null);
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState("");
 
-  const edit = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
-    if (e.nativeEvent.key === "Backspace" && text === "") {
-      e.preventDefault();
-      onChange(toString([...list]));
+  useEffect(() => {
+    if (adding) {
+      const t = setTimeout(() => inputRef.current?.focus(), 0);
+      return () => clearTimeout(t);
+    }
+  }, [adding]);
+
+  const commitTag = (raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed) return false;
+    if (value.includes(trimmed)) return false;
+    onChange([...value, trimmed]);
+    return true;
+  };
+
+  const handleChangeText = (text: string) => {
+    if (text.includes(",")) {
+      const parts = text.split(",");
+      const toCommit = parts.slice(0, -1);
+      const next = [...value];
+      for (const p of toCommit) {
+        const t = p.trim();
+        if (t && !next.includes(t)) next.push(t);
+      }
+      onChange(next);
+      setDraft(parts[parts.length - 1]);
+    } else {
+      setDraft(text);
     }
   };
-  const onSubmit = (
-    e: NativeSyntheticEvent<TextInputSubmitEditingEventData>,
+
+  const handleSubmit = () => {
+    if (commitTag(draft)) {
+      setDraft("");
+    } else if (!draft.trim()) {
+      setAdding(false);
+    }
+  };
+
+  const handleBlur = () => {
+    if (commitTag(draft)) {
+      setDraft("");
+    }
+    if (!draft.trim()) {
+      setAdding(false);
+    }
+  };
+
+  const handleKeyPress = (
+    e: NativeSyntheticEvent<TextInputKeyPressEventData>,
   ) => {
-    onChange(toString([...list, text.trim() + " $ "]));
-    e.preventDefault();
-  };
-  const onBlur = () => {
-    if (text.length) {
-      onChange(toString([...list, text.trim(), " $ "]));
+    if (e.nativeEvent.key === "Backspace" && draft === "" && value.length > 0) {
+      e.preventDefault?.();
+      onChange(value.slice(0, -1));
     }
   };
-  const onChangeText = (e: string) => {
-    if (!e.includes("$")) onChange(toString(list) + " $ " + e);
+
+  const cancelAdding = () => {
+    setDraft("");
+    setAdding(false);
   };
 
-  const toString = (arr: string[]): string => {
-    return arr.reduce((partialSum, a) => partialSum + " $ " + a, "");
+  const removeTag = (index: number) => {
+    onChange(value.filter((_, i) => i !== index));
   };
 
-  const TagList = () => (
-    <>
-      {list.map((e, i) => {
-        if (e.length)
-          return (
-            <Chip
-              key={"tags" + i}
-              mode="outlined"
-              style={{ margin: 4 }}
-              onClose={() => {
-                onChange(toString(list.filter((el, ind) => ind !== i)) + " $ ");
-              }}
-              closeIcon="close"
-            >
-              {e}
-            </Chip>
-          );
-      })}
-    </>
-  );
   return (
-    <Card
-      mode="contained"
-      contentStyle={{
-        width: "100%",
-        flexDirection: "row",
-        flexWrap: "wrap",
-        alignItems: "center",
-      }}
+    <View
       style={[
         {
-          borderRadius: 0,
+          flexDirection: "row",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: Spacing.xs,
         },
         style,
       ]}
     >
-      <TagList />
-      <TextInput
-        placeholder={placeholder}
-        contentStyle={{ flexGrow: 1 }}
-        style={{
-          flexGrow: 1,
-          fontSize: 17,
-          padding: 4,
-          borderRadius: 0,
-        }}
-        ref={inputRef}
-        returnKeyType="next"
-        blurOnSubmit={false}
-        onSubmitEditing={onSubmit}
-        onChangeText={onChangeText}
-        onKeyPress={edit}
-        onBlur={onBlur}
-        value={text}
-      />
-    </Card>
+      {value.map((tag, i) => (
+        <Chip
+          key={`tag-${i}-${tag}`}
+          mode="flat"
+          onClose={() => removeTag(i)}
+          closeIcon="close"
+        >
+          {tag}
+        </Chip>
+      ))}
+
+      {adding ? (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            flexGrow: 1,
+            minWidth: 140,
+            borderWidth: 1,
+            borderColor: theme.colors.primary,
+            borderRadius: BorderRadius.pill,
+            paddingLeft: Spacing.md,
+            paddingRight: Spacing.xs,
+            backgroundColor: theme.colors.surface,
+          }}
+        >
+          <TextInput
+            ref={inputRef}
+            mode="flat"
+            dense
+            value={draft}
+            placeholder={placeholder}
+            onChangeText={handleChangeText}
+            onSubmitEditing={handleSubmit}
+            onBlur={handleBlur}
+            onKeyPress={handleKeyPress}
+            returnKeyType="done"
+            blurOnSubmit={false}
+            underlineColor="transparent"
+            activeUnderlineColor="transparent"
+            style={{
+              flexGrow: 1,
+              flexShrink: 1,
+              backgroundColor: "transparent",
+              fontSize: 14,
+              height: 32,
+              paddingHorizontal: 0,
+            }}
+            contentStyle={{ paddingHorizontal: 0 }}
+          />
+          <IconButton
+            icon="close"
+            size={16}
+            onPress={cancelAdding}
+            style={{ margin: 0 }}
+            accessibilityLabel="Mégse"
+          />
+        </View>
+      ) : (
+        <Chip
+          mode="outlined"
+          icon="plus"
+          onPress={() => setAdding(true)}
+          style={{
+            borderStyle: "dashed",
+            borderColor: theme.colors.outline,
+            backgroundColor: "transparent",
+          }}
+        >
+          Új kulcsszó
+        </Chip>
+      )}
+    </View>
   );
 };
 

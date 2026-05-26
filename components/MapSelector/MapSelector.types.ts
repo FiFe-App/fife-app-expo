@@ -1,13 +1,15 @@
-import { Circle } from "@/redux/store.type";
+import { CircleType } from "@/redux/store.type";
+import { ReactElement } from "react";
 import { StyleProp, ViewStyle } from "react-native";
 
 export interface MapSelectorProps {
   style?: StyleProp<ViewStyle>;
   searchEnabled: boolean;
-  data?: Circle;
+  data?: CircleType;
   title?: string;
   text?: string;
-  setData?: React.Dispatch<React.SetStateAction<Circle | undefined>>;
+  setData?: React.Dispatch<React.SetStateAction<CircleType | undefined>>;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  markerOnly?: boolean
+  markerOnly?: boolean,
+  children?: ReactElement,
 }

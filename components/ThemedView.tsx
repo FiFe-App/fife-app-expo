@@ -1,11 +1,10 @@
-import { StyleSheet, View, type ViewProps } from "react-native";
-import { useTheme } from "react-native-paper";
-import { useMediaQuery } from "react-responsive";
+import { StyleSheet, View, useWindowDimensions, type ViewProps } from "react-native";
+import  { useAppTheme } from "@/assets/theme";
 
 export type ThemedViewProps = ViewProps & {
   lightColor?: string;
   darkColor?: string;
-  type?: "default" | "card";
+  type?: "default" | "card" | "error";
   responsive?: number;
   reverseOnCol?: boolean;
 };
@@ -17,14 +16,18 @@ export function ThemedView({
   reverseOnCol,
   ...otherProps
 }: ThemedViewProps) {
-  const theme = useTheme();
-  // Normalize to the same breakpoints used in ResponsiveLayout
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const isCol = responsive ? useMediaQuery({ maxWidth: responsive }) : false;
+  const theme = useAppTheme();
+  const { width } = useWindowDimensions();
+  const isCol = responsive ? width <= responsive : false;
   
   const styles = StyleSheet.create({
     card: {
       backgroundColor: theme.colors.surface,
+    },
+    error: {
+      backgroundColor: theme.colors.error,
+      borderRadius: 8,
+      padding: 6
     },
     default: {
       backgroundColor: theme.colors.background,
@@ -43,6 +46,7 @@ export function ThemedView({
           backgroundColor: theme.colors.background,
         },
         type === "card" ? styles.card : undefined,
+        type === "error" ? styles.error : undefined,
         style,
         responsive ? (!isCol ? styles.flexRow : styles.flexCol) : undefined,
       ]}

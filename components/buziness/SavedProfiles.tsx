@@ -12,12 +12,15 @@ import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import UserItem from "../user/UserItem";
 import { RootState } from "@/redux/store";
 import { theme } from "@/assets/theme";
+import { Spacing } from "@/constants/spacing";
 
 export interface ContactListProps {
   uid: string;
+  myProfile?: boolean;
+  name?: string;
 }
 
-export function SavedProfiles({ uid }: ContactListProps) {
+export function SavedProfiles({ uid, myProfile, name }: ContactListProps) {
   const [contacts, setContacts] = useState<Tables<"profiles">[]>([]);
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
@@ -45,8 +48,8 @@ export function SavedProfiles({ uid }: ContactListProps) {
   return (
     <>
       <ThemedView style={{ flex: 1 }}>
-        {contacts.length > 0 && <ThemedText variant="labelLarge" style={{ padding: 6, color: theme.colors.secondary, fontWeight: "bold" }}>Őket jelölted megbízhatónak</ThemedText>
-        }<ScrollView contentContainerStyle={{ flex: 1 }}>
+        {contacts.length > 0 && <ThemedText variant="labelLarge" style={{ padding: Spacing.xs, color: theme.colors.secondary, fontWeight: "bold" }}>{myProfile ? "Őket jelölted megbízhatónak" : `Őket jelölte ${name} megbízhatónak`}</ThemedText>
+        }<ScrollView>
           {loading && (
             <View
               style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
@@ -54,21 +57,23 @@ export function SavedProfiles({ uid }: ContactListProps) {
               <ActivityIndicator />
             </View>
           )}
-          <List.Section style={{ gap: 8 }}>
+          <List.Section style={{ gap: Spacing.sm }}>
             {!loading &&
               (contacts.length ? (
                 contacts.map((contact) => (
                   <UserItem key={contact.id} data={contact} />
                 ))
               ) : (
-                <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
+                <View style={{ alignItems: "center", gap: Spacing.lg, padding: Spacing.sm }}>
                   <Image
-                    source={require("../../assets/images/HeroImage.png")}
-                    style={{ height: 200, width: '100%' }}
+                    source={require("@/assets/images/HeroImage.png")}
+                    style={{ height: 200, width: "100%" }}
                     contentFit="contain"
                   />
                   <ThemedText type="subtitle">
-                    Itt fognak megjelenni a mentett profiljaid.
+                    {myProfile
+                      ? "Itt fognak megjelenni a mentett profiljaid."
+                      : `${name} még nem jelölt meg senkit megbízhatónak.`}
                   </ThemedText>
                 </View>
               ))}
@@ -82,8 +87,8 @@ export function SavedProfiles({ uid }: ContactListProps) {
 
 const styles = StyleSheet.create({
   fabStyle: {
-    bottom: 16,
-    right: 16,
+    bottom: Spacing.lg,
+    right: Spacing.lg,
     position: "absolute",
   },
 });

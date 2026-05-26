@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "886597861831",
+    "project_id": "fife-app-b19c3",
+    "storage_bucket": "fife-app-b19c3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:886597861831:android:c4c597516174d0390799e2",
+        "android_client_info": {
+          "package_name": "com.fife.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHCyY0RzSjunkNXLKoh3AqSOQL3_aaKKk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

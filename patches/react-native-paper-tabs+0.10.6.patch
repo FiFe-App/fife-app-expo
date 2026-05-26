@@ -1,0 +1,188 @@
+diff --git a/node_modules/react-native-paper-tabs/lib/commonjs/TabsHeader.js b/node_modules/react-native-paper-tabs/lib/commonjs/TabsHeader.js
+index c7f0733..595011f 100644
+--- a/node_modules/react-native-paper-tabs/lib/commonjs/TabsHeader.js
++++ b/node_modules/react-native-paper-tabs/lib/commonjs/TabsHeader.js
+@@ -227,16 +227,13 @@ const styles = _reactNative.StyleSheet.create({
+   indicator: {
+     position: 'absolute',
+     height: 2,
+-    width: 1,
++    width: 0,
+     left: 0,
+     bottom: 0,
+     ..._reactNative.Platform.select({
+       web: {
+-        backgroundColor: 'transparent',
+         transitionDuration: '150ms',
+-        transitionProperty: 'all',
+-        transformOrigin: 'left',
+-        willChange: 'transform'
++        transitionProperty: 'left, width'
+       },
+       default: {}
+     })
+diff --git a/node_modules/react-native-paper-tabs/lib/commonjs/internal.js b/node_modules/react-native-paper-tabs/lib/commonjs/internal.js
+index 21ea0e7..d95fe7c 100644
+--- a/node_modules/react-native-paper-tabs/lib/commonjs/internal.js
++++ b/node_modules/react-native-paper-tabs/lib/commonjs/internal.js
+@@ -14,16 +14,10 @@ function getIndicatorStyle({
+   width
+ }) {
+   return {
+-    transform: [{
+-      scaleX: width
+-    }, {
+-      translateX: roundToTwo(left / width) || 0
+-    }]
++    left: left,
++    width: width
+   };
+ }
+-function roundToTwo(num) {
+-  return Math.round(num * 100 + Number.EPSILON) / 100;
+-}
+ function useIndicator({
+   index,
+   layouts
+diff --git a/node_modules/react-native-paper-tabs/lib/commonjs/internal.native.js b/node_modules/react-native-paper-tabs/lib/commonjs/internal.native.js
+index aa2fb8d..3ffaa58 100644
+--- a/node_modules/react-native-paper-tabs/lib/commonjs/internal.native.js
++++ b/node_modules/react-native-paper-tabs/lib/commonjs/internal.native.js
+@@ -47,30 +47,27 @@ function useIndicator({
+     const childrenA = Array(childrenCount).fill(undefined);
+     const inputRange = childrenA.map((__, i) => i);
+     const positionWithOffset = _reactNative.Animated.add(position, offset);
+-    const getTranslateX = i => {
++    const getLeft = i => {
+       const cl = layouts.current?.[i];
+       if (!cl) {
+         return 0;
+       }
+-      return (cl.x + cl.width / 2) / cl.width;
++      return cl.x;
+     };
+-    const getScaleX = i => {
++    const getWidth = i => {
+       return layouts.current?.[i]?.width || 0;
+     };
+     return position && tabsLayout && layouts.current ? {
+-      transform: [{
+-        scaleX: childrenA.length <= 1 ? getScaleX(0) : positionWithOffset.interpolate({
+-          inputRange,
+-          outputRange: childrenA.map((__, i) => getScaleX(i))
+-          // extrapolate: 'clamp',
+-        })
+-      }, {
+-        translateX: childrenA.length <= 1 ? getTranslateX(0) : positionWithOffset.interpolate({
+-          inputRange,
+-          outputRange: childrenA.map((__, i) => getTranslateX(i))
+-          // extrapolate: 'clamp',
+-        })
+-      }]
++      left: childrenA.length <= 1 ? getLeft(0) : positionWithOffset.interpolate({
++        inputRange,
++        outputRange: childrenA.map((__, i) => getLeft(i))
++        // extrapolate: 'clamp',
++      }),
++      width: childrenA.length <= 1 ? getWidth(0) : positionWithOffset.interpolate({
++        inputRange,
++        outputRange: childrenA.map((__, i) => getWidth(i))
++        // extrapolate: 'clamp',
++      })
+     } : null;
+   }, [position, offset, tabsLayout, layouts, renderIndex, childrenCount]);
+   const onUpdateTabLayout = React.useCallback(() => {
+diff --git a/node_modules/react-native-paper-tabs/lib/module/TabsHeader.js b/node_modules/react-native-paper-tabs/lib/module/TabsHeader.js
+index 9fc337a..4d1edca 100644
+--- a/node_modules/react-native-paper-tabs/lib/module/TabsHeader.js
++++ b/node_modules/react-native-paper-tabs/lib/module/TabsHeader.js
+@@ -220,16 +220,13 @@ const styles = StyleSheet.create({
+   indicator: {
+     position: 'absolute',
+     height: 2,
+-    width: 1,
++    width: 0,
+     left: 0,
+     bottom: 0,
+     ...Platform.select({
+       web: {
+-        backgroundColor: 'transparent',
+         transitionDuration: '150ms',
+-        transitionProperty: 'all',
+-        transformOrigin: 'left',
+-        willChange: 'transform'
++        transitionProperty: 'left, width'
+       },
+       default: {}
+     })
+diff --git a/node_modules/react-native-paper-tabs/lib/module/internal.js b/node_modules/react-native-paper-tabs/lib/module/internal.js
+index 321b764..6a678f2 100644
+--- a/node_modules/react-native-paper-tabs/lib/module/internal.js
++++ b/node_modules/react-native-paper-tabs/lib/module/internal.js
+@@ -6,16 +6,10 @@ function getIndicatorStyle({
+   width
+ }) {
+   return {
+-    transform: [{
+-      scaleX: width
+-    }, {
+-      translateX: roundToTwo(left / width) || 0
+-    }]
++    left: left,
++    width: width
+   };
+ }
+-function roundToTwo(num) {
+-  return Math.round(num * 100 + Number.EPSILON) / 100;
+-}
+ export function useIndicator({
+   index,
+   layouts
+diff --git a/node_modules/react-native-paper-tabs/lib/module/internal.native.js b/node_modules/react-native-paper-tabs/lib/module/internal.native.js
+index 5bb6520..ef362af 100644
+--- a/node_modules/react-native-paper-tabs/lib/module/internal.native.js
++++ b/node_modules/react-native-paper-tabs/lib/module/internal.native.js
+@@ -39,30 +39,27 @@ export function useIndicator({
+     const childrenA = Array(childrenCount).fill(undefined);
+     const inputRange = childrenA.map((__, i) => i);
+     const positionWithOffset = Animated.add(position, offset);
+-    const getTranslateX = i => {
++    const getLeft = i => {
+       const cl = layouts.current?.[i];
+       if (!cl) {
+         return 0;
+       }
+-      return (cl.x + cl.width / 2) / cl.width;
++      return cl.x;
+     };
+-    const getScaleX = i => {
++    const getWidth = i => {
+       return layouts.current?.[i]?.width || 0;
+     };
+     return position && tabsLayout && layouts.current ? {
+-      transform: [{
+-        scaleX: childrenA.length <= 1 ? getScaleX(0) : positionWithOffset.interpolate({
+-          inputRange,
+-          outputRange: childrenA.map((__, i) => getScaleX(i))
+-          // extrapolate: 'clamp',
+-        })
+-      }, {
+-        translateX: childrenA.length <= 1 ? getTranslateX(0) : positionWithOffset.interpolate({
+-          inputRange,
+-          outputRange: childrenA.map((__, i) => getTranslateX(i))
+-          // extrapolate: 'clamp',
+-        })
+-      }]
++      left: childrenA.length <= 1 ? getLeft(0) : positionWithOffset.interpolate({
++        inputRange,
++        outputRange: childrenA.map((__, i) => getLeft(i))
++        // extrapolate: 'clamp',
++      }),
++      width: childrenA.length <= 1 ? getWidth(0) : positionWithOffset.interpolate({
++        inputRange,
++        outputRange: childrenA.map((__, i) => getWidth(i))
++        // extrapolate: 'clamp',
++      })
+     } : null;
+   }, [position, offset, tabsLayout, layouts, renderIndex, childrenCount]);
+   const onUpdateTabLayout = React.useCallback(() => {

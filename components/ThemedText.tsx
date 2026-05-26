@@ -1,13 +1,14 @@
-import { theme } from "@/assets/theme";
+import { theme, useAppTheme } from "@/assets/theme";
 import { StyleSheet } from "react-native";
 
-import { useTheme, Text, type TextProps } from "react-native-paper";
+import {   Text, type TextProps } from "react-native-paper";
 
 export type ThemedTextProps = TextProps<Text> & {
   type?:
   | "default"
   | "title"
   | "defaultSemiBold"
+  | "bold"
   | "subtitle"
   | "link"
   | "error"
@@ -20,7 +21,7 @@ export function ThemedText({
   type = "default",
   ...rest
 }: ThemedTextProps) {
-  const theme = useTheme();
+  const theme = useAppTheme();
 
   return (
     <Text
@@ -29,6 +30,7 @@ export function ThemedText({
         type === "link" ? styles.link : undefined,
         type === "error" ? styles.error : undefined,
         type === "defaultSemiBold" ? styles.defaultSemiBold : undefined,
+        type === "bold" ? { fontFamily: "RedHatText-Bold"} : undefined,
         type === "none" && undefined,
         style,
       ]}
@@ -64,7 +66,7 @@ const styles = StyleSheet.create({
   error: {
     lineHeight: 30,
     fontSize: 16,
-    color: theme.colors.error,
+    color: theme.colors.onError,
   },
   link: {
     color: theme.colors.secondary,

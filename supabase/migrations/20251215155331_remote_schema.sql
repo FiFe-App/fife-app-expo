@@ -166,8 +166,9 @@ alter table "public"."profileRecommendations" enable row level security;
     "website" text,
     "created_at" timestamp without time zone default now(),
     "viewed_functions" text[],
-    "location" extensions.geography
-      );
+    "location" extensions.geography,
+    "location_radius_m" float
+  );
 
 
 alter table "public"."profiles" enable row level security;
@@ -350,32 +351,6 @@ END;
 $function$
 ;
 
-CREATE OR REPLACE FUNCTION public.hybrid_buziness_search(query_text text, query_embedding extensions.vector, lat double precision, long double precision, distance double precision, skip integer, take integer, full_text_weight double precision DEFAULT 0, semantic_weight double precision DEFAULT 1, match_threshold double precision DEFAULT 0.6, rrf_k integer DEFAULT 50)
- RETURNS TABLE(id bigint, title text, description character varying, author uuid, created_at timestamp with time zone, images text[], location extensions.geography, recommendations integer, lat double precision, long double precision, distance double precision, relevance double precision, defaultcontact bigint)
- LANGUAGE sql
-AS $function$
-  SET search_path TO public; 
-  SELECT 
-    b.id, b.title, b.description, b.author, b.created_at, b.images, b.location, count(br.id) as recommendations, 
-  st_y(location::geometry) as lat,
-  st_x(location::geometry) as long,
-  st_distance(location, st_point(long, lat)::geography) as distance,
-  b.embedding <#> query_embedding as relevance,
-  b."defaultContact"
-  FROM public.buziness b 
-  LEFT OUTER JOIN public."buzinessRecommendations" br
-  ON b.id = br.buziness_id
-  where 
-    case when query_text = '' then true else b.embedding <#> query_embedding < -match_threshold end and    
-    case when location = NULL then true else true end
-  GROUP BY b.id
-  order by case when query_text != '' then (b.embedding <#> query_embedding) end, st_distance(location, st_point(long, lat)::geography) asc
-  OFFSET     CASE WHEN skip>=0 THEN skip 
-      END ROWS       -- skip 10 rows
-  LIMIT CASE WHEN take>=0 THEN take 
-      END
-$function$
-;
 
 CREATE OR REPLACE FUNCTION public.nearby_buziness(lat double precision, long double precision, maxdistance double precision, search character varying, take integer, skip integer)
  RETURNS TABLE(id bigint, title text, description character varying, author uuid, created_at timestamp with time zone, location extensions.geography, recommendations integer, lat double precision, long double precision, distance double precision)
@@ -499,20 +474,6 @@ BEGIN
 
   RETURN retval;
 END;
-$function$
-;
-
-CREATE OR REPLACE FUNCTION public.handle_new_user()
- RETURNS trigger
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
-begin
-  insert into public.profiles (id, full_name, avatar_url)
-  values (new.id, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'avatar_url');
-  return new;
-end;
 $function$
 ;
 

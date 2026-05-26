@@ -1,5 +1,6 @@
 import { StyleSheet } from "react-native";
 
+// Map overlay colors — intentionally fixed, independent of app theme
 const styles = StyleSheet.create({
   search: {
     color: "#000",

@@ -1,35 +1,36 @@
-import React from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
-import { Divider, ActivityIndicator, Button } from "react-native-paper";
+import React, { useCallback, useMemo } from "react";
+import { View, StyleSheet, FlatList } from "react-native";
+import { Spacing } from "@/constants/spacing";
+import { Divider, ActivityIndicator } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import BuzinessItem from "./BuzinessItem";
 import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import {
   loadBuzinesses,
-  storeBuzinessSearchParams,
 } from "@/redux/reducers/buzinessReducer";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import Measure from "../tutorial/Measure";
+import { ThemedView } from "../ThemedView";
 
 interface BuzinessListProps {
-  load: (arg0: number) => void;
+  load: () => void;
   canLoadMore: boolean;
+  error: string | null;
 }
 
 export const BuzinessList: React.FC<BuzinessListProps> = ({
   load,
   canLoadMore,
+  error,
 }) => {
   const dispatch = useDispatch();
-  const { buzinesses, searchParams } = useSelector(
-    (state: RootState) => state.buziness,
-  );
+
+  const buzinesses = useSelector((state: RootState) => state.buziness.buzinesses);
+  const loading = useSelector((state: RootState) => state.buziness.searchParams?.loading ?? false);
+  const searchCircle = useSelector((state: RootState) => state.buziness.searchParams?.searchCircle);
   const { myLocation } = useMyLocation();
-  const skip = searchParams?.skip || 0;
-  const loading = searchParams?.loading || false;
-  const take = 5;
-  const loadNext = () => {
+  const loadNext = useCallback(() => {
     dispatch(
       loadBuzinesses([
         {
@@ -44,58 +45,72 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
         },
       ]),
     );
-    dispatch(storeBuzinessSearchParams({ skip: skip + take }));
-    load(skip + take);
-  };
+    load();
+  }, [dispatch, load]);
+
+  const renderItem = useCallback(
+    ({ item: buzinessItem, index: ind }: { item: (typeof buzinesses)[0]; index: number }) =>
+      buzinessItem.id === -1 ? (
+        <Divider style={{ marginVertical: Spacing.lg }} />
+      ) : (
+        <Measure name={ind === 0 ? "first-biznisz" : null}>
+          <View>
+            <BuzinessItem data={buzinessItem} />
+          </View>
+        </Measure>
+      ),
+    [],
+  );
+
+  const onEndReached = useCallback(() => {
+    if (canLoadMore && !loading) loadNext();
+  }, [canLoadMore, loading, loadNext]);
+
+  const listFooter = useMemo(
+    () => (
+      <View style={styles.footer}>
+        {error ? (
+          <ThemedView type="error">
+            <ThemedText type="error" style={{ textAlign: "center" }}>
+              {error}
+            </ThemedText>
+          </ThemedView>
+        ) : loading ? (
+          <ActivityIndicator />
+        ) : !buzinesses.length ? (
+          <ThemedText style={{ alignSelf: "center" }}>
+            Nem található több biznisz
+          </ThemedText>
+        ) : null}
+      </View>
+    ),
+    [error, loading, buzinesses.length],
+  );
+
+  const listEmpty = useMemo(
+    () =>
+      !loading && !searchCircle && !myLocation ? (
+        <ThemedText style={{ alignSelf: "center" }}>
+          Válassz környéket a kereséshez
+        </ThemedText>
+      ) : null,
+    [loading, searchCircle, myLocation],
+  );
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          gap: 8,
-          marginVertical: 8,
-        }}
-      >
-        {buzinesses.map((buzinessItem,ind) =>
-          buzinessItem.id === -1 ? (
-            <Divider
-              key={Math.random() * 100000 + 100000 + "div"}
-              style={{ marginVertical: 16 }}
-            />
-          ) : (
-            <Measure key={buzinessItem.id} name={ind==0 ? "first-biznisz" : null }>
-              <View>
-                <BuzinessItem data={buzinessItem} />
-              </View>
-            </Measure>
-          ),
-        )}
-        {!searchParams?.searchCircle &&
-          !myLocation &&
-          !buzinesses.length &&
-          (<ThemedText style={{ alignSelf: "center" }}>
-            Válassz környéket a kereséshez
-          </ThemedText>)}
-        <View style={{ padding: 16 }}>
-          {!loading &&
-            (!!buzinesses.length && canLoadMore ? (
-              <Button onPress={loadNext} style={{ alignSelf: "center" }}>
-                További bizniszek
-              </Button>
-            ) : (
-              <ThemedText style={{ alignSelf: "center" }}>
-                Nem található több biznisz
-              </ThemedText>
-            ))}
-        </View>
-      </ScrollView>
-
-      {searchParams?.loading && !buzinesses.length && (
-        <View style={{ flex: 1 }}>
-          <ActivityIndicator />
-        </View>
-      )}
+      <FlatList
+        data={buzinesses}
+        keyExtractor={(item, index) =>
+          item.id === -1 ? `${item.id}-divider-${index}` : String(item.id)
+        }
+        contentContainerStyle={styles.listContent}
+        renderItem={renderItem}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.3}
+        ListEmptyComponent={listEmpty}
+        ListFooterComponent={listFooter}
+      />
     </View>
   );
 };
@@ -104,9 +119,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  businessItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+  listContent: {
+    gap: Spacing.sm,
+    marginVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+  },
+  footer: {
+    padding: Spacing.lg,
   },
 });

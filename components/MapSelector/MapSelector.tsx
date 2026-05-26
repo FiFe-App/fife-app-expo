@@ -1,29 +1,30 @@
 import { useMyLocation } from "@/hooks/useMyLocation";
 import React, { useMemo, useRef, useState } from "react";
-import { FlatList, Text, View } from "react-native";
+import { FlatList, Platform, Text, View } from "react-native";
 import {
   Button,
   Card,
   FAB,
   Icon,
   IconButton,
-  List, TextInput
+  List,
+  TextInput
 } from "react-native-paper";
-import MyLocationIcon from "../../assets/images/myLocationIcon";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 import {
   Camera,
   Circle,
   Details,
-  LatLng,
   MapView,
   Marker,
   Region,
 } from "../mapView/mapView";
 import styles from "../mapView/style";
-import { ThemedText } from "../ThemedText";
 import { MapSelectorProps } from "./MapSelector.types";
 import { CircleType } from "@/redux/store.type";
+import { lightMapStyle, darkMapStyle } from "./mapStyles";
+import { useAppTheme } from "@/assets/theme";
+import { BorderRadius } from "@/constants/borderRadius";
 
 const defaultMapLocation = {
   location: {
@@ -41,7 +42,9 @@ const MapSelector = ({
   setData,
   setOpen,
   markerOnly,
+  children,
 }: MapSelectorProps) => {
+  const theme = useAppTheme();
   const [mapHeight, setMapHeight] = useState<number>(0);
   const circleSize = mapHeight / 3;
   const [circleRadiusText, setCircleRadiusText] = useState("");
@@ -57,7 +60,11 @@ const MapSelector = ({
   const [approxLocation, setApproxLocation] = useState(false);
   const mapRef = useRef<MapView>(null);
 
-  const { myLocation, locationError } = useMyLocation();
+  const { myLocation } = useMyLocation();
+
+  // Determine if we're using dark theme
+  const isDarkTheme = theme.dark;
+  const mapStyle = isDarkTheme ? darkMapStyle : lightMapStyle;
 
   const onRegionChange:
     | ((region: Region, details: Details) => void)
@@ -143,7 +150,7 @@ const MapSelector = ({
   };
 
   return (
-    <View style={[{ flex: 1, overflow: "hidden" }, style]}>
+    <View style={[{ flex: 1, overflow: "hidden", borderRadius: BorderRadius.md }, style]}>
       <View
         style={{ width: "100%", height: "100%" }}
         onLayout={(e) => {
@@ -154,6 +161,7 @@ const MapSelector = ({
           <TextInput
             inputMode="search"
             placeholder="Keress címre..."
+            mode="outlined"
             onChangeText={(text) => {
               setSearch(text);
               debouncedSearch(text);
@@ -200,15 +208,22 @@ const MapSelector = ({
           style={{ width: "100%", flex: 1, zIndex: 0 }}
         >
           <MapView
-            onPress={() => setSearchFocused(false)}
             ref={mapRef}
-            options={{
-              mapTypeControl: false,
-              fullscreenControl: false,
-              streetViewControl: false,
-              zoomControl: false,
+            {...(Platform.OS === "web" ? {
+              options: {
+                mapTypeControl: false,
+                fullscreenControl: false,
+                streetViewControl: false,
+                zoomControl: false,
+              },
+            } : {})}
+            onPoiClick={() => {
+              // no-op: suppress default POI behavior
             }}
-            style={{ width: "100%", height: "100%", maxHeight: 200 }}
+            onPress={() => {
+              setSearchFocused(false);
+            }}
+            style={{ width: "100%", height: "100%" }}
             initialCamera={{
               altitude: 10,
               center: {
@@ -225,13 +240,14 @@ const MapSelector = ({
             rotateEnabled={false}
             toolbarEnabled={false}
             onRegionChangeComplete={onRegionChange}
+            customMapStyle={mapStyle}
           >
             {myLocation && (
               <Marker
                 coordinate={myLocation?.coords}
                 anchor={{ x: 0.5, y: 0.5 }}
               >
-                <MyLocationIcon style={{ width: 20, height: 20 }} />
+                <Icon source="home-map-marker" size={28} color={theme.colors.primary} />
               </Marker>
             )}
 
@@ -248,11 +264,10 @@ const MapSelector = ({
                 center={
                   data?.location
                 }
-                strokeColor="#00000088"
-                fillColor="#00000038"
+                strokeColor={isDarkTheme ? "#ffffff18" : "#00000088"}
+                fillColor={isDarkTheme ? "#ffffff38" : "#00000038"}
                 radius={data?.radius}
-              >
-              </Circle>)}
+              />)}
             {circle?.location && (markerOnly ?
               <Marker
                 coordinate={
@@ -266,9 +281,10 @@ const MapSelector = ({
                 center={
                   circle?.location
                 }
+                strokeColor={isDarkTheme ? "#ffffffaa" : "#00000044"}
+                fillColor={isDarkTheme ? "#ffffff44" : "#00000028"}
                 radius={circle?.radius}
-              >
-              </Circle>)}
+              />)}
           </MapView>
           {!!circleSize && <View style={[styles.circleFixed, {
             width: circleSize,
@@ -309,13 +325,9 @@ const MapSelector = ({
             />
           )}
         </View>
+        {children}
         <View style={{ padding: 8 }}>
-          {!!locationError && (
-            <ThemedText>
-              <Icon source="map-marker-alert" size={16} />
-              {locationError}
-            </ThemedText>
-          )}
+
           <View
             style={{ alignSelf: "flex-end", flexDirection: "row", gap: 8 }}
           >

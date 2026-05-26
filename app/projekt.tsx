@@ -7,20 +7,22 @@ import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 import { Link } from "expo-router";
 import { Footer } from "./index";
 import { theme } from "@/assets/theme";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 
 
 const AboutMe = () => {
   const { isDesktop } = useBreakpoint();
   return (
-    <View style={{ marginHorizontal: 32 }}>
+    <View style={{ marginHorizontal: Spacing.xxxl }}>
       <ThemedView
-        style={[{ paddingVertical: 16, alignItems: "flex-start" }]}
+        style={[{ paddingVertical: Spacing.lg, alignItems: "flex-start" }]}
         responsive={800}
       >
         <View
           style={[
             isDesktop && [styles.flex1, {}],
-            { gap: 16, width: "100%", alignItems: "flex-start", zIndex: 10 },
+            { gap: Spacing.lg, width: "100%", alignItems: "flex-start", zIndex: 10 },
           ]}
         >
           <Text variant="displayMedium">Csatlakozz a FiFe  App csapatához!</Text>
@@ -30,15 +32,15 @@ const AboutMe = () => {
           <Text variant="displaySmall">
             Szükségünk van:
           </Text>
-          <View style={{ gap: 4 }}>
+          <View style={{ gap: Spacing.xs }}>
             <Text variant="bodyLarge">• React Native fejlesztőre</Text>
             <Text variant="bodyLarge">• Jogi tanácsadóra</Text>
             <Text variant="bodyLarge">• Pályázatra</Text>
           </View>
           <Text variant="bodyLarge">
-            Ha beszállnál, írj egy e-mailt ide: <Text variant="bodyLarge" style={{color:theme.colors.tertiary}}><Link href="mailto:kristofakos1229@gmail.com">kristofakos1229@gmail.com</Link></Text>
+            Ha beszállnál, írj egy e-mailt ide: <Text variant="bodyLarge" style={{ color: theme.colors.tertiary }}><Link href="mailto:kristofakos1229@gmail.com">kristofakos1229@gmail.com</Link></Text>
           </Text>
-          <ThemedView responsive={1000} style={{ gap: 16, zIndex: 10 }}>
+          <ThemedView responsive={1000} style={{ gap: Spacing.lg, zIndex: 10 }}>
             <Link href="https://github.com/FiFe-App/fife-app-expo" asChild>
               <Button type="secondary" big>
                 Github
@@ -64,7 +66,7 @@ const AboutMe = () => {
           ]}
         >
           <Image
-            source={require("../assets/images/Trust.png")}
+            source={require("@/assets/images/Trust.png")}
             contentFit="contain"
             style={{ width: "100%", minHeight: 350, zIndex: 5 }}
           />
@@ -78,7 +80,7 @@ export default function Projekt() {
   return (
     <ScrollView style={{ flex: 1 }}>
       <ThemedView type="default" style={{ flex: 1, alignItems: "center" }}>
-        <View style={{ flex: 1, gap: 16, maxWidth: 1000 }}>
+        <View style={{ flex: 1, gap: Spacing.lg, maxWidth: 1000 }}>
           <AboutMe />
         </View>
       </ThemedView>
@@ -96,11 +98,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 8,
+    padding: Spacing.sm,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
-    shadowRadius: 4,
+    shadowRadius: Spacing.xs,
     elevation: 2,
     borderBottomColor: "rgba(0,0,0,0.06)",
     borderBottomWidth: 0.5,
@@ -119,7 +121,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   loginButton: {
-    borderRadius: 12,
+    borderRadius: BorderRadius.lg,
     width: "100%",
   },
   rowWrap: {
@@ -132,13 +134,13 @@ const styles = StyleSheet.create({
   },
   stepCard: {
     flex: 1,
-    borderRadius: 16,
-    gap: 8,
+    borderRadius: BorderRadius.xl,
+    gap: Spacing.sm,
   },
   stepRow: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 4,
+    padding: Spacing.xs,
   },
   stepCol: {
     flexDirection: "column",

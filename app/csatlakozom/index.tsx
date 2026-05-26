@@ -1,5 +1,5 @@
 import { ThemedView } from "@/components/ThemedView";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { Image } from "expo-image";
 import { ThemedText } from "@/components/ThemedText";
 
@@ -28,7 +28,10 @@ const Register = () => {
             zIndex: -1,
             bottom: 0,
             left: 0,
-            position: "fixed",
+            ...Platform.select({
+              web: { position: "fixed" as const },
+              default: { position: "absolute" as const },
+            }),
             width: "100%",
             paddingTop: 20,
             alignItems: "center",

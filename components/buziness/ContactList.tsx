@@ -16,13 +16,15 @@ import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import typeToValueLabel from "@/lib/functions/typeToValueLabel";
 import typeToPrefix from "@/lib/functions/typeToPrefix";
 import typeToPlaceholder from "@/lib/functions/typeToPlaceholder";
+import { Spacing } from "@/constants/spacing";
 
 export interface ContactListProps {
   uid: string;
   edit?: boolean;
+  name?: string;
 }
 
-export function ContactList({ uid, edit }: ContactListProps) {
+export function ContactList({ uid, edit, name }: ContactListProps) {
   const [contacts, setContacts] = useState<Tables<"contacts">[]>([]);
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
@@ -47,7 +49,7 @@ export function ContactList({ uid, edit }: ContactListProps) {
   return (
     <>
       <ThemedView style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ gap: 8, flex: 1 }}>
+        <ScrollView contentContainerStyle={{ gap: Spacing.sm, flex: 1 }}>
           {loading && (
             <View
               style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
@@ -91,14 +93,15 @@ export function ContactList({ uid, edit }: ContactListProps) {
                   </Link>
                 ))
               ) : (
-                <View style={{ alignItems: "center", gap: 16, padding: 8 }}>
+                <View style={{ alignItems: "center", gap: Spacing.lg, padding: Spacing.sm }}>
                   <Image
-                    source={require("../../assets/images/img-map.png")}
+                    source={require("@/assets/images/img-map.png")}
                     style={{ height: 200, width: 200 }}
                   />
-                  <ThemedText type="subtitle">
-                    Itt fognak megjelenni az elérhetőségeid, hogy könnyebben
-                    elérjenek.
+                  <ThemedText type="subtitle" style={{textAlign:"center"}}>
+                    {edit
+                      ? "Itt fognak megjelenni az elérhetőségeid, hogy könnyebben elérjenek."
+                      : `${name} még nem adott meg elérhetőséget.`}
                   </ThemedText>
                 </View>
               ))}
@@ -120,8 +123,8 @@ export function ContactList({ uid, edit }: ContactListProps) {
 
 const styles = StyleSheet.create({
   fabStyle: {
-    bottom: 16,
-    right: 16,
+    bottom: Spacing.lg,
+    right: Spacing.lg,
     position: "absolute",
   },
 });

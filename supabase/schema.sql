@@ -152,51 +152,6 @@ $$;
 
 ALTER FUNCTION "public"."check_author_different"() OWNER TO "postgres";
 
-
-CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO ''
-    AS $$
-begin
-  insert into public.profiles (id, full_name, avatar_url)
-  values (new.id, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'avatar_url');
-  return new;
-end;
-$$;
-
-
-ALTER FUNCTION "public"."handle_new_user"() OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."hybrid_buziness_search"("query_text" "text", "query_embedding" "extensions"."vector", "lat" double precision, "long" double precision, "distance" double precision, "skip" integer, "take" integer, "full_text_weight" double precision DEFAULT 0, "semantic_weight" double precision DEFAULT 1, "match_threshold" double precision DEFAULT 0.6, "rrf_k" integer DEFAULT 50) RETURNS TABLE("id" bigint, "title" "text", "description" character varying, "author" "uuid", "created_at" timestamp with time zone, "images" "text"[], "location" "extensions"."geography", "recommendations" integer, "lat" double precision, "long" double precision, "distance" double precision, "relevance" double precision, "defaultcontact" bigint)
-    LANGUAGE "sql"
-    AS $$
-  SET search_path TO public; 
-  SELECT 
-    b.id, b.title, b.description, b.author, b.created_at, b.images, b.location, count(br.id) as recommendations, 
-  st_y(location::geometry) as lat,
-  st_x(location::geometry) as long,
-  st_distance(location, st_point(long, lat)::geography) as distance,
-  b.embedding <#> query_embedding as relevance,
-  b."defaultContact"
-  FROM public.buziness b 
-  LEFT OUTER JOIN public."buzinessRecommendations" br
-  ON b.id = br.buziness_id
-  where 
-    case when query_text = '' then true else b.embedding <#> query_embedding < -match_threshold end and    
-    case when location = NULL then true else true end
-  GROUP BY b.id
-  order by case when query_text != '' then (b.embedding <#> query_embedding) end, st_distance(location, st_point(long, lat)::geography) asc
-  OFFSET     CASE WHEN skip>=0 THEN skip 
-      END ROWS       -- skip 10 rows
-  LIMIT CASE WHEN take>=0 THEN take 
-      END
-$$;
-
-
-ALTER FUNCTION "public"."hybrid_buziness_search"("query_text" "text", "query_embedding" "extensions"."vector", "lat" double precision, "long" double precision, "distance" double precision, "skip" integer, "take" integer, "full_text_weight" double precision, "semantic_weight" double precision, "match_threshold" double precision, "rrf_k" integer) OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."nearby_buziness"("lat" double precision, "long" double precision, "maxdistance" double precision, "search" character varying, "take" integer, "skip" integer) RETURNS TABLE("id" bigint, "title" "text", "description" character varying, "author" "uuid", "created_at" timestamp with time zone, "location" "extensions"."geography", "recommendations" integer, "lat" double precision, "long" double precision, "distance" double precision)
     LANGUAGE "sql"
     AS $$
@@ -260,27 +215,6 @@ $$;
 
 ALTER FUNCTION "public"."newest_buziness"("lat" double precision, "long" double precision, "distance" double precision, "skip" integer, "take" integer, "full_text_weight" double precision, "semantic_weight" double precision, "match_threshold" double precision, "rrf_k" integer) OWNER TO "postgres";
 
-
-CREATE OR REPLACE FUNCTION "public"."newest_users"("lat" double precision, "long" double precision, "distance" double precision, "skip" integer DEFAULT 0, "take" integer DEFAULT 6, "full_text_weight" double precision DEFAULT 0, "semantic_weight" double precision DEFAULT 1, "match_threshold" double precision DEFAULT 0.8, "rrf_k" integer DEFAULT 50) RETURNS TABLE("id" bigint, "title" "text", "description" character varying, "author" "uuid", "created_at" timestamp with time zone, "images" "text"[], "location" "extensions"."geography", "recommendations" integer, "lat" double precision, "long" double precision, "distance" double precision)
-    LANGUAGE "sql"
-    AS $$
-  SET search_path TO public; 
-  SELECT 
-    b.id, b.title, b.description, b.author, b.created_at, b.images, b.location, count(br.id) as recommendations, 
-  st_y(location::geometry) as lat,
-  st_x(location::geometry) as long,
-  st_distance(location, st_point(long, lat)::geography) as distance
-  FROM public.buziness b 
-  LEFT OUTER JOIN public."buzinessRecommendations" br
-  ON b.id = br.buziness_id
-  where st_distance(location, st_point(long, lat)::geography) <= distance
-  GROUP BY b.id
-  order by b.created_at asc
-  OFFSET CASE WHEN skip>=0 THEN skip 
-      END ROWS       -- skip 10 rows
-  LIMIT CASE WHEN take>=0 THEN take 
-      END
-$$;
 
 
 ALTER FUNCTION "public"."newest_users"("lat" double precision, "long" double precision, "distance" double precision, "skip" integer, "take" integer, "full_text_weight" double precision, "semantic_weight" double precision, "match_threshold" double precision, "rrf_k" integer) OWNER TO "postgres";
@@ -567,6 +501,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "created_at" timestamp without time zone DEFAULT "now"(),
     "viewed_functions" "text"[],
     "location" "extensions"."geography",
+    "location_radius_m" real,
     CONSTRAINT "username_length" CHECK (("char_length"("username") >= 3))
 );
 
@@ -668,6 +603,10 @@ CREATE INDEX "comments_key_idx" ON "public"."comments" USING "hash" ("key");
 
 
 CREATE INDEX "ix_memos_content" ON "public"."buziness" USING "pgroonga" ("title");
+
+
+
+CREATE INDEX "ix_buziness_embedding_text" ON "public"."buziness" USING "pgroonga" ("embedding_text");
 
 
 
@@ -826,7 +765,14 @@ CREATE POLICY "Enable read access for all users" ON "public"."profileRecommendat
 
 
 
-CREATE POLICY "Enable select, insert, update, delete for author" ON "public"."buziness" TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "author"));
+-- Separate policies for buziness: select, update, delete without contact requirement
+CREATE POLICY "Enable select for author" ON "public"."buziness" FOR SELECT TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "author"));
+
+CREATE POLICY "Enable update for author" ON "public"."buziness" FOR UPDATE TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "author"));
+
+CREATE POLICY "Enable delete for author" ON "public"."buziness" FOR DELETE TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "author"));
+
+-- Note: INSERT policy removed - buziness creation should only happen through create-buziness edge function
 
 
 
@@ -858,7 +804,33 @@ ALTER TABLE "public"."comments" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."contacts" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "edit if user's" ON "public"."contacts" USING (("author" = "auth"."uid"())) WITH CHECK (("author" = "auth"."uid"()));
+-- Separate policies for contacts to prevent deletion of last contact
+CREATE POLICY "Enable insert for author" ON "public"."contacts" 
+  FOR INSERT 
+  TO "authenticated" 
+  WITH CHECK ("author" = "auth"."uid"());
+
+CREATE POLICY "Enable update for author" ON "public"."contacts" 
+  FOR UPDATE 
+  TO "authenticated" 
+  USING ("author" = "auth"."uid"())
+  WITH CHECK ("author" = "auth"."uid"());
+
+-- Prevent deletion if it's the user's last contact
+CREATE POLICY "Enable delete for author with remaining contacts" ON "public"."contacts" 
+  FOR DELETE 
+  TO "authenticated" 
+  USING (
+    "author" = "auth"."uid"()
+    AND
+    (
+      SELECT COUNT(*) 
+      FROM "public"."contacts" 
+      WHERE "contacts"."author" = "auth"."uid"()
+      AND "contacts"."data" IS NOT NULL 
+      AND "contacts"."data" != ''
+    ) > 1
+  );
 
 
 
@@ -4204,9 +4176,6 @@ GRANT ALL ON FUNCTION "public"."check_author_different"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "anon";
-GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
 
 
 
