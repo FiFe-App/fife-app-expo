@@ -171,12 +171,17 @@ function RootContent() {
                   name="user/password-reset"
                   options={{ title: "Jelszó visszaállítás" }}
                 />
+                <Stack.Screen
+                  name="user/deleted-account"
+                  options={{ headerShown: false, title: "Fiók törölve" }}
+                />
 
               </Stack.Protected>
             </Stack>
             {pathname !== "/" && !pathname.includes("projekt") &&
               !pathname.includes("login") &&
               !pathname.includes("password") &&
+              !pathname.includes("user/deleted-account") &&
               !pathname.includes("csatlakozom") &&
               pathname !== "/biznisz/new" &&
               !pathname.startsWith("/biznisz/edit") && <BottomNavigation />}

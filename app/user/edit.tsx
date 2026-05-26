@@ -6,22 +6,25 @@ import { ThemedView } from "@/components/ThemedView";
 import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
+import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
-import { setOptions, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
-import { setName, setUserData, setThemePreference } from "@/redux/reducers/userReducer";
+import { setOptions, addSnack, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
+import { setName, setThemePreference, logout } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { ScrollView, View, TouchableWithoutFeedback, Platform } from "react-native";
+import { ScrollView, View, TouchableWithoutFeedback, Platform, Text } from "react-native";
 import {
   Button,
   Divider,
   HelperText,
   Icon,
   IconButton,
+  Dialog,
   Menu,
   Modal,
   Portal,
@@ -45,6 +48,9 @@ export default function Index() {
   const [imageLoading, setImageLoading] = useState(false);
   const [profile, setProfile] = useState<UserInfo>({});
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | undefined>(undefined);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [themeMenuVisible, setThemeMenuVisible] = useState(false);
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [userLocation, setUserLocation] = useState<CircleType | undefined>();
@@ -260,6 +266,67 @@ export default function Index() {
 
     return upload;
   };
+  
+  const handleDeleteProfile = () => {
+    setConfirmEmail("");
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      setDeleteLoading(true);
+
+      const expected = (userData?.email || "").trim().toLowerCase();
+      const entered = confirmEmail.trim().toLowerCase();
+      if (!expected || entered !== expected) {
+        setDeleteLoading(false);
+        return;
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        console.error("No active session");
+        setDeleteLoading(false);
+        dispatch(
+          addSnack({ title: "Nincs aktív bejelentkezés. Kérlek jelentkezz be újra." })
+        );
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("delete-user", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error("Error deleting user:", error);
+        setDeleteLoading(false);
+        dispatch(
+          addSnack({ title: "Hiba történt a profil törlése során. Kérlek próbáld újra később." })
+        );
+        return;
+      }
+
+      console.log("User deleted successfully", data);
+      setShowDeleteDialog(false);
+
+      dispatch(logout());
+      dispatch(clearBuziness());
+      dispatch(clearTutorialState());
+      dispatch(clearBuzinessSearchParams());
+      router.navigate("/user/deleted-account");
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      dispatch(addSnack({ title: "Váratlan hiba történt. Kérlek próbáld újra később." }));
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+  
   const containerStyle = {
     flex: 1,
     height: "100%",
@@ -455,6 +522,73 @@ export default function Index() {
             </View>
             <ContactEditScreen ref={contactEditRef} />
           </View>
+          <Divider style={{ marginTop: 16, marginBottom: 16 }} />
+          <View style={{ gap: 8, paddingBottom: 32 }}>
+
+            <ThemedText variant="bodyLarge" type="bold">Veszélyes szekció</ThemedText>
+            <HelperText type="error">
+              A profil törlése végleges és nem visszavonható.
+            </HelperText>
+            <Button
+              mode="outlined"
+              icon="delete"
+              textColor={theme.colors.error}
+              style={{ borderColor: theme.colors.error }}
+              onPress={handleDeleteProfile}
+            >
+              Profil végleges törlése
+            </Button>
+          </View>
+          <Portal>
+            <Dialog visible={showDeleteDialog} onDismiss={() => setShowDeleteDialog(false)}>
+              <Dialog.Title>Profil végleges törlése</Dialog.Title>
+              <Dialog.Content>
+                <ThemedText>
+                  Biztosan törölni szeretnéd a profilodat? Ez a művelet nem visszavonható.
+                </ThemedText>
+                <View style={{ height: 8 }} />
+                <ThemedText>
+                  A megerősítéshez írd be az alábbi email címet: <Text style={{fontWeight:"bold"}}>{userData?.email}</Text>
+                </ThemedText>
+                <View style={{ height: 8 }} />
+                <TextInput
+                  label="Email"
+                  value={confirmEmail}
+                  onChangeText={setConfirmEmail}
+                  autoCapitalize="none"
+                  mode="outlined"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  disabled={deleteLoading}
+                />
+                {confirmEmail.length > 0 &&
+                  confirmEmail.trim().toLowerCase() !== (userData?.email || "").trim().toLowerCase() && (
+                  <HelperText type="error">Nem egyezik az email címmel.</HelperText>
+                )}
+              </Dialog.Content>
+              <Dialog.Actions>
+                <Button onPress={() => setShowDeleteDialog(false)} disabled={deleteLoading}>
+                  Mégse
+                </Button>
+                <Button
+                  mode="contained"
+                  style={{paddingHorizontal: Spacing.sm}}
+                  buttonColor={theme.colors.error}
+                  textColor={theme.colors.onError}
+                  onPress={confirmDelete}
+                  disabled={
+                    deleteLoading ||
+                    !userData?.email ||
+                    confirmEmail.trim().toLowerCase() !== (userData?.email || "").trim().toLowerCase()
+                  }
+                  icon="delete"
+                  loading={deleteLoading}
+                >
+                  Törlés
+                </Button>
+              </Dialog.Actions>
+            </Dialog>
+          </Portal>
         </ScrollView>
         <Portal>
           <Modal

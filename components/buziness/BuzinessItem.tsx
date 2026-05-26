@@ -5,35 +5,29 @@ import { addDialog } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { BuzinessItemInterface } from "@/redux/store.type";
 import { Link, router } from "expo-router";
-import React, { memo } from "react";
 import {
   GestureResponderEvent,
   Pressable,
   StyleSheet,
   View,
 } from "react-native";
-import { Button, IconButton, Surface, Text } from "react-native-paper";
+import { Button, Icon, IconButton, Surface, Text } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
+import { ThemedText } from "../ThemedText";
+import { theme } from "@/assets/theme";
 import CategoryChip from "../CategoryChip";
-import MetaStat from "../MetaStat";
-import { Spacing } from "@/constants/spacing";
-import { BorderRadius } from "@/constants/borderRadius";
-import { useAppTheme } from "@/assets/theme";
 
 interface BuzinessItemProps {
   data: BuzinessItemInterface;
   showOptions?: boolean;
-  preview?: boolean;
 }
 
-const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) => {
+const BuzinessItem = ({ data, showOptions }: BuzinessItemProps) => {
   const { author, title: titleAndCats, description, id } = data;
 
   const recommendations = typeof data?.recommendations?.[0]?.count === "number" ? data?.recommendations?.[0]?.count : data.recommendations;
-  const uid = useSelector((state: RootState) => state.user.uid);
-  const theme = useAppTheme();
-  
+  const { uid } = useSelector((state: RootState) => state.user);
   const myBuziness = author === uid;
   const dispatch = useDispatch();
 
@@ -56,7 +50,7 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
     e.preventDefault();
     dispatch(
       addDialog({
-        title: title + " törlése?",
+        title: title + " Törlése?",
         text: "Nem fogod tudni visszavonni!",
         onSubmit: () => {
           trackPromise(
@@ -77,14 +71,15 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
     );
   };
 
-  const card = (
-    <Surface style={styles.container} elevation={2} mode="flat">
+  return (
+    <Link href={{ pathname: "/biznisz/[id]", params: { id: id } }} asChild>
+      <Pressable>
+        <Surface style={styles.container} elevation={2} mode="flat">
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1 }}>
-              <Text variant="titleLarge" style={{ fontSize: 18, lineHeight: 24 }}>{title}</Text>
-              <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.xs, marginTop: Spacing.xs }}>
+              <ThemedText variant="titleMedium" type="bold" >{title}</ThemedText>
+              <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4, marginTop: 4 }}>
                 {!!isNew && <CategoryChip key="category-new" style={{ backgroundColor: theme.colors.tertiary }} textStyle={{ color: theme.colors.onTertiary }}>új</CategoryChip>}
-                {!!data.ingyen && <CategoryChip key="category-ingyen" style={{ backgroundColor: theme.colors.nature }} textStyle={{ color: theme.colors.onNature }}>ingyenes</CategoryChip>}
                 {categories?.map((e, i) => {
                   if (e.trim())
                     return (
@@ -94,14 +89,29 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
               </View>
             </View>
           </View>
-          <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.sm }}>
-            <MetaStat icon="account-group">{recommendations} ember ajánlja</MetaStat>
-            {!!data.images?.length && <MetaStat icon="image">{data?.images?.length || 0} kép</MetaStat>}
-            {!!distanceText && <MetaStat icon="map-marker">{distanceText}</MetaStat>}
+          <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 4 }}>
+            <View style={{ flexDirection: "row" }}>
+              <Text>
+                <Icon size={16} source="account-group" />
+                <Text style={{ marginLeft: 4 }}> {recommendations} ember ajánlja</Text>
+              </Text>
+            </View>
+            {data.images?.length && <View style={{ flexDirection: "row" }}>
+              <Text>
+                <Icon size={16} source="image" />
+                <Text style={{ marginLeft: 4 }}> {data?.images?.length || 0} kép</Text>
+              </Text>
+            </View>}
+            {!!distanceText && <View style={{ flexDirection: "row" }}>
+              <Text>
+                <Icon size={16} source="map-marker" />
+                <Text style={{ marginLeft: 4 }}>{distanceText}</Text>
+              </Text>
+            </View>}
           </View>
-          <Text variant="bodyMedium" numberOfLines={4} ellipsizeMode="tail" style={{ flex: 1 }}>
+          <ThemedText numberOfLines={4} ellipsizeMode="tail" style={{ flex: 1 }}>
             {description}
-          </Text>
+          </ThemedText>
 
           {showOptions && myBuziness && (
             <View style={{ flexDirection: "row", alignItems:"flex-end", gap: 4 }}>
@@ -123,26 +133,19 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
             </View>
           )}
         </Surface>
-  );
-
-  if (preview) return card;
-
-  return (
-    <Link href={{ pathname: "/biznisz/[id]", params: { id: id } }} asChild>
-      <Pressable>{card}</Pressable>
+      </Pressable>
     </Link>
   );
-});
-
-BuzinessItem.displayName = "BuzinessItem";
+};
 
 export default BuzinessItem;
 
 const styles = StyleSheet.create({
   container: {
     overflow: "hidden",
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    gap: Spacing.sm,
+    borderRadius: 8,
+    marginHorizontal: 4,
+    padding: 8,
+    gap: 4,
   },
 });

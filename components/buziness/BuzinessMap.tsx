@@ -17,7 +17,6 @@ import locationToCoords from "@/lib/functions/locationToCoords";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { Button, FAB, IconButton } from "react-native-paper";
 import mapStyles from "../mapView/style";
-import { Spacing } from "@/constants/spacing";
 import { addDialog } from "@/redux/reducers/infoReducer";
 
 interface BuzinessBuzinessMapProps {
@@ -42,7 +41,6 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
   const mapRef = useRef<any>(null);
 
   const { myLocation } = useMyLocation();
-  const regionChangeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const panToMyLocation = () => {
     if (!myLocation) {
@@ -85,18 +83,19 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
   };
 
   const onRegionChange = (region: Region, details: Details) => {
-    if (regionChangeTimeout.current) clearTimeout(regionChangeTimeout.current);
-    regionChangeTimeout.current = setTimeout(() => {
-      dispatch(
-        storeBuzinessSearchParams({
-          searchCircle: {
-            location: { latitude: region.latitude, longitude: region.longitude },
-            radius: region.latitudeDelta * 55660,
-          },
-        }),
-      );
-    }, 300);
+    dispatch(
+      storeBuzinessSearchParams({
+        searchCircle: {
+          location: { latitude: region.latitude, longitude: region.longitude },
+          radius: region.longitudeDelta * 50000,
+        },
+      }),
+    );
   };
+  useEffect(() => {
+    console.log(searchParams?.searchCircle);
+    //load(skip + take);
+  }, [searchParams?.searchCircle]);
 
   return (
     <View style={styles.container}>
@@ -162,14 +161,14 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
         pointerEvents="box-none"
         style={{
           position: "absolute",
-          bottom: Spacing.sm,
+          bottom: 8,
           userSelect: "none",
           width: "100%",
           alignItems: "flex-end",
           flexDirection: "column",
         }}
       >
-        <View style={{ padding: Spacing.sm, bottom: Spacing.xxxl }}>
+        <View style={{ padding: 8, bottom: 32 }}>
           <IconButton
             icon="plus"
             style={{
@@ -214,5 +213,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     marginTop: -4,
+  },
+  businessItem: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
 });
