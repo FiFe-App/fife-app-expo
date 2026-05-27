@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const { query, skip, take, lat, long, maxdistance, ingyen, match_threshold, query_weight, distance_weight, recommendation_weight } = await req.json();
+  const { query, skip, take, lat, long, maxdistance, ingyen, match_threshold, query_weight, distance_weight, recommendation_weight, debug } = await req.json();
 
   if (!supabaseServiceRoleKey) {
     console.error("Missing SUPABASE_SERVICE_ROLE_KEY");
@@ -70,13 +70,14 @@ Deno.serve(async (req) => {
 
   // Generate (or retrieve cached) embedding for the user's query
   let embedding = null;
+  let queryEmbeddingText: string | null = null;
   if (query && query.length > 0) {
     const normalized = query.trim().toLowerCase();
     const queryHash = await hashQuery(normalized);
 
     const { data: cached, error: cacheError } = await supabase
       .from("query_embedding_cache")
-      .select("embedding, hit_count")
+      .select("embedding, hit_count, embedding_text")
       .eq("query_hash", queryHash)
       .eq("model_version", MODEL_VERSION)
       .maybeSingle();
@@ -89,6 +90,7 @@ Deno.serve(async (req) => {
       embedding = typeof cached.embedding === "string"
         ? JSON.parse(cached.embedding)
         : cached.embedding;
+      queryEmbeddingText = cached.embedding_text ?? null;
       // Fire-and-forget: bump usage stats
       supabase
         .from("query_embedding_cache")
@@ -105,6 +107,7 @@ Deno.serve(async (req) => {
         input: query,
       });
       const embedding_text = completion.output_text;
+      queryEmbeddingText = embedding_text;
       console.log("embedding input", embedding_text);
 
       const embeddingResponse = await openai.embeddings.create({
@@ -173,7 +176,11 @@ Deno.serve(async (req) => {
     });
   }
 
-  return new Response(JSON.stringify(res.data), {
+  const responseBody = debug
+    ? JSON.stringify({ results: res.data, embedding_text: queryEmbeddingText })
+    : JSON.stringify(res.data);
+
+  return new Response(responseBody, {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
