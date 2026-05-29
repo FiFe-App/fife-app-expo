@@ -32,7 +32,6 @@ import { router } from "expo-router";
 import { RootState } from "@/redux/store";
 import { setLocation, logout } from "@/redux/reducers/userReducer";
 import { supabase } from "@/lib/supabase/supabase";
-import { fetchUserProfile } from "@/lib/auth/fetchUserProfile";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
@@ -86,17 +85,12 @@ function RootContent() {
       if (uid && !session) dispatch(logout());
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_OUT") {
-          // Refresh token expired or explicit sign-out from another tab/device
-          dispatch(logout());
-        } else if (event === "SIGNED_IN" && session?.user && !uid) {
-          // Session restored from storage at startup before Redux Persist loaded
-          await fetchUserProfile(session.user, dispatch);
-        }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        // Refresh token expired or explicit sign-out — clear Redux to match
+        dispatch(logout());
       }
-    );
+    });
     return () => subscription.unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
