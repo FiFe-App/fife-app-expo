@@ -5,7 +5,7 @@ import { persistor, store } from "@/redux/store";
 import { Stack, usePathname } from "expo-router";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
-import { View, StatusBar, useColorScheme, Platform } from "react-native";
+import { View, StatusBar, useColorScheme, Platform, AppState } from "react-native";
 import * as NavigationBar from "expo-navigation-bar";
 import { PaperProvider } from "react-native-paper";
 import { Provider, useSelector, useDispatch } from "react-redux";
@@ -30,8 +30,9 @@ import BuzinessSearchInput from "@/components/BuzinessSearchInput";
 import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 import { router } from "expo-router";
 import { RootState } from "@/redux/store";
-import { setLocation } from "@/redux/reducers/userReducer";
+import { setLocation, logout } from "@/redux/reducers/userReducer";
 import { supabase } from "@/lib/supabase/supabase";
+import { fetchUserProfile } from "@/lib/auth/fetchUserProfile";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
@@ -67,6 +68,37 @@ function RootContent() {
     if (!hasInitialized.current) {
       hasInitialized.current = true;
     }
+  }, []);
+
+  // Manage Supabase token auto-refresh based on whether app is in foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") supabase.auth.startAutoRefresh();
+      else supabase.auth.stopAutoRefresh();
+    });
+    return () => sub.remove();
+  }, []);
+
+  // Keep Redux auth state in sync with Supabase session
+  useEffect(() => {
+    // On startup: if Redux has a uid but Supabase has no valid session, clear Redux
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (uid && !session) dispatch(logout());
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_OUT") {
+          // Refresh token expired or explicit sign-out from another tab/device
+          dispatch(logout());
+        } else if (event === "SIGNED_IN" && session?.user && !uid) {
+          // Session restored from storage at startup before Redux Persist loaded
+          await fetchUserProfile(session.user, dispatch);
+        }
+      }
+    );
+    return () => subscription.unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch user location from Supabase on mount

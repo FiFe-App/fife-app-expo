@@ -9,7 +9,7 @@ import { Redirect, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { openBrowserAsync } from "expo-web-browser";
 import { useEffect, useState } from "react";
-import { AppState, View } from "react-native";
+import { View } from "react-native";
 
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { makeRedirectUri } from "expo-auth-session";
@@ -29,14 +29,6 @@ interface SignupMetadata {
   notify_email?: boolean;
   newsletter?: boolean;
 }
-
-AppState.addEventListener("change", (state) => {
-  if (state === "active") {
-    supabase.auth.startAutoRefresh();
-  } else {
-    supabase.auth.stopAutoRefresh();
-  }
-});
 
 export default function Index() {
   const theme = useAppTheme();
