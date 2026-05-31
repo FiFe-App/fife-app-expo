@@ -314,6 +314,7 @@ export default function Index() {
       console.log("User deleted successfully", data);
       setShowDeleteDialog(false);
 
+      await supabase.auth.signOut();
       dispatch(logout());
       dispatch(clearBuziness());
       dispatch(clearTutorialState());
