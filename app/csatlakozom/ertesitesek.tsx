@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { Spacing } from "@/constants/spacing";
 import { setNotificationPrefs } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { Platform, View } from "react-native";
@@ -13,7 +14,7 @@ export default function Ertesitesek() {
   ) ?? { notifyPush: false, notifyEmail: false, newsletter: false };
 
   return (
-    <ThemedView style={{ flex: 1, padding: 8, paddingTop: 36 }}>
+    <ThemedView style={{ flex: 1, paddingHorizontal: Spacing.md, paddingTop: Spacing.xxxl }}>
       <View style={{ justifyContent: "center" }}>
         <ThemedText type="title" style={{ marginBottom: 16 }}>
           Értesítések

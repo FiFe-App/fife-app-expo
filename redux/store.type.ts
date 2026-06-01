@@ -148,6 +148,9 @@ export interface InfoState {
   snacks: SnackProps[];
   loading?: LoadingProps;
   notificationToken: null | undefined | string;
+  policiesAccepted: boolean;
+  statusBarColor: string | null;
+  bottomBarColor: string | null;
 }
 
 export interface LayoutRectangle {

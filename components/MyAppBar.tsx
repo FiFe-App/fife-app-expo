@@ -34,7 +34,7 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
   return (
     <>
       <Appbar.Header
-        mode="center-aligned"
+      statusBarHeight={0}
         style={[{
           backgroundColor: theme.colors.surface,
           alignItems: "center",

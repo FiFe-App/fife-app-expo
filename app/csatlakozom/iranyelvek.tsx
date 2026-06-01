@@ -1,21 +1,28 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { PhraseInput } from "@/components/PhraseInput";
+import { acceptPolicies } from "@/redux/reducers/infoReducer";
+import { RootState } from "@/redux/store";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   FlatList,
-  Platform,
   Pressable,
   StyleSheet,
-  TextInput as TIRN,
   View,
 } from "react-native";
-import { Checkbox, Icon, Text, TextInput } from "react-native-paper";
+import { Checkbox, Text } from "react-native-paper";
+import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 
 const Register = () => {
-  const textInput = useRef<TIRN>(null);
-  const [text, setText] = useState("");  const [ageConfirmed, setAgeConfirmed] = useState(false);  const textToType = "Nem leszek rosszindulatú";
+  const dispatch = useDispatch();
+  const policiesAccepted = useSelector(
+    (state: RootState) => state.info.policiesAccepted,
+  );
+  const textToType = "Nem leszek rosszindulatú";
+  const [text, setText] = useState(policiesAccepted ? textToType : "");
+  const [ageConfirmed, setAgeConfirmed] = useState(policiesAccepted);
   const handleTextInput = (input: string) => {
     if (
       textToType.slice(0, input.length).toLowerCase().replaceAll(" ", "") ===
@@ -30,7 +37,7 @@ const Register = () => {
     )
       setText(textToType.slice(0, input.length + 1));
   };
-  const accepted = text === textToType && ageConfirmed;
+  const accepted = policiesAccepted || (text === textToType && ageConfirmed);
 
   useFocusEffect(
     useCallback(() => {
@@ -38,12 +45,15 @@ const Register = () => {
         router.setParams({
           canGoNext: accepted ? "true" : undefined,
         });
+      if (!policiesAccepted && text === textToType && ageConfirmed) {
+        dispatch(acceptPolicies());
+      }
       return () => { };
-    }, [accepted]),
+    }, [accepted, policiesAccepted, text, ageConfirmed, textToType, dispatch]),
   );
 
   return (
-    <ThemedView style={{ flex: 1, padding: Spacing.sm }}>
+    <ThemedView style={{ flex: 1, padding: Spacing.sm, paddingTop: Spacing.xxxl, paddingBottom: 60 }}>
       <View style={{ flex: 1, justifyContent: "center" }}>
         <ThemedText type="title" style={{ marginBottom: Spacing.lg }}>
           Ha szeretnél csatlakozni ehhez a közösséghez, be kell tartanod az
@@ -60,10 +70,7 @@ const Register = () => {
           style={[styles.text, { flex: undefined }]}
           renderItem={({ item, index }) => (
             <Text style={styles.listItem} key={"item" + index}>
-              <Text style={{ margin: Spacing.xs }}>
-                <Icon source="heart" size={20} />
-              </Text>
-              {item.key}
+              - {item.key}
             </Text>
           )}
         />
@@ -84,29 +91,11 @@ const Register = () => {
         <ThemedText>
           Ha be fogod tartani ezeket, gépeld be a következő szöveget:
         </ThemedText>
-        <Pressable
-          style={styles.inputView}
-          onPress={() => {
-            console.log("hello");
-
-            if (textInput?.current) textInput?.current?.focus();
-          }}
-        >
-          <Text pointerEvents="none" style={[styles.textToType, { opacity: 0.5 }]}>
-            {textToType}
-          </Text>
-          <TextInput
-            ref={textInput}
-            style={styles.input}
-            allowFontScaling
-            contentStyle={styles.inputContent}
-            scrollEnabled={false}
-            value={text}
-            multiline
-            onChangeText={handleTextInput}
-          />
-          <Text pointerEvents="none" style={[styles.textToType, {}]}>{text}</Text>
-        </Pressable>
+        <PhraseInput
+          phrase={textToType}
+          value={text}
+          onChangeText={handleTextInput}
+        />
       </View>
     </ThemedView>
   );
@@ -121,37 +110,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     fontSize: 17,
     margin: Spacing.xs,
-  },
-  inputView: {
-    borderWidth: 1,
-    borderColor: "#ff0000",
-    borderRadius: 8,
-    position: "relative",
-  },
-  input: {
-    padding: 0,
-    paddingHorizontal: Spacing.sm,
-    fontSize: 15,
-    zIndex: 10,
-    overflow: "hidden",
-  },
-  inputContent: {
-    paddingTop: Spacing.sm,
-    paddingHorizontal: Spacing.sm,
-    letterSpacing: 0,
-    zIndex: 20,
-    overflow: "hidden",
-  },
-  textToType: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.sm,
-    position: "absolute",
-    fontSize: 15,
-    fontWeight: "400",
-    zIndex: 150,
-    ...Platform.select({
-      web: { userSelect: "none", cursor: "text" },
-    }),
   },
   ageCheckbox: {
     flexDirection: "row",

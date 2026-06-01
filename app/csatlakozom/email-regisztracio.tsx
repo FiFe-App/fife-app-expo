@@ -148,15 +148,14 @@ export default function Index() {
 
   if (uid) return <Redirect href="/" />;
   return (
-    <ThemedView style={{ flex: 1, padding: Spacing.lg, alignItems: "center" }}>
-      <View style={{ justifyContent: "center", marginBottom: Spacing.lg }}></View>
+    <ThemedView style={{ flex: 1, padding: Spacing.lg, paddingTop: Spacing.xxxl }}>
+      <View style={{ marginBottom: Spacing.lg }}></View>
       <View
         style={{
           maxWidth: 400,
           width: "100%",
           gap: Spacing.sm,
           flex: 3,
-          justifyContent: "center",
         }}
       >
         <ThemedText type="title" style={{ textAlign: "left" }}>
@@ -268,6 +267,7 @@ export default function Index() {
         </View>
         <Button
           mode="contained"
+          style={{marginTop:Spacing.lg}}
           loading={loading}
           onPress={createUser}
           disabled={

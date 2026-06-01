@@ -6,66 +6,84 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { Button } from "@/components/Button";
-import { useAppTheme } from "@/assets/theme";
 import { Spacing } from "@/constants/spacing";
+import Smiley from "@/components/Smiley";
+import { BorderRadius } from "@/constants/borderRadius";
+import { ThemedView } from "@/components/ThemedView";
+import { Logo } from "@/components/Logo";
 
 export default function NativeLanding() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
-  const theme = useAppTheme();
 
   if (uid) return <Redirect href="/home" />;
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <ThemedView style={{flex:1}} >
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View style={styles.logoContainer}>
+      <View style={[styles.container]}>
+        
+        <View style={{ flex: 1 }} />
+  
+        <View style={[styles.logoContainer,]}>
+          <Smiley style={{ width: 140, height: 140, borderRadius: BorderRadius.xl, zIndex: 100000 }} />
+          <Logo style={{ width: 239, height: 40 }} />
+        </View>
+  
+        <Text variant="displayMedium" style={styles.motto}>
+          Közösség a zsebedben
+        </Text>
+  
+        <View style={{ flex: 1 }} />
+        <View style={styles.buttonsContainer}>
+          <Link asChild href="/csatlakozom">
+            <Button mode="contained" type="secondary" big style={{width:"100%"}}>
+              Regisztrálok
+            </Button>
+          </Link>
+          <Link asChild href="/login">
+            <Button mode="text" >
+              Bejelentkezem
+            </Button>
+          </Link>
+        </View>
+      </View>
+      <View
+        style={{
+          bottom: 0,
+          left: 0,
+          opacity:0,
+          position:"absolute",
+          width: "100%",
+          paddingTop: 20,
+          alignItems: "center",
+        }}
+      >
         <Image
-          source={require("@/assets/Logo.png")}
-          style={{ width: 239, height: 40 }}
-          contentFit="contain"
+          source={require("@/assets/images/Community_Big.png")}
+          style={{ width: "100%", height: 400, resizeMode: "cover" }}
+          contentFit="cover"
+          contentPosition="top"
         />
       </View>
-
-      <View style={styles.imageContainer}>
-        <Image
-          source={require("@/assets/images/HeroImage.png")}
-          contentFit="contain"
-          style={styles.heroImage}
-        />
-      </View>
-
-      <Text variant="displayMedium" style={styles.motto}>
-        Találj megbízható társakat a környékeden!
-      </Text>
-
-      <View style={{ flex: 1 }} />
-
-      <View style={styles.buttonsContainer}>
-        <Link asChild href="/csatlakozom">
-          <Button type="secondary" big style={styles.fullWidth}>
-            Regisztrálok
-          </Button>
-        </Link>
-        <Link asChild href="/login">
-          <Button mode="text" big>
-            Bejelentkezem
-          </Button>
-        </Link>
-      </View>
-    </View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    zIndex:10,
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.xxxl,
     paddingBottom: Spacing.xxl,
   },
   logoContainer: {
+    paddingTop: Spacing.xxxl,
+    gap: Spacing.xl,
     alignItems: "center",
+    flexDirection:"column",
+    justifyContent:"center"
   },
   imageContainer: {
     alignItems: "center",
@@ -77,7 +95,7 @@ const styles = StyleSheet.create({
   },
   motto: {
     textAlign: "center",
-    marginTop: Spacing.xl,
+    marginTop: Spacing.lg,
   },
   buttonsContainer: {
     gap: Spacing.md,

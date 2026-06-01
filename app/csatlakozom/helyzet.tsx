@@ -28,7 +28,7 @@ const Register = () => {
   };
 
   return (
-    <ThemedView style={{ flex: 1, padding: Spacing.sm, paddingTop: 36 }}>
+    <ThemedView style={{ flex: 1, paddingHorizontal: Spacing.md, paddingTop: Spacing.xxxl }}>
       <View style={{ justifyContent: "center" }}>
         <ThemedText type="title" style={{ marginBottom: Spacing.lg }}>
           FiFe Radar

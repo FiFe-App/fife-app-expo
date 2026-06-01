@@ -44,18 +44,27 @@ Deno.serve(async (req)=>{
   const buziness = await req.json();
   console.log(buziness);
   
-  // Validate that user has title
-  if (!buziness.title) {
+  // Validate that user has title and it is a non-empty string
+  if (!buziness.title || typeof buziness.title !== "string") {
     return new Response(JSON.stringify({
-      error: "No title provided"
+      error: "Title must be a non-empty string"
     }), {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json"
-      },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
     });
   }
+  // Normalize title: collapse consecutive or empty " $ " segments
+  // e.g. "title $  $  $  key1" → "title $ key1"
+  const titleSegments = buziness.title.split(/\s*\$\s*/).map((s: string) => s.trim()).filter(Boolean);
+  if (titleSegments.length === 0) {
+    return new Response(JSON.stringify({
+      error: "Title cannot be empty after normalization"
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
+  }
+  buziness.title = titleSegments.join(" $ ");
   
   // Validate that user has at least one contact before proceeding
   if (!supabaseServiceRoleKey) {

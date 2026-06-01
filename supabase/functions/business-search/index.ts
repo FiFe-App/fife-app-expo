@@ -144,6 +144,7 @@ Deno.serve(async (req) => {
   // Call hybrid_search Postgres function via RPC
     res = await supabase.rpc("hybrid_buziness_search", {
       skip,
+      take,
       lat: lat || 47.4979,
       long: long || 19.0402,
       query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),

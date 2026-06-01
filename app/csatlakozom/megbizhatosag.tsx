@@ -54,7 +54,7 @@ const Megbizhatosag = () => {
   const canAccept = typed === textToType;
 
   return (
-    <ThemedView style={{ flex: 1, paddingTop: 36, alignItems: "center" }}>
+    <ThemedView style={{ flex: 1, paddingTop: Spacing.xxxl, alignItems: "center", paddingHorizontal: Spacing.md }}>
       <View style={{ flex: 1 }}>
         <ThemedText
           type="title"
