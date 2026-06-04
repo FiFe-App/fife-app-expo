@@ -15,6 +15,8 @@ import React, { useEffect, useState } from "react";
 import {
   GestureResponderEvent,
   ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   View,
@@ -27,6 +29,7 @@ import {
   Modal,
   Portal,
   TextInput,
+  useTheme,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import SupabaseImage from "../SupabaseImage";
@@ -40,6 +43,7 @@ import { BorderRadius } from "@/constants/borderRadius";
 const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   const dispatch = useDispatch();
   const navigation = router;
+  const theme = useTheme();
 
   const { uid, name }: UserState = useSelector(
     (state: RootState) => state.user,
@@ -47,7 +51,6 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   const { comments }: CommentsState = useSelector(
     (state: RootState) => state.comments,
   );
-  const commentsChannel = supabase.channel(path);
   const author = name;
   const [text, setText] = useState("");
   const [image, setImage] = useState<ExpoImagePicker.ImagePickerAsset | null>(
@@ -66,6 +69,8 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   useEffect(() => {
     dispatch(clearComments());
 
+    const channel = supabase.channel(path);
+
     const getMessages = async () => {
       const { data, error } = await supabase
         .from("comments")
@@ -78,7 +83,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
 
     getMessages();
 
-    commentsChannel
+    channel
       .on<Comment>(
         "postgres_changes",
         {
@@ -115,7 +120,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
       )
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
-          console.log("subscribed to", commentsChannel);
+          console.log("subscribed to", channel);
         }
       });
 
@@ -123,7 +128,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
       setDownloading(false);
     }, 3000);
     return () => {
-      supabase.removeChannel(commentsChannel);
+      supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, limit, path]);
@@ -281,7 +286,10 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       {
         <ScrollView
           contentContainerStyle={{
@@ -344,7 +352,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                         icon="dots-vertical"
                         onPress={(e) => showCommentMenu(e, comment)}
                         size={18}
-                        iconColor={comment.image ? "white" : "black"}
+                        iconColor={comment.image ? "white" : theme.colors.onSurface}
                         style={{ margin: 0, position: "absolute", right: 0 }}
                       />
                     )}
@@ -460,7 +468,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
           </Modal>
         </Portal>
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

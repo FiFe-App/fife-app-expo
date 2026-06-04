@@ -28,6 +28,7 @@ interface SignupMetadata {
   notify_push?: boolean;
   notify_email?: boolean;
   newsletter?: boolean;
+  good_boy?: boolean;
 }
 
 AppState.addEventListener("change", (state) => {
@@ -56,6 +57,7 @@ export default function Index() {
   const isPasswordWeak = !passwordRegex.exec(password)?.length;
 
   const { uid, userData, notificationPrefs }: UserState = useSelector((state: RootState) => state.user);
+  const policiesAccepted = useSelector((state: RootState) => state.info.policiesAccepted);
   const userLocation = userData?.location;
   WebBrowser.maybeCompleteAuthSession(); // required for web only
   const redirectTo = makeRedirectUri({ path: "/csatlakozom/elso-lepesek" });
@@ -93,6 +95,8 @@ export default function Index() {
       metadata.notify_email = notificationPrefs.notifyEmail;
       metadata.newsletter = notificationPrefs.newsletter;
     }
+
+    metadata.good_boy = policiesAccepted;
 
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),

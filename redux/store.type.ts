@@ -71,6 +71,7 @@ export interface BuzinessSearchItemInterface {
   location?: string;
   authorName?: string;
   distance?: number;
+  relevance: number;
   buzinessRecommendations: { author: string }[];
 }
 export interface BuzinessItemInterface {

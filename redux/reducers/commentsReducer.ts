@@ -14,7 +14,7 @@ const commentsReducer = createSlice({
       state.comments.unshift(action.payload);
     },
     addComments: (state, action: PayloadAction<Comment[]>) => {
-      state.comments.unshift(...action.payload);
+      state.comments = action.payload;
     },
     editComment: (state, { payload }: PayloadAction<Comment>) => {
       state.comments = state.comments.map((comment) =>

@@ -1,5 +1,6 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import OpenAI from "npm:openai";
+import { embedding_instructions } from "../_shared/embedding.ts";
 
 // Prefer standard env names (set by Supabase CLI in container); fallback to kong host
 const supabaseUrl =
@@ -101,7 +102,7 @@ Deno.serve(async (req) => {
       const completion = await openai.responses.create({
         model: "gpt-4.1-mini",
         temperature: 0,
-        instructions: "Írd fel vesszővel elválasztva az összes hasonló és különböző szinonimát, rokon értelmű szót és kapcsolódó témát. Ne írj semmit, ha nincs értelme",
+        instructions: embedding_instructions,
         input: query,
       });
       const embedding_text = completion.output_text;
@@ -150,10 +151,11 @@ Deno.serve(async (req) => {
       query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),
       query_text: query,
       filter_ingyen: ingyen || false,
-      match_threshold: match_threshold ?? 0.5,
+      match_threshold: match_threshold ?? 0.4,
       query_weight: query_weight ?? 1.0,
-      distance_weight: distance_weight ?? 0.3,
-      recommendation_weight: recommendation_weight ?? 0.3,
+      distance_weight: distance_weight ?? 0,
+      recommendation_weight: recommendation_weight ?? 0,
+      fts_weight: 1
     });
   } else {
     console.log("no query, normal search");

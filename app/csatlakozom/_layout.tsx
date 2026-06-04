@@ -6,7 +6,6 @@ import {
   Link,
   Redirect,
   Stack,
-  useGlobalSearchParams,
   usePathname,
 } from "expo-router";
 import { ScrollView, View } from "react-native";
@@ -28,8 +27,6 @@ export default function RootLayout() {
     "/csatlakozom/elso-lepesek",
   ] as const;
   type JoinPage = (typeof pages)[number];
-  const canGoNext = useGlobalSearchParams().canGoNext === "true";
-
   const path = usePathname().split("#")[0];
 
   const index = pages.findIndex((page) => {
@@ -96,7 +93,6 @@ export default function RootLayout() {
           </View>
           <Link href={next} asChild
             disabled={
-              (path === "/csatlakozom/iranyelvek" && !canGoNext) ||
               path === "/csatlakozom/regisztracio" ||
               path === "/csatlakozom/email-regisztracio" ||
               path === "/csatlakozom/email-ellenorzes"
