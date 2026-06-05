@@ -38,18 +38,19 @@ const Register = () => {
       setText(textToType.slice(0, input.length + 1));
   };
   const accepted = policiesAccepted || (text === textToType && ageConfirmed);
+  const canGoNext = policiesAccepted || ageConfirmed;
 
   useFocusEffect(
     useCallback(() => {
       if (router)
         router.setParams({
-          canGoNext: accepted ? "true" : undefined,
+          canGoNext: canGoNext ? "true" : undefined,
         });
       if (!policiesAccepted && text === textToType && ageConfirmed) {
         dispatch(acceptPolicies());
       }
       return () => { };
-    }, [accepted, policiesAccepted, text, ageConfirmed, textToType, dispatch]),
+    }, [canGoNext, policiesAccepted, text, ageConfirmed, textToType, dispatch]),
   );
 
   return (

@@ -1,28 +1,12 @@
--- Hybrid buziness search: FTS + semantic + distance + recommendations
--- Score = fts_score * fts_weight + semantic_score * semantic_weight
--- Filter: distance < max_distance, ingyen, score > match_threshold
--- Sort controlled by: score_sort, distance_sort, recommendation_sort (all 0-1)
+-- Add filter_bad_boy parameter to hybrid_buziness_search.
+-- Results are restricted to businesses whose author is in the same "world"
+-- (bad_boy = filter_bad_boy), mirroring the RLS logic for direct table queries.
 
--- Add PGroonga index on description (title and embedding_text already indexed)
-CREATE INDEX IF NOT EXISTS ix_buziness_description
-  ON public.buziness USING pgroonga (description);
-
--- Drop all previous signatures to avoid overload ambiguity
+-- Drop previous signature (without filter_bad_boy)
 DROP FUNCTION IF EXISTS public.hybrid_buziness_search(
   text, extensions.vector, double precision, double precision,
-  integer, integer, double precision, double precision, double precision, double precision, boolean
-);
-DROP FUNCTION IF EXISTS public.hybrid_buziness_search(
-  text, extensions.vector, double precision, double precision,
-  integer, integer, double precision, double precision, double precision, double precision, double precision, boolean
-);
-DROP FUNCTION IF EXISTS public.hybrid_buziness_search(
-  text, extensions.vector, double precision, double precision,
-  integer, integer, double precision, double precision, double precision, double precision, double precision, boolean, boolean
-);
-DROP FUNCTION IF EXISTS public.hybrid_buziness_search(
-  text, extensions.vector, double precision, double precision,
-  double precision, integer, integer, double precision, double precision, double precision, double precision, double precision, double precision, boolean, boolean
+  double precision, integer, integer, double precision, double precision, double precision,
+  double precision, double precision, double precision, boolean
 );
 
 SET search_path = public, extensions;
@@ -41,7 +25,8 @@ CREATE OR REPLACE FUNCTION public.hybrid_buziness_search(
   score_sort double precision DEFAULT 1.0,
   distance_sort double precision DEFAULT 0.0,
   recommendation_sort double precision DEFAULT 0.3,
-  filter_ingyen boolean DEFAULT false
+  filter_ingyen boolean DEFAULT false,
+  filter_bad_boy boolean DEFAULT false
 )
 RETURNS TABLE(
   id bigint,
@@ -82,6 +67,7 @@ AS $function$
       b."defaultContact",
       b.ingyen
     FROM public.buziness b
+    JOIN public.profiles p ON p.id = b.author AND p.bad_boy = filter_bad_boy
     LEFT OUTER JOIN public."buzinessRecommendations" br
       ON b.id = br.buziness_id
     WHERE

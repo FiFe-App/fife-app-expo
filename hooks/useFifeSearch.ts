@@ -68,9 +68,9 @@ export function useFifeSearch() {
     try {
       // Call nearest_profiles function with location parameters
       const { data: profiles, error } = await supabase.rpc("nearest_profiles", {
-        lat: searchLocation.lat,
-        long: searchLocation.long,
-        distance: searchLocation.distance,
+        p_lat: searchLocation.lat,
+        p_long: searchLocation.long,
+        p_distance: searchLocation.distance,
         skip: 0,
         take: PAGE_SIZE,
       });
@@ -104,9 +104,9 @@ export function useFifeSearch() {
 
     try {
       const { data: profiles, error } = await supabase.rpc("nearest_profiles", {
-        lat: searchLocation.lat,
-        long: searchLocation.long,
-        distance: searchLocation.distance,
+        p_lat: searchLocation.lat,
+        p_long: searchLocation.long,
+        p_distance: searchLocation.distance,
         skip: nextSkip,
         take: PAGE_SIZE,
       });

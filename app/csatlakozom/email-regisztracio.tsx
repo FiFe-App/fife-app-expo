@@ -28,7 +28,7 @@ interface SignupMetadata {
   notify_push?: boolean;
   notify_email?: boolean;
   newsletter?: boolean;
-  good_boy?: boolean;
+  bad_boy?: boolean;
 }
 
 AppState.addEventListener("change", (state) => {
@@ -96,7 +96,7 @@ export default function Index() {
       metadata.newsletter = notificationPrefs.newsletter;
     }
 
-    metadata.good_boy = policiesAccepted;
+    metadata.bad_boy = !policiesAccepted;
 
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
