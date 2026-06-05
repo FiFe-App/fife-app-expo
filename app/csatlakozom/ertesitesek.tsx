@@ -10,7 +10,7 @@ export default function Ertesitesek() {
   const dispatch = useDispatch();
   const prefs = useSelector(
     (state: RootState) => state.user.notificationPrefs,
-  ) ?? { notifyPush: false, notifyEmail: false, newsletter: false };
+  ) ?? { notifyPush: false, notifyEmail: false, newsletter: false, emotionCheckEnabled: true };
 
   return (
     <ThemedView style={{ flex: 1, padding: 8, paddingTop: 36 }}>

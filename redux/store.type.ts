@@ -10,6 +10,7 @@ export interface UserState {
     notifyPush: boolean;
     notifyEmail: boolean;
     newsletter: boolean;
+    emotionCheckEnabled: boolean;
   };
   userData?: {
     authorization: string;

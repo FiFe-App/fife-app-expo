@@ -57,6 +57,7 @@ export default function Index() {
   const [notifyPush, setNotifyPush] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState(false);
   const [newsletter, setNewsletter] = useState(false);
+  const [emotionCheckEnabled, setEmotionCheckEnabled] = useState(true);
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -101,11 +102,13 @@ export default function Index() {
             }
           }
           // Fetch notification preferences
-          const { data: prefs } = await supabase.rpc("get_my_notification_prefs");
-          if (prefs?.[0]) {
-            setNotifyPush(prefs[0].notify_push ?? false);
-            setNotifyEmail(prefs[0].notify_email ?? false);
-            setNewsletter(prefs[0].newsletter ?? false);
+          const { data: prefsData } = await supabase.rpc("get_my_notification_prefs");
+          const prefs = prefsData?.[0];
+          if (prefs) {
+            setNotifyPush(prefs.notify_push ?? false);
+            setNotifyEmail(prefs.notify_email ?? false);
+            setNewsletter(prefs.newsletter ?? false);
+            setEmotionCheckEnabled(prefs.emotion_check_enabled ?? true);
           }
           console.log(data);
           setLoading(false);
@@ -159,7 +162,7 @@ export default function Index() {
             // Save notification preferences
             await supabase
               .from("profiles")
-              .update({ notify_push: notifyPush, notify_email: notifyEmail, newsletter })
+              .update({ notify_push: notifyPush, notify_email: notifyEmail, newsletter, emotion_check_enabled: emotionCheckEnabled })
               .eq("id", myUid);
             // If push enabled, ensure we have a token registered
             if (notifyPush) {
@@ -188,7 +191,7 @@ export default function Index() {
         ]),
       );
       return () => { };
-    }, [dispatch, myUid, profile, userLocation, usernameAvailable, notifyPush, notifyEmail, newsletter]),
+    }, [dispatch, myUid, profile, userLocation, usernameAvailable, notifyPush, notifyEmail, newsletter, emotionCheckEnabled]),
   );
   useFocusEffect(
     useCallback(() => {
@@ -494,6 +497,15 @@ export default function Index() {
                   <ThemedText type="label">Értesítések a telefonodon</ThemedText>
                 </View>
                 <Switch value={notifyPush} onValueChange={setNotifyPush} />
+              </View>
+            )}
+            {Platform.OS !== "web" && (
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <View style={{ flex: 1 }}>
+                  <ThemedText>Napi hangulatnapló</ThemedText>
+                  <ThemedText type="label">Kérdezzem meg minden nap, hogy milyen napod volt?</ThemedText>
+                </View>
+                <Switch value={emotionCheckEnabled} onValueChange={setEmotionCheckEnabled} />
               </View>
             )}
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>

@@ -72,7 +72,7 @@ const userReducer = createSlice({
         radius: payload.radius,
       };
     },
-    setNotificationPrefs: (state, { payload }: PayloadAction<{ notifyPush: boolean; notifyEmail: boolean; newsletter: boolean }>) => {
+    setNotificationPrefs: (state, { payload }: PayloadAction<{ notifyPush: boolean; notifyEmail: boolean; newsletter: boolean; emotionCheckEnabled: boolean }>) => {
       state.notificationPrefs = payload;
     },
   },

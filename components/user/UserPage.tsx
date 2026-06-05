@@ -28,7 +28,7 @@ import {
   useGlobalSearchParams,
 } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { Linking, ScrollView, View } from "react-native";
+import { Linking, Platform, ScrollView, View } from "react-native";
 import {
   Badge,
   Button,
@@ -55,7 +55,7 @@ import Measure from "@/components/tutorial/Measure";
 import SectionLabel from "@/components/buziness/SectionLabel";
 import { useAppTheme } from "@/assets/theme";
 
-type UserInfo = Tables<"profiles">;
+type UserInfo = Partial<Tables<"profiles">>;
 
 export default function UserPage() {
   const { uid: paramUid } = useGlobalSearchParams();
@@ -135,6 +135,11 @@ export default function UserPage() {
               onPress: () => router.push("/user/saved-buzinesses"),
               title: "Mentett bizniszek",
             },
+            ...(Platform.OS !== "web" ? [{
+              icon: "emoticon-happy-outline",
+              onPress: () => router.push("/user/emotion-history"),
+              title: "Hangulat-napló",
+            }] : []),
             {
               icon: "exit-run",
               onPress: () => {
