@@ -4,6 +4,7 @@ import { Spacing } from "@/constants/spacing";
 import MapSelector from "@/components/MapSelector/MapSelector";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import EmotionCheckCard from "@/components/EmotionCheckCard";
 import {
   storeUserSearchParams
 } from "@/redux/reducers/usersReducer";
@@ -70,6 +71,7 @@ export default function Index() {
               onPress={() => setLocationMenuVisible(true)}
             >Hol keresel?</Button>
           </ThemedView>
+          <EmotionCheckCard />
           <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} error={error}/>
           <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />
           <Portal>

@@ -30,9 +30,10 @@ import BuzinessSearchInput from "@/components/BuzinessSearchInput";
 import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
 import { router } from "expo-router";
 import { RootState } from "@/redux/store";
-import { setLocation, logout } from "@/redux/reducers/userReducer";
+import { setLocation, logout, setNotificationPrefs } from "@/redux/reducers/userReducer";
 import { supabase } from "@/lib/supabase/supabase";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
+import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
 import { setStatusBarColor } from "@/redux/reducers/infoReducer";
 
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
@@ -114,17 +115,31 @@ function RootContent() {
     });
   }, [uid, dispatch]);
 
-  // Register push token if user opted in to push notifications
+  // Register push token and schedule emotion reminder based on notification prefs
   useEffect(() => {
     if (!uid || Platform.OS === "web") return;
     supabase.rpc("get_my_notification_prefs").then(async ({ data }) => {
-      if (!data?.[0]?.notify_push) return;
-      const token = await registerForPushNotificationsAsync();
-      if (token) {
-        await supabase.rpc("update_my_push_token", { token });
+      const prefs = data?.[0];
+      if (!prefs) return;
+      dispatch(setNotificationPrefs({
+        notifyPush: prefs.notify_push ?? false,
+        notifyEmail: prefs.notify_email ?? false,
+        newsletter: prefs.newsletter ?? false,
+        emotionCheckEnabled: prefs.emotion_check_enabled ?? true,
+      }));
+      if (prefs.notify_push) {
+        const token = await registerForPushNotificationsAsync();
+        if (token) {
+          await supabase.rpc("update_my_push_token", { token });
+        }
+      }
+      if (prefs.emotion_check_enabled ?? true) {
+        await scheduleDailyEmotionReminder();
+      } else {
+        await cancelDailyEmotionReminder();
       }
     });
-  }, [uid]);
+  }, [uid, dispatch]);
 
   // Determine if dark mode should be active based on preference
   const isDarkMode =
