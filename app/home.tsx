@@ -1,7 +1,6 @@
 import { theme } from "@/assets/theme";
 import { UsersList } from "@/components/user/UsersList";
 import { Spacing } from "@/constants/spacing";
-import { BorderRadius } from "@/constants/borderRadius";
 import MapSelector from "@/components/MapSelector/MapSelector";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -17,15 +16,13 @@ import { View } from "react-native";
 import style from "@/components/styles";
 import {
   Icon, Modal,
-  Portal, Text
+  Portal
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import Smiley from "@/components/Smiley";
 import WhatToDo from "@/components/WhatToDo";
 import { Button } from "@/components/Button";
 import { useFifeSearch } from "@/hooks/useFifeSearch";
 import { useProfileSearch } from "@/hooks/useProfileSearch";
-import { PatreonModal } from "@/components/PatreonModal";
 
 export default function Index() {
   const { uid } = useSelector((state: RootState) => state.user);

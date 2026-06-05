@@ -1,5 +1,6 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import OpenAI from "npm:openai";
+import { embedding_instructions } from "../_shared/embedding.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || Deno.env.get("URL") || "http://127.0.0.1:54321";
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY") || "";
@@ -25,7 +26,7 @@ Deno.serve(async (req) => {
     for (const business of businesses) {
       console.log("id", business.id, business.title);
 
-      if (business.title && !business.embedding_text) {
+      if (business.title) {
         const input =
           business.title.replace(/(\s\$\s)+/g, ", ") +
           (business.description
@@ -36,7 +37,7 @@ Deno.serve(async (req) => {
         const completion = await openai.responses.create({
           model: "gpt-4.1-mini",
           temperature: 0.3,
-          instructions: "Írd fel vesszővel elválasztva az összes különböző szinonimát, rokon értelmű szót és kapcsolódó témát. Ne írj semmit, ha nincs értelme",
+          instructions: embedding_instructions,
           input
         });
 

@@ -5,6 +5,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import OpenAI from "npm:openai";
+import { embedding_instructions } from "../_shared/embedding.ts";
 // Prefer standard env names; fallback to local defaults
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || Deno.env.get("URL") || "http://127.0.0.1:54321";
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY") || "";
@@ -44,18 +45,27 @@ Deno.serve(async (req)=>{
   const buziness = await req.json();
   console.log(buziness);
   
-  // Validate that user has title
-  if (!buziness.title) {
+  // Validate that user has title and it is a non-empty string
+  if (!buziness.title || typeof buziness.title !== "string") {
     return new Response(JSON.stringify({
-      error: "No title provided"
+      error: "Title must be a non-empty string"
     }), {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json"
-      },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
     });
   }
+  // Normalize title: collapse consecutive or empty " $ " segments
+  // e.g. "title $  $  $  key1" → "title $ key1"
+  const titleSegments = buziness.title.split(/\s*\$\s*/).map((s: string) => s.trim()).filter(Boolean);
+  if (titleSegments.length === 0) {
+    return new Response(JSON.stringify({
+      error: "Title cannot be empty after normalization"
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
+  }
+  buziness.title = titleSegments.join(" $ ");
   
   // Validate that user has at least one contact before proceeding
   if (!supabaseServiceRoleKey) {
@@ -100,12 +110,12 @@ Deno.serve(async (req)=>{
   const openai = new OpenAI({
     apiKey: openaiApiKey
   });
-  const input = buziness.title.replace(/(\s\$\s)+/g, ", ") + (buziness.description ? " | Description: " + buziness.description : "");
+  const input = buziness.title.replace(/(\s\$\s)+/g, ", ") + (buziness.description || "");
   console.log("run embedding with input", input);
   const completion = await openai.responses.create({
     model: "gpt-4.1-mini",
     temperature: 0.3,
-    instructions: "Írd fel vesszővel elválasztva az összes különböző szinonimát, rokon értelmű szót és kapcsolódó témát. Ne írj semmit, ha nincs értelme",
+    instructions: embedding_instructions,
     input
   });
 

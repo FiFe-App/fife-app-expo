@@ -1,5 +1,6 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import OpenAI from "npm:openai";
+import { embedding_instructions } from "../_shared/embedding.ts";
 
 // Prefer standard env names (set by Supabase CLI in container); fallback to kong host
 const supabaseUrl =
@@ -52,8 +53,6 @@ Deno.serve(async (req) => {
     });
   }
 
-  const { query, skip, take, lat, long, maxdistance, ingyen, match_threshold, query_weight, distance_weight, recommendation_weight } = await req.json();
-
   if (!supabaseServiceRoleKey) {
     console.error("Missing SUPABASE_SERVICE_ROLE_KEY");
     return new Response(JSON.stringify({ error: "Missing Supabase credentials" }), {
@@ -64,6 +63,16 @@ Deno.serve(async (req) => {
 
   // Instantiate service role Supabase client (needed for cache lookup and RPC)
   const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+
+  // Fetch the caller's bad_boy status — used to restrict results to the same "world"
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("bad_boy")
+    .eq("id", user.id)
+    .single();
+  const isBadBoy: boolean = profile?.bad_boy ?? true;
+
+  const { query, skip, take, lat, long, maxdistance, ingyen, match_threshold, fts_weight, semantic_weight, score_sort, distance_sort, recommendation_sort } = await req.json();
 
   // Instantiate OpenAI client
   const openai = new OpenAI({ apiKey: openaiApiKey });
@@ -101,7 +110,7 @@ Deno.serve(async (req) => {
       const completion = await openai.responses.create({
         model: "gpt-4.1-mini",
         temperature: 0,
-        instructions: "Írd fel vesszővel elválasztva az összes hasonló és különböző szinonimát, rokon értelmű szót és kapcsolódó témát. Ne írj semmit, ha nincs értelme",
+        instructions: embedding_instructions,
         input: query,
       });
       const embedding_text = completion.output_text;
@@ -143,23 +152,30 @@ Deno.serve(async (req) => {
   if (query && query.length > 0) {
   // Call hybrid_search Postgres function via RPC
     res = await supabase.rpc("hybrid_buziness_search", {
-      skip,
-      lat: lat || 47.4979,
-      long: long || 19.0402,
+      skip: skip || 0,
+      take: take || 20,
+      lat: lat || 0,
+      long: long || 0,
+      max_distance: maxdistance || 0,
       query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),
       query_text: query,
       filter_ingyen: ingyen || false,
-      match_threshold: match_threshold ?? 0.5,
-      query_weight: query_weight ?? 1.0,
-      distance_weight: distance_weight ?? 0.3,
-      recommendation_weight: recommendation_weight ?? 0.3,
+      match_threshold: match_threshold ?? 0.6,
+      fts_weight: fts_weight ?? 1,
+      semantic_weight: semantic_weight ?? 1.0,
+      score_sort: score_sort ?? 1.0,
+      distance_sort: distance_sort ?? 0.0,
+      recommendation_sort: recommendation_sort ?? 0.3,
+      filter_bad_boy: isBadBoy,
     });
   } else {
     console.log("no query, normal search");
-    
+
+    // Join profiles to filter by the same bad_boy world as the caller
     let q = supabase
       .from("buziness")
-      .select("*, recommendations: buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(count)");
+      .select("*, recommendations: buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(count), author_profile: profiles!buziness_author_fkey1(bad_boy)")
+      .eq("author_profile.bad_boy", isBadBoy);
     if (ingyen) q = q.eq("ingyen", true);
     res = await q
       .range(skip || 0, (skip || 0) + (take < 1 ? 20 : take) - 1)

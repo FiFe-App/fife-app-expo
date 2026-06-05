@@ -57,13 +57,15 @@ export function useEmotionLog() {
     setAlreadyLogged(!!data);
   }, [uid, cardTarget.targetDate, cardTarget.shouldShow, emotionCheckEnabled]);
 
-  const saveLog = async (rate: number) => {
-    if (!uid) return;
-    await supabase.from("emotion_logs").upsert(
+  const saveLog = async (rate: number): Promise<{ error: string | null }> => {
+    if (!uid) return { error: null };
+    const { error } = await supabase.from("emotion_logs").upsert(
       { author: uid, rate, log_date: cardTarget.targetDate },
       { onConflict: "author,log_date" }
     );
+    if (error) return { error: error.message };
     setAlreadyLogged(true);
+    return { error: null };
   };
 
   const fetchAllLogs = useCallback(async () => {

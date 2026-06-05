@@ -12,6 +12,9 @@ const initialState: InfoState = {
   snacks: [],
   loading: undefined,
   notificationToken: null,
+  policiesAccepted: false,
+  statusBarColor: null,
+  bottomBarColor: null,
 };
 
 const infoReducer = createSlice({
@@ -62,6 +65,18 @@ const infoReducer = createSlice({
     hideLoading: (state) => {
       state.loading = undefined;
     },
+    acceptPolicies: (state) => {
+      state.policiesAccepted = true;
+    },
+    resetPolicies: (state) => {
+      state.policiesAccepted = false;
+    },
+    setStatusBarColor: (state, action: PayloadAction<string | null>) => {
+      state.statusBarColor = action.payload;
+    },
+    setBottomBarColor: (state, action: PayloadAction<string | null>) => {
+      state.bottomBarColor = action.payload;
+    },
   },
 });
 
@@ -76,6 +91,10 @@ export const {
   popSnack,
   showLoading,
   hideLoading,
+  acceptPolicies,
+  resetPolicies,
+  setStatusBarColor,
+  setBottomBarColor,
 } = infoReducer.actions;
 
 export default infoReducer.reducer;

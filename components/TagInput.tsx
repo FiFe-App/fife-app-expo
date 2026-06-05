@@ -11,6 +11,7 @@ import { Chip, IconButton, TextInput } from "react-native-paper";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
+import { ThemedText } from "./ThemedText";
 
 interface TagInputProps {
   value: string[];
@@ -109,14 +110,34 @@ const TagInput = ({
       ]}
     >
       {value.map((tag, i) => (
-        <Chip
+        <View
           key={`tag-${i}-${tag}`}
-          mode="flat"
-          onClose={() => removeTag(i)}
-          closeIcon="close"
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: theme.colors.secondaryContainer,
+            borderRadius: BorderRadius.md,
+            paddingLeft: Spacing.md,
+            paddingRight: Spacing.md + 16,
+            paddingVertical: Spacing.xs,
+            position: "relative",
+          }}
         >
-          {tag}
-        </Chip>
+          <ThemedText
+            style={{
+              color: theme.colors.onSecondaryContainer,
+              fontSize: 14,
+            }}
+          >{tag}
+          </ThemedText>
+          <IconButton
+            icon="close"
+            size={16}
+            onPress={() => removeTag(i)}
+            style={{ position: "absolute", right: 0, margin: 0 }}
+            accessibilityLabel="Eltávolítás"
+          />
+        </View>
       ))}
 
       {adding ? (
@@ -124,20 +145,19 @@ const TagInput = ({
           style={{
             flexDirection: "row",
             alignItems: "center",
-            flexGrow: 1,
             minWidth: 140,
+            height:32,
             borderWidth: 1,
             borderColor: theme.colors.primary,
             borderRadius: BorderRadius.pill,
-            paddingLeft: Spacing.md,
+            paddingLeft: Spacing.sm,
             paddingRight: Spacing.xs,
-            backgroundColor: theme.colors.surface,
+            backgroundColor: theme.colors.background,
           }}
         >
           <TextInput
             ref={inputRef}
             mode="flat"
-            dense
             value={draft}
             placeholder={placeholder}
             onChangeText={handleChangeText}

@@ -34,6 +34,7 @@ import { setLocation, logout, setNotificationPrefs } from "@/redux/reducers/user
 import { supabase } from "@/lib/supabase/supabase";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
+import { setStatusBarColor } from "@/redux/reducers/infoReducer";
 
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
 let splashAlreadyShown = false;
@@ -61,6 +62,7 @@ function RootContent() {
   const deviceColorScheme = useColorScheme(); // Auto-detect device theme
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
   const { uid } = useSelector((state: RootState) => state.user);
+  const { statusBarColor, bottomBarColor } = useSelector((state: RootState) => state.info);
   const hasInitialized = React.useRef(false);
 
   // On first load only, mark as initialized
@@ -147,18 +149,21 @@ function RootContent() {
 
   useEffect(() => {
     if (Platform.OS === "android") {
-      NavigationBar.setBackgroundColorAsync(theme.colors.background);
+      NavigationBar.setBackgroundColorAsync(bottomBarColor || theme.colors.background);
       NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
     }
-  }, [isDarkMode, theme.colors.background]);
+    if (pathname.includes("csatlakozom") || pathname=="/")
+      dispatch(setStatusBarColor(theme.colors.background));
+    else
+      dispatch(setStatusBarColor(theme.colors.surface));
+  }, [isDarkMode, theme.colors.background, bottomBarColor, dispatch, pathname]);
 
   return (
     <PaperProvider theme={theme}>
       <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
-        backgroundColor={theme.colors.background}
       />
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={["left", "right", "bottom"]}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: statusBarColor || theme.colors.surface }}>
         <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
           <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
             <InfoLayer />

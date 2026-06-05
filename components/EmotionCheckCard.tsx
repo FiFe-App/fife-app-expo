@@ -2,18 +2,18 @@ import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
 import { useState } from "react";
-import { View, Text, Platform } from "react-native";
+import { View, Text, Image, Platform } from "react-native";
 import { Button, Card, IconButton, TouchableRipple } from "react-native-paper";
 import { ThemedText } from "@/components/ThemedText";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
+import { Emotion, SMILEYS } from "@/constants/emotionTiming";
 
-const SMILEYS: { emoji: string; label: string }[] = [
-  { emoji: "😢", label: "Nagyon rossz" },
-  { emoji: "😞", label: "Rossz" },
-  { emoji: "😐", label: "Semleges" },
-  { emoji: "🙂", label: "Jó" },
-  { emoji: "😄", label: "Nagyszerű" },
-];
+function SmileyIcon({ Emotion, size }: { Emotion: Emotion; size: number }) {
+  if (Emotion.image) {
+    return <Image source={Emotion.image} style={{ width: size, height: size }} />;
+  }
+  return <Text style={{ fontSize: size }}>{Emotion.emoji}</Text>;
+}
 
 type CardStatus = "idle" | "saving" | "saved" | "thanked" | "dismissed";
 
@@ -29,6 +29,7 @@ function EmotionCheckCardInner() {
 
   const [selectedRate, setSelectedRate] = useState<number | null>(null);
   const [status, setStatus] = useState<CardStatus>("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   if (!shouldShowCard || status === "dismissed") return null;
 
@@ -37,12 +38,15 @@ function EmotionCheckCardInner() {
   const handleSave = async () => {
     if (selectedRate === null) return;
     setStatus("saving");
-    await saveLog(selectedRate);
-    setStatus("saved");
-    setTimeout(() => {
-      setStatus("thanked");
-      setTimeout(() => setStatus("dismissed"), 2000);
-    }, 3000);
+    setSaveError(null);
+    const { error } = await saveLog(selectedRate);
+    if (error) {
+      setSaveError(error);
+      setStatus("idle");
+      return;
+    }
+    setStatus("thanked");
+      setTimeout(() => setStatus("dismissed"), 6000);
   };
 
   if (status === "thanked") {
@@ -58,13 +62,14 @@ function EmotionCheckCardInner() {
   }
 
   return (
-    <Card style={{ margin: Spacing.xs }}>
-      <Card.Title
-        title={title}
-        right={() => (
-          <IconButton icon="close" onPress={() => setStatus("dismissed")} />
-        )}
-      />
+    <Card mode="contained" style={{ margin: Spacing.md }}>
+      <View style={{flexDirection:"row",alignItems:"center"}}>
+        <ThemedText variant="bodyLarge" style={{ margin: Spacing.sm, flex:1 }}>
+          {title}
+        </ThemedText>
+        <IconButton icon="close" onPress={() => setStatus("dismissed")} />
+      
+    </View>
       <Card.Content>
         <View
           style={{
@@ -73,7 +78,7 @@ function EmotionCheckCardInner() {
             paddingBottom: Spacing.md,
           }}
         >
-          {SMILEYS.map(({ emoji, label }, index) => {
+          {SMILEYS.map(({ label }, index) => {
             const rate = index + 1;
             const isSelected = selectedRate === rate;
             return (
@@ -84,17 +89,24 @@ function EmotionCheckCardInner() {
                 style={{
                   padding: Spacing.xs,
                   borderRadius: BorderRadius.sm,
-                  borderWidth: 2,
+                  borderWidth: 1,
                   borderColor: isSelected ? theme.colors.primary : "transparent",
                   alignItems: "center",
                 }}
                 accessibilityLabel={label}
               >
-                <Text style={{ fontSize: isSelected ? 36 : 28 }}>{emoji}</Text>
+                <SmileyIcon Emotion={SMILEYS[index]} size={28} />
               </TouchableRipple>
             );
           })}
         </View>
+        {saveError && (
+          <ThemedText
+            style={{ color: theme.colors.error, marginBottom: Spacing.xs, textAlign: "center" }}
+          >
+            {saveError}
+          </ThemedText>
+        )}
         <Button
           mode="contained"
           onPress={handleSave}
