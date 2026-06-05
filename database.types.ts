@@ -527,9 +527,9 @@ export type Database = {
       }
       nearest_profiles: {
         Args: {
-          distance: number
-          lat: number
-          long: number
+          p_distance: number
+          p_lat: number
+          p_long: number
           skip?: number
           take?: number
         }

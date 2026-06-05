@@ -54,6 +54,7 @@ import ContactEditScreen from "./ContactEditScreen";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { Tables } from "@/database.types";
 import { theme } from "@/assets/theme";
+import { Spacing } from "@/constants/spacing";
 
 interface NewBuzinessInterface {
   title: string;
@@ -72,7 +73,7 @@ export default function BuzinessEditScreen({
 }: BuzinessEditScreenProps) {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
-  const [categories, setCategories] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
   const [newBuziness, setNewBuziness] = useState<NewBuzinessInterface>({
     title: "",
     description: "",
@@ -102,7 +103,7 @@ export default function BuzinessEditScreen({
   const [mapModalVisible, setMapModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(true);
 
-  const title = newBuziness.title + " $ " + categories;
+  const title = [newBuziness.title, ...categories].join(" $ ");
   const canSubmit = !!(
     newBuziness.title &&
     categories &&
@@ -258,10 +259,6 @@ export default function BuzinessEditScreen({
     };
   }, [canSubmit, dispatch, save, loading, reloadContacts]);
 
-  useEffect(() => {
-    console.log("contacts", contacts);
-
-  }, [contacts]);
   useFocusEffect(
     useCallback(() => {
       if (editId && uid) {
@@ -283,8 +280,6 @@ export default function BuzinessEditScreen({
                 editingBuziness.title
                   .split(" $ ")
                   .slice(1)
-                  .reduce((partialSum, a) => partialSum + " $ " + a, "") +
-                " $ ",
               );
               if (editingBuziness.defaultContact)
                 setDefaultContact(editingBuziness.defaultContact);
@@ -373,6 +368,7 @@ export default function BuzinessEditScreen({
               onChangeText={(t) => setNewBuziness({ ...newBuziness, title: t })}
             />
             <TagInput
+              style={{marginVertical: Spacing.sm}}
               placeholder="Kategóriák, nyomj entert a hozzáadásukhoz"
               onChange={setCategories}
               value={categories}
@@ -563,7 +559,7 @@ export default function BuzinessEditScreen({
               data={{
                 id: editId || 0,
                 author: uid || "",
-                title: ((newBuziness.title || "A biznisz címe") + (categories ? " $ " + categories : " $ Egy kategória $ Egy másik kategória")),
+                title: [newBuziness.title || "A biznisz címe", ...(categories.length ? categories : ["Egy kategória", "Egy másik kategória"])].join(" $ "),
                 description: newBuziness.description || "Hosszabb leírás hogy miről szól a bizniszed.",
                 images: images,
                 location: circle

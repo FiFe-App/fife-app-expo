@@ -28,6 +28,7 @@ interface SignupMetadata {
   notify_push?: boolean;
   notify_email?: boolean;
   newsletter?: boolean;
+  bad_boy?: boolean;
 }
 
 export default function Index() {
@@ -48,6 +49,7 @@ export default function Index() {
   const isPasswordWeak = !passwordRegex.exec(password)?.length;
 
   const { uid, userData, notificationPrefs }: UserState = useSelector((state: RootState) => state.user);
+  const policiesAccepted = useSelector((state: RootState) => state.info.policiesAccepted);
   const userLocation = userData?.location;
   WebBrowser.maybeCompleteAuthSession(); // required for web only
   const redirectTo = makeRedirectUri({ path: "/csatlakozom/elso-lepesek" });
@@ -85,6 +87,8 @@ export default function Index() {
       metadata.notify_email = notificationPrefs.notifyEmail;
       metadata.newsletter = notificationPrefs.newsletter;
     }
+
+    metadata.bad_boy = !policiesAccepted;
 
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
@@ -140,15 +144,14 @@ export default function Index() {
 
   if (uid) return <Redirect href="/" />;
   return (
-    <ThemedView style={{ flex: 1, padding: Spacing.lg, alignItems: "center" }}>
-      <View style={{ justifyContent: "center", marginBottom: Spacing.lg }}></View>
+    <ThemedView style={{ flex: 1, padding: Spacing.lg, paddingTop: Spacing.xxxl }}>
+      <View style={{ marginBottom: Spacing.lg }}></View>
       <View
         style={{
           maxWidth: 400,
           width: "100%",
           gap: Spacing.sm,
           flex: 3,
-          justifyContent: "center",
         }}
       >
         <ThemedText type="title" style={{ textAlign: "left" }}>
@@ -260,6 +263,7 @@ export default function Index() {
         </View>
         <Button
           mode="contained"
+          style={{marginTop:Spacing.lg}}
           loading={loading}
           onPress={createUser}
           disabled={

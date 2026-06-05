@@ -64,7 +64,7 @@ export function useBuzinessSearch() {
           query: query || "",
           take: params?.searchType === "map" ? -1 : PAGE_SIZE,
           skip: 0,
-          ingyen: params?.ingyen ?? false,
+          ingyen: overrides?.ingyen ?? params?.ingyen ?? false,
           ...searchLocation,
         },
       });
@@ -84,7 +84,7 @@ export function useBuzinessSearch() {
       dispatch(storeBuzinesses([]));
       dispatch(storeBuzinessLoading(false));
     }
-  }, [dispatch, searchParamsRef.current]);
+  }, [dispatch]);
 
   const loadNext = useCallback(async () => {
     const params = searchParamsRef.current;

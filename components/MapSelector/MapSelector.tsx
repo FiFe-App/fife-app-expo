@@ -43,12 +43,22 @@ const MapSelector = ({
   setData,
   setOpen,
   markerOnly,
+  children,
 }: MapSelectorProps) => {
   const theme = useTheme();
   const [mapHeight, setMapHeight] = useState<number>(0);
   const circleSize = mapHeight / 3;
   const [circleRadiusText, setCircleRadiusText] = useState("");
-  const [circle, setCircle] = useState<CircleType>(data || defaultMapLocation);
+  const [circle, setCircle] = useState<CircleType>(() => {
+    const src = data || defaultMapLocation;
+    // Normalize: persisted Redux state may have a stale/different coordinate format
+    // (e.g. { lat, lng } instead of { latitude, longitude }). Passing undefined
+    // coordinates to Android native map causes NoSuchKeyException: latitude.
+    if (typeof src?.location?.latitude === "number" && typeof src?.location?.longitude === "number") {
+      return src;
+    }
+    return defaultMapLocation;
+  });
   interface GeoResult {
     formatted_address: string;
     geometry: { location: { lat: () => number; lng: () => number } };
@@ -236,8 +246,8 @@ const MapSelector = ({
             style={{ width: "100%", height: "100%" }}
             initialCamera={{
               center: {
-                latitude: circle?.location?.latitude,
-                longitude: circle?.location?.longitude,
+                latitude: circle.location.latitude ?? defaultMapLocation.location.latitude,
+                longitude: circle.location.longitude ?? defaultMapLocation.location.longitude,
               },
             }}
             //onRegionChangeComplete={onRegionChange}
@@ -336,6 +346,7 @@ const MapSelector = ({
             />
           )}
         </View>
+        {children}
         <View style={{ padding: 8 }}>
 
           <View

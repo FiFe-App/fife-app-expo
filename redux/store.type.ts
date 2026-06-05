@@ -71,6 +71,7 @@ export interface BuzinessSearchItemInterface {
   location?: string;
   authorName?: string;
   distance?: number;
+  relevance: number;
   buzinessRecommendations: { author: string }[];
 }
 export interface BuzinessItemInterface {
@@ -148,6 +149,9 @@ export interface InfoState {
   snacks: SnackProps[];
   loading?: LoadingProps;
   notificationToken: null | undefined | string;
+  policiesAccepted: boolean;
+  statusBarColor: string | null;
+  bottomBarColor: string | null;
 }
 
 export interface LayoutRectangle {

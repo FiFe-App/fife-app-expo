@@ -10,7 +10,7 @@ import {
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { RootState } from "@/redux/store";
 import { useFocusEffect, useNavigation } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { View } from "react-native";
 import {
   FAB,
@@ -43,7 +43,7 @@ export default function Index() {
 
   const { canLoadMore, search, loadNext, error } = useBuzinessSearch();
   
-  const listTitle = useMemo(() => searchParams?.text ? "Találatok: " + searchParams?.text : "Új bizniszek", [searchParams?.text]);
+  const listTitle = useMemo(() => searchParams?.text ? "Találatok: " + searchParams?.text : "Új bizniszek", [searchParams?.loading]);
   const dispatch = useDispatch();
 
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);

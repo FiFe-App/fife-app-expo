@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import { View, StyleSheet, FlatList } from "react-native";
 import { Spacing } from "@/constants/spacing";
-import { Divider, ActivityIndicator } from "react-native-paper";
+import { Divider, ActivityIndicator, Text } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import BuzinessItem from "./BuzinessItem";
 import { RootState } from "@/redux/store";
@@ -49,8 +49,11 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
   }, [dispatch, load]);
 
   const renderItem = useCallback(
-    ({ item: buzinessItem, index: ind }: { item: (typeof buzinesses)[0]; index: number }) =>
-      buzinessItem.id === -1 ? (
+    ({ item: buzinessItem, index: ind, list }: { item: (typeof buzinesses)[0]; index: number, list: typeof buzinesses }) =>
+      (<>
+      {buzinessItem.relevance > 0.6 && list[ind+1].relevance <= 0.6 && <View><Text>További találatok</Text></View>}  
+      
+      {buzinessItem.id === -1 ? (
         <Divider style={{ marginVertical: Spacing.lg }} />
       ) : (
         <Measure name={ind === 0 ? "first-biznisz" : null}>
@@ -58,7 +61,7 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
             <BuzinessItem data={buzinessItem} />
           </View>
         </Measure>
-      ),
+      )}</>),
     [],
   );
 

@@ -1,20 +1,21 @@
 import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
-import { ScrollView, Platform, StyleSheet, View } from "react-native";
-import { Image, ImageSource } from "expo-image";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Image } from "expo-image";
 import { Text } from "react-native-paper";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { ThemedInput as TextInput } from "@/components/ThemedInput";
 import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 import { Link, Redirect, useNavigation } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Smiley from "@/components/Smiley";
 import { useAppTheme } from "@/assets/theme";
-import { ThemedText } from "@/components/ThemedText";
+import { setStatusBarColor } from "@/redux/reducers/infoReducer";
+import { Logo } from "@/components/Logo";
 
 export const Header = () => {
   const theme = useAppTheme();
@@ -24,11 +25,7 @@ export const Header = () => {
 
       <View style={styles.centerRow}>
         <View style={styles.titleRow}>
-          <Image
-            source={require("@/assets/Logo.png")}
-            style={{ width: 239, height: 40, zIndex: 20 }}
-            contentFit="contain"
-          />
+          <Logo style={{ width: 239, height: 40, zIndex: 20 }} />
         </View>
       </View>
       <View style={styles.flex1} />
@@ -88,90 +85,6 @@ const Hero = () => {
           />
         </View>
       </ThemedView>
-    </View>
-  );
-};
-
-// A single step in the "Hogyan működik?" section
-const StepItem = ({
-  image,
-  title,
-  description,
-}: {
-  image: ImageSource;
-  title: string;
-  description: string;
-}) => {
-  const { isDesktop } = useBreakpoint();
-  return (
-    <ThemedView
-      style={[
-        styles.stepCard,
-        isDesktop ? styles.stepCol : styles.stepRow,
-        isDesktop ? {} : { alignItems: "flex-start" },
-      ]}
-    >
-      <Image
-        source={image}
-        contentFit="contain"
-        style={
-          isDesktop
-            ? { width: "100%", height: 260 }
-            : { height: 100, width: 100, marginRight: Spacing.md }
-        }
-      />
-      <View
-        style={{
-          flex: 1,
-          alignItems: isDesktop ? "center" : "stretch",
-          paddingTop: isDesktop ? 0 : Spacing.sm,
-        }}
-      >
-        <Text
-          variant="headlineSmall"
-          style={{
-            textAlign: isDesktop ? "center" : "left",
-          }}
-        >
-          {title}
-        </Text>
-        <Text
-          variant="bodyMedium"
-          style={{ marginTop: 6, textAlign: isDesktop ? "center" : "left" }}
-        >
-          {description}
-        </Text>
-      </View>
-    </ThemedView>
-  );
-};
-
-const HowItWorks = () => {
-  const { isDesktop, screenPadding } = useBreakpoint();
-  return (
-    <View style={{ marginHorizontal: screenPadding }}>
-      <Text variant="displayMedium">Hogyan működik?</Text>
-      <View style={{ paddingHorizontal: isDesktop ? 64 : Spacing.xs }}>
-        <View
-          style={[{ gap: Spacing.lg }, isDesktop ? styles.rowWrap : styles.colStack]}
-        >
-          <StepItem
-            image={require("@/assets/images/Funkcio1.png")}
-            title="Csatlakozz hozzánk!"
-            description="Hozd létre a profilod, és oszd meg az erőforrásaidat."
-          />
-          <StepItem
-            image={require("@/assets/images/Funkcio 2.png")}
-            title="Keress segítséget!"
-            description="Találj a környékeden tevékenykedő fiféket."
-          />
-          <StepItem
-            image={require("@/assets/images/Funkcio1.png")}
-            title="Építs kapcsolatokat!"
-            description="Jelöld meg, kiket tartasz megbízhatónak."
-          />
-        </View>
-      </View>
     </View>
   );
 };
@@ -426,11 +339,7 @@ export const Footer = () => {
     >
       <View style={[styles.flex1, { flexDirection: "row", alignItems: "center", justifyContent: "center" }]}>
         <Smiley style={{ width: 40, height: 40, borderRadius: BorderRadius.sm, zIndex: 100000 }} />
-        <Image
-          source={require("@/assets/Logo.png")}
-          style={{ width: 180, height: 30, zIndex: 20 }}
-          contentFit="contain"
-        />
+        <Logo style={{ width: 180, height: 30, zIndex: 20 }} />
       </View>
     </ThemedView>
   );
@@ -440,16 +349,13 @@ export default function App() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   const theme = useAppTheme();
   const navigation = useNavigation();
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    
+    dispatch(setStatusBarColor("red"));
     navigation.setOptions({ header: () => <ThemedView style={{flexDirection:"row",alignItems:"center",justifyContent:"center",padding:Spacing.xxxl,gap:Spacing.md}}>
           <Smiley style={{width:50,height:50}}/>
-          <Image
-            source={require("@/assets/Logo.png")}
-            style={{ minWidth: 200, minHeight: 55, zIndex: 20 }}
-            contentFit="contain"
-          />
+          <Logo style={{ minWidth: 200, minHeight: 55, zIndex: 20 }} />
         </ThemedView> });
   }, []);
 
