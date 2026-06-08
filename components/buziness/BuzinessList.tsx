@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { View, StyleSheet, FlatList } from "react-native";
 import { Spacing } from "@/constants/spacing";
 import { Divider, ActivityIndicator, Text } from "react-native-paper";
@@ -48,10 +48,13 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
     load();
   }, [dispatch, load]);
 
+  const buzinessesRef = useRef(buzinesses);
+  buzinessesRef.current = buzinesses;
+
   const renderItem = useCallback(
-    ({ item: buzinessItem, index: ind, list }: { item: (typeof buzinesses)[0]; index: number, list: typeof buzinesses }) =>
+    ({ item: buzinessItem, index: ind }: { item: (typeof buzinesses)[0]; index: number }) =>
       (<>
-      {buzinessItem.relevance > 0.6 && list[ind+1].relevance <= 0.6 && <View><Text>További találatok</Text></View>}  
+      {buzinessItem.relevance > 0.6 && ind + 1 < buzinessesRef.current.length && buzinessesRef.current[ind + 1]?.relevance <= 0.6 && <View><Text>További találatok</Text></View>}  
       
       {buzinessItem.id === -1 ? (
         <Divider style={{ marginVertical: Spacing.lg }} />

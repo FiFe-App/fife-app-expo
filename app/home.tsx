@@ -19,6 +19,7 @@ import {
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import WhatToDo from "@/components/WhatToDo";
+import InviteCard from "@/components/InviteCard";
 import { Button } from "@/components/Button";
 import { useFifeSearch } from "@/hooks/useFifeSearch";
 import { useProfileSearch } from "@/hooks/useProfileSearch";
@@ -71,6 +72,7 @@ export default function Index() {
             >Hol keresel?</Button>
           </ThemedView>
           <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} error={error}/>
+          <InviteCard />
           <WhatToDo visible={whatVisible} onDismiss={() => setWhatVisible(false)} />
           <Portal>
             <Modal

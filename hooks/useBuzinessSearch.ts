@@ -5,6 +5,34 @@ import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
 import { CircleType } from "@/redux/store.type";
 import { useMyLocation } from "./useMyLocation";
+import locationToCoords from "@/lib/functions/locationToCoords";
+
+function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function enrichWithDistance<T extends { distance?: number; location?: unknown }>(
+  items: T[],
+  myLocation: { coords: { latitude: number; longitude: number } } | null,
+): T[] {
+  if (!myLocation) return items;
+  return items.map((item) => {
+    if (item.distance != null || !item.location) return item;
+    try {
+      const [lon, lat] = locationToCoords(String(item.location));
+      return { ...item, distance: haversineMeters(myLocation.coords.latitude, myLocation.coords.longitude, lat, lon) };
+    } catch {
+      return item;
+    }
+  });
+}
 
 export function useBuzinessSearch() {
   const PAGE_SIZE = 10;
@@ -59,9 +87,10 @@ export function useBuzinessSearch() {
         };
 
     try {
+      const effectiveQuery = query ?? params?.text ?? "";
       const { data, error } = await supabase.functions.invoke("business-search", {
         body: {
-          query: query || "",
+          query: effectiveQuery,
           take: params?.searchType === "map" ? -1 : PAGE_SIZE,
           skip: 0,
           ingyen: overrides?.ingyen ?? params?.ingyen ?? false,
@@ -76,7 +105,7 @@ export function useBuzinessSearch() {
         return;
       }
 
-      dispatch(storeBuzinesses(data || []));
+      dispatch(storeBuzinesses(enrichWithDistance(data || [], myLocationRef.current)));
       dispatch(storeBuzinessHasMore(params?.searchType !== "map" && (data?.length || 0) === PAGE_SIZE));
       dispatch(storeBuzinessLoading(false));
     } catch (err) {
@@ -136,7 +165,7 @@ export function useBuzinessSearch() {
       if (!data || data.length === 0) {
         dispatch(removeTrailingDivider());
       } else {
-        dispatch(loadBuzinesses(data));
+        dispatch(loadBuzinesses(enrichWithDistance(data, myLocationRef.current)));
       }
       dispatch(storeBuzinessHasMore((data?.length || 0) === PAGE_SIZE));
       dispatch(storeBuzinessSearchParams({ skip: nextSkip }));
