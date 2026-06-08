@@ -6,9 +6,7 @@ import RecommendationsModal from "@/components/user/RecommendationsModal";
 import ReportProfileModal from "@/components/user/ReportProfileModal";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
-import getLinkForContact from "@/lib/functions/getLinkForContact";
-import typeToIcon from "@/lib/functions/typeToIcon";
-import typeToValueLabel from "@/lib/functions/typeToValueLabel";
+import ContactsCard from "@/components/buziness/ContactsCard";
 import {
   clearBuziness,
   clearBuzinessSearchParams,
@@ -27,8 +25,8 @@ import {
   useFocusEffect,
   useGlobalSearchParams,
 } from "expo-router";
-import React, { useCallback, useState } from "react";
-import { Linking, ScrollView, View } from "react-native";
+import { useCallback, useState } from "react";
+import { ScrollView, View } from "react-native";
 import {
   Badge,
   Button,
@@ -294,63 +292,7 @@ export default function UserPage() {
               {contacts.length > 0 && (
                 <View style={{ width: "100%", gap: Spacing.sm }}>
                   <SectionLabel label="Elérhetőségek" />
-                  <Surface
-                    style={{
-                      borderRadius: BorderRadius.lg,
-                      overflow: "hidden",
-                      width: "100%",
-                    }}
-                    elevation={1}
-                  >
-                    {contacts.map((contact, index) => (
-                      <React.Fragment key={contact.id}>
-                        {index > 0 && (
-                          <View style={{
-                            height: 1,
-                            backgroundColor: theme.colors.outlineVariant,
-                            marginHorizontal: Spacing.lg,
-                          }} />
-                        )}
-                        <TouchableRipple
-                          onPress={() => {
-                            const link = getLinkForContact(contact);
-                            if (link) Linking.openURL(String(link));
-                          }}
-                          onLongPress={() => {
-                            Clipboard.setStringAsync(contact.data).then(() => {
-                              dispatch(addSnack({ title: "Vágólapra másolva!" }));
-                            });
-                          }}
-                        >
-                          <View style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            paddingVertical: Spacing.md,
-                            paddingHorizontal: Spacing.lg,
-                            gap: Spacing.md,
-                          }}>
-                            <View style={{
-                              width: 40,
-                              height: 40,
-                              borderRadius: BorderRadius.full,
-                              backgroundColor: theme.colors.surfaceVariant,
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}>
-                              <Icon source={typeToIcon(contact.type)} size={20} color={theme.colors.primary} />
-                            </View>
-                            <View style={{ flex: 1 }}>
-                              <Text variant="bodyMedium" numberOfLines={1}>{contact.data}</Text>
-                              <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                                {contact.title || typeToValueLabel(contact.type)}
-                              </Text>
-                            </View>
-                            <Icon source="open-in-new" size={16} color={theme.colors.outline} />
-                          </View>
-                        </TouchableRipple>
-                      </React.Fragment>
-                    ))}
-                  </Surface>
+                  <ContactsCard contacts={contacts} />
                 </View>
               )}
               {myProfile && contacts.length === 0 && (

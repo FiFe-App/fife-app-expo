@@ -23,7 +23,6 @@ import {
 } from "react-native";
 import {
   ActivityIndicator,
-  Card,
   IconButton,
   Menu,
   Modal,
@@ -291,73 +290,74 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       {
-        <ScrollView
-          contentContainerStyle={{
-            flexDirection: "column",
-            paddingBottom: 10,
-            gap: Spacing.sm,
-            padding: Spacing.xs,
-          }}
-        >
+        <ScrollView contentContainerStyle={{ paddingBottom: 10 }}>
           {!!comments.length &&
             comments.map((comment, ind) => {
               return (
-                <Card key={"comment" + ind} contentStyle={{}}>
-                  <Card.Content
-                    style={[
-                      { flexDirection: "row", maxWidth: "100%", padding: 0 },
-                    ]}
-                  >
-                    <View style={{ flex: 1, padding: Spacing.sm }}>
-                      <View
-                        style={{ flexDirection: "row", alignItems: "center" }}
+                <View
+                  key={"comment" + ind}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "flex-start",
+                    gap: Spacing.sm,
+                    paddingVertical: Spacing.md,
+                    borderBottomWidth: ind < comments.length - 1 ? 1 : 0,
+                    borderBottomColor: theme.colors.outlineVariant,
+                  }}
+                >
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "baseline",
+                        gap: Spacing.sm,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <Pressable
+                        onPress={() => {
+                          if (comment?.author)
+                            navigation.navigate({
+                              pathname: "/user/[uid]",
+                              params: { uid: comment.author },
+                            });
+                        }}
                       >
-                        <View style={{ flexDirection: "row", flex: 1 }}>
-                          <Pressable
-                            onPress={() => {
-                              if (comment?.author)
-                                navigation.navigate({
-                                  pathname: "/user/[uid]",
-                                  params: { uid: comment.author },
-                                });
-                            }}
-                          >
-                            <ThemedText style={{ fontWeight: "bold" }}>
-                              {comment?.profiles?.full_name ?? "Törölt felhasználó"}
-                            </ThemedText>
-                          </Pressable>
-                          <ThemedText style={{ marginLeft: Spacing.sm }}>
-                            {elapsedTime(comment.created_at)}
-                          </ThemedText>
-                        </View>
-                      </View>
-                      <UrlText text={comment.text} />
-                    </View>
-                    {comment.image && (
-                      <Pressable onPress={() => setSelectedComment(comment)}>
-                        <SupabaseImage
-                          bucket="comments"
-                          path={comment.image}
-                          style={{
-                            width: 100,
-                            height: 100,
-                            borderTopRightRadius: BorderRadius.lg,
-                            borderBottomRightRadius: BorderRadius.lg,
-                          }}
-                        />
+                        <ThemedText style={{ fontWeight: "bold", fontSize: 14 }}>
+                          {comment?.profiles?.full_name ?? "Törölt felhasználó"}
+                        </ThemedText>
                       </Pressable>
-                    )}
-                    {uid && (
-                      <IconButton
-                        icon="dots-vertical"
-                        onPress={(e) => showCommentMenu(e, comment)}
-                        size={18}
-                        iconColor={comment.image ? "white" : theme.colors.onSurface}
-                        style={{ margin: 0, position: "absolute", right: 0 }}
+                      <ThemedText
+                        style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}
+                      >
+                        {elapsedTime(comment.created_at)}
+                      </ThemedText>
+                    </View>
+                    <UrlText text={comment.text} style={{ fontSize: 15, lineHeight: 22 }} />
+                  </View>
+                  {comment.image && (
+                    <Pressable onPress={() => setSelectedComment(comment)}>
+                      <SupabaseImage
+                        bucket="comments"
+                        path={comment.image}
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: BorderRadius.md,
+                        }}
                       />
-                    )}
-                  </Card.Content>
-                </Card>
+                    </Pressable>
+                  )}
+                  {uid && (
+                    <IconButton
+                      icon="dots-vertical"
+                      onPress={(e) => showCommentMenu(e, comment)}
+                      size={18}
+                      iconColor={theme.colors.onSurfaceVariant}
+                      style={{ margin: 0 }}
+                    />
+                  )}
+                </View>
               );
             })}
         </ScrollView>

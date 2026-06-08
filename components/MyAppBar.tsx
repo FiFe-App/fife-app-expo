@@ -43,8 +43,12 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
       >
         <View style={{ width: 48 }} >
           {
-            navigation.canGoBack() && pathname !== "/home" && pathname !== "/" 
-            && <Appbar.BackAction onPress={navigation.goBack} />
+            pathname !== "/home" && pathname !== "/"
+            && <Appbar.BackAction
+              onPress={() =>
+                navigation.canGoBack() ? navigation.goBack() : router.push("/home")
+              }
+            />
           }
         </View>
         {center ? <View style={{ flex: 1 }}>{center}</View>
