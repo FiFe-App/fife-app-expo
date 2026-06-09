@@ -15,8 +15,8 @@ export function useSearchSuggestions(prefix: string, enabled: boolean = true) {
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
-    debounceRef.current = setTimeout(async () => {
-      const { data } = await (supabase as any).rpc("get_popular_search_queries", {
+    debounceRef.current = setTimeout(async () => {     
+      const { data } = await supabase.rpc("get_popular_search_queries", {
         p_prefix: prefix.trim(),
         p_limit: 6,
       });

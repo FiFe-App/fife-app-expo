@@ -34,7 +34,8 @@ const FakeSearchInput = () => {
           paddingHorizontal: Spacing.md,
         }}
       >
-        <View style={{ flex: 1, justifyContent: "center" }}>
+        <Icon source="magnify" size={22} color={theme.colors.onSurface} />
+        <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: Spacing.sm }}>
           <Text
             numberOfLines={1}
             style={{
@@ -47,7 +48,6 @@ const FakeSearchInput = () => {
             {searchText || greeting}
           </Text>
         </View>
-        <Icon source="magnify" size={22} color={theme.colors.onSurface} />
       </Pressable>
     </ThemedView>
   );

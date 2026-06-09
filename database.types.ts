@@ -7,10 +7,30 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -24,6 +44,7 @@ export type Database = {
           embedding_text: string | null
           id: number
           images: string[] | null
+          ingyen: boolean
           location: unknown
           radius: number | null
           title: string
@@ -37,6 +58,7 @@ export type Database = {
           embedding_text?: string | null
           id?: number
           images?: string[] | null
+          ingyen?: boolean
           location?: unknown
           radius?: number | null
           title: string
@@ -50,6 +72,7 @@ export type Database = {
           embedding_text?: string | null
           id?: number
           images?: string[] | null
+          ingyen?: boolean
           location?: unknown
           radius?: number | null
           title?: string
@@ -389,6 +412,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bad_boy: boolean
           created_at: string | null
           full_name: string
           id: string
@@ -405,6 +429,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bad_boy?: boolean
           created_at?: string | null
           full_name: string
           id: string
@@ -421,6 +446,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bad_boy?: boolean
           created_at?: string | null
           full_name?: string
           id?: string
@@ -434,6 +460,39 @@ export type Database = {
           username?: string | null
           viewed_functions?: string[] | null
           website?: string | null
+        }
+        Relationships: []
+      }
+      query_embedding_cache: {
+        Row: {
+          created_at: string
+          embedding: string
+          embedding_text: string
+          hit_count: number
+          last_used_at: string
+          model_version: string
+          query_hash: string
+          query_text: string
+        }
+        Insert: {
+          created_at?: string
+          embedding: string
+          embedding_text: string
+          hit_count?: number
+          last_used_at?: string
+          model_version: string
+          query_hash: string
+          query_text: string
+        }
+        Update: {
+          created_at?: string
+          embedding?: string
+          embedding_text?: string
+          hit_count?: number
+          last_used_at?: string
+          model_version?: string
+          query_hash?: string
+          query_text?: string
         }
         Relationships: []
       }
@@ -495,19 +554,30 @@ export type Database = {
           push_token: string
         }[]
       }
+      get_popular_search_queries: {
+        Args: { p_limit?: number; p_prefix?: string }
+        Returns: {
+          hit_count: number
+          query_text: string
+        }[]
+      }
       hybrid_buziness_search: {
         Args: {
-          distance: number
-          full_text_weight?: number
+          distance_sort?: number
+          filter_bad_boy?: boolean
+          filter_ingyen?: boolean
+          fts_weight?: number
           lat: number
           long: number
           match_threshold?: number
+          max_distance?: number
           query_embedding: string
           query_text: string
-          rrf_k?: number
+          recommendation_sort?: number
+          score_sort?: number
           semantic_weight?: number
-          skip: number
-          take: number
+          skip?: number
+          take?: number
         }
         Returns: {
           author: string
@@ -517,14 +587,16 @@ export type Database = {
           distance: number
           id: number
           images: string[]
+          ingyen: boolean
           lat: number
           location: unknown
           long: number
           recommendations: number
-          relevance: number
+          score: number
           title: string
         }[]
       }
+      is_bad_boy: { Args: never; Returns: boolean }
       nearby_buziness: {
         Args: {
           lat: number
@@ -775,6 +847,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       contact_type: [
@@ -788,4 +863,5 @@ export const Constants = {
       ],
     },
   },
-} as const;
+} as const
+

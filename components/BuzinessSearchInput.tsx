@@ -10,7 +10,7 @@ import { useAppTheme } from "@/assets/theme";
 import { ThemedView } from "./ThemedView";
 import Smiley from "./Smiley";
 import { TextInput, View, FlatList, Pressable, Text, StyleSheet } from "react-native";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 
 const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropdown = true }: { onSearch: (query: string) => void; autoFocus?: boolean; showSuggestionsDropdown?: boolean }) => {
@@ -23,10 +23,12 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
   const [focused, setFocused] = useState(autoFocus);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const greeting = useMemo(() => {
+  const greetingRef = useRef<string | null>(null);
+  if (!greetingRef.current) {
     const greetings = ["Üdv a FiFe Appban!", "Mire van szükséged?", "Keress bizniszekre..."];
-    return greetings[Math.floor(Math.random() * greetings.length)];
-  }, []);
+    greetingRef.current = greetings[Math.floor(Math.random() * greetings.length)];
+  }
+  const greeting = greetingRef.current;
 
   const showSuggestions = focused && showSuggestionsDropdown;
   const suggestions = useSearchSuggestions(inputText, showSuggestions);
@@ -52,27 +54,33 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
     onSearch(inputText);
   }, [inputText, onSearch]);
 
+  const handleClear = () => {
+    setInputText("");
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <ThemedView style={{ flex: 1, flexDirection: "row", gap: Spacing.md, alignItems: "center", justifyContent: "center" }} type="card">
         <Smiley style={{ width: 35, height: 35, zIndex: 100000 }} />
         <View style={{ flex: 1, height: 40, flexDirection: "row", alignItems: "center", backgroundColor: theme.colors.background, borderRadius: BorderRadius.full, paddingHorizontal: Spacing.md }}>
+          <TouchableRipple onPress={handleSubmit} disabled={!canSearch} borderless style={{ borderRadius: 20, padding: Spacing.xs }}>
+            <Icon source="magnify" size={22} color={theme.colors.onSurface} />
+          </TouchableRipple>
           <TextInput
             value={inputText}
             autoFocus={autoFocus}
-            style={{ flex: 1, height: 40, fontFamily: "RedHatText", fontWeight: "300", color: theme.colors.onSurface }}
+            style={{ flex: 1, height: 40, fontFamily: "RedHatText", fontWeight: "300", color: theme.colors.onSurface, paddingHorizontal: Spacing.sm }}
             onChangeText={handleChangeText}
             onSubmitEditing={handleSubmit}
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 150)}
             enterKeyHint="search"
-            textAlign={inputText ? "left" : "center"}
             placeholderTextColor={theme.colors.onSurfaceVariant}
             placeholder={greeting}
           />
-          <TouchableRipple onPress={handleSubmit} disabled={!canSearch} borderless style={{ borderRadius: 20, padding: Spacing.xs }}>
-            <Icon source="magnify" size={22} color={theme.colors.onSurface} />
-          </TouchableRipple>
+          {!!inputText.length && <TouchableRipple onPress={handleClear} disabled={!canSearch} borderless style={{ borderRadius: 20, padding: Spacing.xs }}>
+            <Icon source="close" size={22} color={theme.colors.onSurface} />
+          </TouchableRipple>}
         </View>
       </ThemedView>
 
