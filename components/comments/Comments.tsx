@@ -11,14 +11,11 @@ import { CommentsState, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   GestureResponderEvent,
   ImageBackground,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
-  ScrollView,
   View,
 } from "react-native";
 import {
@@ -39,7 +36,7 @@ import { addSnack } from "@/redux/reducers/infoReducer";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 
-const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
+const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
   const dispatch = useDispatch();
   const navigation = router;
   const theme = useTheme();
@@ -65,10 +62,12 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
 
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
 
+  const mountId = useRef(Date.now()).current;
+
   useEffect(() => {
     dispatch(clearComments());
 
-    const channel = supabase.channel(path);
+    const channel = supabase.channel(`${path}:${mountId}`);
 
     const getMessages = async () => {
       const { data, error } = await supabase
@@ -178,9 +177,18 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             return;
           }
 
-          if (image && data && data.length > 0) {
-            await uploadImage(uid + "/" + path, data[0].id);
-            setImage(null);
+          if (data && data.length > 0) {
+            dispatch(
+              addComment({
+                ...data[0],
+                profiles: { full_name: author },
+              }),
+            );
+
+            if (image) {
+              await uploadImage(uid + "/" + path, data[0].id);
+              setImage(null);
+            }
           }
 
           setText("");
@@ -285,12 +293,11 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <View
+      style={[{ flex: 1 }, style]}
     >
       {
-        <ScrollView contentContainerStyle={{ paddingBottom: 10 }}>
+        <View style={{ paddingBottom: 10, flex:1, minHeight: 200 }}>
           {!!comments.length &&
             comments.map((comment, ind) => {
               return (
@@ -360,14 +367,14 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
                 </View>
               );
             })}
-        </ScrollView>
+        </View>
       }
       {downloading && !comments.length ? (
         <ActivityIndicator />
       ) : (
         !comments?.length && (
-          <ThemedText style={{ padding: Spacing.xl }}>
-            Még nem érkezett komment
+          <ThemedText style={{ padding: Spacing.xl, textAlign:"center" }}>
+            Még nem érkezett vélemény
           </ThemedText>
         )
       )}
@@ -468,7 +475,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
           </Modal>
         </Portal>
       )}
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 

@@ -31,7 +31,7 @@ const BottomNavigation = () => {
       if (alreadyOnMyProfile) return;
     } else {
       // Other tabs: skip if already on the same segment
-      if (segment[0] && path.includes(segment[0])) return;
+      if (segment[0] && path == segment[0]) return;
     }
 
     lastNavTime.current = now;

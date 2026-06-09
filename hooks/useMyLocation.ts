@@ -16,10 +16,13 @@ export function useMyLocation() {
 
   const myLocation = useMemo(() => {
     if (!userData?.location) return null;
+    const lat = userData.location.lat;
+    const lng = userData.location.lng;
+    if (typeof lat !== "number" || typeof lng !== "number" || isNaN(lat) || isNaN(lng)) return null;
     return {
       coords: {
-        latitude: userData.location.lat,
-        longitude: userData.location.lng,
+        latitude: lat,
+        longitude: lng,
       },
     };
   }, [userData?.location]);

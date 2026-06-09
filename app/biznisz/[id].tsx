@@ -44,7 +44,7 @@ import {
   useGlobalSearchParams,
 } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ScrollView, useWindowDimensions, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from "react-native";
 import ImageModal from "react-native-image-modal";
 import openMap from "react-native-open-maps";
 import {
@@ -193,7 +193,7 @@ export default function Index() {
         supabase
           .from("buziness")
           .select(
-            "*, contacts(*), profiles ( full_name, avatar_url ), buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(author)"
+            "*, profiles ( full_name, avatar_url ), buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(author)"
           )
           .eq("id", id)
           .maybeSingle()
@@ -204,6 +204,8 @@ export default function Index() {
               return;
             }
 
+            console.log(data);
+            
             if (data) {
               const cords = data?.location
                 ? locationToCoords(String(data.location))
@@ -216,38 +218,43 @@ export default function Index() {
                 authorName: data?.profiles?.full_name || "???",
                 avatarUrl: data?.profiles?.avatar_url,
               });
-              if (data.images) setImages(getImagesUrlFromSupabase(data.images));
-              if (data.defaultContact) {
-                if (data.contacts) {
-                  setDefaultContact(data.contacts);
-                }
-              }
+
+
 
               setRecommendations(
                 data?.buzinessRecommendations?.map((pr) => pr.author)
               );
 
-              if (data.author)
+              if (data.author){
                 supabase
                   .from("contacts")
                   .select("*")
                   .eq("author", data.author)
                   .then((res) => {
+                    console.log("contact res",res);
+                    
                     const fetched = res.data ?? [];
+                    
+                    setDefaultContact(fetched.find(c=>c.id==data.defaultContact));
                     if (fetched.length > 0) {
                       setContacts(fetched);
-                    } else if (data.contacts) {
-                      setContacts([data.contacts]);
-                    } else {
-                      setContacts([]);
                     }
                   });
-            } else
-              setError({
-                code: "jaj basszus",
-                message: "Ez a biznisz nem található",
-              });
+              }} else{
+                setError({
+                  code: "jaj basszus",
+                  message: "Ez a biznisz nem található",
+                });}
+
+              try {
+                if (data?.images) setImages(getImagesUrlFromSupabase(data.images));
+              } catch (error) {
+                console.log("image error");
+                
+              }
+              
           });
+
         supabase
           .from("comments")
           .select("count")
@@ -272,6 +279,11 @@ export default function Index() {
           title="Biznisz"
           style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} />
       }} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}
+      >
       <ThemedView style={{ flex: 1 }}>
         {!data && !error && (
           <View style={{ paddingTop: Spacing.xxxl, alignItems: "center" }}>
@@ -289,6 +301,8 @@ export default function Index() {
           <ScrollView
             ref={scrollRef}
             stickyHeaderIndices={[1]}
+            automaticallyAdjustKeyboardInsets
+            keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingBottom: Spacing.xxl, minHeight: windowHeight+ 100 }}
           >
             {/* HEADER (index 0) */}
@@ -562,7 +576,7 @@ export default function Index() {
             {/* minHeight keeps the content below the sticky tab bar at least a
                 screenful tall, so jumping to a tab can always scroll the tab
                 bar up to the top even when a tab's content is short. */}
-            <View style={{ paddingTop: Spacing.xl }}>
+            <View style={{ paddingTop: Spacing.xl, minHeight: windowHeight/2, flex:1 }}>
               {tab === "overview" ? (
                 <View style={{ gap: Spacing.xl }}>
                   {contacts.length > 0 && (
@@ -633,7 +647,7 @@ export default function Index() {
                   )}
                 </View>
               ) : (
-                <View style={{ paddingHorizontal: Spacing.md }}>
+                <View style={{ paddingHorizontal: Spacing.md}}>
                   <Comments path={"buziness/" + id} placeholder="Mondd el a véleményed" />
                 </View>
               )}
@@ -651,6 +665,7 @@ export default function Index() {
           </Portal>
         )}
       </ThemedView>
+      </KeyboardAvoidingView>
     </>
   );
 }
