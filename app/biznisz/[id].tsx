@@ -116,6 +116,7 @@ export default function Index() {
   const [defaultContact, setDefaultContact] =
     useState<Tables<"contacts"> | null>();
   const [contacts, setContacts] = useState<Tables<"contacts">[]>([]);
+
   const [error, setError] = useState<null | Partial<PostgrestError>>(null);
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
@@ -232,7 +233,14 @@ export default function Index() {
                   .select("*")
                   .eq("author", data.author)
                   .then((res) => {
-                    if (res.data) setContacts(res.data);
+                    const fetched = res.data ?? [];
+                    if (fetched.length > 0) {
+                      setContacts(fetched);
+                    } else if (data.contacts) {
+                      setContacts([data.contacts]);
+                    } else {
+                      setContacts([]);
+                    }
                   });
             } else
               setError({
@@ -281,7 +289,7 @@ export default function Index() {
           <ScrollView
             ref={scrollRef}
             stickyHeaderIndices={[1]}
-            contentContainerStyle={{ paddingBottom: Spacing.xxl }}
+            contentContainerStyle={{ paddingBottom: Spacing.xxl, minHeight: windowHeight+ 100 }}
           >
             {/* HEADER (index 0) */}
             <View
@@ -298,7 +306,7 @@ export default function Index() {
               >
                 {/* Title + chips + byline */}
                 <View style={{ gap: Spacing.sm }}>
-                  <Text variant="headlineLarge">{title}</Text>
+                  <ThemedText variant="headlineLarge">{title}</ThemedText>
 
                   <View
                     style={{
@@ -506,53 +514,55 @@ export default function Index() {
             </View>
 
             {/* TAB BAR (sticky index 1) */}
-            <View
-              style={{
-                flexDirection: "row",
-                backgroundColor: theme.colors.background,
-                borderBottomWidth: 1,
-                borderBottomColor: theme.colors.outlineVariant,
-              }}
-            >
-              {(
-                [
-                  { key: "overview", label: "Áttekintés" },
-                  {
-                    key: "reviews",
-                    label: commentsCount
-                      ? `Vélemények (${commentsCount})`
-                      : "Vélemények",
-                  },
-                ] as const
-              ).map((t) => {
-                const active = tab === t.key;
-                return (
-                  <TouchableRipple key={t.key} style={{ flex: 1 }} onPress={() => setTab(t.key)}>
-                    <View
-                      style={{
-                        alignItems: "center",
-                        paddingVertical: Spacing.md,
-                        borderBottomWidth: 2,
-                        borderBottomColor: active ? theme.colors.primary : "transparent",
-                      }}
-                    >
-                      <Text
-                        variant="labelLarge"
-                        style={{ color: active ? theme.colors.onSurface : theme.colors.onSurfaceVariant }}
+            <View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  backgroundColor: theme.colors.background,
+                  borderBottomWidth: 1,
+                  borderBottomColor: theme.colors.outlineVariant,
+                }}
+              >
+                {(
+                  [
+                    { key: "overview", label: "Áttekintés" },
+                    {
+                      key: "reviews",
+                      label: commentsCount
+                        ? `Vélemények (${commentsCount})`
+                        : "Vélemények",
+                    },
+                  ] as const
+                ).map((t) => {
+                  const active = tab === t.key;
+                  return (
+                    <TouchableRipple key={t.key} style={{ flex: 1 }} onPress={() => setTab(t.key)}>
+                      <View
+                        style={{
+                          alignItems: "center",
+                          paddingVertical: Spacing.md,
+                          borderBottomWidth: 2,
+                          borderBottomColor: active ? theme.colors.primary : "transparent",
+                        }}
                       >
-                        {t.label}
-                      </Text>
-                    </View>
-                  </TouchableRipple>
-                );
-              })}
+                        <Text
+                          variant="labelLarge"
+                          style={{ color: active ? theme.colors.onSurface : theme.colors.onSurfaceVariant }}
+                        >
+                          {t.label}
+                        </Text>
+                      </View>
+                    </TouchableRipple>
+                  );
+                })}
+              </View>
             </View>
 
             {/* TAB CONTENT (index 2) */}
             {/* minHeight keeps the content below the sticky tab bar at least a
                 screenful tall, so jumping to a tab can always scroll the tab
                 bar up to the top even when a tab's content is short. */}
-            <View style={{ paddingTop: Spacing.xl, minHeight: windowHeight }}>
+            <View style={{ paddingTop: Spacing.xl }}>
               {tab === "overview" ? (
                 <View style={{ gap: Spacing.xl }}>
                   {contacts.length > 0 && (
@@ -590,6 +600,8 @@ export default function Index() {
                         {location && (
                           <IconButton
                             icon="directions"
+                            containerColor={theme.colors.secondary}
+                            iconColor={theme.colors.onSecondary}
                             mode="contained"
                             onPress={() =>
                               openMap({
