@@ -6,6 +6,7 @@ export interface UserState {
   uid?: string;
   name?: string;
   locationAlertDismissed?: boolean;
+  inviteCardDismissed?: boolean;
   notificationPrefs?: {
     notifyPush: boolean;
     notifyEmail: boolean;
@@ -27,6 +28,7 @@ export interface UserState {
   locationError: string | null;
   themePreference: "light" | "dark" | "auto";
   savedBuzinesses: number[];
+  previousSearches: string[];
 }
 
 export type User = Tables<"profiles"> & {

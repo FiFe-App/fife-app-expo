@@ -4,6 +4,7 @@ import { ThemedView } from "@/components/ThemedView";
 import MyBuzinesses from "@/components/user/MyBuzinesses";
 import RecommendationsModal from "@/components/user/RecommendationsModal";
 import ReportProfileModal from "@/components/user/ReportProfileModal";
+import BlockUserModal from "@/components/user/BlockUserModal";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
 import ContactsCard from "@/components/buziness/ContactsCard";
@@ -23,7 +24,7 @@ import {
   router,
   Stack,
   useFocusEffect,
-  useGlobalSearchParams,
+  useLocalSearchParams,
 } from "expo-router";
 import { useCallback, useState } from "react";
 import { ScrollView, View } from "react-native";
@@ -56,8 +57,8 @@ import { useAppTheme } from "@/assets/theme";
 type UserInfo = Tables<"profiles">;
 
 export default function UserPage() {
-  const { uid: paramUid } = useGlobalSearchParams();
-  const uid: string = String(paramUid);
+  const { uid: paramUid } = useLocalSearchParams<{ uid: string }>();
+  const uid: string = paramUid ?? "";
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
@@ -74,6 +75,8 @@ export default function UserPage() {
   const [connectionsCount, setConnectionsCount] = useState(0);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const iRecommended = recommendations.includes(myUid || "");
 
@@ -107,6 +110,15 @@ export default function UserPage() {
               setNotFound(true);
             }
           });
+
+        if (!myProfile && myUid) {
+          supabase
+            .from("blocked_users")
+            .select("id", { count: "exact", head: true })
+            .eq("blocker_id", myUid)
+            .eq("blocked_id", uid)
+            .then(({ count }) => setIsBlocked((count ?? 0) > 0));
+        }
 
         supabase
           .from("contacts")
@@ -175,14 +187,32 @@ export default function UserPage() {
         {data && uid && (
           <ScrollView contentContainerStyle={{ paddingBottom: myProfile ? 96 : 0 }}>
             <ThemedView style={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.xxl, paddingBottom: Spacing.xl, gap: Spacing.xl }}>
-              {/* Report button */}
+              {/* Report / Block buttons */}
               {!myProfile && (
-                <IconButton
-                  icon="alert-octagon"
-                  size={20}
-                  onPress={() => setShowReportModal(true)}
-                  style={{ position: "absolute", right: Spacing.sm, top: Spacing.sm, zIndex: 1 }}
-                />
+                <View style={{ position: "absolute", right: Spacing.sm, top: Spacing.sm, zIndex: 1, flexDirection: "row" }}>
+                  <IconButton
+                    icon="alert-octagon"
+                    size={20}
+                    onPress={() => setShowReportModal(true)}
+                  />
+                  <IconButton
+                    icon={isBlocked ? "account-check" : "account-cancel"}
+                    size={20}
+                    iconColor={isBlocked ? undefined : "#c0392b"}
+                    onPress={async () => {
+                      if (isBlocked) {
+                        await supabase
+                          .from("blocked_users")
+                          .delete()
+                          .eq("blocker_id", myUid!)
+                          .eq("blocked_id", uid);
+                        setIsBlocked(false);
+                      } else {
+                        setShowBlockModal(true);
+                      }
+                    }}
+                  />
+                </View>
               )}
 
               {/* Centered avatar with gold ring */}
@@ -373,6 +403,16 @@ export default function UserPage() {
             setShow={setShowReportModal}
             profileId={uid}
             profileName={data.full_name}
+          />
+          <BlockUserModal
+            show={showBlockModal}
+            setShow={setShowBlockModal}
+            profileId={uid}
+            profileName={data.full_name}
+            onBlocked={() => {
+              setIsBlocked(true);
+              router.back();
+            }}
           />
         </Portal>
       )}

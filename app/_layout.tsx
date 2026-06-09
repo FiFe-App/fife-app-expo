@@ -26,9 +26,7 @@ import RedHatTextMedium from "@/assets/fonts/RedHatText-Medium.ttf";
 import RedHatTextBold from "@/assets/fonts/RedHatText-Bold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
 import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
-import BuzinessSearchInput from "@/components/BuzinessSearchInput";
-import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
-import { router } from "expo-router";
+import FakeSearchInput from "@/components/FakeSearchInput";
 import { RootState } from "@/redux/store";
 import { setLocation, logout } from "@/redux/reducers/userReducer";
 import { supabase } from "@/lib/supabase/supabase";
@@ -39,17 +37,9 @@ import { setStatusBarColor } from "@/redux/reducers/infoReducer";
 let splashAlreadyShown = false;
 
 function HomeHeader() {
-  const dispatch = useDispatch();
   return (
     <MyAppbar
-      center={
-        <BuzinessSearchInput
-          onSearch={() => {
-            dispatch(storeBuzinesses([]));
-            router.push("/biznisz");
-          }}
-        />
-      }
+      center={<FakeSearchInput />}
       style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }}
     />
   );
@@ -167,6 +157,11 @@ function RootContent() {
                 />
 
                 <Stack.Screen
+                  name="search"
+                  options={{ headerShown: true }}
+                />
+
+                <Stack.Screen
                   name="biznisz/new"
                   options={{ title: "Új Biznisz" }}
                 />
@@ -247,15 +242,15 @@ export default function RootLayout() {
           <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
               <RootContent />
+              {!splashDone && (
+                <SplashAnimation onFinished={() => {
+                  splashAlreadyShown = true;
+                  setSplashDone(true);
+                }} />
+              )}
             </PersistGate>
           </Provider>
         </SafeAreaProvider>
-        {!splashDone && (
-          <SplashAnimation onFinished={() => {
-            splashAlreadyShown = true;
-            setSplashDone(true);
-          }} />
-        )}
       </GestureHandlerRootView>
     );
 }

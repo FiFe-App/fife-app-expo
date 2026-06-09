@@ -20,7 +20,7 @@ import {
   Switch,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import BuzinessSearchInput from "@/components/BuzinessSearchInput";
+import FakeSearchInput from "@/components/FakeSearchInput";
 import { Button } from "@/components/Button";
 import { useBuzinessSearch } from "@/hooks/useBuzinessSearch";
 import Measure from "@/components/tutorial/Measure";
@@ -54,7 +54,7 @@ export default function Index() {
       if (buzinesses.length === 0 && !searchParams?.loading)
         search();
       if (uid) dispatch(viewFunction({ key: "buzinessPage", uid }));
-      navigation.setOptions({ header: () => <MyAppbar center={<BuzinessSearchInput onSearch={search} />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
+      navigation.setOptions({ header: () => <MyAppbar center={<FakeSearchInput />} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []),
   );

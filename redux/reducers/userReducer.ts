@@ -9,7 +9,9 @@ const initialState: UserState = {
   locationError: null,
   themePreference: DEFAULT_THEME_PREFERENCE,
   savedBuzinesses: [],
+  previousSearches: [],
   locationAlertDismissed: false,
+  inviteCardDismissed: false,
 };
 
 const userReducer = createSlice({
@@ -55,6 +57,9 @@ const userReducer = createSlice({
     dismissLocationAlert: (state) => {
       state.locationAlertDismissed = true;
     },
+    dismissInviteCard: (state) => {
+      state.inviteCardDismissed = false;
+    },
     setLocation: (state, { payload }: PayloadAction<{ latitude: number; longitude: number; radius: number }>) => {
       if (!state.userData) {
         state.userData = {
@@ -75,6 +80,18 @@ const userReducer = createSlice({
     setNotificationPrefs: (state, { payload }: PayloadAction<{ notifyPush: boolean; notifyEmail: boolean; newsletter: boolean }>) => {
       state.notificationPrefs = payload;
     },
+    addPreviousSearch: (state, { payload }: PayloadAction<string>) => {
+      if (!payload.trim()) return;
+      if (!state.previousSearches) state.previousSearches = [];
+      state.previousSearches = [
+        payload,
+        ...state.previousSearches.filter((s) => s !== payload),
+      ].slice(0, 10);
+    },
+    removeFromPreviousSearches: (state, { payload }: PayloadAction<string>) => {
+      if (!state.previousSearches) return;
+      state.previousSearches = state.previousSearches.filter((s) => s !== payload);
+    },
   },
 });
 
@@ -91,6 +108,9 @@ export const {
   setLocation,
   setNotificationPrefs,
   dismissLocationAlert,
+  dismissInviteCard,
+  addPreviousSearch,
+  removeFromPreviousSearches,
 } = userReducer.actions;
 
 export default userReducer;
