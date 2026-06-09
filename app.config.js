@@ -21,6 +21,7 @@ export default {
     }
   },
   android: {
+    softwareKeyboardLayoutMode: "resize",
     splash: {
       image: "./assets/images/Slimey.png",
       resizeMode: "contain",

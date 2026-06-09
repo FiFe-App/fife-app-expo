@@ -22,7 +22,7 @@ export async function fetchUserProfile(user: User, dispatch: Dispatch) {
     ? (() => {
         const match = myLoc.location_wkt.match(/POINT\(([\d.-]+) ([\d.-]+)\)/);
         return match
-          ? { location: { lng: parseFloat(match[1]), lat: parseFloat(match[2]) }, radius: myLoc.location_radius_m ?? 0 }
+          ? { lat: parseFloat(match[2]), lng: parseFloat(match[1]), radius: myLoc.location_radius_m ?? 0 }
           : undefined;
       })()
     : undefined;

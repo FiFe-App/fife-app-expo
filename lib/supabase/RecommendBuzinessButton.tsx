@@ -13,6 +13,8 @@ interface RecommendBuzinessButtonProps {
   recommended?: boolean;
   setRecommended: React.Dispatch<React.SetStateAction<boolean>>;
   style?: any;
+  /** Button mode when NOT yet recommended. Defaults to "contained". */
+  mode?: React.ComponentProps<typeof Button>["mode"];
 }
 
 export const RecommendBuzinessButton = ({
@@ -20,6 +22,7 @@ export const RecommendBuzinessButton = ({
   recommended,
   setRecommended,
   style,
+  mode = "contained",
 }: RecommendBuzinessButtonProps) => {
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
@@ -87,7 +90,7 @@ export const RecommendBuzinessButton = ({
     <Button
       onPress={toggleRecommendation}
       style={style}
-      mode={!recommended ? "contained" : "contained-tonal"}
+      mode={!recommended ? mode : "contained-tonal"}
       loading={loading}
     >
       {recommended ? "Már ajánlottam." : "Ajánlom"}

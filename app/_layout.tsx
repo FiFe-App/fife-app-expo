@@ -153,7 +153,7 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="biznisz/index"
-                  options={{ title: "Biznisz" }}
+                  options={{ title: "Bizniszek keresése" }}
                 />
 
                 <Stack.Screen
@@ -167,19 +167,19 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="biznisz/[id]"
-                  options={{ title: "FiFe Biznisz" }}
+                  options={{ title: "Biznisz" }}
                 />
                 <Stack.Screen
                   name="biznisz/edit/[editId]"
-                  options={{ title: "FiFe Biznisz" }}
+                  options={{ title: "Biznisz szerkesztése" }}
                 />
                 <Stack.Screen
                   name="user/[uid]"
-                  options={{ title: "FiFe Profil" }}
+                  options={{ title: "Profil" }}
                 />
                 <Stack.Screen
                   name="user/edit"
-                  options={{ title: "Profil Szerkesztése" }}
+                  options={{ title: "Profil szerkesztése" }}
                 />
               </Stack.Protected>
 

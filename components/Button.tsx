@@ -52,7 +52,7 @@ export function Button({
     }
     return {
       backgroundColor: "transparent",
-      textColor: theme.colors.primary,
+      textColor: "black"
     };
   };
 
