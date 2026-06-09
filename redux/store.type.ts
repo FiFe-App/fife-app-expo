@@ -6,6 +6,7 @@ export interface UserState {
   uid?: string;
   name?: string;
   locationAlertDismissed?: boolean;
+  inviteCardDismissed?: boolean;
   notificationPrefs?: {
     notifyPush: boolean;
     notifyEmail: boolean;

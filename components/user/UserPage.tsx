@@ -26,7 +26,7 @@ import {
   router,
   Stack,
   useFocusEffect,
-  useGlobalSearchParams,
+  useLocalSearchParams,
 } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { Linking, ScrollView, View } from "react-native";
@@ -59,8 +59,8 @@ import { useAppTheme } from "@/assets/theme";
 type UserInfo = Tables<"profiles">;
 
 export default function UserPage() {
-  const { uid: paramUid } = useGlobalSearchParams();
-  const uid: string = String(paramUid);
+  const { uid: paramUid } = useLocalSearchParams<{ uid: string }>();
+  const uid: string = paramUid ?? "";
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );

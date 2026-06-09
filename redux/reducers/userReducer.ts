@@ -10,6 +10,7 @@ const initialState: UserState = {
   themePreference: DEFAULT_THEME_PREFERENCE,
   savedBuzinesses: [],
   locationAlertDismissed: false,
+  inviteCardDismissed: false,
 };
 
 const userReducer = createSlice({
@@ -55,6 +56,9 @@ const userReducer = createSlice({
     dismissLocationAlert: (state) => {
       state.locationAlertDismissed = true;
     },
+    dismissInviteCard: (state) => {
+      state.inviteCardDismissed = false;
+    },
     setLocation: (state, { payload }: PayloadAction<{ latitude: number; longitude: number; radius: number }>) => {
       if (!state.userData) {
         state.userData = {
@@ -91,6 +95,7 @@ export const {
   setLocation,
   setNotificationPrefs,
   dismissLocationAlert,
+  dismissInviteCard,
 } = userReducer.actions;
 
 export default userReducer;
