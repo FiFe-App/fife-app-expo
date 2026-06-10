@@ -29,7 +29,6 @@ export default function SearchScreen() {
   const suggestions = useSearchSuggestions(searchText, true);
 
   const handleSearch = useCallback((query: string) => {
-    if (!query.trim()) return;
     dispatch(addPreviousSearch(query));
     dispatch(storeBuzinessSearchParams({ text: query }));
     dispatch(storeBuzinesses([]));
@@ -56,7 +55,7 @@ export default function SearchScreen() {
 
     const items: ListItem[] = [];
     if (prev.length > 0) {
-      items.push({ kind: "section", label: "Korábbi keresések" });
+      items.push({ kind: "section", label: "Korábbi kereséseid" });
       prev.forEach((q) => items.push({ kind: "previous", query: q }));
     }
     if (filtered.length > 0) {

@@ -69,7 +69,7 @@ const RecommendationsModal = ({ show, setShow, uid, name }: RMP) => {
             {list.map((rec, ind) => (
               <>
                 <Link
-                  key={"recommended-"+ind}
+                  key={"recommended-"+rec.id}
                   asChild
                   href={{
                     pathname: "/user/[uid]",

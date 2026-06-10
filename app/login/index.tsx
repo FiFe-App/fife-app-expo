@@ -16,6 +16,7 @@ import * as WebBrowser from "expo-web-browser";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "@/components/Button";
 import { useAppTheme } from "@/assets/theme";
+import { ThemedText } from "@/components/ThemedText";
 
 export default function Index() {
   const navigation = useNavigation();
@@ -61,57 +62,26 @@ export default function Index() {
     if (error) {
       console.log(error.code);
 
-      if (error.code === "email_not_confirmed") {
-        AsyncStorage.setItem("email", email);
-        router.navigate("/csatlakozom/email-ellenorzes");
+      switch (error.code) {
+        case "email_not_confirmed":
+          AsyncStorage.setItem("email", email);
+          router.navigate("/csatlakozom/email-ellenorzes");
+          break;
+        case "invalid_credentials":
+        case "user_not_found":
+          setError("Helytelen e-mail vagy jelszó");
+          break;
+        case "too_many_requests":
+          setError("Túl sok próbálkozás. Próbáld később.");
+          break;
+        default:
+          setError(error.message);
       }
-      setError(error.message);
     } else {
       getUserData(data.user);
     }
     setLoading(false);
   }
-
-  async function signInWithGoogle() {
-    supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${redirectTo}/login`,
-      },
-    });
-  }
-
-  async function autoLogin() {
-    setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: "test@fife.hu",
-      password: "fifewok42",
-    });
-
-    console.log(data, error);
-
-    if (error) {
-      setError(error.message);
-    } else {
-      getUserData(data.user);
-    }
-    setLoading(false);
-  }
-
-  const startFacebookLogin = async () => {
-    console.log("hello");
-
-    console.log({
-      redirectTo: `${redirectTo}/login`,
-    });
-
-    await supabase.auth.signInWithOAuth({
-      provider: "facebook",
-      options: {
-        redirectTo: `${redirectTo}/login`,
-      },
-    });
-  };
 
   const getUserData = async (userData: User) => {
     const profile = await fetchUserProfile(userData, dispatch);
@@ -131,26 +101,12 @@ export default function Index() {
   return (
     <ThemedView style={{ flex: 1 }} type="default">
       <View style={{ maxWidth: 300, width: "100%", gap: Spacing.sm, margin: "auto" }}>
-        <Button onPress={autoLogin} mode="contained">
-          Próba felhasználó
-        </Button>
-        <Button
-          mode="contained"
-          icon="facebook"
-          disabled
-          onPress={startFacebookLogin}
-        >
-          Facebook bejelentkezés
-        </Button>
-        <Button
-          mode="contained"
-          icon="google"
-          disabled
-          onPress={signInWithGoogle}
-        >
-          Google bejelentkezés
-        </Button>
-        <Divider style={{ marginVertical: Spacing.lg }} />
+        
+        <View style={{minHeight:60}}>
+          {!!error && <ThemedView style={{margin:6, alignItems:"center"}} type="error">
+            <ThemedText type="error">{error}</ThemedText>
+          </ThemedView>}
+        </View>
         <TextInput
           mode="outlined"
           onChangeText={setEmail}
@@ -181,7 +137,9 @@ export default function Index() {
         <Button
           onPress={signInWithEmail}
           loading={loading}
+          style={{marginTop: Spacing.md}}
           mode="contained"
+          disabled={!password || !email}
           type="secondary"
         >
           Bejelentkezés
@@ -194,7 +152,6 @@ export default function Index() {
             <Button>Elfelejtettem a jelszavam</Button>
           </Link>
         </View>
-        <Text style={{ color: theme.colors.error }}>{error}</Text>
       </View>
     </ThemedView>
   );

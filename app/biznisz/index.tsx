@@ -43,7 +43,7 @@ export default function Index() {
 
   const { canLoadMore, search, loadNext, error } = useBuzinessSearch();
   
-  const listTitle = useMemo(() => searchParams?.text ? "Találatok: " + searchParams?.text : "Új bizniszek", [searchParams?.loading]);
+  const listTitle = useMemo(() => searchParams?.text ? "Találatok: " + searchParams?.text : "Közeli bizniszek", [searchParams?.loading]);
   const dispatch = useDispatch();
 
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);

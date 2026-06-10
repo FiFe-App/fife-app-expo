@@ -58,7 +58,7 @@ const userReducer = createSlice({
       state.locationAlertDismissed = true;
     },
     dismissInviteCard: (state) => {
-      state.inviteCardDismissed = false;
+      state.inviteCardDismissed = true;
     },
     setLocation: (state, { payload }: PayloadAction<{ latitude: number; longitude: number; radius: number }>) => {
       if (!state.userData) {

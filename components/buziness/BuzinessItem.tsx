@@ -96,8 +96,8 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
           </View>
           <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.sm }}>
             <MetaStat icon="account-group">{recommendations} ember ajánlja</MetaStat>
-            {!!data.images?.length && <MetaStat icon="image">{data?.images?.length || 0} kép</MetaStat>}
             {!!distanceText && <MetaStat icon="map-marker">{distanceText}</MetaStat>}
+            {!!data.images?.length && <MetaStat icon="image">{data?.images?.length || 0} kép</MetaStat>}
           </View>
           <Text variant="bodyMedium" numberOfLines={4} ellipsizeMode="tail" style={{ flex: 1 }}>
             {description}
@@ -117,7 +117,7 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
                   });
                 }}
               >Szerkesztés</Button>
-              <Button textColor={theme.colors.error} mode="text" icon="delete-circle" onPress={showDelete} >
+              <Button textColor={theme.colors.onError} mode="text" icon="delete-circle" onPress={showDelete} >
                 Törlés
               </Button>
             </View>

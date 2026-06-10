@@ -132,12 +132,12 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
           return (
             <Marker
               coordinate={{ latitude: cords[1], longitude: cords[0] }}
-              title={buziness.title}
+              title={buziness.title.split(" $ ")[0]}
               key={buziness.id}
               anchor={{ x: 0.5, y: 0.5 }}
-              onPress={() => setSelectedBuzinessId(buziness.id)}
+              zIndex={selectedBuzinessId === buziness.id ? 1 : -10}
             >
-              <NewMarkerIcon />
+              <NewMarkerIcon onPress={() => setSelectedBuzinessId(buziness.id)} />
             </Marker>
           );
         })}
