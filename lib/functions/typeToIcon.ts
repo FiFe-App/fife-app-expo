@@ -9,7 +9,7 @@ const typeToIcon = (type: string | undefined): IconSource => {
   if (type === "WEB") return "web";
   if (type === "MESSAGE") return "message";
   if (type === "OTHER") return "dots-horizontal";
-  return "";
+  return "dots-horizontal";
 };
 
 export default typeToIcon;

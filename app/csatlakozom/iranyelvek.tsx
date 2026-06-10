@@ -1,20 +1,29 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { PhraseInput } from "@/components/PhraseInput";
+import { acceptPolicies } from "@/redux/reducers/infoReducer";
+import { RootState } from "@/redux/store";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   FlatList,
+  Linking,
   Pressable,
   StyleSheet,
-  TextInput as TIRN,
   View,
 } from "react-native";
-import { Icon, Text, TextInput } from "react-native-paper";
+import { Checkbox, Text } from "react-native-paper";
+import { useDispatch, useSelector } from "react-redux";
+import { Spacing } from "@/constants/spacing";
 
 const Register = () => {
-  const textInput = useRef<TIRN>(null);
-  const [text, setText] = useState("");
+  const dispatch = useDispatch();
+  const policiesAccepted = useSelector(
+    (state: RootState) => state.info.policiesAccepted,
+  );
   const textToType = "Nem leszek rosszindulatú";
+  const [text, setText] = useState(policiesAccepted ? textToType : "");
+  const [ageConfirmed, setAgeConfirmed] = useState(policiesAccepted);
   const handleTextInput = (input: string) => {
     if (
       textToType.slice(0, input.length).toLowerCase().replaceAll(" ", "") ===
@@ -29,22 +38,26 @@ const Register = () => {
     )
       setText(textToType.slice(0, input.length + 1));
   };
-  const accepted = text === textToType;
+  const accepted = policiesAccepted || (text === textToType && ageConfirmed);
+  const canGoNext = policiesAccepted || ageConfirmed;
 
   useFocusEffect(
     useCallback(() => {
       if (router)
         router.setParams({
-          canGoNext: accepted ? "true" : undefined,
+          canGoNext: canGoNext ? "true" : undefined,
         });
-      return () => {};
-    }, [accepted]),
+      if (!policiesAccepted && text === textToType && ageConfirmed) {
+        dispatch(acceptPolicies());
+      }
+      return () => { };
+    }, [canGoNext, policiesAccepted, text, ageConfirmed, textToType, dispatch]),
   );
 
   return (
-    <ThemedView style={{ flex: 1, padding: 8 }}>
+    <ThemedView style={{ flex: 1, padding: Spacing.sm, paddingTop: Spacing.xxxl, paddingBottom: 60 }}>
       <View style={{ flex: 1, justifyContent: "center" }}>
-        <ThemedText type="title" style={{ marginBottom: 16 }}>
+        <ThemedText type="title" style={{ marginBottom: Spacing.lg }}>
           Ha szeretnél csatlakozni ehhez a közösséghez, be kell tartanod az
           irányelveinket:
         </ThemedText>
@@ -59,39 +72,40 @@ const Register = () => {
           style={[styles.text, { flex: undefined }]}
           renderItem={({ item, index }) => (
             <Text style={styles.listItem} key={"item" + index}>
-              <Text style={{ margin: 4 }}>
-                <Icon source="heart" size={20} />
-              </Text>
-              {item.key}
+              - {item.key}
             </Text>
           )}
         />
       </View>
-      <View style={{ marginVertical: 20 }}>
+      <Pressable
+        style={styles.ageCheckbox}
+        onPress={() => setAgeConfirmed((v) => !v)}
+      >
+        <Checkbox
+          status={ageConfirmed ? "checked" : "unchecked"}
+          onPress={() => setAgeConfirmed((v) => !v)}
+        />
+        <Text style={styles.ageCheckboxLabel}>
+          Nyilatkozom, hogy elmúltam 16 éves.
+        </Text>
+      </Pressable>
+      <Pressable
+        onPress={() => Linking.openURL("https://fifeapp.hu/CSAE.html")}
+        style={{ marginTop: Spacing.sm }}
+      >
+        <Text style={styles.csaeLink}>
+          Gyermekvédelmi irányelvek (CSAE) megtekintése
+        </Text>
+      </Pressable>
+      <View style={{ marginVertical: Spacing.xl }}>
         <ThemedText>
           Ha be fogod tartani ezeket, gépeld be a következő szöveget:
         </ThemedText>
-        <Pressable
-          style={styles.inputView}
-          onPress={() => {
-            if (textInput?.current) textInput?.current?.focus();
-          }}
-        >
-          <Text style={[styles.textToType, { opacity: 0.5 }]}>
-            {textToType}
-          </Text>
-          <TextInput
-            ref={textInput}
-            style={styles.input}
-            allowFontScaling
-            contentStyle={styles.inputContent}
-            scrollEnabled={false}
-            value={text}
-            multiline
-            onChangeText={handleTextInput}
-          />
-          <Text style={[styles.textToType, {}]}>{text}</Text>
-        </Pressable>
+        <PhraseInput
+          phrase={textToType}
+          value={text}
+          onChangeText={handleTextInput}
+        />
       </View>
     </ThemedView>
   );
@@ -105,32 +119,21 @@ const styles = StyleSheet.create({
   listItem: {
     alignItems: "center",
     fontSize: 17,
-    margin: 5,
+    margin: Spacing.xs,
   },
-  inputView: {},
-  input: {
-    padding: 0,
-    paddingHorizontal: 10,
+  ageCheckbox: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: Spacing.md,
+  },
+  ageCheckboxLabel: {
+    flex: 1,
     fontSize: 15,
-    zIndex: 10,
-    overflow: "hidden",
   },
-  inputContent: {
-    paddingTop: 10,
-    paddingHorizontal: 10,
-    letterSpacing: 0,
-    zIndex: 20,
-    overflow: "hidden",
-  },
-  textToType: {
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    position: "absolute",
-    userSelect: "none",
-    cursor: "text",
-    fontSize: 15,
-    fontWeight: "400",
-    zIndex: 150,
+  csaeLink: {
+    fontSize: 13,
+    color: "#1a73e8",
+    textDecorationLine: "underline",
   },
 });
 export default Register;

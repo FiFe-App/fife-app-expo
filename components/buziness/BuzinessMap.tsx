@@ -1,16 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, StyleSheet, Pressable, Alert } from "react-native";
+import { View, StyleSheet } from "react-native";
 import BuzinessItem from "./BuzinessItem";
 import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Camera,
-  Circle,
   Details,
-  MapView,
   Marker,
   Region,
 } from "../mapView/mapView";
+import FiFeMap from "../mapView/FiFeMap";
 import MyLocationIcon from "@/assets/images/myLocationIcon";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 import { useMyLocation } from "@/hooks/useMyLocation";
@@ -18,6 +17,7 @@ import locationToCoords from "@/lib/functions/locationToCoords";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { Button, FAB, IconButton } from "react-native-paper";
 import mapStyles from "../mapView/style";
+import { Spacing } from "@/constants/spacing";
 import { addDialog } from "@/redux/reducers/infoReducer";
 
 interface BuzinessBuzinessMapProps {
@@ -41,7 +41,8 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
   const [circleRadiusText, setCircleRadiusText] = useState("0 km");
   const mapRef = useRef<any>(null);
 
-  const { myLocation, locationError } = useMyLocation();
+  const { myLocation } = useMyLocation();
+  const regionChangeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const panToMyLocation = () => {
     if (!myLocation) {
@@ -84,89 +85,63 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
   };
 
   const onRegionChange = (region: Region, details: Details) => {
-    dispatch(
-      storeBuzinessSearchParams({
-        searchCircle: {
-          location: { latitude: region.latitude, longitude: region.longitude },
-          radius: region.longitudeDelta * 50000,
-        },
-      }),
-    );
+    if (regionChangeTimeout.current) clearTimeout(regionChangeTimeout.current);
+    regionChangeTimeout.current = setTimeout(() => {
+      dispatch(
+        storeBuzinessSearchParams({
+          searchCircle: {
+            location: { latitude: region.latitude, longitude: region.longitude },
+            radius: region.latitudeDelta * 55660,
+          },
+        }),
+      );
+    }, 300);
   };
-  useEffect(() => {
-    console.log(searchParams?.searchCircle);
-    //load(skip + take);
-  }, [searchParams?.searchCircle]);
 
   return (
     <View style={styles.container}>
-      <MapView
+      <FiFeMap
         ref={mapRef}
-        //@ts-ignore
-        options={{
-          mapTypeControl: false,
-          fullscreenControl: false,
-          streetViewControl: false,
-          zoomControl: false,
-        }}
-        style={{ width: "100%", height: "100%" }}
+        style={StyleSheet.absoluteFillObject}
         onMapLoaded={(e) => {
           //Alert.alert(JSON.stringify(e));
         }}
+        onPoiClick={() => {
+          // no-op: suppress default POI behavior
+        }}
+        onMarkerPress={(e) => {
+          console.log("marker", e);
+        }}
+        onPress={() => {
+          setSelectedBuzinessId(null);
+        }}
         initialCamera={{
-          altitude: 10,
           center: {
             latitude: myLocation?.coords.latitude || 47.4979,
             longitude: myLocation?.coords.longitude || 19.0402,
           },
-          heading: 0,
-          pitch: 0,
-          zoom: 12,
         }}
-        provider="google"
-        googleMapsApiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
-        pitchEnabled={false}
-        showsPointsOfInterest={false}
+        showsPointsOfInterests={false}
         showsUserLocation
-        rotateEnabled={false}
-        toolbarEnabled={false}
         onRegionChangeComplete={onRegionChange}
-        onPress={() => setSelectedBuzinessId(null)}
       >
         {buzinesses.map((buziness) => {
-          if (buziness?.id < 0 || !buziness.location) return;
+          if (buziness?.id < 0 || !buziness.location) return null;
 
           const cords = locationToCoords(String(buziness.location));
           return (
             <Marker
               coordinate={{ latitude: cords[1], longitude: cords[0] }}
-              title={buziness.title}
+              title={buziness.title.split(" $ ")[0]}
               key={buziness.id}
               anchor={{ x: 0.5, y: 0.5 }}
+              zIndex={selectedBuzinessId === buziness.id ? 1 : -10}
             >
-              <Pressable
-                onPress={() => {
-                  setSelectedBuzinessId(buziness.id);
-                  //panToCoords(Number(cords[1]), Number(cords[0]));
-                }}
-              >
-                <NewMarkerIcon />
-              </Pressable>
+              <NewMarkerIcon onPress={() => setSelectedBuzinessId(buziness.id)} />
             </Marker>
           );
         })}
 
-        <FAB
-          style={mapStyles.myLocationButton}
-          icon={
-            myLocation
-              ? "crosshairs-gps"
-              : locationError
-                ? "map-marker-alert"
-                : "map-marker-question"
-          }
-          onPress={panToMyLocation}
-        />
         {myLocation && (
           <Marker
             centerOffset={{ x: 10, y: 10 }}
@@ -177,30 +152,24 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
             <MyLocationIcon style={{ width: 20, height: 20 }} />
           </Marker>
         )}
-      </MapView>
+      </FiFeMap>
       <FAB
         style={mapStyles.myLocationButton}
-        icon={
-          myLocation
-            ? "map-marker"
-            : locationError
-              ? "map-marker-alert"
-              : "map-marker-question"
-        }
+        icon={myLocation ? "map-marker" : "map-marker-question"}
         onPress={panToMyLocation}
       />
       <View
-        pointerEvents="none"
+        pointerEvents="box-none"
         style={{
           position: "absolute",
-          bottom: 8,
+          bottom: Spacing.sm,
           userSelect: "none",
           width: "100%",
           alignItems: "flex-end",
           flexDirection: "column",
         }}
       >
-        <View style={{ padding: 8, bottom: 32 }}>
+        <View style={{ padding: Spacing.sm, bottom: Spacing.xxxl }}>
           <IconButton
             icon="plus"
             style={{
@@ -245,10 +214,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     marginTop: -4,
-  },
-  businessItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
   },
 });

@@ -7,6 +7,7 @@ import { TextInput, Text, Card } from "react-native-paper";
 import { Link, useLocalSearchParams } from "expo-router";
 import { theme } from "@/assets/theme";
 import { Image } from "expo-image";
+import { Spacing } from "@/constants/spacing";
 
 // Flow:
 // 1. User enters email -> send reset link (supabase.auth.resetPasswordForEmail)
@@ -78,13 +79,13 @@ export default function PasswordResetScreen() {
   };
 
   return (
-    <ThemedView style={{ flex: 1, padding: 16 }}>
+    <ThemedView style={{ flex: 1, padding: Spacing.lg }}>
       <View
         style={{
           maxWidth: 420,
           width: "100%",
           marginHorizontal: "auto",
-          gap: 16,
+          gap: Spacing.lg,
         }}
       >
         {stage === "request" && (
@@ -143,7 +144,7 @@ export default function PasswordResetScreen() {
           </>
         )}
         {(sent || error || message) && (
-          <Card style={{ padding: 20 }} contentStyle={{ gap: 12 }}>
+          <Card style={{ padding: Spacing.xl }} contentStyle={{ gap: Spacing.md }}>
             {error && <Text style={{ color: theme.colors.error }}>{error}</Text>}
             {message && (
               <Text style={{ color: stage === "reset" ? theme.colors.tertiary : undefined }}>
@@ -158,7 +159,7 @@ export default function PasswordResetScreen() {
           </Card>
         )}
         <View
-          style={{ alignItems: "center", justifyContent: "center", margin: 24 }}
+          style={{ alignItems: "center", justifyContent: "center", margin: Spacing.xxl }}
         >
           <Image
             source={require("@/assets/images/Phone.png")}

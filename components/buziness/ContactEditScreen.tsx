@@ -7,16 +7,21 @@ import typeToPrefix from "@/lib/functions/typeToPrefix";
 import typeToValueLabel from "@/lib/functions/typeToValueLabel";
 import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
+import { addSnack } from "@/redux/reducers/infoReducer";
 import { Link, useFocusEffect } from "expo-router";
 import React, {
-  forwardRef,
   useCallback,
   useImperativeHandle,
   useState,
+  useEffect,
+  forwardRef,
 } from "react";
-import { View } from "react-native";
-import { Icon, Switch, TextInput, Button, TouchableRipple, useTheme } from "react-native-paper";
+import { Icon, Switch, TextInput, Button, Menu, IconButton } from "react-native-paper";
+import { StyleProp, View, ViewStyle } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
+import { useAppTheme } from "@/assets/theme";
 
 const types: {
   label: string;
@@ -36,217 +41,320 @@ type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
 type IContact = Optional<Tables<"contacts">, "id">;
 
+type ContactEditScreenProps = {
+  onContactsChange?: (contacts: IContact[]) => void;
+  style?: StyleProp<ViewStyle>;
+  defaultContactId?: number;
+  onDefaultContactChange?: (id: number | undefined) => void;
+  showFeaturedToggle?: boolean;
+};
+
 const ContactEditScreen = forwardRef<{
   saveContacts: () => Promise<
     | PostgrestSingleResponse<any>
-    | {
-        error: string;
-      }
-    | undefined
-  >;
-    }>((_props, ref) => {
-      const [loading, setLoading] = useState(true);
-      const [error, setError] = useState<{
+    | { error: string; }
+    | undefined>;
+}, ContactEditScreenProps>((props, ref) => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<{
     type: Enums<"contact_type">;
     text: string;
   } | null>(null);
-      const { uid, userData } = useSelector((state: RootState) => state.user);
-      const dispatch = useDispatch();
-      const [contacts, setContacts] = useState<IContact[]>([]);
-      const loadContacts = () => {
-        if (uid)
-          supabase
-            .from("contacts")
-            .select("*")
-            .eq("author", uid)
-            .then((res) => {
-              if (res.data?.length) setContacts(res.data);
-              setLoading(false);
-            });
-      };
+  const { uid } = useSelector((state: RootState) => state.user);
+  const theme = useAppTheme();
 
-      useFocusEffect(
-        useCallback(() => {
-          loadContacts();
-          setError(null);
-          return () => {};
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [uid, dispatch]),
-      );
-
-      const saveContact = (c_ind: number, contact: Partial<IContact>) => {
-        if (uid === undefined) return;
-
-        const newArray = types
-          .map((type, ind) => {
-            const current = contacts.find((c) => c?.type === type.value);
-
-            if (c_ind === ind) {
-              return {
-                data: "",
-                title: null,
-                ...current,
-                ...contact,
-                type: type.value,
-                author: uid,
-                public: true,
-                created_at: current?.created_at || new Date().toISOString(),
-              };
-            } else return current;
-          })
-          .filter((item): item is NonNullable<typeof item> => item !== undefined);
-        setContacts(newArray);
-      };
-      const save = async () => {
-        const invalid = contacts.find((c) => c && !c.data && !!c.title);
-        console.log("invalid", invalid);
-
-        if (invalid) {
-          setError({ type: invalid.type, text: "Töltsd ki ezt a mezőt." });
-          return { error: "Invalid field" };
-        }
-        const noNullContacts = contacts.filter((c) => !!c && c.data.length);
-        if (uid && contacts.length) {
-          const response = await supabase.from("contacts").upsert(noNullContacts, {
-            onConflict: "id",
-            defaultToNull: false,
+  const dispatch = useDispatch();
+  const [contacts, setContacts] = useState<IContact[]>([]);
+  const [buzinessCount, setBuzinessCount] = useState(0);
+  const [revealedTypes, setRevealedTypes] = useState<Enums<"contact_type">[]>([
+    "MESSAGE",
+  ]);
+  const [addMenuVisible, setAddMenuVisible] = useState(false);
+  const loadContacts = () => {
+    if (!uid) return;
+    Promise.all([
+      supabase.from("contacts").select("*").eq("author", uid),
+      supabase
+        .from("buziness")
+        .select("id", { count: "exact", head: true })
+        .eq("author", uid),
+    ]).then(([contactsRes, buzinessRes]) => {
+      if (contactsRes.data?.length) {
+        setContacts(contactsRes.data);
+        setRevealedTypes((prev) => {
+          const next = new Set<Enums<"contact_type">>(prev);
+          next.add("TEL");
+          contactsRes.data.forEach((c) => {
+            if (c.data && c.data.length > 0) next.add(c.type);
           });
+          return Array.from(next);
+        });
+      }
+      setBuzinessCount(buzinessRes.count || 0);
+      setLoading(false);
+    });
+  };
 
-          // üres mezők törlése
-          const deletableIds: number[] = contacts
-            .filter((c) => c !== undefined && ((c.title && !c.data) || !c.data))
-            .map((c) => c?.id)
-            .filter((id): id is number => id !== undefined);
+  useEffect(() => {
+    props.onContactsChange?.(contacts);
+  }, [contacts, props]);
 
-          const del_response = await supabase
-            .from("contacts")
-            .delete()
-            .in("id", deletableIds);
-          console.log("del", del_response);
+  useFocusEffect(
+    useCallback(() => {
+      loadContacts();
+      setError(null);
+      return () => { };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [uid, dispatch]),
+  );
 
-          return response;
+  const saveContact = (c_ind: number, contact: Partial<IContact>) => {
+    if (uid === undefined) return;
+
+    const newArray = types
+      .map((type, ind) => {
+        const current = contacts.find((c) => c?.type === type.value);
+
+        if (c_ind === ind) {
+          const newContact = {
+            data: "",
+            title: null,
+            ...current,
+            ...contact,
+            type: type.value,
+            author: uid,
+            public: true,
+            created_at: current?.created_at || new Date().toISOString(),
+          };
+          return newContact;
+        } else return current;
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== undefined);
+    setContacts(newArray);
+  };
+  const save = async () => {
+    const invalid = contacts.find((c) => c && !c.data && !!c.title);
+    console.log("invalid", invalid);
+
+    if (invalid) {
+      setError({ type: invalid.type, text: "Nem maradhat üresen." });
+      return { error: "Invalid field" };
+    }
+    const noNullContacts = contacts.filter((c) => !!c && c.data.length);
+
+    // Prevent deletion if it would leave user with no contacts
+    if (noNullContacts.length === 0 && buzinessCount > 0) {
+      setError({ type: contacts[0]?.type || "TEL", text: "Legalább egy elérhetőséget kötelező megadni ha már van bizniszed." });
+      dispatch(addSnack({ title: "Legalább egy elérhetőséget kötelező megadni ha már van bizniszed." }));
+      return { error: "At least one contact is required" };
+    }
+
+    if (uid && contacts.length) {
+      // Find contacts where both value and title are empty, and delete them
+
+      const deletableIds: number[] = contacts
+        .filter((c) => c !== undefined && (!c.data || c.data === "") && (!c.title || c.title === "") && typeof c.id === "number")
+        .map((c) => c.id as number);
+
+      let del_response = null;
+      if (deletableIds.length > 0) {
+        del_response = await supabase
+          .from("contacts")
+          .delete()
+          .in("id", deletableIds);
+        if (del_response.error) {
+          console.error("Delete error:", del_response.error);
+          dispatch(addSnack({ title: "Hiba a törléskor: " + del_response.error.message }));
+          return { error: del_response.error.message };
+        } else {
+          console.log("Deleted contacts", deletableIds);
         }
-      };
-      useImperativeHandle(ref, () => ({
-        async saveContacts(): Promise<
+      }
+
+      const response = await supabase.from("contacts").upsert(noNullContacts, {
+        onConflict: "id",
+        defaultToNull: false,
+      });
+
+      return { upsert: response, delete: del_response };
+    }
+  };
+  useImperativeHandle(ref, () => ({
+    async saveContacts(): Promise<
       PostgrestSingleResponse<any> | { error: string } | undefined
-      > {
-          return await save();
-        },
-      }));
-      return (
-        <View style={{ flex: 1, gap: 8 }}>
-          {!loading &&
-        types.map((type, ind) => {
+    > {
+      return await save();
+    },
+    getContacts(): IContact[] {
+      return contacts;
+    },
+  }));
+  const hiddenTypes = types.filter((t) => !revealedTypes.includes(t.value));
+
+  return (
+    <View style={[{ flex: 1, gap: Spacing.md }, props?.style]}>
+      {!loading &&
+        types
+          .filter((type) => revealedTypes.includes(type.value))
+          .map((type, ind) => {
           const current = {
             title: "",
             data: "",
             ...contacts.find((c) => c?.type === type.value),
           };
           
-          // Special handling for MESSAGE type - show enable/chat button
-          if (type.value === "MESSAGE") {
-            const isEnabled = !!current.data;
-            const theme = useTheme();
-            
-            return (
-              <View key={ind}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    gap: 4,
-                    paddingLeft: 16,
-                    paddingRight: 16,
-                    paddingVertical: 8,
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      gap: 4,
-                      alignItems: "center",
-                      flex: 1,
-                    }}
-                  >
-                    <Icon size={16} source={typeToIcon(type?.value)} />
-                    <ThemedText>{type.label}</ThemedText>
-                  </View>
-                  {isEnabled ? (
-                    <Link asChild href="/chats">
-                      <Button mode="contained-tonal" compact>
-                        Kattints a beszélgetéshez
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Switch
-                      value={false}
-                      onValueChange={(value) => {
-                        saveContact(ind, { 
-                          data: value ? "enabled" : "",
-                          title: null 
-                        });
-                      }}
-                    />
-                  )}
-                </View>
-                {isEnabled && (
-                  <TextInput
-                    value={current?.title || ""}
-                    disabled={loading}
-                    label="Egyéb információ"
-                    placeholder="Pl. Csak munkaidőben"
-                    onChangeText={(t) => saveContact(ind, { title: t })}
-                  />
-                )}
-              </View>
-            );
-          }
-          
           // Regular contact types
+          const filled = !!current.data;
+          const isFeatured =
+            props.showFeaturedToggle &&
+            typeof current.id === "number" &&
+            props.defaultContactId === current.id;
+          // saveContact still expects an index into the full `types` array
+          const typeIndex = types.findIndex((t) => t.value === type.value);
           return (
-            <View key={ind}>
+            <View key={type.value} style={{ gap: Spacing.xs }}>
               <View
                 style={{
                   flexDirection: "row",
-                  gap: 4,
-                  paddingLeft: 16,
                   alignItems: "center",
+                  gap: Spacing.sm,
                 }}
               >
-                <Icon size={16} source={typeToIcon(type?.value)} />
-                <ThemedText>{type.label} elérhetőséged</ThemedText>
+                <View
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: BorderRadius.full,
+                    backgroundColor: theme.colors.surfaceVariant,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <IconButton
+                    icon={typeToIcon(type?.value)}
+                    size={16}
+                    iconColor={theme.colors.primary}
+                    style={{ margin: 0 }}
+                  />
+                </View>
+                <ThemedText
+                  variant="bodyMedium"
+                  style={{ flex: 1, color: theme.colors.onSurfaceVariant }}
+                >
+                  {type.label}
+                </ThemedText>
+                {props.showFeaturedToggle &&
+                  filled &&
+                  typeof current.id === "number" && (
+                    <IconButton
+                      icon={isFeatured ? "star" : "star-outline"}
+                      size={20}
+                      iconColor={
+                        isFeatured
+                          ? theme.colors.primary
+                          : theme.colors.onSurfaceVariant
+                      }
+                      onPress={() => {
+                        if (typeof current.id === "number") {
+                          props.onDefaultContactChange?.(
+                            isFeatured ? undefined : current.id,
+                          );
+                        }
+                      }}
+                      accessibilityLabel={
+                        isFeatured
+                          ? "Kiemelt elérhetőség eltávolítása"
+                          : "Beállítás kiemelt elérhetőségként"
+                      }
+                    />
+                  )}
               </View>
-              <TextInput
-                label={typeToValueLabel(type?.value)}
-                value={current?.data}
-                disabled={loading || !type.label}
-                left={typeToPrefix(type.value)}
-                placeholder={typeToPlaceholder(type.value)}
-                onChangeText={(t) => saveContact(ind, { data: t })}
-                error={error?.type === type.value}
-              />
+              {type.value === "MESSAGE" ? (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: Spacing.sm,
+                  }}
+                ><View  style={{flex:1}}>
+                  
+                    <ThemedText variant="bodyMedium">
+                      {current?.data === "true" || current?.data === true
+                        ? "A közvetlen üzenet engedélyezve van"
+                        : typeToPlaceholder(type?.value)}
+                    </ThemedText>
+                </View>
+                  <Switch
+                    value={current?.data === "true" || current?.data === true}
+                    onValueChange={(value) =>
+                      saveContact(typeIndex, { data: value ? "true" : "" })
+                    }
+                    disabled={loading || !type.label}
+                  />
+                </View>
+              ) : (
+                <TextInput
+                  mode="outlined"
+                  label={typeToValueLabel(type?.value)}
+                  value={current?.data}
+                  disabled={loading || !type.label}
+                  left={typeToPrefix(type.value)}
+                  placeholder={typeToPlaceholder(type.value)}
+                  onChangeText={(t) => saveContact(typeIndex, { data: t })}
+                  error={error?.type === type.value}
+                  contentStyle={{}}
+                />
+              )}
               {(!!current.data || !!current.title) && (
                 <TextInput
+                  mode="outlined"
                   value={current?.title || ""}
                   disabled={loading}
-                  label="Egyéb információ"
-                  placeholder="Munkanapokon keress / csak hékvégén"
-                  onChangeText={(t) => saveContact(ind, { title: t })}
+                  label={"Egyéb információ"}
+                  placeholder="Munkanapokon keress / csak hétvégén"
+                  onChangeText={(t) => saveContact(typeIndex, { title: t })}
                 />
               )}
               {error?.type === type.value && (
-                <ThemedText type="error" style={{ marginLeft: 16 }}>
+                <ThemedText type="error" style={{ marginLeft: Spacing.xs }}>
                   {error?.text}
                 </ThemedText>
               )}
             </View>
           );
         })}
-        </View>
-      );
-    });
+      {!loading && hiddenTypes.length > 0 && (
+        <Menu
+          visible={addMenuVisible}
+          onDismiss={() => setAddMenuVisible(false)}
+          anchor={
+            <Button
+              icon="plus"
+              mode="text"
+              onPress={() => setAddMenuVisible(true)}
+              style={{ alignSelf: "flex-start" }}
+            >
+              Új elérhetőség
+            </Button>
+          }
+        >
+          {hiddenTypes.map((t) => (
+            <Menu.Item
+              key={t.value}
+              leadingIcon={typeToIcon(t.value)}
+              title={t.label}
+              onPress={() => {
+                setRevealedTypes((prev) => [...prev, t.value]);
+                setAddMenuVisible(false);
+              }}
+            />
+          ))}
+        </Menu>
+      )}
+    </View>
+  );
+});
 ContactEditScreen.displayName = "ContactEditScreen";
 
 export default ContactEditScreen;

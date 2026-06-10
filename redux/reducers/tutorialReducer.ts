@@ -24,6 +24,7 @@ const tutorialReducer = createSlice({
       state,
       action: PayloadAction<{ key: string; uid: string }>,
     ) => {
+      if (!state.functions) state.functions = initialState.functions;
       const index = state.functions.indexOf(action.payload.key);
 
       if (index > -1) {
@@ -43,7 +44,7 @@ const tutorialReducer = createSlice({
       }
     },
     loadViewedFunctions: (state, action: PayloadAction<string[]>) => {
-      state.functions = state.functions.filter((x) =>
+      state.functions = (state.functions ?? initialState.functions).filter((x) =>
         action.payload.includes(x),
       );
     },
@@ -61,8 +62,8 @@ const tutorialReducer = createSlice({
       state.tutorialStep = action.payload;
     },
     specifyTutorialStepLayout(state, action: PayloadAction<{layout:LayoutRectangle,key:string}>) {
-      if (state.tutorialLayouts)
-        state.tutorialLayouts[action.payload.key] = action.payload.layout;
+      if (!state.tutorialLayouts) state.tutorialLayouts = {};
+      state.tutorialLayouts[action.payload.key] = action.payload.layout;
     },
   },
 });

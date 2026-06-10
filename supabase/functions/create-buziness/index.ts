@@ -5,9 +5,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import OpenAI from "npm:openai";
+import { embedding_instructions } from "../_shared/embedding.ts";
 // Prefer standard env names; fallback to local defaults
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || Deno.env.get("URL") || "http://127.0.0.1:54321";
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY") || "";
+const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
 const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,59 +21,138 @@ Deno.serve(async (req)=>{
       headers: corsHeaders
     });
   }
-  const buziness = await req.json();
-  console.log(buziness);
-  if (buziness.title) {
-    const openai = new OpenAI({
-      apiKey: openaiApiKey
-    });
-    const input = "Categories: " + buziness.title.replace(/(\s\$\s)+/g, ", ") + (buziness.description ? " | Description: " + buziness.description : "");
-    console.log("run embedding with input", input);
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: "Írd körül röviden azt az embert, aki ezekhez ért: " + input
-        }
-      ]
-    });
-    const embeddingResponse = await openai.embeddings.create({
-      model: "text-embedding-3-large",
-      input: completion.choices[0].message.content,
-      dimensions: 512
-    });
-    console.log(embeddingResponse);
-    if (!supabaseServiceRoleKey) {
-      console.error("Missing SUPABASE_SERVICE_ROLE_KEY; cannot upsert buziness");
-      return new Response(JSON.stringify({ error: "Missing Supabase credentials" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
-    }
-    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
-    const res = await supabase.from("buziness").upsert({
-      ...buziness,
-      embedding: embeddingResponse.data[0].embedding,
-      embedding_text: completion.choices[0].message.content,
-    }, {
-      onConflict: "id"
-    });
-    console.log(res);
-    if (!res.error) return new Response(JSON.stringify(res), {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json"
-      }
+
+  // Require a valid authenticated JWT
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 401,
     });
   }
-  return new Response(JSON.stringify({
-    error: "No title provided"
-  }), {
+  const token = authHeader.replace("Bearer ", "");
+  const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 401,
+    });
+  }
+
+  const buziness = await req.json();
+  console.log(buziness);
+  
+  // Validate that user has title and it is a non-empty string
+  if (!buziness.title || typeof buziness.title !== "string") {
+    return new Response(JSON.stringify({
+      error: "Title must be a non-empty string"
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
+  }
+  // Normalize title: collapse consecutive or empty " $ " segments
+  // e.g. "title $  $  $  key1" → "title $ key1"
+  const titleSegments = buziness.title.split(/\s*\$\s*/).map((s: string) => s.trim()).filter(Boolean);
+  if (titleSegments.length === 0) {
+    return new Response(JSON.stringify({
+      error: "Title cannot be empty after normalization"
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
+  }
+  buziness.title = titleSegments.join(" $ ");
+  
+  // Validate that user has at least one contact before proceeding
+  if (!supabaseServiceRoleKey) {
+    console.error("Missing SUPABASE_SERVICE_ROLE_KEY; cannot check contacts");
+    return new Response(JSON.stringify({ error: "Missing Supabase credentials" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
+  
+  const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+  
+  // Check if user has at least one contact with non-empty data
+  const { data: contacts, error: contactsError } = await supabase
+    .from("contacts")
+    .select("id")
+    .eq("author", buziness.author)
+    .not("data", "is", null)
+    .neq("data", "");
+  
+  if (contactsError) {
+    console.error("Error checking contacts:", contactsError);
+    return new Response(JSON.stringify({ 
+      error: "Failed to verify contact requirements" 
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
+  
+  if (!contacts || contacts.length === 0) {
+    console.log("User has no contacts, cannot create buziness");
+    return new Response(JSON.stringify({ 
+      error: "At least one contact is required to create a buziness" 
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
+  }
+  
+  // Proceed with buziness creation
+  const openai = new OpenAI({
+    apiKey: openaiApiKey
+  });
+  const input = buziness.title.replace(/(\s\$\s)+/g, ", ") + (buziness.description || "");
+  console.log("run embedding with input", input);
+  const completion = await openai.responses.create({
+    model: "gpt-4.1-mini",
+    temperature: 0.3,
+    instructions: embedding_instructions,
+    input
+  });
+
+
+  const embedding_text = completion.output_text;
+  console.log("embedding_text",embedding_text);
+
+  const embeddingResponse = await openai.embeddings.create({
+    model: "text-embedding-3-large",
+    input: embedding_text,
+    dimensions: 512
+  });
+  console.log(embeddingResponse);
+  
+  const res = await supabase.from("buziness").upsert({
+    ...buziness,
+    embedding: embeddingResponse.data[0].embedding,
+    embedding_text,
+  }, {
+    onConflict: "id"
+  }).select().single();
+  console.log(res);
+  if (!res.error) return new Response(JSON.stringify(res.data), {
     headers: {
       ...corsHeaders,
       "Content-Type": "application/json"
     }
+  });
+  
+  return new Response(JSON.stringify({
+    error: res.error?.message || "Failed to create buziness"
+  }), {
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json"
+    },
+    status: 500,
   });
 }); /* To invoke locally:
 

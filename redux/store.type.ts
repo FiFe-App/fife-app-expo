@@ -5,6 +5,13 @@ import { ImagePickerAsset } from "expo-image-picker";
 export interface UserState {
   uid?: string;
   name?: string;
+  locationAlertDismissed?: boolean;
+  inviteCardDismissed?: boolean;
+  notificationPrefs?: {
+    notifyPush: boolean;
+    notifyEmail: boolean;
+    newsletter: boolean;
+  };
   userData?: {
     authorization: string;
     email: string;
@@ -12,16 +19,37 @@ export interface UserState {
     providerData: unknown;
     createdAt: Date;
     lastLoginAt: Date;
+    location?: {
+      lng: number;
+      lat: number;
+      radius?: number;
+    };
   } | null;
   locationError: string | null;
   themePreference: "light" | "dark" | "auto";
   savedBuzinesses: number[];
+  previousSearches: string[];
 }
 
 export type User = Tables<"profiles"> & {
     buzinesses: { title: string }[];
     profileRecommendations?: { count: number }[];
   };
+
+/** Return type of the nearest_profiles RPC */
+export interface NearestProfile {
+  id: string;
+  full_name: string;
+  username: string | null;
+  avatar_url: string | null;
+  website: string | null;
+  created_at: string | null;
+  recommendations: number;
+  lat: number;
+  long: number;
+  distance: number;
+  buzinesses: { title: string }[];
+}
 
 export interface UsersState {
   users: User[];
@@ -45,6 +73,7 @@ export interface BuzinessSearchItemInterface {
   location?: string;
   authorName?: string;
   distance?: number;
+  relevance: number;
   buzinessRecommendations: { author: string }[];
 }
 export interface BuzinessItemInterface {
@@ -60,6 +89,8 @@ export interface BuzinessItemInterface {
   avatarUrl?: string | null;
   images?: ImageDataType[];
   recommendations: number | { count: number }[];
+  created_at?: string;
+  ingyen?: boolean;
 }
 export interface EventItemInterface extends Tables<"events"> {
   lat: number | null;
@@ -82,6 +113,7 @@ export interface SearchParams {
   loading?: boolean;
   searchType?: string;
   skip?: number;
+  ingyen?: boolean;
 }
 export interface BuzinessState {
   buzinesses: BuzinessSearchItemInterface[];
@@ -119,6 +151,9 @@ export interface InfoState {
   snacks: SnackProps[];
   loading?: LoadingProps;
   notificationToken: null | undefined | string;
+  policiesAccepted: boolean;
+  statusBarColor: string | null;
+  bottomBarColor: string | null;
 }
 
 export interface LayoutRectangle {

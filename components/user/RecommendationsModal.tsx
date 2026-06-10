@@ -14,6 +14,7 @@ import {
 import ProfileImage from "../ProfileImage";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
+import { Spacing } from "@/constants/spacing";
 
 interface RMP {
   show: boolean;
@@ -58,8 +59,8 @@ const RecommendationsModal = ({ show, setShow, uid, name }: RMP) => {
     >
       <ThemedView
         style={{
-          padding: 20,
-          margin: 30,
+          padding: Spacing.xl,
+          margin: Spacing.xxxl,
         }}
       >
         {list.length ? (
@@ -68,6 +69,7 @@ const RecommendationsModal = ({ show, setShow, uid, name }: RMP) => {
             {list.map((rec, ind) => (
               <>
                 <Link
+                  key={"recommended-"+rec.id}
                   asChild
                   href={{
                     pathname: "/user/[uid]",
@@ -78,14 +80,14 @@ const RecommendationsModal = ({ show, setShow, uid, name }: RMP) => {
                     <View
                       style={{
                         flexDirection: "row",
-                        padding: 4,
+                        padding: Spacing.xs,
                         alignItems: "center",
                       }}
                     >
                       <ProfileImage
                         uid={rec.author}
                         avatar_url={rec.profiles?.avatar_url}
-                        style={{ width: 40, height: 40, marginRight: 16 }}
+                        style={{ width: 40, height: 40, marginRight: Spacing.lg }}
                       />
                       <View style={{ flex: 1, justifyContent: "center" }}>
                         <Text>{rec.profiles?.full_name}</Text>

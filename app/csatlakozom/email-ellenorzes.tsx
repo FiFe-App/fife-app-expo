@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import { useDispatch } from "react-redux";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 
 export default function Index() {
   const dispatch = useDispatch();
@@ -97,13 +99,13 @@ export default function Index() {
   }, []);
 
   return (
-    <ThemedView style={{ flex: 1, padding: 16 }}>
-      <View style={{ justifyContent: "center", marginBottom: 16 }}></View>
+    <ThemedView style={{ flex: 1, padding: Spacing.lg }}>
+      <View style={{ justifyContent: "center", marginBottom: Spacing.lg }}></View>
       <View
         style={{
           maxWidth: 400,
           width: "100%",
-          gap: 8,
+          gap: Spacing.sm,
           flex: 3,
           justifyContent: "center",
           alignSelf:"center",
@@ -113,7 +115,7 @@ export default function Index() {
         <ThemedText type="title">
           Kérlek igazold vissza az email-címedet
         </ThemedText>
-        <View style={{ gap: 16, width:"100%" }}>
+        <View style={{ gap: Spacing.lg, width:"100%" }}>
           <ThemedText>Küldtünk egy email-t erre a címre:</ThemedText>
           {!edit ? (
             <ThemedText style={{ textAlign: "center" }}>{email}</ThemedText>
@@ -122,9 +124,9 @@ export default function Index() {
               <TextInput
                 style={{
                   textAlign: "center",
-                  borderRadius: 8,
+                  borderRadius: BorderRadius.md,
                   padding: 0,
-                  marginBottom: 16
+                  marginBottom: Spacing.lg
                 }}
                 placeholder="Az új email-címed"
                 value={email}

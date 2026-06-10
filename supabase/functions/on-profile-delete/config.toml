@@ -1,0 +1,6 @@
+[function]
+verify_jwt = false
+
+# Database webhook: trigger on DELETE from public.profiles
+[function.events]
+database = [{ table = "public.profiles", events = ["DELETE"] }]

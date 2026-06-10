@@ -34,7 +34,7 @@ const buzinessReducer = createSlice({
       state,
       action: PayloadAction<BuzinessSearchItemInterface[]>,
     ) => {
-      state.buzinesses = [...state.buzinesses, ...action.payload];
+      state.buzinesses = [...(state.buzinesses ?? []), ...action.payload];
     },
     storeBuzinessSearchParams: (
       state,
@@ -60,14 +60,20 @@ const buzinessReducer = createSlice({
       state,
       { payload }: PayloadAction<BuzinessSearchItemInterface>,
     ) => {
-      state.buzinesses = state.buzinesses.map((buziness) =>
+      state.buzinesses = (state.buzinesses ?? []).map((buziness) =>
         buziness.id === payload.id ? { ...buziness, ...payload } : buziness,
       );
     },
     deleteBuziness: (state, { payload }: PayloadAction<number>) => {
-      state.buzinesses = state.buzinesses.filter(
+      state.buzinesses = (state.buzinesses ?? []).filter(
         (buziness) => buziness.id !== payload,
       );
+    },
+    removeTrailingDivider: (state) => {
+      const list = state.buzinesses ?? [];
+      if (list.length > 0 && list[list.length - 1].id === -1) {
+        state.buzinesses = list.slice(0, -1);
+      }
     },
     clearBuziness: (state: BuzinessState) => {
       state.buzinesses = [];
@@ -79,6 +85,7 @@ export const {
   storeBuzinesses,
   storeBuzinessHasMore,
   loadBuzinesses,
+  removeTrailingDivider,
   clearBuziness,
   storeBuzinessSearchParams,
   storeBuzinessSearchType,

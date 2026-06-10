@@ -5,7 +5,7 @@ import {
   UsersState,
 } from "../store.type";
 
-const initialState: UsersWState = {
+const initialState: UsersState = {
   users: [],
   userSearchParams: {
     skip: 0,
@@ -30,7 +30,7 @@ const usersReducer = createSlice({
       state,
       action: PayloadAction<User[]>,
     ) => {
-      state.users = [...state.users, ...action.payload];
+      state.users = [...(state.users ?? []), ...action.payload];
     },
     storeUserSearchParams: (
       state,

@@ -6,17 +6,10 @@ import { supabase } from "@/lib/supabase/supabase";
 import { makeRedirectUri } from "expo-auth-session";
 import { Link, Redirect } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { AppState, View } from "react-native";
+import { View } from "react-native";
 import { Button, Divider } from "react-native-paper";
 import { useSelector } from "react-redux";
-
-AppState.addEventListener("change", (state) => {
-  if (state === "active") {
-    supabase.auth.startAutoRefresh();
-  } else {
-    supabase.auth.stopAutoRefresh();
-  }
-});
+import { Spacing } from "@/constants/spacing";
 
 export default function Index() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
@@ -37,8 +30,8 @@ export default function Index() {
 
   if (uid) return <Redirect href="/" />;
   return (
-    <ThemedView style={{ flex: 1, padding: 16 }}>
-      <View style={{ justifyContent: "center", marginBottom: 16 }}>
+    <ThemedView style={{ flex: 1, padding: Spacing.lg }}>
+      <View style={{ justifyContent: "center", marginBottom: Spacing.lg }}>
         <ThemedText type="title" style={{ textAlign: "left" }}>
           Szuper vagy!
         </ThemedText>
@@ -48,7 +41,7 @@ export default function Index() {
         style={{
           maxWidth: 400,
           width: "100%",
-          gap: 8,
+          gap: Spacing.sm,
           flex: 3,
           justifyContent: "center",
         }}
@@ -64,7 +57,7 @@ export default function Index() {
         <Button mode="contained" icon="google" disabled>
           Csatlakozom Google-lel
         </Button>
-        <Divider style={{ marginVertical: 16 }} />
+        <Divider style={{ marginVertical: Spacing.lg }} />
         <Link href="/csatlakozom/email-regisztracio" asChild>
           <Button mode="contained">E-mail és Jelszó regisztráció</Button>
         </Link>

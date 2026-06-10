@@ -8,7 +8,7 @@ import { ActivityIndicator, Text } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { ChatListItem } from "./ChatListItem";
 import { useFocusEffect } from "expo-router";
-import { MessagingDisabled } from "./MessagingDisabled";
+import { MessagingDisabledCard } from "./MessagingDisabledCard";
 
 type Message = Tables<"messages">;
 type Profile = Tables<"profiles">;
@@ -135,7 +135,8 @@ export default function ChatList() {
   if (!hasMessagingEnabled) {
     return (
       <ThemedView style={styles.container}>
-        <MessagingDisabled
+        <MessagingDisabledCard
+          myMessagingEnabled={false}
           onEnabled={() => {
             setHasMessagingEnabled(true);
             loadChats();

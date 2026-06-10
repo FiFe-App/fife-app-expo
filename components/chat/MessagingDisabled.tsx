@@ -11,7 +11,6 @@ interface MessagingDisabledProps {
 }
 
 export function MessagingDisabled({ onEnabled }: MessagingDisabledProps) {
-  const theme = useTheme();
   const { uid } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const [enabling, setEnabling] = useState(false);
@@ -79,7 +78,7 @@ export function MessagingDisabled({ onEnabled }: MessagingDisabledProps) {
         <Card.Content>
           <Text
             variant="titleMedium"
-            style={[styles.title, { color: theme.colors.error }]}
+            style={[styles.title]}
           >
             Nincs bekapcsolva az üzenetküldés a profilodban
           </Text>

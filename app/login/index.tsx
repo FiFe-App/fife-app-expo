@@ -1,41 +1,35 @@
 import { ThemedView } from "@/components/ThemedView";
-import {
-  setName,
-  setUserData,
-  login as sliceLogin,
-} from "@/redux/reducers/userReducer";
+import { fetchUserProfile } from "@/lib/auth/fetchUserProfile";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
-import { Link, Redirect, router, useLocalSearchParams } from "expo-router";
+import { Link, Redirect, router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
-import { AppState, View } from "react-native";
+import { View } from "react-native";
 import { Divider, Text, TextInput } from "react-native-paper";
+import { Spacing } from "@/constants/spacing";
 import { useDispatch, useSelector } from "react-redux";
 
 import { makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
-import { loadViewedFunctions } from "@/redux/reducers/tutorialReducer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "@/components/Button";
-
-AppState.addEventListener("change", (state) => {
-  if (state === "active") {
-    supabase.auth.startAutoRefresh();
-  } else {
-    supabase.auth.stopAutoRefresh();
-  }
-});
+import { useAppTheme } from "@/assets/theme";
+import { ThemedText } from "@/components/ThemedText";
+import { Image } from "expo-image";
+import Smiley from "@/components/Smiley";
 
 export default function Index() {
+  const navigation = useNavigation();
+  const theme = useAppTheme();
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
-  const { "#": hash } = useLocalSearchParams<{ "#": string }>();
+  const { "#": hash, redirected_from } = useLocalSearchParams<{ "#": string; redirected_from?: string }>();
   const token_data = hash
     ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
     : null;
@@ -43,6 +37,7 @@ export default function Index() {
   const redirectTo = makeRedirectUri();
 
   useEffect(() => {
+    navigation.setOptions({ "title": "Bejelentkezés" });
     if (token_data) {
       console.log(token_data);
 
@@ -69,159 +64,99 @@ export default function Index() {
     if (error) {
       console.log(error.code);
 
-      if (error.code === "email_not_confirmed") {
-        AsyncStorage.setItem("email", email);
-        router.navigate("/csatlakozom/email-ellenorzes");
+      switch (error.code) {
+        case "email_not_confirmed":
+          AsyncStorage.setItem("email", email);
+          router.navigate("/csatlakozom/email-ellenorzes");
+          break;
+        case "invalid_credentials":
+        case "user_not_found":
+          setError("Helytelen e-mail vagy jelszó");
+          break;
+        case "too_many_requests":
+          setError("Túl sok próbálkozás. Próbáld később.");
+          break;
+        default:
+          setError(error.message);
       }
-      setError(error.message);
     } else {
       getUserData(data.user);
     }
     setLoading(false);
   }
-
-  async function signInWithGoogle() {
-    supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${redirectTo}/login`,
-      },
-    });
-  }
-
-  async function autoLogin() {
-    setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: "test@fife.hu",
-      password: "fifewok42",
-    });
-
-    if (error) {
-      setError(error.message);
-    } else {
-      getUserData(data.user);
-    }
-    setLoading(false);
-  }
-
-  const startFacebookLogin = async () => {
-    console.log("hello");
-
-    console.log({
-      redirectTo: `${redirectTo}/login`,
-    });
-
-    await supabase.auth.signInWithOAuth({
-      provider: "facebook",
-      options: {
-        redirectTo: `${redirectTo}/login`,
-      },
-    });
-  };
 
   const getUserData = async (userData: User) => {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select()
-      .eq("id", userData.id)
-      .maybeSingle();
-    if (error) {
-      console.log(error);
-    }
+    const profile = await fetchUserProfile(userData, dispatch);
     if (profile) {
-      console.log("profile", profile);
-
-      dispatch(sliceLogin(profile?.id));
-      dispatch(setName(profile?.full_name));
-      console.log("user-data", { ...userData, ...profile });
-
-      dispatch(setUserData({ ...userData, ...profile }));
-      if (profile?.viewed_functions)
-        dispatch(loadViewedFunctions(profile?.viewed_functions));
+      const isValidInternal =
+        typeof redirected_from === "string" &&
+        redirected_from.startsWith("/") &&
+        !redirected_from.startsWith("//") &&
+        !redirected_from.includes(":");
+      router.replace(isValidInternal ? (redirected_from as `/${string}`) : "/");
     }
   };
 
-  if (!uid)
-    return (
-      <ThemedView style={{ flex: 1 }} type="default">
-        <View style={{ maxWidth: 300, width: "100%", gap: 8, margin: "auto" }}>
-          <Button onPress={autoLogin} mode="contained">
-            Próba felhasználó
-          </Button>
-          <Button
-            mode="contained"
-            icon="facebook"
-            disabled
-            onPress={startFacebookLogin}
-          >
-            Facebook bejelentkezés
-          </Button>
-          <Button
-            mode="contained"
-            icon="google"
-            disabled
-            onPress={signInWithGoogle}
-          >
-            Google bejelentkezés
-          </Button>
-          <Divider style={{ marginVertical: 16 }} />
-          <TextInput
-            mode="outlined"
-            onChangeText={setEmail}
-            value={email}
-            label="E-mail"
-            autoComplete="email"
-            textContentType="emailAddress"
-            inputMode="email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <TextInput
-            mode="outlined"
-            onChangeText={setPassword}
-            value={password}
-            label="Jelszó"
-            secureTextEntry={!showPassword}
-            autoComplete="current-password"
-            textContentType="password"
-            right={
-              <TextInput.Icon
-                icon={showPassword ? "eye" : "eye-off"}
-                onPress={() => setShowPassword(!showPassword)}
-              />
-            }
-          />
-          <Button
-            onPress={signInWithEmail}
-            loading={loading}
-            mode="contained"
-            type="secondary"
-          >
-            Bejelentkezés
-          </Button>
-          <View style={{ flexDirection: "row", justifyContent: "center" }}>
-            <Link href="/csatlakozom" asChild>
-              <Button>Még nincs fiókom</Button>
-            </Link>
-            <Link href="/user/password-reset" asChild>
-              <Button>Elfelejtettem a jelszavam</Button>
-            </Link>
-          </View>
-          <Text style={{ color: "red" }}>{error}</Text>
-        </View>
-      </ThemedView>
-    );
+  if (uid)
+    return <Redirect href="/" />;
+
   return (
-    <ThemedView
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 32,
-      }}
-    >
-      <Redirect href="/" />
+    <ThemedView style={{ flex: 1 }} type="default">
+      <View style={{ maxWidth: 300, width: "80%", gap: Spacing.sm, marginHorizontal:"auto", marginTop: Spacing.xxxl }}>
+        <View style={{width:"100%",alignItems:"center"}}>
+          <Smiley style={{width:100,height:100}} />
+        </View>
+        <TextInput
+          mode="outlined"
+          onChangeText={setEmail}
+          value={email}
+          label="E-mail"
+          autoComplete="email"
+          textContentType="emailAddress"
+          inputMode="email"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        <TextInput
+          mode="outlined"
+          onChangeText={setPassword}
+          value={password}
+          label="Jelszó"
+          secureTextEntry={!showPassword}
+          autoComplete="current-password"
+          textContentType="password"
+          right={
+            <TextInput.Icon
+              icon={showPassword ? "eye" : "eye-off"}
+              onPress={() => setShowPassword(!showPassword)}
+            />
+          }
+        />
+        <Button
+          onPress={signInWithEmail}
+          loading={loading}
+          style={{marginTop: Spacing.md}}
+          mode="contained"
+          disabled={!password || !email}
+          type="secondary"
+        >
+          Bejelentkezés
+        </Button>
+        <View style={{minHeight:60}}>
+          {!!error && <ThemedView style={{margin:6, alignItems:"center"}} type="error">
+            <ThemedText type="error">{error}</ThemedText>
+          </ThemedView>}
+        <View style={{ flexDirection: "row", justifyContent: "center" }}>
+          <Link href="/csatlakozom" asChild>
+            <Button>Még nincs fiókom</Button>
+          </Link>
+          <Link href="/user/password-reset" asChild>
+            <Button>Elfelejtettem a jelszavam</Button>
+          </Link>
+        </View>
+        </View>
+      </View>
     </ThemedView>
   );
 }

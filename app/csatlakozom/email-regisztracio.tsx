@@ -3,29 +3,36 @@ import { ThemedView } from "@/components/ThemedView";
 import { supabase } from "@/lib/supabase/supabase";
 import { login, setUserData } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
-import { UserState } from "@/redux/store.type";
+import { UserState, CircleType } from "@/redux/store.type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Link, Redirect, router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import { openBrowserAsync } from "expo-web-browser";
 import { useEffect, useState } from "react";
-import { AppState, View } from "react-native";
+import { View } from "react-native";
 
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { makeRedirectUri } from "expo-auth-session";
-import { Button, Checkbox, HelperText, Icon, TextInput, useTheme } from "react-native-paper";
+import { Button, Checkbox, HelperText, Icon, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import UsernameInput from "@/components/UsernameInput";
+import { Spacing } from "@/constants/spacing";
+import { useAppTheme } from "@/assets/theme";
 
-AppState.addEventListener("change", (state) => {
-  if (state === "active") {
-    supabase.auth.startAutoRefresh();
-  } else {
-    supabase.auth.stopAutoRefresh();
-  }
-});
+// Type for signup metadata
+interface SignupMetadata {
+  full_name: string;
+  username: string;
+  location?: string; // PostGIS POINT string format
+  location_radius_m?: number;
+  notify_push?: boolean;
+  notify_email?: boolean;
+  newsletter?: boolean;
+  bad_boy?: boolean;
+}
 
 export default function Index() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const dispatch = useDispatch();
 
   const [name, setName] = useState("");
@@ -41,20 +48,53 @@ export default function Index() {
   const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
   const isPasswordWeak = !passwordRegex.exec(password)?.length;
 
-  const { uid }: UserState = useSelector((state: RootState) => state.user);
+  const { uid, userData, notificationPrefs }: UserState = useSelector((state: RootState) => state.user);
+  const policiesAccepted = useSelector((state: RootState) => state.info.policiesAccepted);
+  const userLocation = userData?.location;
   WebBrowser.maybeCompleteAuthSession(); // required for web only
   const redirectTo = makeRedirectUri({ path: "/csatlakozom/elso-lepesek" });
 
   const createUser = async () => {
     setLoading(true);
+    
+    // Ensure we have required fields
+    if (!email.trim() || !name.trim()) {
+      setError("Email és név megadása kötelező");
+      setLoading(false);
+      return;
+    }
+
+    // Prepare metadata with proper typing
+    const metadata: SignupMetadata = {
+      full_name: name.trim(),
+      username: username.trim(),
+    };
+
+    // Add location if available and properly structured
+    if (userLocation &&
+        typeof userLocation.lat === "number" &&
+        typeof userLocation.lng === "number") {
+      // Format as PostGIS POINT string
+      metadata.location = `POINT(${userLocation.lng} ${userLocation.lat})`;
+      if (typeof userLocation.radius === "number") {
+        metadata.location_radius_m = userLocation.radius;
+      }
+    }
+
+    // Add notification preferences from onboarding
+    if (notificationPrefs) {
+      metadata.notify_push = notificationPrefs.notifyPush;
+      metadata.notify_email = notificationPrefs.notifyEmail;
+      metadata.newsletter = notificationPrefs.newsletter;
+    }
+
+    metadata.bad_boy = !policiesAccepted;
+
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: email.trim(),
       password,
       options: {
-        data: {
-          full_name: name,
-          username,
-        },
+        data: metadata,
         emailRedirectTo: redirectTo,
       },
     });
@@ -104,15 +144,14 @@ export default function Index() {
 
   if (uid) return <Redirect href="/" />;
   return (
-    <ThemedView style={{ flex: 1, padding: 16, alignItems: "center" }}>
-      <View style={{ justifyContent: "center", marginBottom: 16 }}></View>
+    <ThemedView style={{ flex: 1, padding: Spacing.lg, paddingTop: Spacing.xxxl }}>
+      <View style={{ marginBottom: Spacing.lg }}></View>
       <View
         style={{
           maxWidth: 400,
           width: "100%",
-          gap: 8,
+          gap: Spacing.sm,
           flex: 3,
-          justifyContent: "center",
         }}
       >
         <ThemedText type="title" style={{ textAlign: "left" }}>
@@ -137,7 +176,7 @@ export default function Index() {
           onChangeText={setUsername}
           onAvailabilityChange={setUsernameAvailable}
           label="Felhasználónév"
-          style={{ marginTop: 8 }}
+          style={{ marginTop: Spacing.sm }}
         />
         <TextInput
           mode="outlined"
@@ -167,7 +206,7 @@ export default function Index() {
           }
         />
         <View style={{ flexDirection: "row" }}>
-          <View style={{ marginRight: 4, justifyContent: "center" }}>
+          <View style={{ marginRight: Spacing.xs, justifyContent: "center" }}>
             <Icon
               source={isPasswordWeak ? "check-circle-outline" : "check-circle"}
               color={theme.colors.onSurface}
@@ -197,21 +236,34 @@ export default function Index() {
             />
           }
         />
-        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 16 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginTop: Spacing.lg }}>
           <Checkbox
             onPress={() => setAcceptConditions(!acceptConditions)}
             status={acceptConditions ? "checked" : "unchecked"}
           />
-          <ThemedText variant="labelLarge" onPress={() => setAcceptConditions(!acceptConditions)}>
-            Elfogadom a
-            <ThemedText variant="labelLarge" type="link">
-              <Link href="/csatlakozom/iranyelvek"> feltételeket</Link>
+          <ThemedText variant="labelLarge" style={{ flex: 1, flexWrap: "wrap" }} onPress={() => setAcceptConditions(!acceptConditions)}>
+            {"Elolvastam és elfogadom a "}
+            <ThemedText
+              variant="labelLarge"
+              type="link"
+              onPress={(e) => { e.stopPropagation?.(); openBrowserAsync("https://fifeapp.hu/terms.html"); }}
+            >
+              Felhasználási feltételeket
             </ThemedText>
-            .
+            {" és az "}
+            <ThemedText
+              variant="labelLarge"
+              type="link"
+              onPress={(e) => { e.stopPropagation?.(); openBrowserAsync("https://fifeapp.hu/privacy.html"); }}
+            >
+              Adatkezelési tájékoztatót
+            </ThemedText>
+            {"."}          
           </ThemedText>
         </View>
         <Button
           mode="contained"
+          style={{marginTop:Spacing.lg}}
           loading={loading}
           onPress={createUser}
           disabled={

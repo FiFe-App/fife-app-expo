@@ -1,5 +1,6 @@
 import { Link } from "expo-router";
 import { Icon, Button } from "react-native-paper";
+import { Spacing } from "@/constants/spacing";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 import { View } from "react-native";
@@ -21,7 +22,7 @@ const ErrorScreen = ({
         alignItems: "center",
         flex: 1,
         justifyContent: "center",
-        gap: 32,
+        gap: Spacing.xxxl,
       }}
     >
       <Icon source={icon} size={100} />

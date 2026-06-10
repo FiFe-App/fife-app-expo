@@ -2,7 +2,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
-import { useFocusEffect, useGlobalSearchParams } from "expo-router";
+import { Link, useFocusEffect, useGlobalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, View, StyleSheet } from "react-native";
 import { Appbar } from "react-native-paper";
@@ -16,7 +16,7 @@ import { RealtimeChannel } from "@supabase/supabase-js";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import BuzinessSearchInput from "../BuzinessSearchInput";
 import { MyAppbar } from "../MyAppBar";
-import { MessagingDisabled } from "./MessagingDisabled";
+import { MessagingDisabledCard } from "./MessagingDisabledCard";
 
 type Message = Tables<"messages">;
 
@@ -32,6 +32,7 @@ export default function ChatScreen() {
   const [otherHasMessagingEnabled, setOtherHasMessagingEnabled] = useState(false);
   const [checkingMessaging, setCheckingMessaging] = useState(true);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const mountId = useRef(Date.now()).current;
   const flatListRef = useRef<FlatList>(null);
   const navigation = useNavigation();
 
@@ -80,18 +81,20 @@ export default function ChatScreen() {
           setOtherUser(data);
         });
       navigation.setOptions({ header: () => <MyAppbar center={
-        otherUser && (
-          <View style={styles.profileHeaderContent}>
-            <ProfileImage
-              uid={otherUser.id}
-              avatar_url={otherUser.avatar_url}
-              size={36}
-              style={styles.profileImage}
-            />
-            <Text variant="titleLarge" style={styles.profileName} numberOfLines={1}>
-              {otherUser.full_name || otherUser.username}
-            </Text>
-          </View>
+        otherUser && otherUid && (
+          <Link href={`/user/${otherUid}`} style={{width:"100%",textAlign:"center"}}>
+            <View style={styles.profileHeaderContent}>
+              <ProfileImage
+                uid={otherUser.id}
+                avatar_url={otherUser.avatar_url}
+                size={36}
+                style={styles.profileImage}
+              />
+              <Text variant="titleLarge" style={styles.profileName} numberOfLines={1}>
+                {otherUser.full_name || otherUser.username}
+              </Text>
+            </View>
+          </Link>
         )} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
     }, [otherUid, myUid]),
   );
@@ -126,7 +129,7 @@ export default function ChatScreen() {
     // Subscribe to new messages - listen to all messages and filter client-side
     // because Supabase realtime filters don't support complex OR conditions well
     const channel = supabase
-      .channel("messages_channel")
+      .channel(`messages:${myUid}:${otherUid}:${mountId}`)
       .on(
         "postgres_changes",
         {
@@ -141,7 +144,10 @@ export default function ChatScreen() {
             (newMessage.author === myUid && newMessage.to === otherUid) ||
             (newMessage.author === otherUid && newMessage.to === myUid)
           ) {
-            setMessages((prev) => [...prev, newMessage]);
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === newMessage.id)) return prev;
+              return [...prev, newMessage];
+            });
           }
         }
       )
@@ -161,20 +167,25 @@ export default function ChatScreen() {
 
     setSending(true);
 
-    const { error } = await supabase.from("messages").insert({
+    const { data, error } = await supabase.from("messages").insert({
       author: myUid,
       to: otherUid,
       text,
-    });
+    }).select().single();
 
     if (error) {
       console.error("Error sending message:", error);
+    } else if (data) {
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === data.id)) return prev;
+        return [...prev, data];
+      });
     }
 
     setSending(false);
   };
 
-  if (loading || checkingMessaging) {
+  if (checkingMessaging) {
     return (
       <ThemedView style={styles.centerContainer}>
         <ActivityIndicator size="large" />
@@ -185,7 +196,9 @@ export default function ChatScreen() {
   if (!hasMessagingEnabled || !otherHasMessagingEnabled) {
     return (
       <ThemedView style={styles.container}>
-        <MessagingDisabled
+        <MessagingDisabledCard
+          myMessagingEnabled={hasMessagingEnabled}
+          otherMessagingEnabled={otherHasMessagingEnabled}
           onEnabled={() => {
             // Re-check both users' messaging status
             (async () => {
@@ -219,6 +232,14 @@ export default function ChatScreen() {
     );
   }
 
+  if (loading) {
+    return (
+      <ThemedView style={styles.centerContainer}>
+        <ActivityIndicator size="large" />
+      </ThemedView>
+    );
+  }
+
   return (
     <ThemedView style={styles.container}>
       <FlatList
@@ -237,9 +258,9 @@ export default function ChatScreen() {
         contentContainerStyle={styles.messagesList}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text variant="bodyLarge">
+            <Text variant="bodyLarge" style={{textAlign:"center"}}>
               {otherUser
-                ? `Kezdj beszélgetést ${otherUser.full_name} felhasználóval!`
+                ? `Te és ${otherUser.full_name} még nem beszélgettetek az appon belül!`
                 : "Nincs még üzenet"}
             </Text>
           </View>
@@ -271,6 +292,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flex:1,
+    width:"100%",
     marginLeft: 8,
   },
   profileImage: {

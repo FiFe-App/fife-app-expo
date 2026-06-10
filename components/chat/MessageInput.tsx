@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
-import { IconButton, TextInput, useTheme } from "react-native-paper";
+import { TextInput, useTheme } from "react-native-paper";
 
 interface MessageInputProps {
   onSend: (text: string) => void;
@@ -37,7 +37,7 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
         style={styles.input}
         right={
           <TextInput.Icon
-            icon="send"
+            icon="send-variant"
             onPress={handleSend}
             disabled={disabled || !text.trim()}
           />
@@ -50,7 +50,6 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
 const styles = StyleSheet.create({
   container: {
     borderTopWidth: 1,
-    padding: 8,
   },
   input: {
     backgroundColor: "transparent",

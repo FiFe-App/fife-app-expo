@@ -9,6 +9,7 @@ npm-debug.*
 *.mobileprovision
 *.orig.*
 web-build/
+builds
 
 account-service.json
 admin-cred.json
@@ -31,3 +32,4 @@ expo-env.d.ts
 # @end expo-cli
 # Local Netlify folder
 .netlify
+*.aab

@@ -12,6 +12,9 @@ const initialState: InfoState = {
   snacks: [],
   loading: undefined,
   notificationToken: null,
+  policiesAccepted: false,
+  statusBarColor: null,
+  bottomBarColor: null,
 };
 
 const infoReducer = createSlice({
@@ -31,20 +34,20 @@ const infoReducer = createSlice({
       ];
     },
     popDialog: (state) => {
-      state.dialogs = state.dialogs.slice(1);
+      state.dialogs = (state.dialogs ?? []).slice(1);
     },
     addSnack: (state, action: PayloadAction<SnackProps>) => {
       state.snacks = [...(state.snacks || []), action.payload];
     },
     popSnack: (state) => {
-      state.snacks = state.snacks.slice(1);
+      state.snacks = (state.snacks ?? []).slice(1);
     },
     setOptions: (state, action: PayloadAction<OptionProps[]>) => {
       state.options = action.payload;
     },
     updateOption: (state, action: PayloadAction<Partial<OptionProps>>) => {
       console.log("update", action.payload);
-
+      if (!state.options) return;
       const toUpdate = state.options.findIndex(
         (opt) => opt.title === action.payload.title,
       );
@@ -62,6 +65,18 @@ const infoReducer = createSlice({
     hideLoading: (state) => {
       state.loading = undefined;
     },
+    acceptPolicies: (state) => {
+      state.policiesAccepted = true;
+    },
+    resetPolicies: (state) => {
+      state.policiesAccepted = false;
+    },
+    setStatusBarColor: (state, action: PayloadAction<string | null>) => {
+      state.statusBarColor = action.payload;
+    },
+    setBottomBarColor: (state, action: PayloadAction<string | null>) => {
+      state.bottomBarColor = action.payload;
+    },
   },
 });
 
@@ -76,6 +91,10 @@ export const {
   popSnack,
   showLoading,
   hideLoading,
+  acceptPolicies,
+  resetPolicies,
+  setStatusBarColor,
+  setBottomBarColor,
 } = infoReducer.actions;
 
 export default infoReducer.reducer;

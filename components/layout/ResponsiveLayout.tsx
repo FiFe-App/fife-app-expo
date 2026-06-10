@@ -1,16 +1,17 @@
 import React, { ReactNode } from "react";
-import { StyleSheet, ViewStyle } from "react-native";
+import { StyleSheet, ViewStyle, useWindowDimensions } from "react-native";
+import { Spacing } from "@/constants/spacing";
 import { ThemedView as View } from "@/components/ThemedView";
-import { useMediaQuery } from "react-responsive";
 
 export type Breakpoint = "mobile" | "tablet" | "desktop";
 
 export const useBreakpoint = () => {
-  const isMobile = useMediaQuery({ maxWidth: 599 });
-  const isDesktop = useMediaQuery({ minWidth: 600 });
+  const { width } = useWindowDimensions();
+  const isMobile = width < 600;
+  const isDesktop = !isMobile;
   const screenPadding = isDesktop ? 32 : 8;
   const current: Breakpoint = isDesktop ? "desktop" : "mobile";
-  return { isMobile, isDesktop: !isMobile, current, screenPadding };
+  return { isMobile, isDesktop, current, screenPadding };
 };
 
 type Props = {
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
   },
   center: {
     alignSelf: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: Spacing.lg,
   },
   row: {
     flexDirection: "row",
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
   },
   gap16: {
-    gap: 16,
+    gap: Spacing.lg,
   },
   left: {
     width: 280,

@@ -1,10 +1,8 @@
 import { theme } from "@/assets/theme";
-import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 import { ThemedView } from "@/components/ThemedView";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import {
-  Href,
   Link,
   Redirect,
   Stack,
@@ -13,23 +11,26 @@ import {
 } from "expo-router";
 import { ScrollView, View } from "react-native";
 import Dots from "react-native-dots-pagination";
-import { Button, MD3DarkTheme } from "react-native-paper";
+import { Button } from "react-native-paper";
 import { useSelector } from "react-redux";
+import { Spacing } from "@/constants/spacing";
 
 export default function RootLayout() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
-  const pages: Href<string>[] = [
+  const policiesAccepted = useSelector((state: RootState) => state.info.policiesAccepted);
+  const pages = [
     "/csatlakozom/",
-    "/csatlakozom/megbizhatosag",
+    "/csatlakozom/iranyelvek",
+    "/csatlakozom/helyzet",
+    "/csatlakozom/ertesitesek",
     "/csatlakozom/email-regisztracio",
     "/csatlakozom/email-ellenorzes",
     "/csatlakozom/elso-lepesek",
-  ];
+  ] as const;
+  type JoinPage = (typeof pages)[number];
   const canGoNext = useGlobalSearchParams().canGoNext === "true";
-  const { screenPadding } = useBreakpoint();
 
   const path = usePathname().split("#")[0];
-  console.log(path);
 
   const index = pages.findIndex((page) => {
     return page === path;
@@ -37,16 +38,15 @@ export default function RootLayout() {
 
   const current = index < 0 ? 0 : index;
 
-  const prev: Href<string> = pages[current - 1 || 0] || "";
-  const next: Href<string> = pages[current + 1 || 0] || "";
-  console.log(path == "/csatlakozom/megbizhatosag" && canGoNext);
+  const prev: JoinPage = pages[current - 1] ?? pages[0];
+  const next: JoinPage = pages[current + 1] ?? pages[0];
 
 
   if (uid && path === "/csatlakozom") return <Redirect href="/user" />;
 
   return (
     <ThemedView type="default" style={{ flex: 1 }}>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flex: 1, padding: screenPadding }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flex: 1 }}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="iranyelvek" options={{ headerShown: false }} />
@@ -72,13 +72,13 @@ export default function RootLayout() {
             justifyContent: "space-between",
             flexDirection: "row",
             width: "100%",
-            padding: 16,
+            padding: Spacing.lg,
           }}
         >
           <Link href={current === 0 ? "/" : prev} asChild>
             <Button
               disabled={
-                (!prev || path === "/csatlakozom/elso-lepesek") && current !== 0
+                ((!prev || path === "/csatlakozom/elso-lepesek") && current !== 0)
               }
               mode="contained"
             >
@@ -89,22 +89,27 @@ export default function RootLayout() {
             <Dots
               length={pages.length}
               active={current}
-
+              marginHorizontal={4}
               passiveColor={theme.colors.backdrop}
-              activeColor={theme.colors.onBackground}
+              activeColor={theme.colors.surface}
             />
           </View>
-          {!(
-            path === "/csatlakozom/regisztracio" ||
-            path === "/csatlakozom/email-regisztracio" ||
-            path === "/csatlakozom/email-ellenorzes"
-          ) &&
-            (
-              <Link href={next} asChild
-                disabled={path === "/csatlakozom/megbizhatosag" && !canGoNext}>
-                <Button mode="contained">Tovább</Button>
-              </Link>
-            )}
+          <Link href={next} asChild
+            disabled={
+              (path === "/csatlakozom/iranyelvek" && !canGoNext) ||
+              path === "/csatlakozom/regisztracio" ||
+              path === "/csatlakozom/email-regisztracio" ||
+              path === "/csatlakozom/email-ellenorzes"
+            }
+            style={{
+              opacity: (
+                path === "/csatlakozom/regisztracio" ||
+                path === "/csatlakozom/email-regisztracio" ||
+                path === "/csatlakozom/email-ellenorzes"
+              ) ? 0 : 1,
+            }}>
+            <Button mode="contained">Tovább</Button>
+          </Link>
         </View>
       </ThemedView>
     </ThemedView>

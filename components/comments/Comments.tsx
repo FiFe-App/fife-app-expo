@@ -11,22 +11,21 @@ import { CommentsState, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   GestureResponderEvent,
   ImageBackground,
   Pressable,
-  ScrollView,
   View,
 } from "react-native";
 import {
   ActivityIndicator,
-  Card,
   IconButton,
   Menu,
   Modal,
   Portal,
   TextInput,
+  useTheme,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import SupabaseImage from "../SupabaseImage";
@@ -34,10 +33,13 @@ import UrlText from "./UrlText";
 import { Comment, CommentsProps } from "./comments.types";
 import { ThemedText } from "../ThemedText";
 import { addSnack } from "@/redux/reducers/infoReducer";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 
-const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
+const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
   const dispatch = useDispatch();
   const navigation = router;
+  const theme = useTheme();
 
   const { uid, name }: UserState = useSelector(
     (state: RootState) => state.user,
@@ -45,7 +47,6 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   const { comments }: CommentsState = useSelector(
     (state: RootState) => state.comments,
   );
-  const commentsChannel = supabase.channel(path);
   const author = name;
   const [text, setText] = useState("");
   const [image, setImage] = useState<ExpoImagePicker.ImagePickerAsset | null>(
@@ -61,8 +62,12 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
 
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
 
+  const mountId = useRef(Date.now()).current;
+
   useEffect(() => {
     dispatch(clearComments());
+
+    const channel = supabase.channel(`${path}:${mountId}`);
 
     const getMessages = async () => {
       const { data, error } = await supabase
@@ -76,7 +81,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
 
     getMessages();
 
-    commentsChannel
+    channel
       .on<Comment>(
         "postgres_changes",
         {
@@ -113,7 +118,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
       )
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
-          console.log("subscribed to", commentsChannel);
+          console.log("subscribed to", channel);
         }
       });
 
@@ -121,7 +126,7 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
       setDownloading(false);
     }, 3000);
     return () => {
-      supabase.removeChannel(commentsChannel);
+      supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, limit, path]);
@@ -172,9 +177,18 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             return;
           }
 
-          if (image && data && data.length > 0) {
-            await uploadImage(uid + "/" + path, data[0].id);
-            setImage(null);
+          if (data && data.length > 0) {
+            dispatch(
+              addComment({
+                ...data[0],
+                profiles: { full_name: author },
+              }),
+            );
+
+            if (image) {
+              await uploadImage(uid + "/" + path, data[0].id);
+              setImage(null);
+            }
           }
 
           setText("");
@@ -279,85 +293,88 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View
+      style={[{ flex: 1 }, style]}
+    >
       {
-        <ScrollView
-          contentContainerStyle={{
-            flexDirection: "column",
-            paddingBottom: 10,
-            gap: 8,
-            padding: 4,
-          }}
-        >
+        <View style={{ paddingBottom: 10, flex:1, minHeight: 200 }}>
           {!!comments.length &&
             comments.map((comment, ind) => {
               return (
-                <Card key={"comment" + ind} contentStyle={{}}>
-                  <Card.Content
-                    style={[
-                      { flexDirection: "row", maxWidth: "100%", padding: 0 },
-                    ]}
-                  >
-                    <View style={{ flex: 1, padding: 8 }}>
-                      <View
-                        style={{ flexDirection: "row", alignItems: "center" }}
+                <View
+                  key={"comment" + ind}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "flex-start",
+                    gap: Spacing.sm,
+                    paddingVertical: Spacing.md,
+                    borderBottomWidth: ind < comments.length - 1 ? 1 : 0,
+                    borderBottomColor: theme.colors.outlineVariant,
+                  }}
+                >
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "baseline",
+                        gap: Spacing.sm,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <Pressable
+                        onPress={() => {
+                          if (comment?.author)
+                            navigation.navigate({
+                              pathname: "/user/[uid]",
+                              params: { uid: comment.author },
+                            });
+                        }}
                       >
-                        <View style={{ flexDirection: "row", flex: 1 }}>
-                          <Pressable
-                            onPress={() => {
-                              if (comment?.author)
-                                navigation.navigate({
-                                  pathname: "/user/[uid]",
-                                  params: { uid: comment.author },
-                                });
-                            }}
-                          >
-                            <ThemedText style={{ fontWeight: "bold" }}>
-                              {comment?.profiles?.full_name}
-                            </ThemedText>
-                          </Pressable>
-                          <ThemedText style={{ marginLeft: 8 }}>
-                            {elapsedTime(comment.created_at)}
-                          </ThemedText>
-                        </View>
-                      </View>
-                      <UrlText text={comment.text} />
-                    </View>
-                    {comment.image && (
-                      <Pressable onPress={() => setSelectedComment(comment)}>
-                        <SupabaseImage
-                          bucket="comments"
-                          path={comment.image}
-                          style={{
-                            width: 100,
-                            height: 100,
-                            borderTopRightRadius: 12,
-                            borderBottomRightRadius: 12,
-                          }}
-                        />
+                        <ThemedText style={{ fontWeight: "bold", fontSize: 14 }}>
+                          {comment?.profiles?.full_name ?? "Törölt felhasználó"}
+                        </ThemedText>
                       </Pressable>
-                    )}
-                    {uid && (
-                      <IconButton
-                        icon="dots-vertical"
-                        onPress={(e) => showCommentMenu(e, comment)}
-                        size={18}
-                        iconColor={comment.image ? "white" : "black"}
-                        style={{ margin: 0, position: "absolute", right: 0 }}
+                      <ThemedText
+                        style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}
+                      >
+                        {elapsedTime(comment.created_at)}
+                      </ThemedText>
+                    </View>
+                    <UrlText text={comment.text} style={{ fontSize: 15, lineHeight: 22 }} />
+                  </View>
+                  {comment.image && (
+                    <Pressable onPress={() => setSelectedComment(comment)}>
+                      <SupabaseImage
+                        bucket="comments"
+                        path={comment.image}
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: BorderRadius.md,
+                        }}
                       />
-                    )}
-                  </Card.Content>
-                </Card>
+                    </Pressable>
+                  )}
+                  {uid && (
+                    <IconButton
+                      icon="dots-vertical"
+                      onPress={(e) => showCommentMenu(e, comment)}
+                      size={18}
+                      iconColor={theme.colors.onSurfaceVariant}
+                      style={{ margin: 0 }}
+                    />
+                  )}
+                </View>
               );
             })}
-        </ScrollView>
+        </View>
       }
       {downloading && !comments.length ? (
         <ActivityIndicator />
       ) : (
         !comments?.length && (
-          <ThemedText style={{ padding: 20 }}>
-            Még nem érkezett komment
+          <ThemedText style={{ padding: Spacing.xl, textAlign:"center" }}>
+            Még nem érkezett vélemény
           </ThemedText>
         )
       )}
@@ -411,17 +428,25 @@ const Comments = ({ path, placeholder, limit = 10 }: CommentsProps) => {
             </>
           ) : (
             <>
-              <Menu.Item
-                onPress={() => {
-                  navigation.navigate({
-                    pathname: "/user/[uid]",
-                    params: { uid: menuAnchor.comment.author },
-                  });
-                  setMenuAnchor(null);
-                }}
-                title={menuAnchor?.comment?.profiles?.full_name + " profilja"}
-                leadingIcon="account"
-              />
+              {menuAnchor?.comment?.author ? (
+                <Menu.Item
+                  onPress={() => {
+                    navigation.navigate({
+                      pathname: "/user/[uid]",
+                      params: { uid: menuAnchor.comment.author },
+                    });
+                    setMenuAnchor(null);
+                  }}
+                  title={(menuAnchor?.comment?.profiles?.full_name ?? "Törölt felhasználó") + " profilja"}
+                  leadingIcon="account"
+                />
+              ) : (
+                <Menu.Item
+                  title="Törölt felhasználó"
+                  leadingIcon="account-off"
+                  disabled
+                />
+              )}
               <Menu.Item
                 onPress={() => { }}
                 title="Problémám van ezzel a kommenttel."

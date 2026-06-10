@@ -1,34 +1,46 @@
 import ContactEditScreen from "@/components/buziness/ContactEditScreen";
+import MapSelector from "@/components/MapSelector/MapSelector";
 import ProfileImage from "@/components/ProfileImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
-import { setOptions } from "@/redux/reducers/infoReducer";
-import { setName, setUserData, setThemePreference } from "@/redux/reducers/userReducer";
+import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
+import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
+import { setOptions, addSnack, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
+import { setName, setThemePreference, logout } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
-import { UserState } from "@/redux/store.type";
+import { UserState, CircleType } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { ScrollView, View, TouchableWithoutFeedback } from "react-native";
+import { ScrollView, View, TouchableWithoutFeedback, Platform, Text } from "react-native";
 import {
+  Button,
   Divider,
   HelperText,
   Icon,
   IconButton,
+  Dialog,
   Menu,
+  Modal,
+  Portal,
+  Switch,
   TextInput,
-  useTheme,
+   
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
+import { useAppTheme } from "@/assets/theme";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const { uid: myUid, userData, themePreference }: UserState = useSelector(
     (state: RootState) => state.user,
   );
@@ -36,36 +48,68 @@ export default function Index() {
   const [imageLoading, setImageLoading] = useState(false);
   const [profile, setProfile] = useState<UserInfo>({});
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | undefined>(undefined);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [themeMenuVisible, setThemeMenuVisible] = useState(false);
+  const [locationMenuVisible, setLocationMenuVisible] = useState(false);
+  const [userLocation, setUserLocation] = useState<CircleType | undefined>();
+  const [notifyPush, setNotifyPush] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState(false);
+  const [newsletter, setNewsletter] = useState(false);
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
       | PostgrestSingleResponse<unknown>
       | {
-          error: string;
+        error: string;
       }
       | undefined
     >;
-      }>(null);
+  }>(null);
 
   const load = () => {
     console.log("loaded user", myUid);
     if (!myUid) return;
+    dispatch(showLoading({ title: "Betöltés...", dismissable: false }));
     setLoading(true);
-
     supabase
       .from("profiles")
-      .select("*")
+      .select("id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions")
       .eq("id", myUid)
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
         if (error) {
           console.log("err", error.message);
+          dispatch(hideLoading());
           return;
         }
         if (data) {
           setProfile(data[0]);
+          // Fetch own location via secure function
+          const { data: loc } = await supabase.rpc("get_my_profile_location");
+          const myLoc = loc?.[0];
+          if (myLoc?.location_wkt) {
+            const match = myLoc.location_wkt.match(/POINT\(([\d.-]+) ([\d.-]+)\)/);
+            if (match) {
+              setUserLocation({
+                location: {
+                  latitude: parseFloat(match[2]),
+                  longitude: parseFloat(match[1]),
+                },
+                radius: Number(myLoc.location_radius_m ?? 0),
+              });
+            }
+          }
+          // Fetch notification preferences
+          const { data: prefs } = await supabase.rpc("get_my_notification_prefs");
+          if (prefs?.[0]) {
+            setNotifyPush(prefs[0].notify_push ?? false);
+            setNotifyEmail(prefs[0].notify_email ?? false);
+            setNewsletter(prefs[0].newsletter ?? false);
+          }
           console.log(data);
           setLoading(false);
+          dispatch(hideLoading());
         }
       });
   };
@@ -73,6 +117,7 @@ export default function Index() {
     useCallback(() => {
       const save = async () => {
         setLoading(true);
+        dispatch(showLoading({ title: "Mentés...", dismissable: false }));
         if (!myUid) return;
 
         const response = await contactEditRef.current?.saveContacts();
@@ -80,6 +125,8 @@ export default function Index() {
 
         if (response?.error) {
           console.log(response.error);
+          setLoading(false);
+          dispatch(hideLoading());
           return;
         }
         supabase
@@ -91,16 +138,42 @@ export default function Index() {
             },
             { onConflict: "id" },
           )
-          .then((res) => {
+          .then(async (res) => {
             setLoading(false);
+            console.log("res", res);
+
             if (res.error) {
               console.log(res.error);
+              dispatch(hideLoading());
               return;
             }
-            setProfile(profile);
+            // location/location_radius_m are not in the authenticated SELECT
+            // grant, so they must be written via a SECURITY DEFINER function
+            const { error: locError } = await supabase.rpc(
+              "update_my_profile_location",
+              {
+                lat: userLocation?.location.latitude ?? null,
+                long: userLocation?.location.longitude ?? null,
+                radius_m: userLocation?.radius ?? null,
+              },
+            );
+            if (locError) console.log("location update error", locError);
+            // Save notification preferences
+            await supabase
+              .from("profiles")
+              .update({ notify_push: notifyPush, notify_email: notifyEmail, newsletter })
+              .eq("id", myUid);
+            // If push enabled, ensure we have a token registered
+            if (notifyPush) {
+              const token = await registerForPushNotificationsAsync();
+              if (token) {
+                await supabase.rpc("update_my_push_token", { token });
+              }
+            }
+            setProfile({ ...profile, location: userLocation?.location || null });
             dispatch(setName(profile?.full_name));
-            dispatch(setUserData(profile));
             console.log(res);
+            dispatch(hideLoading());
             router.navigate("/user");
           });
       };
@@ -117,7 +190,7 @@ export default function Index() {
         ]),
       );
       return () => { };
-    }, [dispatch, myUid, profile, usernameAvailable]),
+    }, [dispatch, myUid, profile, userLocation, usernameAvailable, notifyPush, notifyEmail, newsletter]),
   );
   useFocusEffect(
     useCallback(() => {
@@ -126,6 +199,15 @@ export default function Index() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [myUid]),
   );
+  const deleteImage = async () => {
+    if (!myUid || !profile?.avatar_url) return;
+    setImageLoading(true);
+    await supabase.storage.from("avatars").remove([myUid + "/" + profile.avatar_url]);
+    await supabase.from("profiles").update({ avatar_url: null }).eq("id", myUid);
+    setProfile({ ...profile, avatar_url: null });
+    setImageLoading(false);
+  };
+
   const pickImage = async () => {
     const result = await ExpoImagePicker.launchImageLibraryAsync({
       mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
@@ -186,20 +268,89 @@ export default function Index() {
 
     return upload;
   };
+  
+  const handleDeleteProfile = () => {
+    setConfirmEmail("");
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      setDeleteLoading(true);
+
+      const expected = (userData?.email || "").trim().toLowerCase();
+      const entered = confirmEmail.trim().toLowerCase();
+      if (!expected || entered !== expected) {
+        setDeleteLoading(false);
+        return;
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        console.error("No active session");
+        setDeleteLoading(false);
+        dispatch(
+          addSnack({ title: "Nincs aktív bejelentkezés. Kérlek jelentkezz be újra." })
+        );
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("delete-user", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error("Error deleting user:", error);
+        setDeleteLoading(false);
+        dispatch(
+          addSnack({ title: "Hiba történt a profil törlése során. Kérlek próbáld újra később." })
+        );
+        return;
+      }
+
+      console.log("User deleted successfully", data);
+      setShowDeleteDialog(false);
+
+      await supabase.auth.signOut();
+      dispatch(logout());
+      dispatch(clearBuziness());
+      dispatch(clearTutorialState());
+      dispatch(clearBuzinessSearchParams());
+      router.navigate("/user/deleted-account");
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      dispatch(addSnack({ title: "Váratlan hiba történt. Kérlek próbáld újra később." }));
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+  
+  const containerStyle = {
+    flex: 1,
+    height: "100%",
+    borderRadius: BorderRadius.md,
+  };
+
   if (myUid)
     return (
-      <ThemedView style={{ flex: 1 }}>
-        <ScrollView style={{ flex: 1, padding: 8 }}>
-          <View style={{ alignItems: "center", marginBottom: 16 }}>
-            <View style={{ width: 100 }}>
+      <ThemedView style={{ flex: 1, paddingBottom: Spacing.xxl }}>
+        <ScrollView style={{ flex: 1, padding: Spacing.sm }}>
+          <View style={{ alignItems: "center", marginBottom: Spacing.lg }}>
+            <View style={{ width: 200 }}>
               <ProfileImage
                 key={profile?.avatar_url}
                 uid={myUid}
                 avatar_url={profile?.avatar_url}
                 propLoading={imageLoading}
                 style={{
-                  width: 100,
-                  height: 100,
+                  width: 200,
+                  height: 200,
+                  borderRadius: 8
                 }}
               />
               <IconButton
@@ -208,10 +359,22 @@ export default function Index() {
                 mode="contained-tonal"
                 style={{ position: "absolute", right: 0, bottom: 0 }}
               />
+              {!!profile?.avatar_url && (
+                <IconButton
+                  icon="close"
+                  onPress={deleteImage}
+                  mode="contained-tonal"
+                  style={{ position: "absolute", right: 0, top: 0 }}
+                />
+              )}
             </View>
           </View>
+
+          <ThemedText variant="bodyLarge" type="bold" style={{ marginBottom: 8 }}>
+            Általános infóid
+          </ThemedText>
           <TextInput
-            label="Teljes név* (kötelező)"
+            label="Név* (kötelező)"
             value={profile?.full_name || ""}
             disabled={loading}
             autoComplete="name"
@@ -227,22 +390,21 @@ export default function Index() {
             excludeUid={myUid}
             onAvailabilityChange={setUsernameAvailable}
             onChangeText={(t) => setProfile({ ...profile, username: t })}
-            style={{ marginTop: 8 }}
+            style={{ marginTop: Spacing.sm }}
           />
-          <View style={{ padding: 16 }}>
+          <View style={{ padding: Spacing.sm }}>
             <ThemedText type="label">Email, amivel regisztráltál:</ThemedText>
             <ThemedText>{userData?.email}</ThemedText>
           </View>
           <Divider />
-          <View style={{ padding: 16 }}>
+          <View style={{ padding: Spacing.sm }}>
             <Menu
               visible={themeMenuVisible}
               onDismiss={() => setThemeMenuVisible(false)}
               anchor={
-                <TouchableWithoutFeedback 
+                <TouchableWithoutFeedback
                   onPress={() => setThemeMenuVisible(true)}
                   accessible={true}
-                  accessibilityRole="button"
                   accessibilityLabel="Téma kiválasztása"
                 >
                   <View>
@@ -250,10 +412,10 @@ export default function Index() {
                       mode="outlined"
                       label="Téma"
                       value={
-                        themePreference === "auto" 
-                          ? "Automatikus" 
-                          : themePreference === "dark" 
-                            ? "Sötét" 
+                        themePreference === "auto"
+                          ? "Automatikus"
+                          : themePreference === "dark"
+                            ? "Sötét"
                             : "Világos"
                       }
                       right={<TextInput.Icon icon="chevron-down" />}
@@ -291,8 +453,69 @@ export default function Index() {
             </Menu>
           </View>
           <Divider />
-          <View style={{ gap: 8, paddingTop: 8 }}>
-            <ThemedText type="subtitle">Elérhetőségeid</ThemedText>
+          <View style={{ paddingVertical: Spacing.lg }}>
+            <ThemedText variant="bodyLarge" type="bold" style={{ marginBottom: Spacing.sm }}>
+              Lakhelyed környéke
+            </ThemedText>
+            <ThemedText type="label" style={{ marginBottom: Spacing.sm }}>
+              Add meg a lakhelyedet, hogy lásd a fiféket a környékeden.
+            </ThemedText>
+            {!userLocation && (
+              <ThemedText type="label" style={{ marginBottom: Spacing.md }}>
+                Nincs lakhely beállítva
+              </ThemedText>
+            )}
+            <View style={{ flexDirection: "row", gap: Spacing.xs, flexWrap: "wrap" }}>
+              <Button
+                mode="outlined"
+                onPress={() => setLocationMenuVisible(true)}
+                icon="map-marker"
+                style={{ marginBottom: Spacing.sm }}
+              >
+                {userLocation ? "Környék módosítása" : "Megadom a környékemet"}
+              </Button>
+              {userLocation && (
+                <Button
+                  mode="text"
+                  onPress={() => setUserLocation(undefined)}
+                  icon="delete"
+                  textColor={theme.colors.error}
+                >
+                  Helyzet törlése
+                </Button>
+              )}
+            </View>
+          </View>
+          <Divider />
+          <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
+            <ThemedText variant="bodyLarge" type="bold">Értesítések</ThemedText>
+            {Platform.OS !== "web" && (
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <View style={{ flex: 1 }}>
+                  <ThemedText>Push értesítések</ThemedText>
+                  <ThemedText type="label">Értesítések a telefonodon</ThemedText>
+                </View>
+                <Switch value={notifyPush} onValueChange={setNotifyPush} />
+              </View>
+            )}
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <View style={{ flex: 1 }}>
+                <ThemedText>Email értesítések</ThemedText>
+                <ThemedText type="label">Értesítések a(z) {userData?.email} címedre</ThemedText>
+              </View>
+              <Switch value={notifyEmail} onValueChange={setNotifyEmail} />
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <View style={{ flex: 1 }}>
+                <ThemedText>Kérek hírlevelet</ThemedText>
+                <ThemedText type="label">Újdonságok és tippek emailben</ThemedText>
+              </View>
+              <Switch value={newsletter} onValueChange={setNewsletter} />
+            </View>
+          </View>
+          <Divider />
+          <View style={{ gap: Spacing.sm, paddingTop: Spacing.sm, paddingBottom: 48 }}>
+            <ThemedText variant="bodyLarge" type="bold">Elérhetőségeid</ThemedText>
             <View style={{ alignItems: "center" }}>
               <Icon source="alert" size={24} color={theme.colors.error} />
               <HelperText type="error" style={{ textAlign: "center" }}>
@@ -302,7 +525,100 @@ export default function Index() {
             </View>
             <ContactEditScreen ref={contactEditRef} />
           </View>
+          <Divider style={{ marginTop: 16, marginBottom: 16 }} />
+          <View style={{ gap: 8, paddingBottom: 32 }}>
+
+            <ThemedText variant="bodyLarge" type="bold">Veszélyes szekció</ThemedText>
+            <HelperText type="error">
+              A profil törlése végleges és nem visszavonható.
+            </HelperText>
+            <Button
+              mode="outlined"
+              icon="delete"
+              textColor={theme.colors.error}
+              style={{ borderColor: theme.colors.error }}
+              onPress={handleDeleteProfile}
+            >
+              Profil végleges törlése
+            </Button>
+          </View>
+          <Portal>
+            <Dialog visible={showDeleteDialog} onDismiss={() => setShowDeleteDialog(false)}>
+              <Dialog.Title>Profil végleges törlése</Dialog.Title>
+              <Dialog.Content>
+                <ThemedText>
+                  Biztosan törölni szeretnéd a profilodat? Ez a művelet nem visszavonható.
+                </ThemedText>
+                <View style={{ height: 8 }} />
+                <ThemedText>
+                  A megerősítéshez írd be az alábbi email címet: <Text style={{fontWeight:"bold"}}>{userData?.email}</Text>
+                </ThemedText>
+                <View style={{ height: 8 }} />
+                <TextInput
+                  label="Email"
+                  value={confirmEmail}
+                  onChangeText={setConfirmEmail}
+                  autoCapitalize="none"
+                  mode="outlined"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  disabled={deleteLoading}
+                />
+                {confirmEmail.length > 0 &&
+                  confirmEmail.trim().toLowerCase() !== (userData?.email || "").trim().toLowerCase() && (
+                  <HelperText type="error">Nem egyezik az email címmel.</HelperText>
+                )}
+              </Dialog.Content>
+              <Dialog.Actions>
+                <Button onPress={() => setShowDeleteDialog(false)} disabled={deleteLoading}>
+                  Mégse
+                </Button>
+                <Button
+                  mode="contained"
+                  style={{paddingHorizontal: Spacing.sm}}
+                  buttonColor={theme.colors.error}
+                  textColor={theme.colors.onError}
+                  onPress={confirmDelete}
+                  disabled={
+                    deleteLoading ||
+                    !userData?.email ||
+                    confirmEmail.trim().toLowerCase() !== (userData?.email || "").trim().toLowerCase()
+                  }
+                  icon="delete"
+                  loading={deleteLoading}
+                >
+                  Törlés
+                </Button>
+              </Dialog.Actions>
+            </Dialog>
+          </Portal>
         </ScrollView>
+        <Portal>
+          <Modal
+            visible={locationMenuVisible}
+            onDismiss={() => setLocationMenuVisible(false)}
+            style={{alignItems:"center"}}
+              contentContainerStyle={[
+                {
+                  width: "90%",
+                  height: "90%",
+                },
+              ]}
+          >
+            <ThemedView style={containerStyle}>
+              <MapSelector
+                data={userLocation}
+                setData={(location) => {
+                  console.log("Selected location:", location);
+                  setUserLocation(location);
+                }}
+                searchEnabled
+                markerOnly
+                setOpen={setLocationMenuVisible}
+              />
+            </ThemedView>
+          </Modal>
+        </Portal>
       </ThemedView>
     );
 }

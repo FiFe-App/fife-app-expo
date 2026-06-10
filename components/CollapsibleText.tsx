@@ -1,8 +1,14 @@
 import { PropsWithChildren, useEffect, useState } from "react";
 
 import { Text, TouchableRipple } from "react-native-paper";
+import { ThemedText } from "./ThemedText";
+import { StyleProp, View, ViewStyle } from "react-native";
+import { Spacing } from "@/constants/spacing";
 
-function CollapsibleText({ children }: PropsWithChildren) {
+function CollapsibleText({
+  children,
+  style,
+}: PropsWithChildren<{ style?: StyleProp<ViewStyle> }>) {
   const [isLongDescription, setIsLongDescription] = useState<
     undefined | boolean
   >(undefined);
@@ -11,43 +17,34 @@ function CollapsibleText({ children }: PropsWithChildren) {
     setIsLongDescription(undefined);
   }, []);
 
-  useEffect(() => {
-    console.log("isLongDescription", isLongDescription);
-    console.log("isundef", isLongDescription !== undefined);
-  }, [isLongDescription]);
-
   return (
     <TouchableRipple
-      style={{ padding: 10 }}
+      style={[{ padding: Spacing.sm }, style]}
+      onLayout={(e) => {
+        if (
+          isLongDescription === undefined &&
+              e.nativeEvent.layout.height > 165
+        ) {
+          setIsLongDescription(true);
+        }
+      }}
       onPress={
         isLongDescription !== undefined
           ? () => {
-            console.log("asd");
-
             setIsLongDescription(!isLongDescription);
           }
           : undefined
       }
       disabled={isLongDescription === undefined}
     >
-      <Text>
-        <Text
-          numberOfLines={isLongDescription ? 10 : undefined}
-          onLayout={(e) => {
-            if (
-              isLongDescription === undefined &&
-              e.nativeEvent.layout.height > 165
-            ) {
-              setIsLongDescription(true);
-            }
-          }}
-        >
+      <View style={{gap:8}}>
+        <Text numberOfLines={isLongDescription ? 10 : undefined} >
           {children}
         </Text>
         {isLongDescription !== undefined && (
-          <Text>{isLongDescription ? "Több" : ""}</Text>
+          <ThemedText>{isLongDescription ? "Több" : ""}</ThemedText>
         )}
-      </Text>
+      </View>
     </TouchableRipple>
   );
 }

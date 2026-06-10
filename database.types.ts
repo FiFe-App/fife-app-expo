@@ -7,13 +7,69 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
+      blocked_users: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: number
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: never
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_users_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocked_users_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buziness: {
         Row: {
           author: string
@@ -21,9 +77,11 @@ export type Database = {
           defaultContact: number | null
           description: string
           embedding: string | null
+          embedding_text: string | null
           id: number
           images: string[] | null
-          location: unknown | null
+          ingyen: boolean
+          location: unknown
           radius: number | null
           title: string
         }
@@ -33,9 +91,11 @@ export type Database = {
           defaultContact?: number | null
           description: string
           embedding?: string | null
+          embedding_text?: string | null
           id?: number
           images?: string[] | null
-          location?: unknown | null
+          ingyen?: boolean
+          location?: unknown
           radius?: number | null
           title: string
         }
@@ -45,9 +105,11 @@ export type Database = {
           defaultContact?: number | null
           description?: string
           embedding?: string | null
+          embedding_text?: string | null
           id?: number
           images?: string[] | null
-          location?: unknown | null
+          ingyen?: boolean
+          location?: unknown
           radius?: number | null
           title?: string
         }
@@ -216,7 +278,7 @@ export type Database = {
           description: string | null
           duration: string | null
           id: number
-          location: unknown | null
+          location: unknown
           locationName: string
           title: string
         }
@@ -227,7 +289,7 @@ export type Database = {
           description?: string | null
           duration?: string | null
           id?: number
-          location?: unknown | null
+          location?: unknown
           locationName: string
           title: string
         }
@@ -238,7 +300,7 @@ export type Database = {
           description?: string | null
           duration?: string | null
           id?: number
-          location?: unknown | null
+          location?: unknown
           locationName?: string
           title?: string
         }
@@ -282,7 +344,7 @@ export type Database = {
           categories: string
           created_at: string
           id: number
-          location: unknown | null
+          location: unknown
           text: string
         }
         Insert: {
@@ -290,7 +352,7 @@ export type Database = {
           categories: string
           created_at?: string
           id?: number
-          location?: unknown | null
+          location?: unknown
           text: string
         }
         Update: {
@@ -298,7 +360,7 @@ export type Database = {
           categories?: string
           created_at?: string
           id?: number
-          location?: unknown | null
+          location?: unknown
           text?: string
         }
         Relationships: [
@@ -347,6 +409,93 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bad_boy: boolean
+          created_at: string | null
+          full_name: string
+          id: string
+          location: unknown
+          location_radius_m: number | null
+          newsletter: boolean
+          notify_email: boolean
+          notify_push: boolean
+          push_token: string | null
+          updated_at: string | null
+          username: string | null
+          viewed_functions: string[] | null
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bad_boy?: boolean
+          created_at?: string | null
+          full_name: string
+          id: string
+          location?: unknown
+          location_radius_m?: number | null
+          newsletter?: boolean
+          notify_email?: boolean
+          notify_push?: boolean
+          push_token?: string | null
+          updated_at?: string | null
+          username?: string | null
+          viewed_functions?: string[] | null
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bad_boy?: boolean
+          created_at?: string | null
+          full_name?: string
+          id?: string
+          location?: unknown
+          location_radius_m?: number | null
+          newsletter?: boolean
+          notify_email?: boolean
+          notify_push?: boolean
+          push_token?: string | null
+          updated_at?: string | null
+          username?: string | null
+          viewed_functions?: string[] | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      query_embedding_cache: {
+        Row: {
+          created_at: string
+          embedding: string
+          embedding_text: string
+          hit_count: number
+          last_used_at: string
+          model_version: string
+          query_hash: string
+          query_text: string
+        }
+        Insert: {
+          created_at?: string
+          embedding: string
+          embedding_text: string
+          hit_count?: number
+          last_used_at?: string
+          model_version: string
+          query_hash: string
+          query_text: string
+        }
+        Update: {
+          created_at?: string
+          embedding?: string
+          embedding_text?: string
+          hit_count?: number
+          last_used_at?: string
+          model_version?: string
+          query_hash?: string
+          query_text?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           author: string
@@ -372,47 +521,6 @@ export type Database = {
           reason?: string
           reported_profile_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "reports_reported_profile_id_fkey"
-            columns: ["reported_profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string | null
-          full_name: string | null
-          id: string
-          updated_at: string | null
-          username: string | null
-          viewed_functions: string[] | null
-          website: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id: string
-          updated_at?: string | null
-          username?: string | null
-          viewed_functions?: string[] | null
-          website?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string
-          updated_at?: string | null
-          username?: string | null
-          viewed_functions?: string[] | null
-          website?: string | null
-        }
         Relationships: []
       }
     }
@@ -420,19 +528,56 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_my_notification_prefs: {
+        Args: never
+        Returns: {
+          newsletter: boolean
+          notify_email: boolean
+          notify_push: boolean
+        }[]
+      }
+      get_my_profile_location: {
+        Args: never
+        Returns: {
+          location_radius_m: number
+          location_wkt: string
+        }[]
+      }
+      get_notification_prefs_for: {
+        Args: { user_id: string }
+        Returns: {
+          email: string
+          full_name: string
+          newsletter: boolean
+          notify_email: boolean
+          notify_push: boolean
+          push_token: string
+        }[]
+      }
+      get_popular_search_queries: {
+        Args: { p_limit?: number; p_prefix?: string }
+        Returns: {
+          hit_count: number
+          query_text: string
+        }[]
+      }
       hybrid_buziness_search: {
         Args: {
-          distance: number
-          full_text_weight?: number
+          distance_sort?: number
+          filter_bad_boy?: boolean
+          filter_ingyen?: boolean
+          fts_weight?: number
           lat: number
           long: number
           match_threshold?: number
+          max_distance?: number
           query_embedding: string
           query_text: string
-          rrf_k?: number
+          recommendation_sort?: number
+          score_sort?: number
           semantic_weight?: number
-          skip: number
-          take: number
+          skip?: number
+          take?: number
         }
         Returns: {
           author: string
@@ -442,14 +587,17 @@ export type Database = {
           distance: number
           id: number
           images: string[]
+          ingyen: boolean
           lat: number
           location: unknown
           long: number
           recommendations: number
-          relevance: number
+          score: number
           title: string
         }[]
       }
+      is_bad_boy: { Args: never; Returns: boolean }
+      is_blocked_by: { Args: { other_user: string }; Returns: boolean }
       nearby_buziness: {
         Args: {
           lat: number
@@ -486,6 +634,28 @@ export type Database = {
           text: string
         }[]
       }
+      nearest_profiles: {
+        Args: {
+          p_distance: number
+          p_lat: number
+          p_long: number
+          skip?: number
+          take?: number
+        }
+        Returns: {
+          avatar_url: string
+          buzinesses: Json
+          created_at: string
+          distance: number
+          full_name: string
+          id: string
+          lat: number
+          long: number
+          recommendations: number
+          username: string
+          website: string
+        }[]
+      }
       newest_buziness: {
         Args: {
           distance: number
@@ -512,10 +682,37 @@ export type Database = {
           title: string
         }[]
       }
-      send_email_mailersend: {
-        Args: { message: Json }
-        Returns: Json
+      newest_users: {
+        Args: {
+          distance: number
+          full_text_weight?: number
+          lat: number
+          long: number
+          match_threshold?: number
+          rrf_k?: number
+          semantic_weight?: number
+          skip?: number
+          take?: number
+        }
+        Returns: {
+          author: string
+          created_at: string
+          description: string
+          distance: number
+          id: number
+          images: string[]
+          lat: number
+          location: unknown
+          long: number
+          recommendations: number
+          title: string
+        }[]
       }
+      update_my_profile_location: {
+        Args: { lat: number; long: number; radius_m: number }
+        Returns: undefined
+      }
+      update_my_push_token: { Args: { token: string }; Returns: undefined }
     }
     Enums: {
       contact_type:
@@ -652,6 +849,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       contact_type: [
@@ -667,3 +867,4 @@ export const Constants = {
     },
   },
 } as const
+

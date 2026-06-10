@@ -1,3 +1,4 @@
+import { useAppTheme } from "@/assets/theme";
 import { supabase } from "@/lib/supabase/supabase";
 import { Image, ImageContentFit } from "expo-image";
 import { useEffect, useState } from "react";
@@ -22,6 +23,7 @@ const SupabaseImage = ({
   propLoading = false,
   modal = false,
 }: SupabaseImageProps) => {
+  const theme = useAppTheme();
   const [source, setSource] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -59,7 +61,7 @@ const SupabaseImage = ({
         <ImageModal
           resizeMode="cover"
           modalImageResizeMode="contain"
-          overlayBackgroundColor="#00000088"
+          overlayBackgroundColor={theme.colors.backdrop}
           style={style}
           source={{ uri: source }}
         />
