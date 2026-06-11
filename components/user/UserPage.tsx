@@ -139,7 +139,7 @@ export default function UserPage() {
             ...(emotionAvailable ? [{
               icon: "emoticon-happy-outline",
               onPress: () => router.push("/user/emotion-history"),
-              title: "Hangulat-napló",
+              title: "Napló",
             }] : []),
             {
               icon: "exit-run",

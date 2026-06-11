@@ -216,7 +216,7 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="user/emotion-history"
-                  options={{ title: "Hangulat-napló" }}
+                  options={{ title: "Napló" }}
                 />
               </Stack.Protected>
 

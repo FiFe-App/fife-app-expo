@@ -1,9 +1,7 @@
 import { EMOTIONS } from "@/constants/emotions";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
-import { View } from "react-native";
-import { Icon, TouchableRipple } from "react-native-paper";
-import { ThemedText } from "./ThemedText";
+import { Image, Pressable, View } from "react-native";
 
 interface EmotionPickerProps {
   value: number | null;
@@ -17,33 +15,28 @@ export default function EmotionPicker({ value, onSelect, disabled }: EmotionPick
       {EMOTIONS.map((emotion) => {
         const selected = value === emotion.rate;
         return (
-          <TouchableRipple
+          <Pressable
             key={emotion.rate}
             onPress={() => !disabled && onSelect(emotion.rate)}
-            borderless
             style={{
               alignItems: "center",
               padding: Spacing.xs,
-              borderRadius: BorderRadius.md,
-              borderWidth: selected ? 2 : 0,
+              borderRadius: BorderRadius.sm,
+              borderWidth: 2,
               borderColor: selected ? emotion.color : "transparent",
               opacity: disabled ? 0.5 : 1,
             }}
           >
             <View style={{ alignItems: "center", gap: 2 }}>
-              <Icon
-                source={emotion.icon}
-                size={selected ? 38 : 30}
-                color={emotion.color}
+              <Image
+                source={emotion.image}
+                style={{
+                  width: 50,
+                  height: 50,
+                }}
               />
-              <ThemedText
-                style={{ fontSize: 10, color: emotion.color }}
-                type={selected ? "defaultSemiBold" : "default"}
-              >
-                {emotion.label}
-              </ThemedText>
             </View>
-          </TouchableRipple>
+          </Pressable>
         );
       })}
     </View>

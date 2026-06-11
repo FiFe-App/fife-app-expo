@@ -2,25 +2,35 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import EmotionPicker from "@/components/EmotionPicker";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
-import { emotionByRate, EMOTIONS } from "@/constants/emotions";
+import { emotionByRate } from "@/constants/emotions";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
 import { useFocusEffect, Redirect } from "expo-router";
 import { useCallback, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, View, Image } from "react-native";
 import { emotionAvailable } from "@/constants/emotionTiming";
 import { Calendar } from "react-native-calendars";
-import { Card, Divider, Icon, IconButton, Surface, TextInput } from "react-native-paper";
+import { Divider, IconButton, Surface, TextInput } from "react-native-paper";
 
 type MarkedDates = Record<string, { selected: boolean; selectedColor: string; selectedTextColor: string }>;
 
 export default function EmotionHistoryScreen() {
-  if (!emotionAvailable) return <Redirect href="/user" />;
 
   const theme = useAppTheme();
   const { logs, updateLog, loadFromServer } = useEmotionLog();
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  const getTodayDateString = (): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const [selectedDate, setSelectedDate] = useState<string | null>(getTodayDateString());
+  console.log(selectedDate);
+  
   const [editMode, setEditMode] = useState(false);
   const [editRate, setEditRate] = useState<number | null>(null);
   const [editNote, setEditNote] = useState("");
@@ -28,10 +38,11 @@ export default function EmotionHistoryScreen() {
   useFocusEffect(
     useCallback(() => {
       loadFromServer();
-      setSelectedDate(null);
+      setSelectedDate(getTodayDateString());
       setEditMode(false);
     }, [loadFromServer])
   );
+  if (!emotionAvailable) return <Redirect href="/user" />;
 
   const markedDates: MarkedDates = logs.reduce<MarkedDates>((acc, log) => {
     const emotion = emotionByRate(log.rate);
@@ -76,18 +87,15 @@ export default function EmotionHistoryScreen() {
   };
 
   return (
-    <ThemedView style={{ flex: 1 }}>
+    <ThemedView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={{ padding: Spacing.md }}>
-        <ThemedText variant="titleMedium" type="bold" style={{ marginBottom: Spacing.md }}>
-          Hangulat-napló
-        </ThemedText>
 
         <Calendar
           markedDates={markedDates}
           onDayPress={handleDayPress}
           theme={{
-            backgroundColor: theme.colors.surface,
-            calendarBackground: theme.colors.surface,
+            backgroundColor: theme.colors.background,
+            calendarBackground: theme.colors.background,
             textSectionTitleColor: theme.colors.onSurface,
             dayTextColor: theme.colors.onSurface,
             todayTextColor: theme.colors.primary,
@@ -98,12 +106,12 @@ export default function EmotionHistoryScreen() {
         />
 
         {selectedDate && (
-          <Surface elevation={1} style={{ marginTop: Spacing.lg, borderRadius: BorderRadius.lg, padding: Spacing.md }}>
+          <Surface elevation={0} style={{ marginTop: Spacing.lg, borderRadius: BorderRadius.lg, padding: Spacing.md }}>
             {selectedLog ? (
               editMode ? (
                 <View>
                   <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: Spacing.sm }}>
-                    <ThemedText variant="titleSmall" type="bold">{selectedDate}</ThemedText>
+                    <ThemedText variant="titleSmall" type="bold">{new Date(selectedDate).toLocaleDateString("hu-HU")}</ThemedText>
                     <IconButton icon="check" onPress={handleSaveEdit} />
                   </View>
                   <EmotionPicker value={editRate} onSelect={setEditRate} />
@@ -119,42 +127,36 @@ export default function EmotionHistoryScreen() {
               ) : (
                 <View>
                   <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                    <ThemedText variant="labelLarge">{selectedDate}</ThemedText>
+                    <ThemedText variant="labelLarge">{new Date(selectedDate).toLocaleDateString("hu-HU")}</ThemedText>
                     <IconButton icon="pencil" onPress={handleStartEdit} />
                   </View>
                   <Divider style={{ marginVertical: Spacing.sm }} />
                   <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.md }}>
-                    <Icon
-                      source={emotionByRate(selectedLog.rate)?.icon ?? "emoticon-neutral-outline"}
-                      size={48}
-                      color={emotionByRate(selectedLog.rate)?.color}
+                    <Image
+                      source={emotionByRate(selectedLog.rate)?.image}
+                      style={{ width: 48, height: 48 }}
                     />
-                    <ThemedText variant="bodyLarge" type="bold" style={{ color: emotionByRate(selectedLog.rate)?.color }}>
-                      {emotionByRate(selectedLog.rate)?.label}
-                    </ThemedText>
                   </View>
                   {selectedLog.note ? (
                     <ThemedText style={{ marginTop: Spacing.sm }}>{selectedLog.note}</ThemedText>
                   ) : (
-                    <ThemedText type="label" style={{ marginTop: Spacing.sm }}>Nincs jegyzet</ThemedText>
+                    <ThemedText style={{ marginTop: Spacing.sm }}>Nincs jegyzet.</ThemedText>
                   )}
                 </View>
               )
             ) : (
-              <ThemedText type="label">Ezen a napon nincs bejegyzés.</ThemedText>
+
+                <View>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                    <ThemedText variant="labelLarge">{new Date(selectedDate).toLocaleDateString("hu-HU")}</ThemedText>
+                  </View>
+                  <Divider style={{ marginVertical: Spacing.sm }} />    
+                  <ThemedText>Ezen a napon nincs bejegyzés.</ThemedText>
+
+                </View>
             )}
           </Surface>
         )}
-
-        <View style={{ marginTop: Spacing.xl, gap: Spacing.xs }}>
-          <ThemedText type="label" style={{ marginBottom: Spacing.xs }}>Jelmagyarázat</ThemedText>
-          {EMOTIONS.map((e) => (
-            <View key={e.rate} style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
-              <Icon source={e.icon} size={20} color={e.color} />
-              <ThemedText>{e.label}</ThemedText>
-            </View>
-          ))}
-        </View>
       </ScrollView>
     </ThemedView>
   );

@@ -26,8 +26,8 @@ function EmotionCheckCardInner() {
     return (
       <Card style={{ margin: Spacing.xs }}>
         <Card.Content>
-          <ThemedText style={{ textAlign: "center", paddingVertical: Spacing.md }}>
-            Köszi a válaszodat. Legyen szép napod!
+          <ThemedText type="bold" style={{ textAlign: "center", paddingVertical: Spacing.xs }}>
+            Köszi a válaszodat. {"\n"} Legyen szép napod! :)
           </ThemedText>
         </Card.Content>
       </Card>
@@ -38,16 +38,14 @@ function EmotionCheckCardInner() {
     if (selectedRate === null) return;
     setStatus("saving");
     await saveLog(selectedRate, note.trim() || undefined);
-    setStatus("saved");
-    setTimeout(() => {
-      setStatus("thanked");
-      setTimeout(() => setStatus("dismissed"), 2000);
-    }, 3000);
+    setStatus("thanked");
+    setTimeout(() => setStatus("dismissed"), 4000);
   };
 
   return (
     <Card style={{ margin: Spacing.xs }}>
       <Card.Title
+      titleStyle={{fontFamily:"Piazzolla-Medium"}}
         title={isYesterday ? "Milyen napod volt tegnap?" : "Milyen napod volt?"}
         right={() => (
           <IconButton icon="close" onPress={() => setStatus("dismissed")} />
@@ -56,25 +54,27 @@ function EmotionCheckCardInner() {
       <Card.Content>
         <EmotionPicker
           value={selectedRate}
-          onSelect={setSelectedRate}
-          disabled={status === "saving"}
+          onSelect={setSelectedRate}          
+          disabled={selectedRate === null || status === "saving" || status == "saved"}
         />
         {selectedRate !== null && (
           <View style={{ marginTop: Spacing.sm }}>
             <TextInput
-              label="Jegyzet (opcionális)"
+              label="Jegyzeteid"
+              placeholder="Írd le milyen napod volt, ha gondolod!"
               value={note}
               onChangeText={setNote}
               multiline
-              numberOfLines={2}
-              disabled={status === "saving"}
+              numberOfLines={10}          
+              disabled={selectedRate === null || status === "saving" || status == "saved"}
+
             />
           </View>
         )}
         <Button
           mode="contained"
           onPress={handleSave}
-          disabled={selectedRate === null || status === "saving"}
+          disabled={selectedRate === null || status === "saving" || status == "saved"}
           loading={status === "saving"}
           style={{ marginTop: Spacing.md }}
         >

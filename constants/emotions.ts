@@ -1,9 +1,9 @@
 export const EMOTIONS = [
-  { rate: 1, icon: "emoticon-cry-outline",     label: "Szomorú",   color: "#E53935" },
-  { rate: 2, icon: "emoticon-sad-outline",     label: "Lehangolt", color: "#FB8C00" },
-  { rate: 3, icon: "emoticon-neutral-outline", label: "Semleges",  color: "#FDD835" },
-  { rate: 4, icon: "emoticon-happy-outline",   label: "Jó",        color: "#7CB342" },
-  { rate: 5, icon: "emoticon-excited-outline", label: "Boldog",    color: "#43A047" },
+  { rate: 1, image: require("@/assets/images/emotions/emotion-1.png"), label: "Szomorú",   color: "#FF5F36" },
+  { rate: 2, image: require("@/assets/images/emotions/emotion-2.png"), label: "Lehangolt", color: "#FFC74F" },
+  { rate: 3, image: require("@/assets/images/emotions/emotion-3.png"), label: "Semleges",  color: "#FFECB3" },
+  { rate: 4, image: require("@/assets/images/emotions/emotion-4.png"), label: "Jó",        color: "#CDDCA3" },
+  { rate: 5, image: require("@/assets/images/emotions/emotion-5.png"), label: "Boldog",    color: "#11AB68" },
 ] as const;
 
 export const emotionByRate = (rate: number) =>
