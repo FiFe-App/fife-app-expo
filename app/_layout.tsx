@@ -36,6 +36,7 @@ import { registerForPushNotificationsAsync } from "@/lib/notifications/registerF
 import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
 import { setStatusBarColor } from "@/redux/reducers/infoReducer";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
+import { emotionAvailable } from "@/constants/emotionTiming";
 
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
 let splashAlreadyShown = false;
@@ -80,7 +81,7 @@ function RootContent() {
     const sub = AppState.addEventListener("change", (state) => {
       if (state === "active") {
         supabase.auth.startAutoRefresh();
-        if (uid && Platform.OS !== "web") syncPendingLogs();
+        if (uid && emotionAvailable) syncPendingLogs();
       } else {
         supabase.auth.stopAutoRefresh();
       }
@@ -122,7 +123,7 @@ function RootContent() {
     });
   }, [uid, dispatch]);
 
-  // Register push token, schedule emotion reminder, and load server logs on login
+  // Register push token and schedule emotion reminder on login (native-only)
   useEffect(() => {
     if (!uid || Platform.OS === "web") return;
     supabase.rpc("get_my_notification_prefs").then(async ({ data }) => {
@@ -138,15 +139,20 @@ function RootContent() {
         const token = await registerForPushNotificationsAsync();
         if (token) await supabase.rpc("update_my_push_token", { token });
       }
-      if (prefs.emotion_daily_prompt ?? true) {
+      if (emotionAvailable && (prefs.emotion_daily_prompt ?? true)) {
         await scheduleDailyEmotionReminder();
       } else {
         await cancelDailyEmotionReminder();
       }
     });
+  }, [uid, dispatch]);
+
+  // Load and sync emotion logs on login
+  useEffect(() => {
+    if (!uid || !emotionAvailable) return;
     loadFromServer();
     syncPendingLogs();
-  }, [uid, dispatch]);
+  }, [uid]);
 
   // Determine if dark mode should be active based on preference
   const isDarkMode =

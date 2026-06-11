@@ -36,6 +36,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
+import { emotionAvailable } from "@/constants/emotionTiming";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
@@ -499,7 +500,7 @@ export default function Index() {
                 <Switch value={notifyPush} onValueChange={setNotifyPush} />
               </View>
             )}
-            {Platform.OS !== "web" && (
+            {emotionAvailable && (
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <View style={{ flex: 1 }}>
                   <ThemedText>Napi hangulatnapló</ThemedText>

@@ -8,14 +8,15 @@ import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
 import { useFocusEffect, Redirect } from "expo-router";
 import { useCallback, useState } from "react";
-import { Platform, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { emotionAvailable } from "@/constants/emotionTiming";
 import { Calendar } from "react-native-calendars";
 import { Card, Divider, Icon, IconButton, Surface, TextInput } from "react-native-paper";
 
 type MarkedDates = Record<string, { selected: boolean; selectedColor: string; selectedTextColor: string }>;
 
 export default function EmotionHistoryScreen() {
-  if (Platform.OS === "web") return <Redirect href="/user" />;
+  if (!emotionAvailable) return <Redirect href="/user" />;
 
   const theme = useAppTheme();
   const { logs, updateLog, loadFromServer } = useEmotionLog();

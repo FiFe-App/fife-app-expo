@@ -29,6 +29,7 @@ import {
 } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { Linking, Platform, ScrollView, View } from "react-native";
+import { emotionAvailable } from "@/constants/emotionTiming";
 import {
   Badge,
   Button,
@@ -135,7 +136,7 @@ export default function UserPage() {
               onPress: () => router.push("/user/saved-buzinesses"),
               title: "Mentett bizniszek",
             },
-            ...(Platform.OS !== "web" ? [{
+            ...(emotionAvailable ? [{
               icon: "emoticon-happy-outline",
               onPress: () => router.push("/user/emotion-history"),
               title: "Hangulat-napló",

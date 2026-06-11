@@ -1,15 +1,16 @@
 import { Spacing } from "@/constants/spacing";
 import { useState } from "react";
-import { Platform, View } from "react-native";
+import { View } from "react-native";
 import { Button, Card, IconButton, TextInput } from "react-native-paper";
 import { ThemedText } from "@/components/ThemedText";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
 import EmotionPicker from "@/components/EmotionPicker";
+import { emotionAvailable } from "@/constants/emotionTiming";
 
 type CardStatus = "idle" | "saving" | "saved" | "thanked" | "dismissed";
 
 export default function EmotionCheckCard() {
-  if (Platform.OS === "web") return null;
+  if (!emotionAvailable) return null;
   return <EmotionCheckCardInner />;
 }
 
