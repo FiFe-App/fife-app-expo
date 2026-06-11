@@ -17,6 +17,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "@/components/Button";
 import { useAppTheme } from "@/assets/theme";
 import { ThemedText } from "@/components/ThemedText";
+import { Image } from "expo-image";
+import Smiley from "@/components/Smiley";
 
 export default function Index() {
   const navigation = useNavigation();
@@ -99,13 +101,10 @@ export default function Index() {
     return <Redirect href="/" />;
 
   return (
-    <ThemedView style={{ flex: 1 }} type="default">
-      <View style={{ maxWidth: 300, width: "100%", gap: Spacing.sm, margin: "auto" }}>
-        
-        <View style={{minHeight:60}}>
-          {!!error && <ThemedView style={{margin:6, alignItems:"center"}} type="error">
-            <ThemedText type="error">{error}</ThemedText>
-          </ThemedView>}
+    <ThemedView style={{ flex: 1, alignItems:"center", justifyContent:"center" }} type="default">
+      <View style={{ maxWidth: 300, width: "80%", gap: Spacing.sm, marginTop: Spacing.xxxl }}>
+        <View style={{width:"100%",alignItems:"center"}}>
+          <Smiley style={{width:100,height:100}} />
         </View>
         <TextInput
           mode="outlined"
@@ -144,6 +143,10 @@ export default function Index() {
         >
           Bejelentkezés
         </Button>
+        <View style={{minHeight:60}}>
+          {!!error && <ThemedView style={{margin:6, alignItems:"center"}} type="error">
+            <ThemedText type="error">{error}</ThemedText>
+          </ThemedView>}
         <View style={{ flexDirection: "row", justifyContent: "center" }}>
           <Link href="/csatlakozom" asChild>
             <Button>Még nincs fiókom</Button>
@@ -151,6 +154,7 @@ export default function Index() {
           <Link href="/user/password-reset" asChild>
             <Button>Elfelejtettem a jelszavam</Button>
           </Link>
+        </View>
         </View>
       </View>
     </ThemedView>

@@ -1,4 +1,4 @@
-import { Route, router, useGlobalSearchParams, useSegments } from "expo-router";
+import { Link, Route, router, useGlobalSearchParams, useSegments } from "expo-router";
 import { useRef, useCallback } from "react";
 import { StyleSheet, View } from "react-native";
 import { Badge, Icon, TouchableRipple } from "react-native-paper";
@@ -10,6 +10,7 @@ import globStyles from "@/constants/Styles";
 import { theme } from "@/assets/theme";
 import Measure from "../tutorial/Measure";
 import { ThemedView } from "../ThemedView";
+
 const BottomNavigation = () => {
   const segment = useSegments();
   const globalParams = useGlobalSearchParams();
@@ -19,6 +20,7 @@ const BottomNavigation = () => {
   const bizniszActive = segment[0]?.includes("biznisz");
   const profilActive = segment[0]?.includes("user");
   const homeActive = segment[0]?.includes("home");
+  const chatsActive = segment[0]?.includes("chat");
   const lastNavTime = useRef(0);
 
   const navigateTo = useCallback((path: Route, params?: Record<string,string>) => {
@@ -45,7 +47,7 @@ const BottomNavigation = () => {
           <View style={{ alignItems: "center" }}>
             <Icon
               source="magnify"
-              size={bizniszActive ? 30 : 24}
+              size={24}
               color={bizniszActive ? theme.colors.secondary : undefined}
             />
             <ThemedText type={bizniszActive ? "defaultSemiBold" : "default"}>
@@ -62,7 +64,7 @@ const BottomNavigation = () => {
           <View style={{ alignItems: "center" }}>
             <Icon
               source={homeActive ? "home" : "home-outline"}
-              size={homeActive ? 30 : 24}
+              size={24}
               color={homeActive ? theme.colors.secondary : undefined}
             />
             <ThemedText type={homeActive ? "defaultSemiBold" : "default"}>
@@ -71,12 +73,28 @@ const BottomNavigation = () => {
           </View>
         </TouchableRipple>
       </Measure>
+      <Measure name="chats">
+        <Link asChild href="/chats">
+          <TouchableRipple style={{ ...styles.button }}>
+            <View style={{ alignItems: "center" }}>
+              <Icon
+                source={chatsActive ? "message" : "message-outline"}
+                size={24}
+                color={chatsActive ? theme.colors.secondary : undefined}
+              />
+              <ThemedText type={chatsActive ? "defaultSemiBold" : "default"}>
+                Üzenetek
+              </ThemedText>
+            </View>
+          </TouchableRipple>
+        </Link>
+      </Measure>
       <Measure name="user">
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user",{uid:uid!})}>
           <View style={{ alignItems: "center" }}>
             <Icon
               source={profilActive ? "account" : "account-outline"}
-              size={profilActive ? 30 : 24}
+              size={24}
               color={profilActive ? theme.colors.secondary : undefined}
             />
             <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>

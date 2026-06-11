@@ -34,6 +34,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocked_users: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: number
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: never
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_users_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocked_users_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buziness: {
         Row: {
           author: string
@@ -126,42 +162,6 @@ export type Database = {
             columns: ["buziness_id"]
             isOneToOne: false
             referencedRelation: "buziness"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      blocked_users: {
-        Row: {
-          id: number
-          blocker_id: string
-          blocked_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: number
-          blocker_id: string
-          blocked_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: number
-          blocker_id?: string
-          blocked_id?: string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "blocked_users_blocker_id_fkey"
-            columns: ["blocker_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "blocked_users_blocked_id_fkey"
-            columns: ["blocked_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -597,6 +597,7 @@ export type Database = {
         }[]
       }
       is_bad_boy: { Args: never; Returns: boolean }
+      is_blocked_by: { Args: { other_user: string }; Returns: boolean }
       nearby_buziness: {
         Args: {
           lat: number
@@ -722,6 +723,7 @@ export type Database = {
         | "INSTAGRAM"
         | "FACEBOOK"
         | "PLACE"
+        | "MESSAGE"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -860,6 +862,7 @@ export const Constants = {
         "INSTAGRAM",
         "FACEBOOK",
         "PLACE",
+        "MESSAGE",
       ],
     },
   },

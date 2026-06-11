@@ -117,7 +117,7 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
                   });
                 }}
               >Szerkesztés</Button>
-              <Button textColor={theme.colors.onError} mode="text" icon="delete-circle" onPress={showDelete} >
+              <Button textColor={theme.colors.error} mode="text" icon="delete-circle" onPress={showDelete} >
                 Törlés
               </Button>
             </View>

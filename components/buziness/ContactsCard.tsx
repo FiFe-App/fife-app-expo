@@ -7,6 +7,7 @@ import typeToIcon from "@/lib/functions/typeToIcon";
 import typeToValueLabel from "@/lib/functions/typeToValueLabel";
 import { addSnack } from "@/redux/reducers/infoReducer";
 import * as Clipboard from "expo-clipboard";
+import { router } from "expo-router";
 import React from "react";
 import { Linking, View } from "react-native";
 import { Icon, Surface, Text, TouchableRipple } from "react-native-paper";
@@ -14,9 +15,10 @@ import { useDispatch } from "react-redux";
 
 interface ContactsCardProps {
   contacts: Tables<"contacts">[];
+  isOwnProfile?: boolean;
 }
 
-export default function ContactsCard({ contacts }: ContactsCardProps) {
+export default function ContactsCard({ contacts, isOwnProfile }: ContactsCardProps) {
   const theme = useAppTheme();
   const dispatch = useDispatch();
 
@@ -42,8 +44,19 @@ export default function ContactsCard({ contacts }: ContactsCardProps) {
           )}
           <TouchableRipple
             onPress={() => {
-              const link = getLinkForContact(contact);
-              if (link) Linking.openURL(String(link));
+              const link = String(getLinkForContact(contact));
+              console.log(link);
+              
+              if (!link || isOwnProfile && contact.type == "MESSAGE") return; 
+              if (link[0] == "/") {
+                router.push(link);
+              } else {
+                Linking.openURL(link).catch(() => {
+                  Clipboard.setStringAsync(contact.data).then(() => {
+                    dispatch(addSnack({ title: "Vágólapra másolva!" }));
+                  });
+                });
+              }
             }}
             onLongPress={() => {
               Clipboard.setStringAsync(contact.data).then(() => {
@@ -78,7 +91,9 @@ export default function ContactsCard({ contacts }: ContactsCardProps) {
               </View>
               <View style={{ flex: 1 }}>
                 <Text variant="bodyMedium" numberOfLines={1}>
-                  {contact.data}
+                  {contact.type === "MESSAGE"
+                    ? (isOwnProfile ? "A közvetlen üzenet engedélyezve van" : "Kattints a beszélgetéshez")
+                    : contact.data}
                 </Text>
                 <Text
                   variant="labelSmall"
@@ -87,7 +102,7 @@ export default function ContactsCard({ contacts }: ContactsCardProps) {
                   {contact.title || typeToValueLabel(contact.type)}
                 </Text>
               </View>
-              <Icon source="open-in-new" size={16} color={theme.colors.outline} />
+              {contact.type !== "MESSAGE" && <Icon source="open-in-new" size={16} color={theme.colors.outline} />}
             </View>
           </TouchableRipple>
         </React.Fragment>

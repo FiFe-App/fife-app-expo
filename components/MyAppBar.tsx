@@ -1,6 +1,6 @@
 import { clearOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { useNavigation, usePathname, useSegments } from "expo-router";
+import { router, useNavigation, usePathname, useSegments } from "expo-router";
 import React, { ReactNode, useRef } from "react";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View, ViewStyle } from "react-native";

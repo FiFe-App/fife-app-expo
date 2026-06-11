@@ -322,7 +322,7 @@ export default function UserPage() {
               {contacts.length > 0 && (
                 <View style={{ width: "100%", gap: Spacing.sm }}>
                   <SectionLabel label="Elérhetőségek" />
-                  <ContactsCard contacts={contacts} />
+                  <ContactsCard contacts={contacts} isOwnProfile={myProfile} />
                 </View>
               )}
               {myProfile && contacts.length === 0 && (

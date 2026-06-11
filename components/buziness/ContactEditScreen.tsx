@@ -7,7 +7,8 @@ import typeToPrefix from "@/lib/functions/typeToPrefix";
 import typeToValueLabel from "@/lib/functions/typeToValueLabel";
 import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
-import { useFocusEffect } from "expo-router";
+import { addSnack } from "@/redux/reducers/infoReducer";
+import { Link, useFocusEffect } from "expo-router";
 import React, {
   useCallback,
   useImperativeHandle,
@@ -15,8 +16,8 @@ import React, {
   useEffect,
   forwardRef,
 } from "react";
+import { Icon, Switch, TextInput, Button, Menu, IconButton } from "react-native-paper";
 import { StyleProp, View, ViewStyle } from "react-native";
-import { Button, IconButton, Menu, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
@@ -26,14 +27,15 @@ const types: {
   label: string;
   value: Enums<"contact_type">;
 }[] = [
-    { label: "Telefonszám", value: "TEL" },
-    { label: "Email-cím", value: "EMAIL" },
-    { label: "Webhely", value: "WEB" },
-    { label: "Instagram", value: "INSTAGRAM" },
-    { label: "Facebook", value: "FACEBOOK" },
-    { label: "Cím/Hely", value: "PLACE" },
-    { label: "Más", value: "OTHER" },
-  ];
+  { label: "Telefonszám", value: "TEL" },
+  { label: "Email-cím", value: "EMAIL" },
+  { label: "Webhely", value: "WEB" },
+  { label: "Instagram", value: "INSTAGRAM" },
+  { label: "Facebook", value: "FACEBOOK" },
+  { label: "Cím/Hely", value: "PLACE" },
+  { label: "Közvetlen üzenet", value: "MESSAGE" },
+  { label: "Más", value: "OTHER" },
+];
 
 type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
@@ -65,7 +67,7 @@ const ContactEditScreen = forwardRef<{
   const [contacts, setContacts] = useState<IContact[]>([]);
   const [buzinessCount, setBuzinessCount] = useState(0);
   const [revealedTypes, setRevealedTypes] = useState<Enums<"contact_type">[]>([
-    "TEL",
+    "MESSAGE",
   ]);
   const [addMenuVisible, setAddMenuVisible] = useState(false);
   const loadContacts = () => {
@@ -143,6 +145,7 @@ const ContactEditScreen = forwardRef<{
     // Prevent deletion if it would leave user with no contacts
     if (noNullContacts.length === 0 && buzinessCount > 0) {
       setError({ type: contacts[0]?.type || "TEL", text: "Legalább egy elérhetőséget kötelező megadni ha már van bizniszed." });
+      dispatch(addSnack({ title: "Legalább egy elérhetőséget kötelező megadni ha már van bizniszed." }));
       return { error: "At least one contact is required" };
     }
 
@@ -161,6 +164,8 @@ const ContactEditScreen = forwardRef<{
           .in("id", deletableIds);
         if (del_response.error) {
           console.error("Delete error:", del_response.error);
+          dispatch(addSnack({ title: "Hiba a törléskor: " + del_response.error.message }));
+          return { error: del_response.error.message };
         } else {
           console.log("Deleted contacts", deletableIds);
         }
@@ -197,6 +202,8 @@ const ContactEditScreen = forwardRef<{
             data: "",
             ...contacts.find((c) => c?.type === type.value),
           };
+          
+          // Regular contact types
           const filled = !!current.data;
           const isFeatured =
             props.showFeaturedToggle &&
@@ -262,22 +269,49 @@ const ContactEditScreen = forwardRef<{
                     />
                   )}
               </View>
-              <TextInput
-                mode="outlined"
-                label={typeToValueLabel(type?.value)}
-                value={current?.data}
-                disabled={loading || !type.label}
-                left={typeToPrefix(type.value)}
-                placeholder={typeToPlaceholder(type.value)}
-                onChangeText={(t) => saveContact(typeIndex, { data: t })}
-                error={error?.type === type.value}
-              />
+              {type.value === "MESSAGE" ? (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: Spacing.sm,
+                  }}
+                ><View  style={{flex:1}}>
+                  
+                    <ThemedText variant="bodyMedium">
+                      {current?.data === "true" || current?.data === true
+                        ? "A közvetlen üzenet engedélyezve van"
+                        : typeToPlaceholder(type?.value)}
+                    </ThemedText>
+                </View>
+                  <Switch
+                    value={current?.data === "true" || current?.data === true}
+                    onValueChange={(value) =>
+                      saveContact(typeIndex, { data: value ? "true" : "" })
+                    }
+                    disabled={loading || !type.label}
+                  />
+                </View>
+              ) : (
+                <TextInput
+                  mode="outlined"
+                  label={typeToValueLabel(type?.value)}
+                  value={current?.data}
+                  disabled={loading || !type.label}
+                  left={typeToPrefix(type.value)}
+                  placeholder={typeToPlaceholder(type.value)}
+                  onChangeText={(t) => saveContact(typeIndex, { data: t })}
+                  error={error?.type === type.value}
+                  contentStyle={{}}
+                />
+              )}
               {(!!current.data || !!current.title) && (
                 <TextInput
                   mode="outlined"
                   value={current?.title || ""}
                   disabled={loading}
-                  label="Egyéb információ"
+                  label={"Egyéb információ"}
                   placeholder="Munkanapokon keress / csak hétvégén"
                   onChangeText={(t) => saveContact(typeIndex, { title: t })}
                 />

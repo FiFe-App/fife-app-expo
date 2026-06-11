@@ -5,6 +5,7 @@ import nodemailer from "npm:nodemailer@6";
 import {
   buzinessRecommendationHtml,
   commentHtml,
+  messageHtml,
   profileRecommendationHtml,
 } from "../_shared/email.ts";
 
@@ -179,6 +180,39 @@ Deno.serve(async (req) => {
           await sendNotification(supabase, buziness.author, message, {
             subject: `${authorName} kommentet írt a bizniszedhez!`,
             htmlBuilder: (name) => commentHtml(name, authorName, buzinessTitle, buzinessId),
+          });
+        }
+      }
+    } else if (table === "messages") {
+      // Notify recipient of a new message, rate-limited to 1 per 60s per sender→recipient pair
+      if (!record.to || record.to === record.author) {
+        // No recipient or self-message — skip
+      } else {
+        // Rate-limit: check if there's a recent message from same author→to within last 60s
+        const cutoff = new Date(new Date(record.created_at).getTime() - 60_000).toISOString();
+        const { count } = await supabase
+          .from("messages")
+          .select("id", { count: "exact", head: true })
+          .eq("author", record.author)
+          .eq("to", record.to)
+          .gt("created_at", cutoff)
+          .lt("created_at", record.created_at)
+          .limit(1);
+
+        if (count && count > 0) {
+          console.log(`Rate-limited: message notification skipped for ${record.author} → ${record.to}`);
+        } else {
+          const authorRes = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", record.author)
+            .maybeSingle();
+          const senderName = authorRes.data?.full_name || "Valaki";
+          const preview = (record.text || "").slice(0, 100);
+          const message = `${senderName} üzenetet küldött neked!`;
+          await sendNotification(supabase, record.to, message, {
+            subject: `${senderName} üzenetet küldött!`,
+            htmlBuilder: (name) => messageHtml(name, senderName, record.author, preview),
           });
         }
       }

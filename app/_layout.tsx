@@ -145,7 +145,6 @@ function RootContent() {
             <Stack
               screenOptions={{ header: (props: NativeStackHeaderProps) => <MyAppbar title={props.options.title} /> }}
             >
-              <Stack.Screen name="index" />
               <Stack.Protected guard={!!uid}>
                 <Stack.Screen
                   name="home"
@@ -181,8 +180,15 @@ function RootContent() {
                   name="user/edit"
                   options={{ title: "Profil szerkesztése" }}
                 />
+                <Stack.Screen
+                  name="chats"
+                  options={{ title: "Üzenetek" }}
+                />
+                <Stack.Screen
+                  name="chat/[uid]"
+                  options={{ title: "Üzenet" }}
+                />
               </Stack.Protected>
-
               <Stack.Protected guard={!uid}>
 
                 <Stack.Screen

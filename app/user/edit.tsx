@@ -125,6 +125,8 @@ export default function Index() {
 
         if (response?.error) {
           console.log(response.error);
+          setLoading(false);
+          dispatch(hideLoading());
           return;
         }
         supabase

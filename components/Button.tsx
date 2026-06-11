@@ -80,6 +80,9 @@ export function Button({
           paddingHorizontal: Spacing.xs,
           borderRadius: BorderRadius.md,
         },
+        otherProps.disabled && {
+          backdropFilter: "",
+        },
         style,
       ]}
       compact={compact}
