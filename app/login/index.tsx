@@ -101,8 +101,8 @@ export default function Index() {
     return <Redirect href="/" />;
 
   return (
-    <ThemedView style={{ flex: 1 }} type="default">
-      <View style={{ maxWidth: 300, width: "80%", gap: Spacing.sm, marginHorizontal:"auto", marginTop: Spacing.xxxl }}>
+    <ThemedView style={{ flex: 1, alignItems:"center", justifyContent:"center" }} type="default">
+      <View style={{ maxWidth: 300, width: "80%", gap: Spacing.sm, marginTop: Spacing.xxxl }}>
         <View style={{width:"100%",alignItems:"center"}}>
           <Smiley style={{width:100,height:100}} />
         </View>
