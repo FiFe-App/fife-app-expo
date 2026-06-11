@@ -1,24 +1,19 @@
 import { supabase } from "@/lib/supabase/supabase";
+import { mergeFromServer, markSynced, upsertLog } from "@/redux/reducers/emotionLogsReducer";
 import { RootState } from "@/redux/store";
-import { useCallback, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { EmotionLogLocal } from "@/redux/store.type";
+import { useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   EMOTION_MAX_TIME_FOR_YESTERDAY,
   EMOTION_MIN_TIME_FOR_TODAY,
 } from "@/constants/emotionTiming";
 
-export type EmotionLog = {
-  id: string;
-  rate: number;
-  log_date: string;
-  created_at: string;
-};
-
 function formatDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-function getCardTarget(now: Date) {
+export function getCardTarget(now: Date) {
   const hour = now.getHours() + now.getMinutes() / 60;
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterday = new Date(today);
@@ -34,59 +29,99 @@ function getCardTarget(now: Date) {
 }
 
 export function useEmotionLog() {
+  const dispatch = useDispatch();
   const { uid } = useSelector((state: RootState) => state.user);
-  const emotionCheckEnabled = useSelector(
-    (state: RootState) => state.user.notificationPrefs?.emotionCheckEnabled ?? true
+  const emotionDailyPrompt = useSelector(
+    (state: RootState) => state.user.notificationPrefs?.emotionDailyPrompt ?? true
   );
+  const logs = useSelector((state: RootState) => state.emotionLogs.logs);
 
   const cardTarget = getCardTarget(new Date());
-  const [alreadyLogged, setAlreadyLogged] = useState<boolean | null>(null);
-  const [allLogs, setAllLogs] = useState<EmotionLog[]>([]);
+  const alreadyLogged = logs.some((l) => l.log_date === cardTarget.targetDate);
 
-  const checkTodayLog = useCallback(async () => {
-    if (!uid || !cardTarget.shouldShow || !emotionCheckEnabled) {
-      setAlreadyLogged(true);
-      return;
+  const saveLog = useCallback(
+    async (rate: number, note?: string) => {
+      if (!uid) return;
+      dispatch(upsertLog({ log_date: cardTarget.targetDate, rate, note }));
+      try {
+        await supabase
+          .from("emotion_logs")
+          .upsert(
+            { author: uid, rate, note: note ?? null, log_date: cardTarget.targetDate },
+            { onConflict: "author,log_date" }
+          );
+        dispatch(markSynced(cardTarget.targetDate));
+      } catch {
+        // stays synced: false — will retry on next syncPendingLogs call
+      }
+    },
+    [uid, cardTarget.targetDate, dispatch]
+  );
+
+  const updateLog = useCallback(
+    async (log_date: string, rate: number, note?: string) => {
+      if (!uid) return;
+      dispatch(upsertLog({ log_date, rate, note }));
+      try {
+        await supabase
+          .from("emotion_logs")
+          .upsert(
+            { author: uid, rate, note: note ?? null, log_date },
+            { onConflict: "author,log_date" }
+          );
+        dispatch(markSynced(log_date));
+      } catch {
+        // stays synced: false
+      }
+    },
+    [uid, dispatch]
+  );
+
+  const syncPendingLogs = useCallback(async () => {
+    if (!uid) return;
+    const pending = logs.filter((l) => !l.synced);
+    for (const log of pending) {
+      try {
+        await supabase
+          .from("emotion_logs")
+          .upsert(
+            { author: uid, rate: log.rate, note: log.note ?? null, log_date: log.log_date },
+            { onConflict: "author,log_date" }
+          );
+        dispatch(markSynced(log.log_date));
+      } catch {
+        // keep for next attempt
+      }
     }
-    const { data } = await supabase
-      .from("emotion_logs")
-      .select("id")
-      .eq("author", uid)
-      .eq("log_date", cardTarget.targetDate)
-      .maybeSingle();
-    setAlreadyLogged(!!data);
-  }, [uid, cardTarget.targetDate, cardTarget.shouldShow, emotionCheckEnabled]);
+  }, [uid, logs, dispatch]);
 
-  const saveLog = async (rate: number): Promise<{ error: string | null }> => {
-    if (!uid) return { error: null };
-    const { error } = await supabase.from("emotion_logs").upsert(
-      { author: uid, rate, log_date: cardTarget.targetDate },
-      { onConflict: "author,log_date" }
-    );
-    if (error) return { error: error.message };
-    setAlreadyLogged(true);
-    return { error: null };
-  };
-
-  const fetchAllLogs = useCallback(async () => {
+  const loadFromServer = useCallback(async () => {
     if (!uid) return;
     const { data } = await supabase
       .from("emotion_logs")
-      .select("id, rate, log_date, created_at")
+      .select("rate, note, log_date, created_at")
       .eq("author", uid)
       .order("log_date", { ascending: false });
-    if (data) setAllLogs(data as EmotionLog[]);
-  }, [uid]);
-
-  useEffect(() => {
-    checkTodayLog();
-  }, [checkTodayLog]);
+    if (data) {
+      const mapped: EmotionLogLocal[] = data.map((row) => ({
+        log_date: row.log_date,
+        rate: row.rate,
+        note: row.note ?? undefined,
+        synced: true,
+        created_at: row.created_at,
+        updated_at: row.created_at,
+      }));
+      dispatch(mergeFromServer(mapped));
+    }
+  }, [uid, dispatch]);
 
   return {
-    shouldShowCard: cardTarget.shouldShow && alreadyLogged === false && emotionCheckEnabled,
+    shouldShowCard: cardTarget.shouldShow && !alreadyLogged && emotionDailyPrompt,
     isYesterday: cardTarget.isYesterday,
+    logs,
     saveLog,
-    allLogs,
-    fetchAllLogs,
+    updateLog,
+    syncPendingLogs,
+    loadFromServer,
   };
 }

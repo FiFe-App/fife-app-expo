@@ -374,11 +374,38 @@ export type Database = {
         }
         Relationships: []
       }
+      emotion_logs: {
+        Row: {
+          id: string
+          author: string
+          rate: number
+          note: string | null
+          log_date: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          author: string
+          rate: number
+          note?: string | null
+          log_date: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          author?: string
+          rate?: number
+          note?: string | null
+          log_date?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string | null
-          emotion_check_enabled: boolean
+          emotion_daily_prompt: boolean
           full_name: string
           id: string
           location: unknown
@@ -395,7 +422,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
-          emotion_check_enabled?: boolean
+          emotion_daily_prompt?: boolean
           full_name: string
           id: string
           location?: unknown
@@ -412,7 +439,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string | null
-          emotion_check_enabled?: boolean
+          emotion_daily_prompt?: boolean
           full_name?: string
           id?: string
           location?: unknown
@@ -463,7 +490,7 @@ export type Database = {
       get_my_notification_prefs: {
         Args: never
         Returns: {
-          emotion_check_enabled: boolean
+          emotion_daily_prompt: boolean
           newsletter: boolean
           notify_email: boolean
           notify_push: boolean

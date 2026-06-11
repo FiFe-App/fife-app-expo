@@ -1,19 +1,14 @@
 import * as Notifications from "expo-notifications";
 
-const EMOTION_NOTIFICATION_ID_PREFIX = "emotion-daily-reminder";
+const ID = "daily-emotion-reminder";
 
 export async function scheduleDailyEmotionReminder() {
-  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-  const alreadyScheduled = scheduled.some((n) =>
-    n.identifier.startsWith(EMOTION_NOTIFICATION_ID_PREFIX)
-  );
-  if (alreadyScheduled) return;
-
+  await cancelDailyEmotionReminder();
   await Notifications.scheduleNotificationAsync({
-    identifier: EMOTION_NOTIFICATION_ID_PREFIX,
+    identifier: ID,
     content: {
       title: "Milyen napod volt ma?",
-      body: "Értékeld a napodat! 😊",
+      body: "Értékeld a napodat!",
       data: { url: "/home" },
     },
     trigger: {
@@ -25,5 +20,5 @@ export async function scheduleDailyEmotionReminder() {
 }
 
 export async function cancelDailyEmotionReminder() {
-  await Notifications.cancelScheduledNotificationAsync(EMOTION_NOTIFICATION_ID_PREFIX);
+  await Notifications.cancelScheduledNotificationAsync(ID).catch(() => {});
 }

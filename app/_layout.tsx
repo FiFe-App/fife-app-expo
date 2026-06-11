@@ -35,6 +35,7 @@ import { supabase } from "@/lib/supabase/supabase";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
 import { setStatusBarColor } from "@/redux/reducers/infoReducer";
+import { useEmotionLog } from "@/hooks/useEmotionLog";
 
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
 let splashAlreadyShown = false;
@@ -72,14 +73,20 @@ function RootContent() {
     }
   }, []);
 
-  // Manage Supabase token auto-refresh based on whether app is in foreground
+  const { syncPendingLogs, loadFromServer } = useEmotionLog();
+
+  // Manage Supabase token auto-refresh and offline sync on foreground
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") supabase.auth.startAutoRefresh();
-      else supabase.auth.stopAutoRefresh();
+      if (state === "active") {
+        supabase.auth.startAutoRefresh();
+        if (uid && Platform.OS !== "web") syncPendingLogs();
+      } else {
+        supabase.auth.stopAutoRefresh();
+      }
     });
     return () => sub.remove();
-  }, []);
+  }, [uid, syncPendingLogs]);
 
   // Keep Redux auth state in sync with Supabase session
   useEffect(() => {
@@ -115,7 +122,7 @@ function RootContent() {
     });
   }, [uid, dispatch]);
 
-  // Register push token and schedule emotion reminder based on notification prefs
+  // Register push token, schedule emotion reminder, and load server logs on login
   useEffect(() => {
     if (!uid || Platform.OS === "web") return;
     supabase.rpc("get_my_notification_prefs").then(async ({ data }) => {
@@ -125,20 +132,20 @@ function RootContent() {
         notifyPush: prefs.notify_push ?? false,
         notifyEmail: prefs.notify_email ?? false,
         newsletter: prefs.newsletter ?? false,
-        emotionCheckEnabled: prefs.emotion_check_enabled ?? true,
+        emotionDailyPrompt: prefs.emotion_daily_prompt ?? true,
       }));
       if (prefs.notify_push) {
         const token = await registerForPushNotificationsAsync();
-        if (token) {
-          await supabase.rpc("update_my_push_token", { token });
-        }
+        if (token) await supabase.rpc("update_my_push_token", { token });
       }
-      if (prefs.emotion_check_enabled ?? true) {
+      if (prefs.emotion_daily_prompt ?? true) {
         await scheduleDailyEmotionReminder();
       } else {
         await cancelDailyEmotionReminder();
       }
     });
+    loadFromServer();
+    syncPendingLogs();
   }, [uid, dispatch]);
 
   // Determine if dark mode should be active based on preference
@@ -200,6 +207,10 @@ function RootContent() {
                 <Stack.Screen
                   name="user/edit"
                   options={{ title: "Profil Szerkesztése" }}
+                />
+                <Stack.Screen
+                  name="user/emotion-history"
+                  options={{ title: "Hangulat-napló" }}
                 />
               </Stack.Protected>
 

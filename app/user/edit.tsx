@@ -57,7 +57,7 @@ export default function Index() {
   const [notifyPush, setNotifyPush] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState(false);
   const [newsletter, setNewsletter] = useState(false);
-  const [emotionCheckEnabled, setEmotionCheckEnabled] = useState(true);
+  const [emotionDailyPrompt, setEmotionDailyPrompt] = useState(true);
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -108,7 +108,7 @@ export default function Index() {
             setNotifyPush(prefs.notify_push ?? false);
             setNotifyEmail(prefs.notify_email ?? false);
             setNewsletter(prefs.newsletter ?? false);
-            setEmotionCheckEnabled(prefs.emotion_check_enabled ?? true);
+            setEmotionDailyPrompt(prefs.emotion_daily_prompt ?? true);
           }
           console.log(data);
           setLoading(false);
@@ -162,7 +162,7 @@ export default function Index() {
             // Save notification preferences
             await supabase
               .from("profiles")
-              .update({ notify_push: notifyPush, notify_email: notifyEmail, newsletter, emotion_check_enabled: emotionCheckEnabled })
+              .update({ notify_push: notifyPush, notify_email: notifyEmail, newsletter, emotion_daily_prompt: emotionDailyPrompt })
               .eq("id", myUid);
             // If push enabled, ensure we have a token registered
             if (notifyPush) {
@@ -191,7 +191,7 @@ export default function Index() {
         ]),
       );
       return () => { };
-    }, [dispatch, myUid, profile, userLocation, usernameAvailable, notifyPush, notifyEmail, newsletter, emotionCheckEnabled]),
+    }, [dispatch, myUid, profile, userLocation, usernameAvailable, notifyPush, notifyEmail, newsletter, emotionDailyPrompt]),
   );
   useFocusEffect(
     useCallback(() => {
@@ -505,7 +505,7 @@ export default function Index() {
                   <ThemedText>Napi hangulatnapló</ThemedText>
                   <ThemedText type="label">Kérdezzem meg minden nap, hogy milyen napod volt?</ThemedText>
                 </View>
-                <Switch value={emotionCheckEnabled} onValueChange={setEmotionCheckEnabled} />
+                <Switch value={emotionDailyPrompt} onValueChange={setEmotionDailyPrompt} />
               </View>
             )}
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
