@@ -9,6 +9,8 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated";
 import { Image, ImageSource } from "expo-image";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 
 const FADE_DURATION = 300;
@@ -101,6 +103,7 @@ export function SplashAnimation({ onFinished }: SplashAnimationProps) {
   
   // Cell fills the larger dimension so the grid always covers the screen
   const cellSize = Math.min(Math.max(width, height) / COLS, 80);
+  const { uid } = useSelector((state: RootState) => state.user);
 
   const containerOpacity = useSharedValue(1);
   const [webContainerVisible, setWebContainerVisible] = React.useState(true);
@@ -136,6 +139,7 @@ export function SplashAnimation({ onFinished }: SplashAnimationProps) {
 
   const bgColor = colorScheme == "dark" ? "#1e1b16" : colorScheme == "light" ? "#fff5e0" : "transparent";
 
+  if (Platform.OS === "web" && uid) return null;
   if (Platform.OS === "web") {
     const darkModeMql = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
     return (

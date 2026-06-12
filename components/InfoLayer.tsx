@@ -7,7 +7,6 @@ import {
 import { RootState } from "@/redux/store";
 import {
   ActivityIndicator,
-  Button,
   Dialog,
   Portal,
   Snackbar,
@@ -18,6 +17,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "./ThemedText";
 import { Spacing } from "@/constants/spacing";
 import { PatreonModal } from "./PatreonModal";
+import { Button } from "./Button";
+import { View } from "react-native";
 
 const InfoLayer = () => {
   const { dialogs, snacks, loading } = useSelector(
@@ -67,7 +68,7 @@ const InfoLayer = () => {
             <Dialog.Content>
               <Text variant="bodyMedium">{dialog?.text}</Text>
             </Dialog.Content>
-            <Dialog.Actions>
+            <View style={{flexDirection:"row",alignItems:"center",justifyContent:"flex-end",padding:Spacing.lg}}>
               {dialog?.dismissable && (
                 <Button onPress={cancelDialog}>Mégsem</Button>
               )}
@@ -75,10 +76,11 @@ const InfoLayer = () => {
                 mode="contained"
                 onPress={submitDialog}
                 loading={promiseInProgress}
+                            labelStyle={{ fontFamily: "RedHatText-Bold" }}
               >
                 {dialog?.submitText || "Kész"}
               </Button>
-            </Dialog.Actions>
+            </View>
           </Dialog>
         )}
         {snacks?.map((snack, ind) => (

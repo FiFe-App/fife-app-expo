@@ -1,8 +1,14 @@
-import { Linking, Pressable, Text } from "react-native";
+import { Linking, Pressable, StyleProp, Text, TextStyle } from "react-native";
 import { useAppTheme } from "@/assets/theme";
 import { ThemedText } from "../ThemedText";
 
-const UrlText = ({ text = "" }: { text: string }) => {
+const UrlText = ({
+  text = "",
+  style,
+}: {
+  text: string;
+  style?: StyleProp<TextStyle>;
+}) => {
   const theme = useAppTheme();
 
   // Matches URLs (must start with http/https or www) and phone numbers (7+ digits)
@@ -31,7 +37,7 @@ const UrlText = ({ text = "" }: { text: string }) => {
 
     parts.push(
       <Pressable key={`l-${index}`} onPress={() => Linking.openURL(href)}>
-        <ThemedText style={{ color: theme.colors.secondary }}>{matched}</ThemedText>
+        <ThemedText style={[{ color: theme.colors.secondary }, style]}>{matched}</ThemedText>
       </Pressable>,
     );
 
@@ -42,7 +48,7 @@ const UrlText = ({ text = "" }: { text: string }) => {
     parts.push(<Text key={`t-${lastIndex}`}>{text.slice(lastIndex)}</Text>);
   }
 
-  return <ThemedText>{parts}</ThemedText>;
+  return <ThemedText style={style}>{parts}</ThemedText>;
 };
 
 export default UrlText;

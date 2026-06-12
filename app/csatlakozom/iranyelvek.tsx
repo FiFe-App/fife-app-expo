@@ -7,6 +7,7 @@ import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
   FlatList,
+  Linking,
   Pressable,
   StyleSheet,
   View,
@@ -88,6 +89,14 @@ const Register = () => {
           Nyilatkozom, hogy elmúltam 16 éves.
         </Text>
       </Pressable>
+      <Pressable
+        onPress={() => Linking.openURL("https://fifeapp.hu/CSAE.html")}
+        style={{ marginTop: Spacing.sm }}
+      >
+        <Text style={styles.csaeLink}>
+          Gyermekvédelmi irányelvek (CSAE) megtekintése
+        </Text>
+      </Pressable>
       <View style={{ marginVertical: Spacing.xl }}>
         <ThemedText>
           Ha be fogod tartani ezeket, gépeld be a következő szöveget:
@@ -120,6 +129,11 @@ const styles = StyleSheet.create({
   ageCheckboxLabel: {
     flex: 1,
     fontSize: 15,
+  },
+  csaeLink: {
+    fontSize: 13,
+    color: "#1a73e8",
+    textDecorationLine: "underline",
   },
 });
 export default Register;

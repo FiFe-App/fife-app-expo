@@ -9,6 +9,7 @@ import { router } from "expo-router";
 import { ScrollView, View } from "react-native";
 import { FAB } from "react-native-paper";
 import { useSelector } from "react-redux";
+import { ThemedText } from "@/components/ThemedText";
 
 export default function MeScreen() {
   const { uid } = useSelector((state: RootState) => state.user);
@@ -22,11 +23,13 @@ export default function MeScreen() {
         automaticallyAdjustKeyboardInsets
       >
         <Mantra />
+        <ThemedText style={{textAlign:"center",margin:Spacing.lg}}>Ez egy biztonságos hely</ThemedText>
         <EmotionCheckCard />
         <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
           <ToDoList />
         </View>
       </ScrollView>
+
       <FAB
         icon="account"
         label="Profilom"

@@ -11,6 +11,9 @@ import { useCallback, useEffect } from "react";
 import { ScrollView, View } from "react-native";
 import { ActivityIndicator, Icon } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import WhatToDo from "@/components/WhatToDo";
+import InviteCard from "@/components/InviteCard";
+import { Button } from "@/components/Button";
 import { useFifeSearch } from "@/hooks/useFifeSearch";
 import { useNearbyBuzinesses } from "@/hooks/useNearbyBuzinesses";
 
@@ -55,7 +58,7 @@ export default function Index() {
           canLoadMore={hasMore}
           loading={loading}
           error={error}
-        />
+        />          
         <ThemedView
           type="card"
           style={{
@@ -88,6 +91,7 @@ export default function Index() {
           )}
         </View>
       </ScrollView>
+        <InviteCard />
     </ThemedView>
   );
 }

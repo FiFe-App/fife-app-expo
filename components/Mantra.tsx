@@ -15,7 +15,8 @@ export default function Mantra() {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
 
-  const text = mantra || `Szia, ${name ?? ""}`;
+  const defaultMantra = `Szia, ${name ?? ""}`;
+  const text = mantra || defaultMantra;
 
   const fontSize = Platform.OS === "web" ? WEB_FONT_SIZE : 34;
 
@@ -41,6 +42,8 @@ export default function Mantra() {
       {editing ? (
         <TextInput
           value={draft}
+          label="A Mantrád"
+          placeholder={defaultMantra}
           onChangeText={setDraft}
           onSubmitEditing={save}
           dense

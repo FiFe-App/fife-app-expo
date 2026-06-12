@@ -27,6 +27,7 @@ export interface UserState {
   mantra?: string;
   tasks?: TaskItem[];
   locationAlertDismissed?: boolean;
+  inviteCardDismissed?: boolean;
   notificationPrefs?: {
     notifyPush: boolean;
     notifyEmail: boolean;
@@ -49,6 +50,7 @@ export interface UserState {
   locationError: string | null;
   themePreference: "light" | "dark" | "auto";
   savedBuzinesses: number[];
+  previousSearches: string[];
 }
 
 export type User = Tables<"profiles"> & {

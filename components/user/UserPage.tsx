@@ -4,11 +4,10 @@ import { ThemedView } from "@/components/ThemedView";
 import MyBuzinesses from "@/components/user/MyBuzinesses";
 import RecommendationsModal from "@/components/user/RecommendationsModal";
 import ReportProfileModal from "@/components/user/ReportProfileModal";
+import BlockUserModal from "@/components/user/BlockUserModal";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
-import getLinkForContact from "@/lib/functions/getLinkForContact";
-import typeToIcon from "@/lib/functions/typeToIcon";
-import typeToValueLabel from "@/lib/functions/typeToValueLabel";
+import ContactsCard from "@/components/buziness/ContactsCard";
 import {
   clearBuziness,
   clearBuzinessSearchParams,
@@ -25,11 +24,10 @@ import {
   router,
   Stack,
   useFocusEffect,
-  useGlobalSearchParams,
+  useLocalSearchParams,
 } from "expo-router";
-import React, { useCallback, useState } from "react";
-import { Linking, Platform, ScrollView, View } from "react-native";
-import { emotionAvailable } from "@/constants/emotionTiming";
+import { useCallback, useState } from "react";
+import { ScrollView, View } from "react-native";
 import {
   Badge,
   Button,
@@ -59,8 +57,8 @@ import { useAppTheme } from "@/assets/theme";
 type UserInfo = Partial<Tables<"profiles">>;
 
 export default function UserPage() {
-  const { uid: paramUid } = useGlobalSearchParams();
-  const uid: string = String(paramUid);
+  const { uid: paramUid } = useLocalSearchParams<{ uid: string }>();
+  const uid: string = paramUid ?? "";
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
@@ -77,6 +75,8 @@ export default function UserPage() {
   const [connectionsCount, setConnectionsCount] = useState(0);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const iRecommended = recommendations.includes(myUid || "");
 
@@ -111,6 +111,15 @@ export default function UserPage() {
             }
           });
 
+        if (!myProfile && myUid) {
+          supabase
+            .from("blocked_users")
+            .select("id", { count: "exact", head: true })
+            .eq("blocker_id", myUid)
+            .eq("blocked_id", uid)
+            .then(({ count }) => setIsBlocked((count ?? 0) > 0));
+        }
+
         supabase
           .from("contacts")
           .select("*")
@@ -136,11 +145,6 @@ export default function UserPage() {
               onPress: () => router.push("/user/saved-buzinesses"),
               title: "Mentett bizniszek",
             },
-            ...(emotionAvailable ? [{
-              icon: "emoticon-happy-outline",
-              onPress: () => router.push("/user/emotion-history"),
-              title: "Napló",
-            }] : []),
             {
               icon: "exit-run",
               onPress: () => {
@@ -183,14 +187,32 @@ export default function UserPage() {
         {data && uid && (
           <ScrollView contentContainerStyle={{ paddingBottom: myProfile ? 96 : 0 }}>
             <ThemedView style={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.xxl, paddingBottom: Spacing.xl, gap: Spacing.xl }}>
-              {/* Report button */}
+              {/* Report / Block buttons */}
               {!myProfile && (
-                <IconButton
-                  icon="alert-octagon"
-                  size={20}
-                  onPress={() => setShowReportModal(true)}
-                  style={{ position: "absolute", right: Spacing.sm, top: Spacing.sm, zIndex: 1 }}
-                />
+                <View style={{ position: "absolute", right: Spacing.sm, top: Spacing.sm, zIndex: 1, flexDirection: "row" }}>
+                  <IconButton
+                    icon="alert-octagon"
+                    size={20}
+                    onPress={() => setShowReportModal(true)}
+                  />
+                  <IconButton
+                    icon={isBlocked ? "account-check" : "account-cancel"}
+                    size={20}
+                    iconColor={isBlocked ? undefined : "#c0392b"}
+                    onPress={async () => {
+                      if (isBlocked) {
+                        await supabase
+                          .from("blocked_users")
+                          .delete()
+                          .eq("blocker_id", myUid!)
+                          .eq("blocked_id", uid);
+                        setIsBlocked(false);
+                      } else {
+                        setShowBlockModal(true);
+                      }
+                    }}
+                  />
+                </View>
               )}
 
               {/* Centered avatar with gold ring */}
@@ -300,63 +322,7 @@ export default function UserPage() {
               {contacts.length > 0 && (
                 <View style={{ width: "100%", gap: Spacing.sm }}>
                   <SectionLabel label="Elérhetőségek" />
-                  <Surface
-                    style={{
-                      borderRadius: BorderRadius.lg,
-                      overflow: "hidden",
-                      width: "100%",
-                    }}
-                    elevation={1}
-                  >
-                    {contacts.map((contact, index) => (
-                      <React.Fragment key={contact.id}>
-                        {index > 0 && (
-                          <View style={{
-                            height: 1,
-                            backgroundColor: theme.colors.outlineVariant,
-                            marginHorizontal: Spacing.lg,
-                          }} />
-                        )}
-                        <TouchableRipple
-                          onPress={() => {
-                            const link = getLinkForContact(contact);
-                            if (link) Linking.openURL(String(link));
-                          }}
-                          onLongPress={() => {
-                            Clipboard.setStringAsync(contact.data).then(() => {
-                              dispatch(addSnack({ title: "Vágólapra másolva!" }));
-                            });
-                          }}
-                        >
-                          <View style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            paddingVertical: Spacing.md,
-                            paddingHorizontal: Spacing.lg,
-                            gap: Spacing.md,
-                          }}>
-                            <View style={{
-                              width: 40,
-                              height: 40,
-                              borderRadius: BorderRadius.full,
-                              backgroundColor: theme.colors.surfaceVariant,
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}>
-                              <Icon source={typeToIcon(contact.type)} size={20} color={theme.colors.primary} />
-                            </View>
-                            <View style={{ flex: 1 }}>
-                              <Text variant="bodyMedium" numberOfLines={1}>{contact.data}</Text>
-                              <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                                {contact.title || typeToValueLabel(contact.type)}
-                              </Text>
-                            </View>
-                            <Icon source="open-in-new" size={16} color={theme.colors.outline} />
-                          </View>
-                        </TouchableRipple>
-                      </React.Fragment>
-                    ))}
-                  </Surface>
+                  <ContactsCard contacts={contacts} />
                 </View>
               )}
               {myProfile && contacts.length === 0 && (
@@ -437,6 +403,16 @@ export default function UserPage() {
             setShow={setShowReportModal}
             profileId={uid}
             profileName={data.full_name}
+          />
+          <BlockUserModal
+            show={showBlockModal}
+            setShow={setShowBlockModal}
+            profileId={uid}
+            profileName={data.full_name}
+            onBlocked={() => {
+              setIsBlocked(true);
+              router.back();
+            }}
           />
         </Portal>
       )}

@@ -29,6 +29,7 @@ const reportReasons = [
   { label: "Megszegte a feltételeket", value: "terms_violation" },
   { label: "Nem megbízható", value: "not_trustworthy" },
   { label: "Illegális tevékenység", value: "illegal_activity" },
+  { label: "Gyermekbántalmazás / Kiskorú védelme", value: "child_safety" },
   { label: "Egyéb", value: "other" },
 ];
 

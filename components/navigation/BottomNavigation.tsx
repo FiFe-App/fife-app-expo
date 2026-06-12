@@ -1,30 +1,39 @@
-import { router, useSegments } from "expo-router";
+import { Route, router, useGlobalSearchParams, useSegments } from "expo-router";
 import { useRef, useCallback } from "react";
 import { StyleSheet, View } from "react-native";
-import { Badge, Icon, TouchableRipple } from "react-native-paper";
+import { Icon, TouchableRipple } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import { useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { RootState } from "@/redux/store";
-import globStyles from "@/constants/Styles";
 import { theme } from "@/assets/theme";
 import Measure from "../tutorial/Measure";
 import { ThemedView } from "../ThemedView";
 const BottomNavigation = () => {
   const segment = useSegments();
-  const { functions } = useSelector((state: RootState) => state.tutorial);
+  const globalParams = useGlobalSearchParams();
+  const { uid } = useSelector((state: RootState) => state.user);
 
-  const bizniszActive = segment[0]?.includes("biznisz");
   const meActive = segment[0] === "me" || segment[0]?.includes("user");
   const homeActive = segment[0]?.includes("home") || segment[0]?.includes("fifeRadar");
   const lastNavTime = useRef(0);
 
-  const navigateTo = useCallback((path: "/biznisz" | "/home" | "/me") => {
+  const navigateTo = useCallback((path: Route, params?: Record<string,string>) => {
     const now = Date.now();
     if (now - lastNavTime.current < 300) return;
+
+    if (params?.uid) {
+      // Profile tab: skip only if already viewing own profile
+      const alreadyOnMyProfile = segment[0] === "user" && globalParams.uid === uid;
+      if (alreadyOnMyProfile) return;
+    } else {
+      // Other tabs: skip if already on the same segment
+      if (segment[0] && path == segment[0]) return;
+    }
+
     lastNavTime.current = now;
-    router.navigate(path);
-  }, []);
+    router.navigate(path, params);
+  }, [segment, uid, globalParams]);
 
   return (
     <ThemedView style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level0 }}>

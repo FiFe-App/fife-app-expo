@@ -9,8 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
-import BuzinessSearchInput from "./BuzinessSearchInput";
-import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
+import FakeSearchInput from "./FakeSearchInput";
 
 export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?: string, style?: ViewStyle }) => {
   const navigation = useNavigation();
@@ -43,18 +42,18 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
       >
         <View style={{ width: 48 }} >
           {
-            navigation.canGoBack() && pathname !== "/home" && pathname !== "/me" && pathname !== "/"
-            && <Appbar.BackAction onPress={navigation.goBack} />
+            pathname !== "/home" && pathname !== "/" && pathname !== "/me"
+            && <Appbar.BackAction
+              onPress={() =>
+                navigation.canGoBack() ? navigation.goBack() : router.push("/home")
+              }
+            />
           }
         </View>
         {center ? <View style={{ flex: 1 }}>{center}</View>
           : title ?
             <Appbar.Content titleStyle={{ fontFamily: "Piazzolla-ExtraBold", fontSize: 20 }} title={title} style={{ flex: 1 }} />
-            : <BuzinessSearchInput 
-            onSearch={() => {
-              dispatch(storeBuzinesses([]));
-              router.push("/biznisz");
-            }} /> }
+            : <FakeSearchInput /> }
         {options.length > 0 ? (
           <>
             {options?.length === 1 && <Appbar.Action {...options[0]} />}

@@ -26,9 +26,7 @@ import RedHatTextMedium from "@/assets/fonts/RedHatText-Medium.ttf";
 import RedHatTextBold from "@/assets/fonts/RedHatText-Bold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
 import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
-import BuzinessSearchInput from "@/components/BuzinessSearchInput";
-import { storeBuzinesses } from "@/redux/reducers/buzinessReducer";
-import { router } from "expo-router";
+import FakeSearchInput from "@/components/FakeSearchInput";
 import { RootState } from "@/redux/store";
 import { setLocation, logout, setNotificationPrefs } from "@/redux/reducers/userReducer";
 import { supabase } from "@/lib/supabase/supabase";
@@ -42,17 +40,9 @@ import { emotionAvailable } from "@/constants/emotionTiming";
 let splashAlreadyShown = false;
 
 function HomeHeader() {
-  const dispatch = useDispatch();
   return (
     <MyAppbar
-      center={
-        <BuzinessSearchInput
-          onSearch={() => {
-            dispatch(storeBuzinesses([]));
-            router.push("/biznisz");
-          }}
-        />
-      }
+      center={<FakeSearchInput />}
       style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }}
     />
   );
@@ -195,11 +185,16 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="fifeRadar"
-                  options={{ title: "FiFe Radar" }}
+                  options={{ header: () => <HomeHeader /> }}
                 />
                 <Stack.Screen
                   name="biznisz/index"
-                  options={{ title: "Biznisz" }}
+                  options={{ title: "Bizniszek keresése" }}
+                />
+
+                <Stack.Screen
+                  name="search"
+                  options={{ headerShown: true }}
                 />
 
                 <Stack.Screen
@@ -208,19 +203,19 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="biznisz/[id]"
-                  options={{ title: "FiFe Biznisz" }}
+                  options={{ title: "Biznisz" }}
                 />
                 <Stack.Screen
                   name="biznisz/edit/[editId]"
-                  options={{ title: "FiFe Biznisz" }}
+                  options={{ title: "Biznisz szerkesztése" }}
                 />
                 <Stack.Screen
                   name="user/[uid]"
-                  options={{ title: "FiFe Profil" }}
+                  options={{ title: "Profil" }}
                 />
                 <Stack.Screen
                   name="user/edit"
-                  options={{ title: "Profil Szerkesztése" }}
+                  options={{ title: "Profil szerkesztése" }}
                 />
                 <Stack.Screen
                   name="user/emotion-history"
@@ -287,15 +282,15 @@ export default function RootLayout() {
           <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
               <RootContent />
+              {!splashDone && (
+                <SplashAnimation onFinished={() => {
+                  splashAlreadyShown = true;
+                  setSplashDone(true);
+                }} />
+              )}
             </PersistGate>
           </Provider>
         </SafeAreaProvider>
-        {!splashDone && (
-          <SplashAnimation onFinished={() => {
-            splashAlreadyShown = true;
-            setSplashDone(true);
-          }} />
-        )}
       </GestureHandlerRootView>
     );
 }

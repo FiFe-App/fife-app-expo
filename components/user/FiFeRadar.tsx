@@ -1,6 +1,6 @@
 import React from "react";
 import { FlatList, Pressable, View } from "react-native";
-import { ActivityIndicator, Icon, IconButton, Text } from "react-native-paper";
+import { ActivityIndicator, Icon, Text } from "react-native-paper";
 import { Link, router } from "expo-router";
 import { NearestProfile } from "@/redux/store.type";
 import ProfileImage from "../ProfileImage";
@@ -55,15 +55,15 @@ export const FiFeRadar: React.FC<FiFeRadarProps> = ({
 
   return (
     <View>
-      <ThemedView
-        type="card"
+      <Pressable
+        onPress={() => router.push("/fifeRadar")}
         style={{
           paddingHorizontal: Spacing.lg,
           paddingVertical: Spacing.sm,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-            backgroundColor:theme.colors.background
+          backgroundColor: theme.colors.background,
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
@@ -72,13 +72,13 @@ export const FiFeRadar: React.FC<FiFeRadarProps> = ({
           </ThemedText>
           <Icon size={18} color={theme.colors.secondary} source="wifi" />
         </View>
-        <IconButton
-          icon="chevron-right"
-          size={22}
-          style={{ margin: 0 }}
-          onPress={() => router.push("/fifeRadar")}
-        />
-      </ThemedView>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.xs }}>
+          <ThemedText variant="labelMedium" style={{ color: theme.colors.secondary }}>
+            Több
+          </ThemedText>
+          <Icon size={18} color={theme.colors.secondary} source="chevron-right" />
+        </View>
+      </Pressable>
       {!!error && (
         <ThemedView style={{ margin: 6, alignItems: "center" }} type="error">
           <ThemedText type="error">{error}</ThemedText>

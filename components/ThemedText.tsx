@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
   error: {
     lineHeight: 30,
     fontSize: 16,
-    color: theme.colors.onError,
+    color: theme.colors.error,
   },
   link: {
     color: theme.colors.secondary,
