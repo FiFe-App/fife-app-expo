@@ -21,7 +21,7 @@ function EmotionCheckCardInner() {
   const [note, setNote] = useState("");
   const [status, setStatus] = useState<CardStatus>("idle");
 
-  const showForm = shouldShowCard && status !== "dismissed" && status !== "thanked";
+  const showForm = true;//shouldShowCard && status !== "dismissed" && status !== "thanked";
 
   const handleSave = async () => {
     if (selectedRate === null) return;
@@ -32,19 +32,16 @@ function EmotionCheckCardInner() {
   };
 
   return (
-    <Card style={{ margin: Spacing.xs }}>
+    <Card style={{ margin: Spacing.xs }} elevation={0}>
       <Card.Title
         titleStyle={{ fontFamily: "Piazzolla-Medium" }}
-        title="Hogy vagy?"
+        title="Hogy vagy ma?"
         right={() => (
           <View style={{ flexDirection: "row" }}>
             <IconButton
               icon="calendar-month"
               onPress={() => router.push("/user/emotion-history")}
             />
-            {showForm && (
-              <IconButton icon="close" onPress={() => setStatus("dismissed")} />
-            )}
           </View>
         )}
       />
@@ -59,12 +56,12 @@ function EmotionCheckCardInner() {
           <EmotionPicker
             value={selectedRate}
             onSelect={setSelectedRate}
-            disabled={selectedRate === null || status === "saving" || status == "saved"}
+            disabled={status === "saving" || status == "saved"}
           />
           {selectedRate !== null && (
             <View style={{ marginTop: Spacing.sm }}>
               <TextInput
-                label="Jegyzeteid"
+                label="Fejlegyzéseid"
                 placeholder="Írd le milyen napod volt, ha gondolod!"
                 value={note}
                 onChangeText={setNote}

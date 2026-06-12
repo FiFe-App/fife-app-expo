@@ -16,10 +16,14 @@ export default function MeScreen() {
   if (!uid) return null;
   return (
     <ThemedView style={{ flex: 1 }} type="default">
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 120 }}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+      >
         <Mantra />
         <EmotionCheckCard />
-        <View style={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.md }}>
+        <View style={{ paddingHorizontal: Spacing.sm, paddingTop: Spacing.md }}>
           <ToDoList />
         </View>
       </ScrollView>

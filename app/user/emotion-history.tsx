@@ -120,7 +120,7 @@ export default function EmotionHistoryScreen() {
                     value={editNote}
                     onChangeText={setEditNote}
                     multiline
-                    numberOfLines={3}
+                    numberOfLines={100}
                     style={{ marginTop: Spacing.sm }}
                   />
                 </View>

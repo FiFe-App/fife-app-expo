@@ -39,7 +39,7 @@ export default function ToDoList() {
     <View style={{ gap: Spacing.sm }}>
       <View style={{ flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
         <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>
-          Feladatok
+          Feladataid
         </ThemedText>
       </View>
       <Surface
@@ -50,7 +50,7 @@ export default function ToDoList() {
           paddingHorizontal: Spacing.lg,
           width: "100%",
         }}
-        elevation={1}
+        elevation={0}
       >
         {visibleTasks.map((task) => (
           <TouchableRipple

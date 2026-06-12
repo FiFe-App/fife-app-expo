@@ -28,23 +28,6 @@ const BottomNavigation = () => {
 
   return (
     <ThemedView style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level0 }}>
-      <Measure name="biznisz">
-        <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/biznisz")}>
-          <View style={{ alignItems: "center" }}>
-            <Icon
-              source="magnify"
-              size={bizniszActive ? 30 : 24}
-              color={bizniszActive ? theme.colors.secondary : undefined}
-            />
-            <ThemedText type={bizniszActive ? "defaultSemiBold" : "default"}>
-              Biznisz
-            </ThemedText>
-            {functions.includes("buzinessPage") && (
-              <Badge style={globStyles.badge}>ÚJ</Badge>
-            )}
-          </View>
-        </TouchableRipple>
-      </Measure>
       <Measure name="home">
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/home")}>
           <View style={{ alignItems: "center" }}>

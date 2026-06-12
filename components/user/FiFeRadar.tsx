@@ -34,11 +34,11 @@ const RadarItem = ({ data, reversed }: { data: NearestProfile; reversed: boolean
         <ProfileImage
           uid={data.id}
           avatar_url={data.avatar_url}
-          style={{ width: 72, height: 72, borderRadius: BorderRadius.full }}
+          style={{ width: 72, height: 72, borderRadius: BorderRadius.md }}
         />
-        <Text variant="labelMedium" numberOfLines={1} style={{ textAlign: "center", maxWidth: 88 }}>
+        <ThemedText variant="labelSmall" type="bold" numberOfLines={1} style={{ textAlign: "center", maxWidth: 88 }}>
           {data.full_name || "Nincs név"}
-        </Text>
+        </ThemedText>
       </View>
     </Pressable>
   </Link>
@@ -63,6 +63,7 @@ export const FiFeRadar: React.FC<FiFeRadarProps> = ({
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
+            backgroundColor:theme.colors.background
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
@@ -91,8 +92,8 @@ export const FiFeRadar: React.FC<FiFeRadarProps> = ({
           <RadarItem data={item} reversed={index % 2 === 1} />
         )}
         contentContainerStyle={{
-          gap: Spacing.md,
-          paddingHorizontal: Spacing.md,
+          gap: Spacing.xs,
+          paddingHorizontal: Spacing.xs,
           paddingVertical: Spacing.sm,
           alignItems: "center",
         }}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Platform, useWindowDimensions, View } from "react-native";
+import { Platform, View } from "react-native";
 import { IconButton, Text, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -12,17 +12,12 @@ const WEB_FONT_SIZE = 26;
 export default function Mantra() {
   const dispatch = useDispatch();
   const { mantra, name } = useSelector((state: RootState) => state.user);
-  const { width } = useWindowDimensions();
-
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
 
   const text = mantra || `Szia, ${name ?? ""}`;
 
-  const fontSize =
-    Platform.OS === "web"
-      ? WEB_FONT_SIZE
-      : Math.min(34, Math.max(16, Math.floor(((width - 120) / Math.max(text.length, 8)) * 1.8)));
+  const fontSize = Platform.OS === "web" ? WEB_FONT_SIZE : 34;
 
   const startEdit = () => {
     setDraft(text);
@@ -55,7 +50,7 @@ export default function Mantra() {
       ) : (
         <Text
           variant="headlineMedium"
-          numberOfLines={1}
+          numberOfLines={3}
           adjustsFontSizeToFit={Platform.OS !== "web"}
           style={{
             flex: 1,

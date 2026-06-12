@@ -64,6 +64,7 @@ export default function Index() {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
+            backgroundColor:theme.colors.background
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
