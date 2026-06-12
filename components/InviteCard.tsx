@@ -1,5 +1,5 @@
 import { Spacing } from "@/constants/spacing";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { IconButton, Surface } from "react-native-paper";
 import { ThemedText } from "@/components/ThemedText";
 import * as Clipboard from "expo-clipboard";
@@ -37,10 +37,12 @@ export default function InviteCard() {
   return (
     <Surface elevation={5} style={{ borderRadius: BorderRadius.md, position: "absolute", bottom: Spacing.md, left: Spacing.md, right: Spacing.md }}>
       <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <ThemedText variant="bodyLarge" style={{ margin: Spacing.sm, flex: 1 }}>
-          Hívd meg a barátaidat!
-        </ThemedText>
-        <IconButton icon="account-plus" onPress={handleOpen} />
+        <Pressable onPress={handleOpen} style={{ flex: 1, flexDirection: "row", alignItems: "center", paddingLeft: Spacing.sm }}>
+          <ThemedText variant="bodyLarge" style={{ flex: 1 }}>
+            Hívd meg a barátaidat!
+          </ThemedText>
+          <IconButton icon="account-plus" onPress={handleOpen} />
+        </Pressable>
         <IconButton icon="close" onPress={handleDismiss} />
       </View>
     </Surface>

@@ -2,15 +2,37 @@ import { Comment } from "@/components/comments/comments.types";
 import { Tables } from "@/database.types";
 import { ImagePickerAsset } from "expo-image-picker";
 
+export interface EmotionLogLocal {
+  log_date: string;
+  rate: number;
+  note?: string;
+  synced: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EmotionLogsState {
+  logs: EmotionLogLocal[];
+}
+
+export interface TaskItem {
+  id: string;
+  title: string;
+  checked: boolean;
+}
+
 export interface UserState {
   uid?: string;
   name?: string;
+  mantra?: string;
+  tasks?: TaskItem[];
   locationAlertDismissed?: boolean;
   inviteCardDismissed?: boolean;
   notificationPrefs?: {
     notifyPush: boolean;
     notifyEmail: boolean;
     newsletter: boolean;
+    emotionDailyPrompt: boolean;
   };
   userData?: {
     authorization: string;

@@ -54,7 +54,7 @@ import Measure from "@/components/tutorial/Measure";
 import SectionLabel from "@/components/buziness/SectionLabel";
 import { useAppTheme } from "@/assets/theme";
 
-type UserInfo = Tables<"profiles">;
+type UserInfo = Partial<Tables<"profiles">>;
 
 export default function UserPage() {
   const { uid: paramUid } = useLocalSearchParams<{ uid: string }>();

@@ -1,6 +1,6 @@
 import { clearOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { useNavigation, usePathname, useSegments } from "expo-router";
+import { router, useNavigation, usePathname, useSegments } from "expo-router";
 import React, { ReactNode, useRef } from "react";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View, ViewStyle } from "react-native";
@@ -42,7 +42,7 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
       >
         <View style={{ width: 48 }} >
           {
-            pathname !== "/home" && pathname !== "/"
+            pathname !== "/home" && pathname !== "/" && pathname !== "/me"
             && <Appbar.BackAction
               onPress={() =>
                 navigation.canGoBack() ? navigation.goBack() : router.push("/home")

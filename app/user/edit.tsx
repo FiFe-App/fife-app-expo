@@ -36,6 +36,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
+import { emotionAvailable } from "@/constants/emotionTiming";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
@@ -57,6 +58,7 @@ export default function Index() {
   const [notifyPush, setNotifyPush] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState(false);
   const [newsletter, setNewsletter] = useState(false);
+  const [emotionDailyPrompt, setEmotionDailyPrompt] = useState(true);
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -101,11 +103,13 @@ export default function Index() {
             }
           }
           // Fetch notification preferences
-          const { data: prefs } = await supabase.rpc("get_my_notification_prefs");
-          if (prefs?.[0]) {
-            setNotifyPush(prefs[0].notify_push ?? false);
-            setNotifyEmail(prefs[0].notify_email ?? false);
-            setNewsletter(prefs[0].newsletter ?? false);
+          const { data: prefsData } = await supabase.rpc("get_my_notification_prefs");
+          const prefs = prefsData?.[0];
+          if (prefs) {
+            setNotifyPush(prefs.notify_push ?? false);
+            setNotifyEmail(prefs.notify_email ?? false);
+            setNewsletter(prefs.newsletter ?? false);
+            setEmotionDailyPrompt(prefs.emotion_daily_prompt ?? true);
           }
           console.log(data);
           setLoading(false);
@@ -159,7 +163,7 @@ export default function Index() {
             // Save notification preferences
             await supabase
               .from("profiles")
-              .update({ notify_push: notifyPush, notify_email: notifyEmail, newsletter })
+              .update({ notify_push: notifyPush, notify_email: notifyEmail, newsletter, emotion_daily_prompt: emotionDailyPrompt })
               .eq("id", myUid);
             // If push enabled, ensure we have a token registered
             if (notifyPush) {
@@ -188,7 +192,7 @@ export default function Index() {
         ]),
       );
       return () => { };
-    }, [dispatch, myUid, profile, userLocation, usernameAvailable, notifyPush, notifyEmail, newsletter]),
+    }, [dispatch, myUid, profile, userLocation, usernameAvailable, notifyPush, notifyEmail, newsletter, emotionDailyPrompt]),
   );
   useFocusEffect(
     useCallback(() => {
@@ -494,6 +498,15 @@ export default function Index() {
                   <ThemedText type="label">Értesítések a telefonodon</ThemedText>
                 </View>
                 <Switch value={notifyPush} onValueChange={setNotifyPush} />
+              </View>
+            )}
+            {emotionAvailable && (
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <View style={{ flex: 1 }}>
+                  <ThemedText>Napi hangulatnapló</ThemedText>
+                  <ThemedText type="label">Kérdezzem meg minden nap, hogy milyen napod volt?</ThemedText>
+                </View>
+                <Switch value={emotionDailyPrompt} onValueChange={setEmotionDailyPrompt} />
               </View>
             )}
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>

@@ -25,7 +25,7 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
 
   const greetingRef = useRef<string | null>(null);
   if (!greetingRef.current) {
-    const greetings = ["Üdv a FiFe Appban!", "Mire van szükséged?", "Keress bizniszekre..."];
+    const greetings = ["Keress bizniszekre..."];
     greetingRef.current = greetings[Math.floor(Math.random() * greetings.length)];
   }
   const greeting = greetingRef.current;
