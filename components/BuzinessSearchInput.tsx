@@ -22,7 +22,7 @@ const BuzinessSearchInput = ({ onSearch }: { onSearch: (query: string) => void }
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const greeting = useMemo(() => {
-    const greetings = ["Üdv a FiFe Appban!", "Mire van szükséged?", "Keress bizniszekre..."];
+    const greetings = ["Keress bizniszekre..."];
     return greetings[Math.floor(Math.random() * greetings.length)];
   }, []);
 

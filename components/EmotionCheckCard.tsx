@@ -21,7 +21,7 @@ function EmotionCheckCardInner() {
   const [note, setNote] = useState("");
   const [status, setStatus] = useState<CardStatus>("idle");
 
-  const showForm = true;//shouldShowCard && status !== "dismissed" && status !== "thanked";
+  const showForm = shouldShowCard && status !== "dismissed" && status !== "thanked";
 
   const handleSave = async () => {
     if (selectedRate === null) return;
@@ -31,11 +31,12 @@ function EmotionCheckCardInner() {
     setTimeout(() => setStatus("dismissed"), 4000);
   };
 
+  if (showForm)
   return (
     <Card style={{ margin: Spacing.xs }} elevation={0}>
       <Card.Title
         titleStyle={{ fontFamily: "Piazzolla-Medium" }}
-        title="Hogy vagy ma?"
+        title={(showForm ? "Hogy vagy ma?" : "Naplód")}
         right={() => (
           <View style={{ flexDirection: "row" }}>
             <IconButton

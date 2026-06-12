@@ -23,13 +23,13 @@ export default function MeScreen() {
       >
         <Mantra />
         <EmotionCheckCard />
-        <View style={{ paddingHorizontal: Spacing.sm, paddingTop: Spacing.md }}>
+        <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
           <ToDoList />
         </View>
       </ScrollView>
       <FAB
         icon="account"
-        label="Publikus Profilod"
+        label="Profilom"
         onPress={() => router.push({ pathname: "/user/[uid]", params: { uid } })}
         style={{
           position: "absolute",
