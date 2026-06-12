@@ -1,5 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { UserState } from "../store.type";
+import { TaskItem, UserState } from "../store.type";
 import { DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
 
 const initialState: UserState = {
@@ -35,6 +35,17 @@ const userReducer = createSlice({
     },
     setName: (state, { payload }) => {
       state.name = payload;
+    },
+    setMantra: (state, { payload }: PayloadAction<string>) => {
+      state.mantra = payload;
+    },
+    addTask: (state, { payload }: PayloadAction<TaskItem>) => {
+      state.tasks = [...(state.tasks ?? []), payload];
+    },
+    toggleTask: (state, { payload }: PayloadAction<string>) => {
+      state.tasks = (state.tasks ?? []).map((task) =>
+        task.id === payload ? { ...task, checked: !task.checked } : task,
+      );
     },
     setLocationError: (state, { payload }: PayloadAction<string | null>) => {
       state.locationError = payload;
@@ -83,6 +94,9 @@ export const {
   login,
   logout,
   setName,
+  setMantra,
+  addTask,
+  toggleTask,
   setUserData,
   setLocationError,
   setThemePreference,

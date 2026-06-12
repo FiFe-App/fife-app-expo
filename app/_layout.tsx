@@ -186,8 +186,16 @@ function RootContent() {
               <Stack.Screen name="index" />
               <Stack.Protected guard={!!uid}>
                 <Stack.Screen
+                  name="me"
+                  options={{ header: () => <HomeHeader /> }}
+                />
+                <Stack.Screen
                   name="home"
                   options={{ header: () => <HomeHeader /> }}
+                />
+                <Stack.Screen
+                  name="fifeRadar"
+                  options={{ title: "FiFe Radar" }}
                 />
                 <Stack.Screen
                   name="biznisz/index"
