@@ -43,7 +43,7 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
       >
         <View style={{ width: 48 }} >
           {
-            navigation.canGoBack() && pathname !== "/home" && pathname !== "/" 
+            navigation.canGoBack() && pathname !== "/home" && pathname !== "/me" && pathname !== "/"
             && <Appbar.BackAction onPress={navigation.goBack} />
           }
         </View>

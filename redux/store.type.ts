@@ -15,9 +15,17 @@ export interface EmotionLogsState {
   logs: EmotionLogLocal[];
 }
 
+export interface TaskItem {
+  id: string;
+  title: string;
+  checked: boolean;
+}
+
 export interface UserState {
   uid?: string;
   name?: string;
+  mantra?: string;
+  tasks?: TaskItem[];
   locationAlertDismissed?: boolean;
   notificationPrefs?: {
     notifyPush: boolean;

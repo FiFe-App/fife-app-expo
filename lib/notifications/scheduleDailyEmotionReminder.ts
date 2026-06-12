@@ -7,9 +7,9 @@ export async function scheduleDailyEmotionReminder() {
   await Notifications.scheduleNotificationAsync({
     identifier: ID,
     content: {
-      title: "Milyen napod volt ma?",
-      body: "Értékeld a napodat!",
-      data: { url: "/home" },
+      title: "Hogy vagy?",
+      body: "Mesélj a napodról, ha van egy perced!",
+      data: { url: "/me" },
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,
