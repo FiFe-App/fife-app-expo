@@ -1,3 +1,4 @@
+import { router, useFocusEffect } from "expo-router";
 import { theme } from "@/assets/theme";
 import { UsersList } from "@/components/user/UsersList";
 import { Spacing } from "@/constants/spacing";
@@ -8,8 +9,8 @@ import {
   storeUserSearchParams
 } from "@/redux/reducers/usersReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
+import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
 import style from "@/components/styles";
@@ -40,11 +41,26 @@ export default function Index() {
 
   useEffect(() => {
     fetch();
-  }, [searchCircle]);
+  }, [searchCircle, fetch]);
 
+  useEffect(() => {
+    return () => {
+      dispatch(clearOptions());
+    };
+  }, [dispatch]);
 
   useFocusEffect(
     useCallback(() => {
+
+      dispatch(
+        setOptions([
+          {
+            icon: "message-outline",
+            title: "Üzenetek",
+            onPress: () => router.push("/chats"),
+          },
+        ]),
+      );
       if (data.length === 0) {
         fetch();
       }

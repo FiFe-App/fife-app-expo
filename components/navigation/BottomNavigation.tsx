@@ -1,4 +1,4 @@
-import { Link, Route, router, useGlobalSearchParams, useSegments } from "expo-router";
+import { Route, router, useGlobalSearchParams, useSegments } from "expo-router";
 import { useRef, useCallback } from "react";
 import { StyleSheet, View } from "react-native";
 import { Badge, Icon, TouchableRipple } from "react-native-paper";
@@ -20,7 +20,6 @@ const BottomNavigation = () => {
   const bizniszActive = segment[0]?.includes("biznisz");
   const profilActive = segment[0]?.includes("user");
   const homeActive = segment[0]?.includes("home");
-  const chatsActive = segment[0]?.includes("chat");
   const lastNavTime = useRef(0);
 
   const navigateTo = useCallback((path: Route, params?: Record<string,string>) => {
@@ -72,22 +71,6 @@ const BottomNavigation = () => {
             </ThemedText>
           </View>
         </TouchableRipple>
-      </Measure>
-      <Measure name="chats">
-        <Link asChild href="/chats">
-          <TouchableRipple style={{ ...styles.button }}>
-            <View style={{ alignItems: "center" }}>
-              <Icon
-                source={chatsActive ? "message" : "message-outline"}
-                size={24}
-                color={chatsActive ? theme.colors.secondary : undefined}
-              />
-              <ThemedText type={chatsActive ? "defaultSemiBold" : "default"}>
-                Üzenetek
-              </ThemedText>
-            </View>
-          </TouchableRipple>
-        </Link>
       </Measure>
       <Measure name="user">
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user",{uid:uid!})}>
