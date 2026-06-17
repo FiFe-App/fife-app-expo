@@ -1,10 +1,9 @@
 import { Tables } from "@/database.types";
 import { RootState } from "@/redux/store";
-import React, { useState } from "react";
+import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Card, Text, useTheme } from "react-native-paper";
 import { useSelector } from "react-redux";
-import { formatChatDate } from "@/lib/functions/formatChatDate";
 
 type Message = Tables<"messages">;
 
@@ -20,7 +19,6 @@ export function MessageItem({ message, selected, onPress }: MessageItemProps) {
   const isMyMessage = message.author === uid;
 
   // Show short time if not selected, full timestamp if selected
-  const formattedTime = formatChatDate(message.created_at, "time");
   const fullTime = new Date(message.created_at).toLocaleString("hu-HU", {
     year: "numeric",
     month: "short",
@@ -38,28 +36,36 @@ export function MessageItem({ message, selected, onPress }: MessageItemProps) {
       ]}
     >
       <Card
+        mode="contained"
         style={[
           styles.card,
           {
             backgroundColor: isMyMessage
-              ? theme.colors.primaryContainer
+              ? theme.colors.secondaryContainer
               : theme.colors.surfaceVariant,
           },
         ]}
         onPress={onPress}
       >
         <Card.Content style={styles.content}>
-          <Text variant="bodyMedium">{message.text}</Text>
-          {selected && (
-            <Text
-              variant="labelSmall"
-              style={[styles.time, { color: theme.colors.onSurfaceVariant }]}
-            >
-              {fullTime}
-            </Text>
-          )}
+          <Text variant="bodyMedium"
+        style={[
+          {
+            color: isMyMessage
+              ? theme.colors.onSecondaryContainer
+              : theme.colors.onSurfaceVariant,
+          },
+        ]} >{message.text}</Text>
         </Card.Content>
       </Card>
+      {selected && (
+        <Text
+          variant="labelSmall"
+          style={[styles.time, { color: theme.colors.onSurfaceVariant }]}
+        >
+          {fullTime}
+        </Text>
+      )}
     </View>
   );
 }
@@ -83,7 +89,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   time: {
+    marginLeft: 4,
     marginTop: 4,
-    alignSelf: "flex-end",
   },
 });

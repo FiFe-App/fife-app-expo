@@ -15,7 +15,7 @@ import { Logo } from "@/components/Logo";
 export default function NativeLanding() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
 
-  if (uid) return <Redirect href="/home" />;
+  if (uid) return <Redirect href="/me" />;
 
   return (
     <ThemedView style={{flex:1}} >

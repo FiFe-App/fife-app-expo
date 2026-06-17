@@ -2,7 +2,8 @@ import InfoLayer from "@/components/InfoLayer";
 import { SplashAnimation } from "@/components/SplashAnimation";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { persistor, store } from "@/redux/store";
-import { Stack, usePathname } from "expo-router";
+import { Stack, usePathname, useRouter } from "expo-router";
+import * as Notifications from "expo-notifications";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
 import { View, StatusBar, useColorScheme, Platform, AppState } from "react-native";
@@ -28,10 +29,13 @@ import { MyAppbar } from "@/components/MyAppBar";
 import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import FakeSearchInput from "@/components/FakeSearchInput";
 import { RootState } from "@/redux/store";
-import { setLocation, logout } from "@/redux/reducers/userReducer";
+import { setLocation, logout, setNotificationPrefs } from "@/redux/reducers/userReducer";
 import { supabase } from "@/lib/supabase/supabase";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
+import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
 import { setStatusBarColor } from "@/redux/reducers/infoReducer";
+import { useEmotionLog } from "@/hooks/useEmotionLog";
+import { emotionAvailable } from "@/constants/emotionTiming";
 
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
 let splashAlreadyShown = false;
@@ -61,14 +65,20 @@ function RootContent() {
     }
   }, []);
 
-  // Manage Supabase token auto-refresh based on whether app is in foreground
+  const { syncPendingLogs, loadFromServer } = useEmotionLog();
+
+  // Manage Supabase token auto-refresh and offline sync on foreground
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") supabase.auth.startAutoRefresh();
-      else supabase.auth.stopAutoRefresh();
+      if (state === "active") {
+        supabase.auth.startAutoRefresh();
+        if (uid && emotionAvailable) syncPendingLogs();
+      } else {
+        supabase.auth.stopAutoRefresh();
+      }
     });
     return () => sub.remove();
-  }, []);
+  }, [uid, syncPendingLogs]);
 
   // Keep Redux auth state in sync with Supabase session
   useEffect(() => {
@@ -104,16 +114,57 @@ function RootContent() {
     });
   }, [uid, dispatch]);
 
-  // Register push token if user opted in to push notifications
+  // Register push token and schedule emotion reminder on login (native-only)
   useEffect(() => {
     if (!uid || Platform.OS === "web") return;
     supabase.rpc("get_my_notification_prefs").then(async ({ data }) => {
-      if (!data?.[0]?.notify_push) return;
-      const token = await registerForPushNotificationsAsync();
-      if (token) {
-        await supabase.rpc("update_my_push_token", { token });
+      const prefs = data?.[0];
+      if (!prefs) return;
+      dispatch(setNotificationPrefs({
+        notifyPush: prefs.notify_push ?? false,
+        notifyEmail: prefs.notify_email ?? false,
+        newsletter: prefs.newsletter ?? false,
+        emotionDailyPrompt: prefs.emotion_daily_prompt ?? true,
+      }));
+      if (prefs.notify_push) {
+        const token = await registerForPushNotificationsAsync();
+        if (token) await supabase.rpc("update_my_push_token", { token });
+      }
+      if (emotionAvailable && (prefs.emotion_daily_prompt ?? true)) {
+        await scheduleDailyEmotionReminder();
+      } else {
+        await cancelDailyEmotionReminder();
       }
     });
+  }, [uid, dispatch]);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const handleResponse = (response: Notifications.NotificationResponse) => {
+      const data = response.notification.request.content.data as Record<string, unknown> | undefined;
+      const url = data?.url;
+      if (typeof url === "string" && url.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        router.push(url as any);
+      }
+    };
+
+    if (Platform.OS !== "web") {
+      const subscription = Notifications.addNotificationResponseReceivedListener(handleResponse);
+      Notifications.getLastNotificationResponseAsync().then((response) => {
+        if (response) handleResponse(response);
+      }).catch(() => {});
+      return () => subscription.remove();
+    }
+    return undefined;
+  }, [router]);
+
+  // Load and sync emotion logs on login
+  useEffect(() => {
+    if (!uid || !emotionAvailable) return;
+    loadFromServer();
+    syncPendingLogs();
   }, [uid]);
 
   // Determine if dark mode should be active based on preference
@@ -147,7 +198,15 @@ function RootContent() {
             >
               <Stack.Protected guard={!!uid}>
                 <Stack.Screen
+                  name="me"
+                  options={{ header: () => <HomeHeader /> }}
+                />
+                <Stack.Screen
                   name="home"
+                  options={{ header: () => <HomeHeader /> }}
+                />
+                <Stack.Screen
+                  name="fifeRadar"
                   options={{ header: () => <HomeHeader /> }}
                 />
                 <Stack.Screen
@@ -187,6 +246,10 @@ function RootContent() {
                 <Stack.Screen
                   name="chat/[uid]"
                   options={{ title: "Üzenet" }}
+                />
+                <Stack.Screen
+                  name="user/emotion-history"
+                  options={{ title: "Napló" }} 
                 />
               </Stack.Protected>
               <Stack.Protected guard={!uid}>

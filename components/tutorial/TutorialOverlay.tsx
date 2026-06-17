@@ -30,17 +30,17 @@ const tutorialSteps: { message?: string; description?: string; key?: string; pag
   {
     message: "Üdvözöllek a FiFe Appban!",
     description: "Ez egy bemutató a funkciókról, átugorhatod ha akarod.",
-    page: "/home"
+    page: "/me"
   },
   {
     key: "first-user",
     message: "Ez a főoldal, itt láthatod az újonan regisztrált tagokat, és hogy mihez értenek",
-    page: "/home"
+    page: "/me"
   },
   {
     key: "biznisz",
     message: "A bizniszeket itt, alul találod.",
-    page: "/home"
+    page: "/me"
   },
   {
     message: "Ez a biznisz kereső oldal",

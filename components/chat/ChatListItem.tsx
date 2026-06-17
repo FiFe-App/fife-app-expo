@@ -5,6 +5,8 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Card, Text, TouchableRipple, useTheme } from "react-native-paper";
 import { formatChatDate } from "@/lib/functions/formatChatDate";
+import { BorderRadius } from "@/constants/borderRadius";
+import { Spacing } from "@/constants/spacing";
 
 type Message = Tables<"messages">;
 type Profile = Tables<"profiles">;
@@ -29,12 +31,12 @@ export function ChatListItem({
   return (
     <Link asChild href={`/chat/${otherUser.id}`}>
       <TouchableRipple>
-        <Card style={styles.card}>
-          <Card.Content style={styles.content}>
+        <View style={styles.card}>
+          <View style={styles.content}>
             <ProfileImage
               uid={otherUser.id}
               avatar_url={otherUser.avatar_url}
-              style={styles.avatar}
+              style={[styles.avatar,{borderRadius:BorderRadius.md}]}
             />
             <View style={styles.textContainer}>
               <View style={styles.headerRow}>
@@ -85,8 +87,8 @@ export function ChatListItem({
                 </Text>
               </View>
             )}
-          </Card.Content>
-        </Card>
+          </View>
+        </View>
       </TouchableRipple>
     </Link>
   );
@@ -94,7 +96,7 @@ export function ChatListItem({
 
 const styles = StyleSheet.create({
   card: {
-    marginHorizontal: 8,
+    marginHorizontal: Spacing.lg,
     marginVertical: 4,
   },
   content: {
@@ -105,7 +107,6 @@ const styles = StyleSheet.create({
   avatar: {
     width: 50,
     height: 50,
-    borderRadius: 25,
   },
   textContainer: {
     flex: 1,

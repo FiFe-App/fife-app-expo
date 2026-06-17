@@ -5,36 +5,34 @@ import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
 import { Link, Redirect, router, useLocalSearchParams, useNavigation } from "expo-router";
-import { useEffect, useState } from "react";
-import { View } from "react-native";
-import { Divider, Text, TextInput } from "react-native-paper";
+import React, { useEffect, useRef, useState } from "react";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
+import { TextInput } from "react-native-paper";
 import { Spacing } from "@/constants/spacing";
 import { useDispatch, useSelector } from "react-redux";
 
-import { makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "@/components/Button";
-import { useAppTheme } from "@/assets/theme";
 import { ThemedText } from "@/components/ThemedText";
-import { Image } from "expo-image";
 import Smiley from "@/components/Smiley";
 
 export default function Index() {
   const navigation = useNavigation();
-  const theme = useAppTheme();
   const dispatch = useDispatch();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const passwordRef = useRef<any>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const [focusedField, setFocusedField] = useState<"email" | "password" | null>(null);
   const { "#": hash, redirected_from } = useLocalSearchParams<{ "#": string; redirected_from?: string }>();
   const token_data = hash
     ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
     : null;
   WebBrowser.maybeCompleteAuthSession(); // required for web only
-  const redirectTo = makeRedirectUri();
 
   useEffect(() => {
     navigation.setOptions({ "title": "Bejelentkezés" });
@@ -106,43 +104,59 @@ export default function Index() {
         <View style={{width:"100%",alignItems:"center"}}>
           <Smiley style={{width:100,height:100}} />
         </View>
-        <TextInput
-          mode="outlined"
-          onChangeText={setEmail}
-          value={email}
-          label="E-mail"
-          autoComplete="email"
-          textContentType="emailAddress"
-          inputMode="email"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <TextInput
-          mode="outlined"
-          onChangeText={setPassword}
-          value={password}
-          label="Jelszó"
-          secureTextEntry={!showPassword}
-          autoComplete="current-password"
-          textContentType="password"
-          right={
-            <TextInput.Icon
-              icon={showPassword ? "eye" : "eye-off"}
-              onPress={() => setShowPassword(!showPassword)}
-            />
-          }
-        />
-        <Button
-          onPress={signInWithEmail}
-          loading={loading}
-          style={{marginTop: Spacing.md}}
-          mode="contained"
-          disabled={!password || !email}
-          type="secondary"
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 80}
+          style={{ width: "100%" }}
         >
-          Bejelentkezés
-        </Button>
+          <TextInput
+            mode="outlined"
+            onChangeText={setEmail}
+            value={email}
+            label="E-mail"
+            autoComplete="email"
+            textContentType="emailAddress"
+            inputMode="email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="next"
+            blurOnSubmit={false}
+            onFocus={() => setFocusedField("email")}
+            onBlur={() => setFocusedField((value) => (value === "email" ? null : value))}
+            onSubmitEditing={() => passwordRef.current?.focus()}
+          />
+          <TextInput
+            ref={passwordRef}
+            mode="outlined"
+            onChangeText={setPassword}
+            value={password}
+            label="Jelszó"
+            secureTextEntry={!showPassword}
+            autoComplete="current-password"
+            textContentType="password"
+            returnKeyType="go"
+            onFocus={() => setFocusedField("password")}
+            onBlur={() => setFocusedField((value) => (value === "password" ? null : value))}
+            onSubmitEditing={signInWithEmail}
+            right={
+              <TextInput.Icon
+                icon={showPassword ? "eye" : "eye-off"}
+                onPress={() => setShowPassword(!showPassword)}
+              />
+            }
+          />
+          <Button
+            onPress={signInWithEmail}
+            loading={loading}
+            style={[{ marginTop: Spacing.md }, focusedField ? { opacity: 1 } : undefined]}
+            mode="contained"
+            disabled={!password || !email}
+            type="secondary"
+          >
+            Bejelentkezés
+          </Button>
+        </KeyboardAvoidingView>
         <View style={{minHeight:60}}>
           {!!error && <ThemedView style={{margin:6, alignItems:"center"}} type="error">
             <ThemedText type="error">{error}</ThemedText>

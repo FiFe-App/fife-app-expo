@@ -359,7 +359,7 @@ export default function App() {
         </ThemedView> });
   }, []);
 
-  if (uid) return <Redirect href="/home" />;
+  if (uid) return <Redirect href="/me" />;
   return (
     <ScrollView contentContainerStyle={{ backgroundColor: theme.colors.background }} style={{ flex: 1, backgroundColor: theme.colors.background }}>
       

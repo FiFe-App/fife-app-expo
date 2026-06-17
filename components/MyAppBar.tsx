@@ -42,7 +42,7 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
       >
         <View style={{ width: 48 }} >
           {
-            pathname !== "/home" && pathname !== "/"
+            pathname !== "/home" && pathname !== "/" && pathname !== "/me"
             && <Appbar.BackAction
               onPress={() =>
                 navigation.canGoBack() ? navigation.goBack() : router.push("/home")

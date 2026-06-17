@@ -126,7 +126,7 @@ export default function Index() {
           dispatch(login(signInResponse.data.user.id));
           dispatch(setUserData(signInResponse.data.user));
           dispatch(addSnack({ title: "Bejelentkeztél!" }));
-          router.navigate("/home");
+          router.navigate("/me");
         }
       }
     }

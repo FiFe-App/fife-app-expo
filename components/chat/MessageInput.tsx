@@ -1,35 +1,42 @@
-import React, { useState } from "react";
+import { Spacing } from "@/constants/spacing";
+import React from "react";
 import { View, StyleSheet } from "react-native";
 import { TextInput, useTheme } from "react-native-paper";
 
 interface MessageInputProps {
+  value: string;
+  onChangeText: (text: string) => void;
   onSend: (text: string) => void;
   disabled?: boolean;
 }
 
-export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
+export function MessageInput({
+  value,
+  onChangeText,
+  onSend,
+  disabled = false,
+}: MessageInputProps) {
   const theme = useTheme();
-  const [text, setText] = useState("");
 
   const handleSend = () => {
-    if (text.trim()) {
-      onSend(text.trim());
-      setText("");
+    if (value.trim()) {
+      onSend(value.trim());
     }
   };
 
   return (
     <View
       style={[
-        styles.container,
-        { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outline },
+        styles.container
       ]}
     >
       <TextInput
-        mode="flat"
+        mode="outlined"
         placeholder="Írj üzenetet..."
-        value={text}
-        onChangeText={setText}
+        value={value}
+        onChangeText={onChangeText}
+        submitBehavior="blurAndSubmit"
+        returnKeyType="send"
         onSubmitEditing={handleSend}
         disabled={disabled}
         multiline={false}
@@ -38,8 +45,9 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
         right={
           <TextInput.Icon
             icon="send-variant"
+            color={theme.colors.secondary}
             onPress={handleSend}
-            disabled={disabled || !text.trim()}
+            disabled={disabled || !value.trim()}
           />
         }
       />
@@ -49,7 +57,7 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
 
 const styles = StyleSheet.create({
   container: {
-    borderTopWidth: 1,
+    padding: Spacing.sm
   },
   input: {
     backgroundColor: "transparent",

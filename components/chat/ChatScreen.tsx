@@ -4,8 +4,7 @@ import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
 import { Link, useFocusEffect, useGlobalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { FlatList, View, StyleSheet } from "react-native";
-import { Appbar } from "react-native-paper";
+import { FlatList, View, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import ProfileImage from "@/components/ProfileImage";
 import { useNavigation } from "@react-navigation/native";
 import { ActivityIndicator, Text } from "react-native-paper";
@@ -13,17 +12,20 @@ import { useDispatch, useSelector } from "react-redux";
 import { MessageItem } from "./MessageItem";
 import { MessageInput } from "./MessageInput";
 import { RealtimeChannel } from "@supabase/supabase-js";
-import { viewFunction } from "@/redux/reducers/tutorialReducer";
-import BuzinessSearchInput from "../BuzinessSearchInput";
+import { clearDraftMessage, setDraftMessage, setLastReadAt } from "@/redux/reducers/chatReducer";
 import { MyAppbar } from "../MyAppBar";
 import { MessagingDisabledCard } from "./MessagingDisabledCard";
 
 type Message = Tables<"messages">;
 
 export default function ChatScreen() {
+  const dispatch = useDispatch();
   const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null);
   const { uid: otherUid } = useGlobalSearchParams<{ uid: string }>();
   const { uid: myUid } = useSelector((state: RootState) => state.user);
+  const draft = useSelector((state: RootState) =>
+    otherUid ? state.chat.drafts[otherUid] ?? "" : ""
+  );
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -39,6 +41,8 @@ export default function ChatScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!otherUid || !myUid) return;
+      const currentMyUid = myUid;
+      const currentOtherUid = otherUid;
 
       // Check if both users have MESSAGE contact enabled
       const checkMessaging = async () => {
@@ -46,7 +50,7 @@ export default function ChatScreen() {
         const { data: myMessageContact } = await supabase
           .from("contacts")
           .select("*")
-          .eq("author", myUid)
+          .eq("author", currentMyUid)
           .eq("type", "MESSAGE")
           .maybeSingle();
 
@@ -54,7 +58,7 @@ export default function ChatScreen() {
         const { data: otherMessageContact } = await supabase
           .from("contacts")
           .select("*")
-          .eq("author", otherUid)
+          .eq("author", currentOtherUid)
           .eq("type", "MESSAGE")
           .maybeSingle();
 
@@ -71,7 +75,7 @@ export default function ChatScreen() {
       supabase
         .from("profiles")
         .select("*")
-        .eq("id", otherUid)
+        .eq("id", currentOtherUid)
         .single()
         .then(({ data, error }) => {
           if (error) {
@@ -81,8 +85,8 @@ export default function ChatScreen() {
           setOtherUser(data);
         });
       navigation.setOptions({ header: () => <MyAppbar center={
-        otherUser && otherUid && (
-          <Link href={`/user/${otherUid}`} style={{width:"100%",textAlign:"center"}}>
+        otherUser && currentOtherUid && (
+          <Link href={`/user/${currentOtherUid}`} style={{width:"100%",textAlign:"center"}}>
             <View style={styles.profileHeaderContent}>
               <ProfileImage
                 uid={otherUser.id}
@@ -96,7 +100,7 @@ export default function ChatScreen() {
             </View>
           </Link>
         )} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
-    }, [otherUid, myUid]),
+    }, [otherUid, myUid, otherUser, navigation]),
   );
 
   // Load messages
@@ -117,8 +121,12 @@ export default function ChatScreen() {
     }
 
     setMessages(data || []);
+    if (otherUid) {
+      const lastReadAt = data && data.length > 0 ? data[data.length - 1].created_at : new Date().toISOString();
+      dispatch(setLastReadAt({ chatId: otherUid, lastReadAt }));
+    }
     setLoading(false);
-  }, [myUid, otherUid]);
+  }, [myUid, otherUid, dispatch]);
 
   // Set up realtime subscription
   useEffect(() => {
@@ -148,6 +156,10 @@ export default function ChatScreen() {
               if (prev.some((m) => m.id === newMessage.id)) return prev;
               return [...prev, newMessage];
             });
+
+            if (newMessage.author === otherUid && newMessage.to === myUid && otherUid) {
+              dispatch(setLastReadAt({ chatId: otherUid, lastReadAt: newMessage.created_at }));
+            }
           }
         }
       )
@@ -160,7 +172,20 @@ export default function ChatScreen() {
         supabase.removeChannel(channelRef.current);
       }
     };
-  }, [myUid, otherUid, hasMessagingEnabled, otherHasMessagingEnabled, loadMessages]);
+  }, [myUid, otherUid, hasMessagingEnabled, otherHasMessagingEnabled, loadMessages, dispatch, mountId]);
+
+  const setDraft = useCallback(
+    (text: string) => {
+      if (!otherUid) return;
+      dispatch(setDraftMessage({ chatId: otherUid, draft: text }));
+    },
+    [dispatch, otherUid],
+  );
+
+  const clearDraft = useCallback(() => {
+    if (!otherUid) return;
+    dispatch(clearDraftMessage({ chatId: otherUid }));
+  }, [dispatch, otherUid]);
 
   const sendMessage = async (text: string) => {
     if (!myUid || !otherUid || sending || !hasMessagingEnabled || !otherHasMessagingEnabled) return;
@@ -180,6 +205,7 @@ export default function ChatScreen() {
         if (prev.some((m) => m.id === data.id)) return prev;
         return [...prev, data];
       });
+      clearDraft();
     }
 
     setSending(false);
@@ -202,17 +228,21 @@ export default function ChatScreen() {
           onEnabled={() => {
             // Re-check both users' messaging status
             (async () => {
+              if (!myUid || !otherUid) return;
+              const currentMyUid = myUid;
+              const currentOtherUid = otherUid;
+
               const { data: myMessageContact } = await supabase
                 .from("contacts")
                 .select("*")
-                .eq("author", myUid)
+                .eq("author", currentMyUid)
                 .eq("type", "MESSAGE")
                 .maybeSingle();
 
               const { data: otherMessageContact } = await supabase
                 .from("contacts")
                 .select("*")
-                .eq("author", otherUid)
+                .eq("author", currentOtherUid)
                 .eq("type", "MESSAGE")
                 .maybeSingle();
 
@@ -241,39 +271,52 @@ export default function ChatScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <MessageItem
-            message={item}
-            selected={selectedMessageId === item.id}
-            onPress={() =>
-              setSelectedMessageId((prev) => (prev === item.id ? null : item.id))
-            }
-          />
-        )}
-        contentContainerStyle={styles.messagesList}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text variant="bodyLarge" style={{textAlign:"center"}}>
-              {otherUser
-                ? `Te és ${otherUser.full_name} még nem beszélgettetek az appon belül!`
-                : "Nincs még üzenet"}
-            </Text>
-          </View>
-        }
-        onContentSizeChange={() => {
-          // Auto-scroll to bottom when content changes
-          if (messages.length > 0) {
-            flatListRef.current?.scrollToEnd({ animated: true });
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoiding}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 34}
+    >
+      <ThemedView style={styles.container}>
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <MessageItem
+              message={item}
+              selected={selectedMessageId === item.id}
+              onPress={() =>
+                setSelectedMessageId((prev) => (prev === item.id ? null : item.id))
+              }
+            />
+          )}
+          contentContainerStyle={styles.messagesList}
+          keyboardShouldPersistTaps="handled"
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text variant="bodyLarge" style={{textAlign:"center"}}>
+                {otherUser
+                  ? `Te és ${otherUser.full_name} még nem beszélgettetek az appon belül!`
+                  : "Nincs még üzenet"}
+              </Text>
+            </View>
           }
-        }}
-      />
-      <MessageInput onSend={sendMessage} disabled={sending || !hasMessagingEnabled || !otherHasMessagingEnabled} />
-    </ThemedView>
+          onContentSizeChange={() => {
+            // Auto-scroll to bottom when content changes
+            if (messages.length > 0) {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }
+          }}
+        />
+
+        <MessageInput
+          value={draft}
+          onChangeText={setDraft}
+          onSend={sendMessage}
+          disabled={sending || !hasMessagingEnabled || !otherHasMessagingEnabled}
+        />
+      </ThemedView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -303,6 +346,7 @@ const styles = StyleSheet.create({
   },
   profileName: {
     flexShrink: 1,
+    fontFamily: "Piazzolla-Regular",
     fontWeight: "bold",
   },
   centerContainer: {
@@ -313,6 +357,9 @@ const styles = StyleSheet.create({
   messagesList: {
     flexGrow: 1,
     paddingVertical: 8,
+  },
+  keyboardAvoiding: {
+    flex: 1,
   },
   emptyContainer: {
     flex: 1,
