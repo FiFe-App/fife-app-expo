@@ -37,7 +37,14 @@ export default {
       }
     },
     package: "com.fife.app",
-    googleServicesFile: "./google-services.json"
+    googleServicesFile: "./google-services.json",
+    // Lets Android offer Fife App as a Home app ("use as launcher") alongside its normal launch path.
+    intentFilters: [
+      {
+        action: "MAIN",
+        category: ["DEFAULT", "HOME"]
+      }
+    ]
   },
   web: {
     bundler: "metro",
