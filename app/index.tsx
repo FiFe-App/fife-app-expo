@@ -17,6 +17,8 @@ import { useAppTheme } from "@/assets/theme";
 import { setStatusBarColor } from "@/redux/reducers/infoReducer";
 import { Logo } from "@/components/Logo";
 
+const GOOGLE_PLAY_URL = "https://play.google.com/store/apps/details?id=com.fife.app";
+
 export const Header = () => {
   const theme = useAppTheme();
   return (
@@ -56,16 +58,6 @@ const Hero = () => {
           <Text variant="headlineMedium">
             Fedezd fel a segítői hálózatot a zsebedben
           </Text>
-          <Link asChild href="/csatlakozom">
-            <Button style={styles.loginButton} type="secondary">
-              Regisztrálok
-            </Button>
-          </Link>
-          <Link asChild href="/login">
-            <Button style={styles.loginButton} mode="contained">
-              Bejelentkezem
-            </Button>
-          </Link>
         </View>
         <View
           style={[
@@ -85,6 +77,21 @@ const Hero = () => {
           />
         </View>
       </ThemedView>
+      <View style={{ alignItems: "center", gap: Spacing.md, paddingBottom: Spacing.lg }}>
+        <Text variant="headlineMedium">Csatlakozom</Text>
+        <View style={{ width: "100%", maxWidth: 320, gap: Spacing.sm }}>
+          <Link href={GOOGLE_PLAY_URL} asChild>
+            <Button style={styles.loginButton} mode="contained">
+              Letöltöm Androidra
+            </Button>
+          </Link>
+          <Link href="/login" asChild>
+            <Button style={styles.loginButton} mode="text">
+              Megnyitom weben
+            </Button>
+          </Link>
+        </View>
+      </View>
     </View>
   );
 };
