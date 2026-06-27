@@ -78,7 +78,6 @@ const Hero = () => {
         </View>
       </ThemedView>
       <View style={{ alignItems: "center", gap: Spacing.md, paddingBottom: Spacing.lg }}>
-        <Text variant="headlineMedium">Csatlakozom</Text>
         <View style={{ width: "100%", maxWidth: 320, gap: Spacing.sm }}>
           <Link href={GOOGLE_PLAY_URL} asChild>
             <Button style={styles.loginButton} mode="contained">
