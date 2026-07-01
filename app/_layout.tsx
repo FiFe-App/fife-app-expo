@@ -194,15 +194,15 @@ function RootContent() {
                   options={{ headerShown: false, animation: "slide_from_right" }}
                 />
                 <Stack.Screen
-                  name="user/password-reset"
-                  options={{ title: "Jelszó visszaállítás" }}
-                />
-                <Stack.Screen
                   name="user/deleted-account"
                   options={{ headerShown: false, title: "Fiók törölve" }}
                 />
 
               </Stack.Protected>
+                <Stack.Screen
+                  name="user/password-reset"
+                  options={{ title: "Jelszó visszaállítás" }}
+                />
             </Stack>
             {pathname !== "/" && !pathname.includes("projekt") &&
               !pathname.includes("login") &&
