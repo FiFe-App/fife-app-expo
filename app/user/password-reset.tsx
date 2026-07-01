@@ -50,9 +50,7 @@ export default function PasswordResetScreen() {
     setLoading(true);
     setError(null);
     setMessage(null);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/user/password-reset`,
-    });
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) setError(error.message);
     else {
       setSent(true);
