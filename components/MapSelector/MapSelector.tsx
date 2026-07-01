@@ -13,14 +13,7 @@ import {
   useTheme
 } from "react-native-paper";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
-import {
-  Camera,
-  Circle,
-  Details,
-  MapView,
-  Marker,
-  Region,
-} from "../mapView/mapView";
+import { Camera, Circle, MapView, Marker } from "../mapView/mapView";
 import FiFeMap from "../mapView/FiFeMap";
 import styles from "../mapView/style";
 import { MapSelectorProps } from "./MapSelector.types";
@@ -37,8 +30,6 @@ const defaultMapLocation = {
 
 const MapSelector = ({
   style,
-  title,
-  text,
   data,
   setData,
   setOpen,
@@ -48,7 +39,7 @@ const MapSelector = ({
   const theme = useTheme();
   const [mapHeight, setMapHeight] = useState<number>(0);
   const circleSize = mapHeight / 3;
-  const [circleRadiusText, setCircleRadiusText] = useState("");
+  const [circleRadiusText] = useState("");
   const [circle, setCircle] = useState<CircleType>(() => {
     const src = data || defaultMapLocation;
     // Normalize: persisted Redux state may have a stale/different coordinate format
@@ -62,40 +53,19 @@ const MapSelector = ({
   interface GeoResult {
     formatted_address: string;
     geometry: { location: { lat: () => number; lng: () => number } };
+    place_id?: string;
   }
   const [search, setSearch] = useState("");
   const [addressList, setAddressList] = useState<GeoResult[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<GeoResult | null>(null);
   const [searchFocused, setSearchFocused] = useState(false);
-  const showList = addressList && selectedAddress?.formatted_address !== search && searchFocused;
-  const [approxLocation, setApproxLocation] = useState(false);
+  const showList = addressList.length > 0 && selectedAddress?.formatted_address !== search && searchFocused;
   const mapRef = useRef<MapView>(null);
 
   const { myLocation } = useMyLocation();
 
   // Determine if we're using dark theme
   const isDarkTheme = theme.dark;
-
-  const onRegionChange:
-    | ((region: Region, details: Details) => void)
-    | undefined = async (e) => {
-      if (!mapHeight) return;
-      const km = (e?.latitudeDelta * 111.32 * circleSize) / mapHeight;
-
-      let text = Math.round(km) + " km";
-      if (km < 2) {
-        text = Math.round(km * 1000) + " m";
-      }
-
-      setCircle({
-        location: {
-          latitude: e?.latitude,
-          longitude: e?.longitude,
-        },
-        radius: km * 500,
-      });
-      setCircleRadiusText(text);
-    };
 
   const panToMyLocation = () => {
     if (!mapRef.current || !myLocation) return;
@@ -123,33 +93,93 @@ const MapSelector = ({
     }
   };
 
-  const turnToAddress = async (address: string) => {
-    if (address.length < 4) return;
-    if (Platform.OS === "web") {
-      const geocoder = new google.maps.Geocoder();
-      const coded = await geocoder.geocode({
-        address,
-        componentRestrictions: { country: "HU" },
+  const getPlaceDetails = async (placeId: string) => {
+    if (!placeId) return null;
+
+    if (Platform.OS === "web" && typeof google !== "undefined" && google.maps?.places?.PlacesService) {
+      const service = new google.maps.places.PlacesService(document.createElement("div"));
+      return await new Promise<{ latitude: number; longitude: number } | null>((resolve) => {
+        service.getDetails({ placeId, fields: ["geometry"] }, (place, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
+            resolve({
+              latitude: place.geometry.location.lat(),
+              longitude: place.geometry.location.lng(),
+            });
+            return;
+          }
+          resolve(null);
+        });
       });
-      return { results: coded.results.map((r) => ({
-        formatted_address: r.formatted_address,
-        geometry: { location: { lat: () => r.geometry.location.lat(), lng: () => r.geometry.location.lng() } },
-      })) };
-    } else {
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&components=country:HU&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
-      const response = await fetch(url);
-      const json = await response.json();
-      if (json.status !== "OK") return { results: [] };
+    }
+
+    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=geometry&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+    const response = await fetch(url);
+    const json = await response.json();
+    if (json.status !== "OK" || !json.result?.geometry?.location) return null;
+
+    return {
+      latitude: json.result.geometry.location.lat,
+      longitude: json.result.geometry.location.lng,
+    };
+  };
+
+  const turnToAddress = async (address: string) => {
+    const trimmedAddress = address.trim();
+    if (trimmedAddress.length < 4) return { results: [] };
+
+    if (Platform.OS === "web" && typeof google !== "undefined" && google.maps?.places?.AutocompleteService) {
+      const service = new google.maps.places.AutocompleteService();
+      const predictions = await new Promise<google.maps.places.AutocompletePrediction[]>((resolve) => {
+        service.getPlacePredictions(
+          {
+            input: trimmedAddress,
+            componentRestrictions: { country: "HU" },
+            types: ["address", "establishment", "geocode"],
+          },
+          (predictions, status) => {
+            if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
+              resolve([]);
+              return;
+            }
+            resolve(predictions);
+          },
+        );
+      });
+
       return {
-        results: (json.results as Array<{ formatted_address: string; geometry: { location: { lat: number; lng: number } } }>).map((r) => ({
-          formatted_address: r.formatted_address,
-          geometry: { location: { lat: () => r.geometry.location.lat, lng: () => r.geometry.location.lng } },
+        results: predictions.map((prediction) => ({
+          formatted_address: prediction.description,
+          place_id: prediction.place_id,
+          geometry: {
+            location: {
+              lat: () => 0,
+              lng: () => 0,
+            },
+          },
         })),
       };
     }
+
+    const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(trimmedAddress)}&components=country:HU&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+    const response = await fetch(url);
+    const json = await response.json();
+    if (json.status !== "OK") return { results: [] };
+
+    return {
+      results: (json.predictions ?? []).map((prediction: { description: string; place_id: string }) => ({
+        formatted_address: prediction.description,
+        place_id: prediction.place_id,
+        geometry: {
+          location: {
+            lat: () => 0,
+            lng: () => 0,
+          },
+        },
+      })),
+    };
   };
   const debounce = <T,>(func: (param: T) => void, wait: number) => {
-    let timeout: NodeJS.Timeout;
+    let timeout: ReturnType<typeof setTimeout>;
     return (args: T) => {
       clearTimeout(timeout);
       timeout = setTimeout(() => func(args), wait);
@@ -170,10 +200,6 @@ const MapSelector = ({
       }, 500),
     [],
   );
-  const toggleApproxLocation = () => {
-    setApproxLocation(!approxLocation);
-  };
-
   return (
     <View style={[{ flex: 1, overflow: "hidden", borderRadius: 16 }, style]}>
       <View
@@ -189,6 +215,11 @@ const MapSelector = ({
             placeholder="Keress címre..."
             onChangeText={(text) => {
               setSearch(text);
+              if (!text.trim()) {
+                setAddressList([]);
+                setSelectedAddress(null);
+                return;
+              }
               debouncedSearch(text);
             }}
             outlineStyle={{borderRadius: 999}}
@@ -209,22 +240,31 @@ const MapSelector = ({
                 <List.Item
                   style={{ zIndex: 1000 }}
                   title={props.item.formatted_address}
-                  onPress={(e) => {
+                  onPress={async () => {
                     const address = props.item;
-                    console.log("address", address);
-                    if (address && mapRef.current) {
-                      setSelectedAddress(address);
-                      setSearch(address.formatted_address);
+                    if (!address || !mapRef.current) return;
 
-                      const region = {
-                        latitude: address.geometry.location.lat(),
-                        longitude: address.geometry.location.lng(),
-                        latitudeDelta: 0.0043,
-                        longitudeDelta: 0.0034,
-                      };
-                      setCircle({ location: region, radius: 20 });
-                      mapRef.current.animateToRegion(region, 1000);
-                    }
+                    setSelectedAddress(address);
+                    setSearch(address.formatted_address);
+                    setAddressList([]);
+
+                    const details = await getPlaceDetails(address.place_id ?? "");
+                    const region = details
+                      ? {
+                          latitude: details.latitude,
+                          longitude: details.longitude,
+                          latitudeDelta: 0.0043,
+                          longitudeDelta: 0.0034,
+                        }
+                      : {
+                          latitude: address.geometry.location.lat(),
+                          longitude: address.geometry.location.lng(),
+                          latitudeDelta: 0.0043,
+                          longitudeDelta: 0.0034,
+                        };
+
+                    setCircle({ location: region, radius: 20 });
+                    mapRef.current.animateToRegion(region, 1000);
                   }}
                 />
               )}

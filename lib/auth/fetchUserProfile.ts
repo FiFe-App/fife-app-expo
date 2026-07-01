@@ -1,7 +1,7 @@
 import { User } from "@supabase/auth-js";
 import { Dispatch } from "@reduxjs/toolkit";
 import { supabase } from "@/lib/supabase/supabase";
-import { login, setName, setUserData } from "@/redux/reducers/userReducer";
+import { login, setMessagingEnabled, setName, setUserData } from "@/redux/reducers/userReducer";
 import { loadViewedFunctions } from "@/redux/reducers/tutorialReducer";
 
 export async function fetchUserProfile(user: User, dispatch: Dispatch) {
@@ -32,6 +32,15 @@ export async function fetchUserProfile(user: User, dispatch: Dispatch) {
     ...profile,
     ...(locationData ? { location: locationData } : {}),
   }));
+
+  const { data: messagingContact } = await supabase
+    .from("contacts")
+    .select("data")
+    .eq("author", user.id)
+    .eq("type", "MESSAGE")
+    .maybeSingle();
+
+  dispatch(setMessagingEnabled(Boolean(messagingContact?.data)));
 
   if (profile.viewed_functions) {
     dispatch(loadViewedFunctions(profile.viewed_functions));

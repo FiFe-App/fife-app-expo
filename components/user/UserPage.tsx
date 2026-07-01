@@ -174,8 +174,9 @@ export default function UserPage() {
         <ErrorScreen
           icon="account-off"
           title="Nem található"
-          text="Ez a felhasználó nem létezik vagy törölte fiókját."
+          text={"Ez a felhasználó nem létezik vagy törölte fiókját."}
         />
+        
       </>
     );
   }

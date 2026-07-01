@@ -15,6 +15,7 @@ import { RealtimeChannel } from "@supabase/supabase-js";
 import { clearDraftMessage, setDraftMessage, setLastReadAt } from "@/redux/reducers/chatReducer";
 import { MyAppbar } from "../MyAppBar";
 import { MessagingDisabledCard } from "./MessagingDisabledCard";
+import { setMessagingEnabled } from "@/redux/reducers/userReducer";
 
 type Message = Tables<"messages">;
 
@@ -22,7 +23,7 @@ export default function ChatScreen() {
   const dispatch = useDispatch();
   const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null);
   const { uid: otherUid } = useGlobalSearchParams<{ uid: string }>();
-  const { uid: myUid } = useSelector((state: RootState) => state.user);
+  const { uid: myUid, messagingEnabled: myMessagingEnabledFromRedux } = useSelector((state: RootState) => state.user);
   const draft = useSelector((state: RootState) =>
     otherUid ? state.chat.drafts[otherUid] ?? "" : ""
   );
@@ -30,7 +31,7 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [otherUser, setOtherUser] = useState<Tables<"profiles"> | null>(null);
-  const [hasMessagingEnabled, setHasMessagingEnabled] = useState(false);
+  const hasMessagingEnabled = myMessagingEnabledFromRedux ?? false;
   const [otherHasMessagingEnabled, setOtherHasMessagingEnabled] = useState(false);
   const [checkingMessaging, setCheckingMessaging] = useState(true);
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -65,7 +66,7 @@ export default function ChatScreen() {
         const myMessagingEnabled = !!(myMessageContact && myMessageContact.data);
         const otherMessagingEnabled = !!(otherMessageContact && otherMessageContact.data);
 
-        setHasMessagingEnabled(myMessagingEnabled);
+        dispatch(setMessagingEnabled(myMessagingEnabled));
         setOtherHasMessagingEnabled(otherMessagingEnabled);
         setCheckingMessaging(false);
       };
@@ -249,7 +250,7 @@ export default function ChatScreen() {
               const myMessagingEnabled = !!(myMessageContact && myMessageContact.data);
               const otherMessagingEnabled = !!(otherMessageContact && otherMessageContact.data);
 
-              setHasMessagingEnabled(myMessagingEnabled);
+              dispatch(setMessagingEnabled(myMessagingEnabled));
               setOtherHasMessagingEnabled(otherMessagingEnabled);
               
               if (myMessagingEnabled && otherMessagingEnabled) {

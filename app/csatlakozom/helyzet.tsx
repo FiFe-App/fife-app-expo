@@ -21,8 +21,6 @@ const Register = () => {
   const [searchCircle, setSearchCircle] = useState<CircleType | undefined>();
 
   const containerStyle = {
-    padding: Spacing.xl,
-    margin: Spacing.xl,
     flex: 1,
     height: 200
   };
@@ -57,7 +55,7 @@ const Register = () => {
           }}
           contentContainerStyle={[
             {
-              height: 500,
+              height: "90%",
               borderRadius: BorderRadius.xl,
             },
           ]}
@@ -82,6 +80,7 @@ const Register = () => {
                 }
               }}
               searchEnabled
+              markerOnly
               setOpen={setLocationMenuVisible}
             />
           </ThemedView>

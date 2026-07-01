@@ -6,8 +6,9 @@ import { RootState } from "@/redux/store";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-  FlatList,
+  KeyboardAvoidingView,
   Linking,
+  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -15,9 +16,11 @@ import {
 import { Checkbox, Text } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
+import { useAppTheme } from "@/assets/theme";
 
 const Register = () => {
   const dispatch = useDispatch();
+  const theme = useAppTheme();
   const policiesAccepted = useSelector(
     (state: RootState) => state.info.policiesAccepted,
   );
@@ -38,7 +41,6 @@ const Register = () => {
     )
       setText(textToType.slice(0, input.length + 1));
   };
-  const accepted = policiesAccepted || (text === textToType && ageConfirmed);
   const canGoNext = policiesAccepted || ageConfirmed;
 
   useFocusEffect(
@@ -55,58 +57,63 @@ const Register = () => {
   );
 
   return (
-    <ThemedView style={{ flex: 1, padding: Spacing.sm, paddingTop: Spacing.xxxl, paddingBottom: 60 }}>
-      <View style={{ flex: 1, justifyContent: "center" }}>
-        <ThemedText type="title" style={{ marginBottom: Spacing.lg }}>
-          Ha szeretnél csatlakozni ehhez a közösséghez, be kell tartanod az
-          irányelveinket:
-        </ThemedText>
-        <FlatList
-          data={[
-            { key: "Nem leszek rosszindulatú senkivel!" },
-            { key: "Saját és mások érdekeit is figyelembe veszem!" },
-            {
-              key: "Ha valaki valaki bántóan viselkedik velem vagy mással, jelentem!",
-            },
-          ]}
-          style={[styles.text, { flex: undefined }]}
-          renderItem={({ item, index }) => (
-            <Text style={styles.listItem} key={"item" + index}>
-              - {item.key}
-            </Text>
-          )}
-        />
-      </View>
-      <Pressable
-        style={styles.ageCheckbox}
-        onPress={() => setAgeConfirmed((v) => !v)}
+    <ThemedView style={{ flex: 1, minHeight: 0, padding: Spacing.sm, paddingTop: Spacing.xxxl, paddingBottom: 60 }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1, minHeight: 0 }}
+        behavior={Platform.OS === "ios" ? "padding" : "padding"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 24}
       >
-        <Checkbox
-          status={ageConfirmed ? "checked" : "unchecked"}
+        <View style={{ flex: 1, minHeight: 0 }}>
+          <ThemedText type="title" style={{ marginBottom: Spacing.lg }}>
+            Ha szeretnél csatlakozni ehhez a közösséghez, be kell tartanod az
+            irányelveinket:
+          </ThemedText>
+          <View style={styles.text}>
+            {[
+              "Nem leszek rosszindulatú senkivel!",
+              "Saját és mások érdekeit is figyelembe veszem!",
+              "Ha valaki valaki bántóan viselkedik velem vagy mással, jelentem!",
+            ].map((item, index) => (
+              <Text key={`item-${index}`} style={styles.listItem}>
+                - {item}
+              </Text>
+            ))}
+          </View>
+      </View>
+      <View style={{ backgroundColor: theme.colors.background }}>
+        <Pressable
+          style={styles.ageCheckbox}
           onPress={() => setAgeConfirmed((v) => !v)}
-        />
-        <Text style={styles.ageCheckboxLabel}>
-          Nyilatkozom, hogy elmúltam 16 éves.
-        </Text>
-      </Pressable>
-      <Pressable
-        onPress={() => Linking.openURL("https://fifeapp.hu/CSAE.html")}
-        style={{ marginTop: Spacing.sm }}
-      >
-        <Text style={styles.csaeLink}>
-          Gyermekvédelmi irányelvek (CSAE) megtekintése
-        </Text>
-      </Pressable>
-      <View style={{ marginVertical: Spacing.xl }}>
-        <ThemedText>
-          Ha be fogod tartani ezeket, gépeld be a következő szöveget:
-        </ThemedText>
-        <PhraseInput
-          phrase={textToType}
-          value={text}
-          onChangeText={handleTextInput}
-        />
+        >
+          <Checkbox
+        
+            status={ageConfirmed ? "checked" : "unchecked"}
+            onPress={() => setAgeConfirmed((v) => !v)}
+          />
+          <Text style={styles.ageCheckboxLabel}>
+            Nyilatkozom, hogy elmúltam 16 éves.
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => Linking.openURL("https://fifeapp.hu/CSAE.html")}
+          style={{ marginTop: Spacing.sm }}
+        >
+          <Text style={[styles.csaeLink,{color: theme.colors.tertiary}]}>
+            Gyermekvédelmi irányelvek (CSAE) megtekintése
+          </Text>
+        </Pressable>
+          <View style={{ marginVertical: Spacing.xl }}>
+            <ThemedText>
+              Ha be fogod tartani ezeket, gépeld be a következő szöveget:
+            </ThemedText>
+            <PhraseInput
+              phrase={textToType}
+              value={text}
+              onChangeText={handleTextInput}
+            />
+          </View>
       </View>
+    </KeyboardAvoidingView>
     </ThemedView>
   );
 };
@@ -132,7 +139,6 @@ const styles = StyleSheet.create({
   },
   csaeLink: {
     fontSize: 13,
-    color: "#1a73e8",
     textDecorationLine: "underline",
   },
 });

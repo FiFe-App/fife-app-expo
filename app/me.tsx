@@ -6,8 +6,8 @@ import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { RootState } from "@/redux/store";
 import { router } from "expo-router";
-import { ScrollView, View } from "react-native";
-import { FAB } from "react-native-paper";
+import { Image, ScrollView, StyleSheet, View } from "react-native";
+import { Card, FAB } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { ThemedText } from "@/components/ThemedText";
 
@@ -27,20 +27,58 @@ export default function MeScreen() {
         <EmotionCheckCard />
         <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
           <ToDoList />
+          {false && <View style={styles.cardRow}>
+            <Card style={[styles.card, styles.cardSpacing]} theme={{colors: {shadow:"red"}}} onPress={() => {}}>
+              <Card.Content style={styles.cardContent}>
+                <Image
+                  source={require("@/assets/gifs/focus.gif")}
+                  style={styles.cardImage}
+                  resizeMode="contain"
+                />
+                <ThemedText style={styles.cardText}>Fókusz</ThemedText>
+              </Card.Content>
+            </Card>
+            <Card style={[styles.card, styles.cardSpacing]} onPress={() => {}}>
+              <Card.Content style={styles.cardContent}>
+                <Image
+                  source={require("@/assets/gifs/black.gif")}
+                  style={styles.cardImage}
+                  resizeMode="contain"
+                />
+                <ThemedText style={styles.cardText}>Szünet</ThemedText>
+              </Card.Content>
+            </Card>
+          </View>}
         </View>
       </ScrollView>
-
-      <FAB
-        icon="account"
-        label="Profilom"
-        onPress={() => router.push({ pathname: "/user/[uid]", params: { uid } })}
-        style={{
-          position: "absolute",
-          right: Spacing.md,
-          bottom: Spacing.md,
-          borderRadius: BorderRadius.pill,
-        }}
-      />
     </ThemedView>
   );
 }
+
+const styles = StyleSheet.create({
+  cardRow: {
+    flexDirection: "row",
+    marginTop: Spacing.md,
+  },
+  card: {
+    flex: 1,
+    borderRadius: BorderRadius.lg,
+  },
+  cardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+  },
+  cardSpacing: {
+    marginRight: Spacing.md,
+  },
+  cardImage: {
+    width: 50,
+    height: 50,
+    marginRight: Spacing.md,
+  },
+  cardText: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+});

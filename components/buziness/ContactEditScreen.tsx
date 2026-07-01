@@ -8,7 +8,8 @@ import typeToValueLabel from "@/lib/functions/typeToValueLabel";
 import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
 import { addSnack } from "@/redux/reducers/infoReducer";
-import { Link, useFocusEffect } from "expo-router";
+import { setMessagingEnabled } from "@/redux/reducers/userReducer";
+import { useFocusEffect } from "expo-router";
 import React, {
   useCallback,
   useImperativeHandle,
@@ -16,7 +17,7 @@ import React, {
   useEffect,
   forwardRef,
 } from "react";
-import { Icon, Switch, TextInput, Button, Menu, IconButton } from "react-native-paper";
+import { Switch, TextInput, Button, Menu, IconButton } from "react-native-paper";
 import { StyleProp, View, ViewStyle } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
@@ -51,8 +52,8 @@ type ContactEditScreenProps = {
 
 const ContactEditScreen = forwardRef<{
   saveContacts: () => Promise<
-    | PostgrestSingleResponse<any>
-    | { error: string; }
+    | PostgrestSingleResponse<null>
+    | { error: string }
     | undefined>;
 }, ContactEditScreenProps>((props, ref) => {
   const [loading, setLoading] = useState(true);
@@ -176,12 +177,19 @@ const ContactEditScreen = forwardRef<{
         defaultToNull: false,
       });
 
-      return { upsert: response, delete: del_response };
+      if (response.error) {
+        return { error: response.error.message };
+      }
+
+      const messagingContact = noNullContacts.find((contact) => contact.type === "MESSAGE");
+      dispatch(setMessagingEnabled(!!messagingContact?.data && messagingContact.data !== ""));
+
+      return response;
     }
   };
   useImperativeHandle(ref, () => ({
     async saveContacts(): Promise<
-      PostgrestSingleResponse<any> | { error: string } | undefined
+      PostgrestSingleResponse<null> | { error: string } | undefined
     > {
       return await save();
     },
@@ -196,7 +204,13 @@ const ContactEditScreen = forwardRef<{
       {!loading &&
         types
           .filter((type) => revealedTypes.includes(type.value))
-          .map((type, ind) => {
+          // ensure MESSAGE type appears first
+          .sort((a, b) => {
+            if (a.value === "MESSAGE" && b.value !== "MESSAGE") return -1;
+            if (b.value === "MESSAGE" && a.value !== "MESSAGE") return 1;
+            return 0;
+          })
+          .map((type) => {
           const current = {
             title: "",
             data: "",
@@ -280,13 +294,13 @@ const ContactEditScreen = forwardRef<{
                 ><View  style={{flex:1}}>
                   
                     <ThemedText variant="bodyMedium">
-                      {current?.data === "true" || current?.data === true
+                      {current?.data === "true"
                         ? "A közvetlen üzenet engedélyezve van"
                         : typeToPlaceholder(type?.value)}
                     </ThemedText>
                 </View>
                   <Switch
-                    value={current?.data === "true" || current?.data === true}
+                    value={current?.data === "true"}
                     onValueChange={(value) =>
                       saveContact(typeIndex, { data: value ? "true" : "" })
                     }
@@ -311,7 +325,7 @@ const ContactEditScreen = forwardRef<{
                   mode="outlined"
                   value={current?.title || ""}
                   disabled={loading}
-                  label={"Egyéb információ"}
+                  label={"Egyéb infó a elérhetőségedről"}
                   placeholder="Munkanapokon keress / csak hétvégén"
                   onChangeText={(t) => saveContact(typeIndex, { title: t })}
                 />

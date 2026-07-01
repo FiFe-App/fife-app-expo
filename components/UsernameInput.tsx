@@ -11,6 +11,10 @@ export interface UsernameInputProps {
   style?: StyleProp<ViewStyle | TextStyle>;
   excludeUid?: string; // allow existing username for this uid
   onAvailabilityChange?: (available: boolean | undefined) => void;
+  inputRef?: React.RefObject<{ focus: () => void } | null>;
+  returnKeyType?: "default" | "done" | "go" | "next" | "search" | "send";
+  onSubmitEditing?: () => void;
+  onFocus?: () => void;
 }
 
 export const UsernameInput: React.FC<UsernameInputProps> = ({
@@ -21,6 +25,10 @@ export const UsernameInput: React.FC<UsernameInputProps> = ({
   style,
   excludeUid,
   onAvailabilityChange,
+  inputRef,
+  returnKeyType = "next",
+  onSubmitEditing,
+  onFocus,
 }) => {
   const [available, setAvailable] = useState<boolean | undefined>(undefined);
   const [checking, setChecking] = useState(false);
@@ -84,6 +92,7 @@ export const UsernameInput: React.FC<UsernameInputProps> = ({
   return (
     <View style={style as ViewStyle}>
       <TextInput
+        ref={inputRef as never}
         label={label}
         value={value}
         disabled={disabled}
@@ -93,6 +102,10 @@ export const UsernameInput: React.FC<UsernameInputProps> = ({
         inputMode="text"
         autoComplete="username-new"
         textContentType="username"
+        returnKeyType={returnKeyType}
+        blurOnSubmit={false}
+        onFocus={onFocus}
+        onSubmitEditing={onSubmitEditing}
         left={<TextInput.Affix textStyle={{ opacity: 0.5 }} text="www.fifeapp.hu/@" />}
         onChangeText={onChangeText}
         right={rightIcon ? <TextInput.Icon icon={rightIcon} /> : undefined}

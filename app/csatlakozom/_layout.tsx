@@ -17,7 +17,6 @@ import { Spacing } from "@/constants/spacing";
 
 export default function RootLayout() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
-  const policiesAccepted = useSelector((state: RootState) => state.info.policiesAccepted);
   const pages = [
     "/csatlakozom/",
     "/csatlakozom/iranyelvek",
@@ -77,6 +76,7 @@ export default function RootLayout() {
         >
           <Link href={current === 0 ? "/" : prev} asChild>
             <Button
+              
               disabled={
                 ((!prev || path === "/csatlakozom/elso-lepesek") && current !== 0)
               }

@@ -19,12 +19,10 @@ interface ChatInfo {
 }
 
 export default function ChatList() {
-  const { uid: myUid } = useSelector((state: RootState) => state.user);
+  const { uid: myUid, messagingEnabled } = useSelector((state: RootState) => state.user);
   const [chats, setChats] = useState<ChatInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [hasMessagingEnabled, setHasMessagingEnabled] = useState(false);
-  const [checkingMessaging, setCheckingMessaging] = useState(true);
 
   const loadChats = useCallback(async () => {
     if (!myUid) return;
@@ -100,23 +98,8 @@ export default function ChatList() {
 
   useFocusEffect(
     useCallback(() => {
-      const checkMessaging = async () => {
-        if (!myUid) return;
-
-        const { data } = await supabase
-          .from("contacts")
-          .select("*")
-          .eq("author", myUid)
-          .eq("type", "MESSAGE")
-          .maybeSingle();
-
-        setHasMessagingEnabled(!!(data && data.data));
-        setCheckingMessaging(false);
-      };
-
-      checkMessaging();
       loadChats();
-    }, [loadChats, myUid])
+    }, [loadChats])
   );
 
   const onRefresh = () => {
@@ -124,7 +107,7 @@ export default function ChatList() {
     loadChats();
   };
 
-  if (loading || checkingMessaging) {
+  if (loading) {
     return (
       <ThemedView style={styles.centerContainer}>
         <ActivityIndicator size="large" />
@@ -132,13 +115,12 @@ export default function ChatList() {
     );
   }
 
-  if (!hasMessagingEnabled) {
+  if (!messagingEnabled) {
     return (
       <ThemedView style={styles.container}>
         <MessagingDisabledCard
           myMessagingEnabled={false}
           onEnabled={() => {
-            setHasMessagingEnabled(true);
             loadChats();
           }}
         />

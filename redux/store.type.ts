@@ -25,6 +25,7 @@ export interface UserState {
   uid?: string;
   name?: string;
   mantra?: string;
+  messagingEnabled?: boolean;
   tasks?: TaskItem[];
   locationAlertDismissed?: boolean;
   inviteCardDismissed?: boolean;

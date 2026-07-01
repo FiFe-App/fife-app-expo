@@ -27,6 +27,16 @@ export function MessageItem({ message, selected, onPress }: MessageItemProps) {
     minute: "2-digit",
     second: "2-digit",
   });
+  const colors = {
+    my:    { 
+      color: theme.colors.onPrimaryContainer, 
+      backgroundColor: theme.colors.primaryContainer 
+    },
+    their: { 
+      color: theme.colors.onSurface, 
+      backgroundColor: theme.colors.surface
+    }
+  };
 
   return (
     <View
@@ -40,9 +50,7 @@ export function MessageItem({ message, selected, onPress }: MessageItemProps) {
         style={[
           styles.card,
           {
-            backgroundColor: isMyMessage
-              ? theme.colors.secondaryContainer
-              : theme.colors.surfaceVariant,
+            backgroundColor: colors[isMyMessage ? "my" : "their"].backgroundColor
           },
         ]}
         onPress={onPress}
@@ -51,9 +59,7 @@ export function MessageItem({ message, selected, onPress }: MessageItemProps) {
           <Text variant="bodyMedium"
         style={[
           {
-            color: isMyMessage
-              ? theme.colors.onSecondaryContainer
-              : theme.colors.onSurfaceVariant,
+            color: colors[isMyMessage ? "my" : "their"].color
           },
         ]} >{message.text}</Text>
         </Card.Content>

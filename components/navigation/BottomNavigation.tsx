@@ -15,8 +15,9 @@ const BottomNavigation = () => {
   const globalParams = useGlobalSearchParams();
   const { uid } = useSelector((state: RootState) => state.user);
 
-  const meActive = segment[0] === "me" || segment[0]?.includes("user");
-  const homeActive = segment[0]?.includes("home") || segment[0]?.includes("fifeRadar");
+  const profilActive = segment[0]?.includes("user");
+  const meActive = segment[0] === "me";
+  const usActive = segment[0]?.includes("home") || segment[0]?.includes("fifeRadar");
   const lastNavTime = useRef(0);
 
   const navigateTo = useCallback((path: Route, params?: Record<string,string>) => {
@@ -42,26 +43,38 @@ const BottomNavigation = () => {
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/home")}>
           <View style={{ alignItems: "center" }}>
             <Icon
-              source={homeActive ? "account-group" : "account-group-outline"}
-              size={homeActive ? 30 : 24}
-              color={homeActive ? theme.colors.secondary : undefined}
+              source={usActive ? "account-group" : "account-group-outline"}
+              size={usActive ? 30 : 24}
+              color={usActive ? theme.colors.secondary : undefined}
             />
-            <ThemedText type={homeActive ? "defaultSemiBold" : "default"}>
+            <ThemedText type={usActive ? "defaultSemiBold" : "default"}>
               Mi
             </ThemedText>
           </View>
         </TouchableRipple>
       </Measure>
-      <Measure name="user">
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/me")}>
           <View style={{ alignItems: "center" }}>
             <Icon
-              source={meActive ? "account" : "account-outline"}
+              source={meActive ? "home" : "home-outline"}
               size={meActive ? 30 : 24}
               color={meActive ? theme.colors.secondary : undefined}
             />
             <ThemedText type={meActive ? "defaultSemiBold" : "default"}>
-              Én
+              Otthon
+            </ThemedText>
+          </View>
+        </TouchableRipple>
+      <Measure name="user">
+        <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user",{uid})}>
+          <View style={{ alignItems: "center" }}>
+            <Icon
+              source={profilActive ? "account" : "account-outline"}
+              size={profilActive ? 30 : 24}
+              color={profilActive ? theme.colors.secondary : undefined}
+            />
+            <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
+              Profil
             </ThemedText>
           </View>
         </TouchableRipple>

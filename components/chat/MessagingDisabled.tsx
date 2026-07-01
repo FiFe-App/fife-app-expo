@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase/supabase";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { addSnack } from "@/redux/reducers/infoReducer";
+import { setMessagingEnabled } from "@/redux/reducers/userReducer";
 
 interface MessagingDisabledProps {
   onEnabled?: () => void;
@@ -56,6 +57,7 @@ export function MessagingDisabled({ onEnabled }: MessagingDisabledProps) {
         }
       }
 
+      dispatch(setMessagingEnabled(true));
       dispatch(
         addSnack({
           title: "Üzenetküldés bekapcsolva",

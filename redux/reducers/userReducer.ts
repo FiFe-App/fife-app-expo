@@ -5,6 +5,7 @@ import { DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
 const initialState: UserState = {
   uid: undefined,
   name: undefined,
+  messagingEnabled: false,
   userData: null,
   locationError: null,
   themePreference: DEFAULT_THEME_PREFERENCE,
@@ -37,6 +38,9 @@ const userReducer = createSlice({
     },
     setName: (state, { payload }) => {
       state.name = payload;
+    },
+    setMessagingEnabled: (state, { payload }: PayloadAction<boolean>) => {
+      state.messagingEnabled = payload;
     },
     setMantra: (state, { payload }: PayloadAction<string>) => {
       state.mantra = payload;
@@ -111,6 +115,7 @@ export const {
   login,
   logout,
   setName,
+  setMessagingEnabled,
   setMantra,
   addTask,
   toggleTask,

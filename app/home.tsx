@@ -1,16 +1,16 @@
 import { router, useFocusEffect } from "expo-router";
-import { theme } from "@/assets/theme";
 import BuzinessItem from "@/components/buziness/BuzinessItem";
 import { FiFeRadar } from "@/components/user/FiFeRadar";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Spacing } from "@/constants/spacing";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
-import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
+import { clearOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { useCallback, useEffect } from "react";
 import { View } from "react-native";
 import {
+  Card,
   Icon
 } from "react-native-paper";
 import { ScrollView } from "react-native";
@@ -19,12 +19,14 @@ import { useDispatch, useSelector } from "react-redux";
 import InviteCard from "@/components/InviteCard";
 import { useFifeSearch } from "@/hooks/useFifeSearch";
 import { useNearbyBuzinesses } from "@/hooks/useNearbyBuzinesses";
+import { useAppTheme } from "@/assets/theme";
 
 export default function Index() {
-  const { uid } = useSelector((state: RootState) => state.user);
+  const { uid, messagingEnabled } = useSelector((state: RootState) => state.user);
   const searchCircle = useSelector(
     (state: RootState) => state.users.userSearchParams?.searchCircle,
   );
+  const theme = useAppTheme();
   const dispatch = useDispatch();
 
   const { fetch, data, fetchNextPage, hasMore, error, loading } = useFifeSearch();
@@ -48,15 +50,6 @@ export default function Index() {
   useFocusEffect(
     useCallback(() => {
 
-      dispatch(
-        setOptions([
-          {
-            icon: "message-outline",
-            title: "Üzenetek",
-            onPress: () => router.push("/chats"),
-          },
-        ]),
-      );
       if (data.length === 0) {
         fetch();
       }
@@ -69,22 +62,53 @@ export default function Index() {
 
   if (!uid) return null;
   return (
-    <ThemedView style={{ flex: 1 }} type="default">
-      <ScrollView stickyHeaderIndices={[1]} contentContainerStyle={{ paddingBottom: Spacing.xl }}>
+    <ThemedView style={{ flex: 1, minHeight: 0 }} type="default">
+      <ScrollView
+        style={{ flex: 1, minHeight: 0 }}
+        stickyHeaderIndices={[messagingEnabled ? 2 : 2]}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: Spacing.xxl }}
+      >
+        {messagingEnabled && (
+          <Card
+            style={{
+              marginHorizontal: Spacing.sm,
+              marginTop: Spacing.sm,
+              marginBottom: Spacing.sm,
+              paddingHorizontal: Spacing.lg,
+              paddingVertical: Spacing.sm,
+              borderRadius: 12,
+            }}
+            contentStyle={{
+              gap: Spacing.xs,
+              flexDirection: "row",
+            }}
+          >
+            <Icon size={18} color={theme.colors.primary} source="message" />
+            <ThemedText
+              variant="labelLarge"
+              type="bold"
+              onPress={() => router.push("/chats")}
+              style={{ color: theme.colors.primary }}
+            >
+              Üzeneteid
+            </ThemedText>
+          </Card>
+        )}
         <FiFeRadar
           data={data}
           load={fetchNextPage}
           canLoadMore={hasMore}
           loading={loading}
           error={error}
-        />          
+        />
         <ThemedView
           style={{
             paddingHorizontal: Spacing.lg,
             paddingVertical: Spacing.sm,
             flexDirection: "row",
             alignItems: "center",
-            justifyContent: "space-between",
+            justifyContent: "space-between", 
+            backgroundColor: theme.colors.background
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
@@ -99,16 +123,17 @@ export default function Index() {
             <ThemedText type="error">{buzinessError}</ThemedText>
           </ThemedView>
         )}
-        <View style={{ gap: Spacing.sm, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm }}>
-          {nearbyBuzinesses.map((buziness) => (
-            <BuzinessItem key={buziness.id} data={buziness} />
+        <View style={{ paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, paddingBottom: Spacing.xl }}>
+          {nearbyBuzinesses.map((buziness, index) => (
+            <View
+              key={buziness.id}
+              style={{ marginBottom: index === nearbyBuzinesses.length - 1 ? 0 : Spacing.sm }}
+            >
+              <BuzinessItem data={buziness} />
+            </View>
           ))}
-          {buzinessesLoading && !nearbyBuzinesses.length && (
-            <ActivityIndicator style={{ padding: Spacing.lg }} />
-          )}
         </View>
       </ScrollView>
-        <InviteCard />
     </ThemedView>
   );
 }

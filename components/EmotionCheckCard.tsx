@@ -11,7 +11,6 @@ import { router } from "expo-router";
 type CardStatus = "idle" | "saving" | "saved" | "thanked" | "dismissed";
 
 export default function EmotionCheckCard() {
-  if (!emotionAvailable) return null;
   return <EmotionCheckCardInner />;
 }
 
@@ -31,9 +30,8 @@ function EmotionCheckCardInner() {
     setTimeout(() => setStatus("dismissed"), 4000);
   };
 
-  if (showForm)
   return (
-    <Card style={{ margin: Spacing.xs }} elevation={0}>
+    <Card style={{ margin: Spacing.lg }} elevation={1}>
       <Card.Title
         titleStyle={{ fontFamily: "Piazzolla-Medium" }}
         title={(showForm ? "Hogy vagy ma?" : "Naplód")}
@@ -47,7 +45,8 @@ function EmotionCheckCardInner() {
         )}
       />
       {status === "thanked" ? (
-        <Card.Content>
+        <Card.Content 
+        pointerEvents="none">
           <ThemedText type="bold" style={{ textAlign: "center", paddingVertical: Spacing.xs }}>
             Köszi a válaszodat. {"\n"} Legyen szép napod! :)
           </ThemedText>

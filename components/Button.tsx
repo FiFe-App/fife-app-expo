@@ -71,9 +71,11 @@ export function Button({
         compact && theme.fonts.labelMedium,
         { fontFamily: "Piazzolla-ExtraBold" },
       ]}
+      contentStyle={[
+        big && { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg },
+      ]}
       style={[
         ButtonPStyle,
-        big && { paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg },
         compact && {
           maxHeight: 12,
           paddingVertical: Spacing.md,

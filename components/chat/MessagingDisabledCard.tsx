@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
-import { Button, Card, Text, useTheme } from "react-native-paper";
+import { Button, Card, Text } from "react-native-paper";
 import { supabase } from "@/lib/supabase/supabase";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { addSnack } from "@/redux/reducers/infoReducer";
+import { setMessagingEnabled } from "@/redux/reducers/userReducer";
 
 interface MessagingDisabledCardProps {
   /** Whether the current user has messaging enabled */
@@ -17,10 +18,8 @@ interface MessagingDisabledCardProps {
 
 export function MessagingDisabledCard({
   myMessagingEnabled = false,
-  otherMessagingEnabled = true,
   onEnabled,
 }: MessagingDisabledCardProps) {
-  const theme = useTheme();
   const { uid } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const [enabling, setEnabling] = useState(false);
@@ -63,6 +62,7 @@ export function MessagingDisabledCard({
         }
       }
 
+      dispatch(setMessagingEnabled(true));
       dispatch(addSnack({ title: "Üzenetküldés bekapcsolva" }));
       onEnabled?.();
     } catch (error) {
