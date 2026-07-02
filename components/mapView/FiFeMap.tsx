@@ -46,7 +46,7 @@ const FiFeMap = forwardRef<MapView, FiFeMapProps>(
           zoom: 12,
           ...initialCamera,
         }}
-        provider="google"
+        provider={Platform.OS === "ios" ? undefined : "google"}
         pitchEnabled={false}
         rotateEnabled={false}
         toolbarEnabled={false}
