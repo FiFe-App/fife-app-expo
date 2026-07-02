@@ -30,7 +30,7 @@ const FiFeMap = forwardRef<MapView, FiFeMapProps>(
             zoomControl: false,
             ...((props as Record<string, unknown>).options as object),
           },
-          googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
+          googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_WEB,
         }
       : {};
 

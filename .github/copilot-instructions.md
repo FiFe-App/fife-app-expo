@@ -4,7 +4,7 @@ This repo is an Expo (React Native) app using expo-router, React Native Paper, R
 
 ## Run and Build
 
-- Env: copy `example.env` to `.env` and set `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`, `EXPO_PUBLIC_LOCATIONIQ_API_KEY` (address search, from locationiq.com).
+- Env: copy `example.env` to `.env` and set `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_ANDROID`, `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS`, `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_WEB` (one restricted key per platform — Android by package+SHA-1, iOS by bundle ID, web by HTTP referrer), `EXPO_PUBLIC_LOCATIONIQ_API_KEY` (address search, from locationiq.com).
 - Dev: `npm install` then `npm start` (Metro). Platform: `npm run android` / `npm run ios` / `npm run web`.
 - Web export: `npm run build` (static to `dist/`, Netlify config in `netlify.toml`).
 - EAS: profiles in `eas.json`. Build with `eas build -p android|ios --profile production`. OTA updates via `eas update`.
