@@ -21,18 +21,22 @@ const HCaptchaField = forwardRef<HCaptchaHandle, HCaptchaProps>(({ siteKey }, re
       siteKey={siteKey}
       size="invisible"
       languageCode="hu"
+      hasBackdrop={false}
       onMessage={(event) => {
         const data = event.nativeEvent.data;
-        if (event.success && data) {
-          pending.current?.resolve(data);
+        // The "open" event (challenge popup shown) is reported with success:true too,
+        // so only real tokens (long strings) count as a completed verification.
+        if (event.success && data && data.length > 35) {
           event.markUsed?.();
+          pending.current?.resolve(data);
+          pending.current = null;
         } else if (data === "challenge-closed") {
           pending.current?.reject(new Error("captcha-closed"));
-        } else if (data) {
+          pending.current = null;
+        } else if (data && data !== "open") {
           pending.current?.reject(new Error(String(data)));
+          pending.current = null;
         }
-        pending.current = null;
-        event.reset?.();
       }}
     />
   );
