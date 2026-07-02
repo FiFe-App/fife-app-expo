@@ -1,6 +1,6 @@
 import { useMyLocation } from "@/hooks/useMyLocation";
 import React, { useMemo, useRef, useState } from "react";
-import { FlatList, Platform, Text, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
 import {
   Button,
   Card,
@@ -125,28 +125,17 @@ const MapSelector = ({
 
   const turnToAddress = async (address: string) => {
     if (address.length < 4) return;
-    if (Platform.OS === "web") {
-      const geocoder = new google.maps.Geocoder();
-      const coded = await geocoder.geocode({
-        address,
-        componentRestrictions: { country: "HU" },
-      });
-      return { results: coded.results.map((r) => ({
-        formatted_address: r.formatted_address,
-        geometry: { location: { lat: () => r.geometry.location.lat(), lng: () => r.geometry.location.lng() } },
-      })) };
-    } else {
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&components=country:HU&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
-      const response = await fetch(url);
-      const json = await response.json();
-      if (json.status !== "OK") return { results: [] };
-      return {
-        results: (json.results as Array<{ formatted_address: string; geometry: { location: { lat: number; lng: number } } }>).map((r) => ({
-          formatted_address: r.formatted_address,
-          geometry: { location: { lat: () => r.geometry.location.lat, lng: () => r.geometry.location.lng } },
-        })),
-      };
-    }
+    const url = `https://us1.locationiq.com/v1/search?key=${process.env.EXPO_PUBLIC_LOCATIONIQ_API_KEY}&q=${encodeURIComponent(address)}&countrycodes=hu&format=json&limit=5`;
+    const response = await fetch(url);
+    if (!response.ok) return { results: [] };
+    const json = await response.json();
+    if (!Array.isArray(json)) return { results: [] };
+    return {
+      results: (json as Array<{ display_name: string; lat: string; lon: string }>).map((r) => ({
+        formatted_address: r.display_name,
+        geometry: { location: { lat: () => parseFloat(r.lat), lng: () => parseFloat(r.lon) } },
+      })),
+    };
   };
   const debounce = <T,>(func: (param: T) => void, wait: number) => {
     let timeout: NodeJS.Timeout;
