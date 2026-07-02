@@ -5,7 +5,7 @@ import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
 import { Link, Redirect, router, useLocalSearchParams, useNavigation } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { Divider, Text, TextInput } from "react-native-paper";
 import { Spacing } from "@/constants/spacing";
@@ -17,6 +17,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "@/components/Button";
 import { useAppTheme } from "@/assets/theme";
 import { ThemedText } from "@/components/ThemedText";
+import HCaptchaField from "@/components/HCaptcha";
+import { HCaptchaHandle } from "@/components/HCaptcha.types";
 
 export default function Index() {
   const navigation = useNavigation();
@@ -27,6 +29,7 @@ export default function Index() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const captchaRef = useRef<HCaptchaHandle>(null);
   const { "#": hash, redirected_from } = useLocalSearchParams<{ "#": string; redirected_from?: string }>();
   const token_data = hash
     ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
@@ -54,10 +57,23 @@ export default function Index() {
 
   async function signInWithEmail() {
     setLoading(true);
+    setError(undefined);
+
+    let captchaToken: string;
+    try {
+      captchaToken = await captchaRef.current!.execute();
+    } catch {
+      setError("A captcha ellenőrzése sikertelen volt. Próbáld újra.");
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: { captchaToken },
     });
+    captchaRef.current?.reset();
 
     if (error) {
       console.log(error.code);
@@ -134,6 +150,7 @@ export default function Index() {
             />
           }
         />
+        <HCaptchaField ref={captchaRef} siteKey={process.env.EXPO_PUBLIC_HCAPTCHA_SITE_KEY!} />
         <Button
           onPress={signInWithEmail}
           loading={loading}

@@ -8,7 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Redirect, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { openBrowserAsync } from "expo-web-browser";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 
 import { addSnack } from "@/redux/reducers/infoReducer";
@@ -18,6 +18,8 @@ import { useDispatch, useSelector } from "react-redux";
 import UsernameInput from "@/components/UsernameInput";
 import { Spacing } from "@/constants/spacing";
 import { useAppTheme } from "@/assets/theme";
+import HCaptchaField from "@/components/HCaptcha";
+import { HCaptchaHandle } from "@/components/HCaptcha.types";
 
 // Type for signup metadata
 interface SignupMetadata {
@@ -45,6 +47,7 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [showPassword, setShowPassword] = useState(false);
+  const captchaRef = useRef<HCaptchaHandle>(null);
   const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
   const isPasswordWeak = !passwordRegex.exec(password)?.length;
 
@@ -90,14 +93,25 @@ export default function Index() {
 
     metadata.bad_boy = !policiesAccepted;
 
+    let captchaToken: string;
+    try {
+      captchaToken = await captchaRef.current!.execute();
+    } catch {
+      setError("A captcha ellenőrzése sikertelen volt. Próbáld újra.");
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
         data: metadata,
         emailRedirectTo: redirectTo,
+        captchaToken,
       },
     });
+    captchaRef.current?.reset();
     if (data.user) {
       if (data?.user.identities && data.user.identities.length > 0) {
         console.log("Sign-up successful!");
@@ -105,10 +119,22 @@ export default function Index() {
         router.navigate("/csatlakozom/email-ellenorzes");
       } else {
         console.log("Email address is already taken.");
+
+        let signInCaptchaToken: string;
+        try {
+          signInCaptchaToken = await captchaRef.current!.execute();
+        } catch {
+          setError("A captcha ellenőrzése sikertelen volt. Próbáld újra.");
+          setLoading(false);
+          return;
+        }
+
         const signInResponse = await supabase.auth.signInWithPassword({
           email,
           password,
+          options: { captchaToken: signInCaptchaToken },
         });
+        captchaRef.current?.reset();
 
         if (signInResponse.error) {
           console.error(
@@ -261,6 +287,7 @@ export default function Index() {
             {"."}          
           </ThemedText>
         </View>
+        <HCaptchaField ref={captchaRef} siteKey={process.env.EXPO_PUBLIC_HCAPTCHA_SITE_KEY!} />
         <Button
           mode="contained"
           style={{marginTop:Spacing.lg}}

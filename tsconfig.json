@@ -5,6 +5,7 @@
     "declaration": true,
     "noImplicitAny": true,
     "moduleResolution": "bundler",
+    "moduleSuffixes": [".ios", ".android", ".native", ""],
     "paths": {
       "@/*": [
         "./*"
