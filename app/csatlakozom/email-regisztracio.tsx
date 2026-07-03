@@ -64,78 +64,94 @@ export default function Index() {
       return;
     }
 
-    // Prepare metadata with proper typing
-    const metadata: SignupMetadata = {
-      full_name: name.trim(),
-      username: username.trim(),
-    };
+    try {
+      // Prepare metadata with proper typing
+      const metadata: SignupMetadata = {
+        full_name: name.trim(),
+        username: username.trim(),
+      };
 
-    // Add location if available and properly structured
-    if (userLocation &&
-        typeof userLocation.lat === "number" &&
-        typeof userLocation.lng === "number") {
-      // Format as PostGIS POINT string
-      metadata.location = `POINT(${userLocation.lng} ${userLocation.lat})`;
-      if (typeof userLocation.radius === "number") {
-        metadata.location_radius_m = userLocation.radius;
-      }
-    }
-
-    // Add notification preferences from onboarding
-    if (notificationPrefs) {
-      metadata.notify_push = notificationPrefs.notifyPush;
-      metadata.notify_email = notificationPrefs.notifyEmail;
-      metadata.newsletter = notificationPrefs.newsletter;
-    }
-
-    metadata.bad_boy = !policiesAccepted;
-
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: {
-        data: metadata,
-        emailRedirectTo: redirectTo,
-      },
-    });
-    if (data.user) {
-      if (data?.user.identities && data.user.identities.length > 0) {
-        console.log("Sign-up successful!");
-        AsyncStorage.setItem("email", email);
-        router.navigate("/csatlakozom/email-ellenorzes");
-      } else {
-        console.log("Email address is already taken.");
-        const signInResponse = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInResponse.error) {
-          console.error(
-            "An error occurred during sign-in:",
-            signInResponse.error.message,
-          );
-          console.log(signInResponse.error.code);
-          if (signInResponse.error.code === "invalid_credentials") {
-            setError("Ez az email már foglalt");
-          } else {
-            setError(signInResponse.error.message);
-          }
-        } else {
-          console.log("Successfully signed in existing user!");
-          dispatch(login(signInResponse.data.user.id));
-          dispatch(setUserData(signInResponse.data.user));
-          dispatch(addSnack({ title: "Bejelentkeztél!" }));
-          router.navigate("/home");
+      // Add location if available and properly structured
+      if (userLocation &&
+          typeof userLocation.lat === "number" &&
+          typeof userLocation.lng === "number") {
+        // Format as PostGIS POINT string
+        metadata.location = `POINT(${userLocation.lng} ${userLocation.lat})`;
+        if (typeof userLocation.radius === "number") {
+          metadata.location_radius_m = userLocation.radius;
         }
       }
-    }
-    if (error) {
-      setError(error.message);
-    }
-    console.log(data, error);
 
-    setLoading(false);
+      // Add notification preferences from onboarding
+      if (notificationPrefs) {
+        metadata.notify_push = notificationPrefs.notifyPush;
+        metadata.notify_email = notificationPrefs.notifyEmail;
+        metadata.newsletter = notificationPrefs.newsletter;
+      }
+
+      metadata.bad_boy = !policiesAccepted;
+
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: metadata,
+          emailRedirectTo: redirectTo,
+        },
+      });
+      if (error) {
+        // Surface the error even if a user object also came back (e.g. the
+        // account was created but the confirmation email failed to send) —
+        // don't silently navigate away and hide the failure.
+        console.log(error.code, error.message);
+        if (error.code === "over_email_send_rate_limit") {
+          setError("Túl sok próbálkozás. Kérlek várj egy kicsit, majd próbáld újra.");
+        } else {
+          setError(error.message);
+        }
+      } else if (data.user) {
+        if (data?.user.identities && data.user.identities.length > 0) {
+          console.log("Sign-up successful!");
+          AsyncStorage.setItem("email", email);
+          router.navigate("/csatlakozom/email-ellenorzes");
+        } else {
+          console.log("Email address is already taken.");
+          const signInResponse = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (signInResponse.error) {
+            console.error(
+              "An error occurred during sign-in:",
+              signInResponse.error.message,
+            );
+            console.log(signInResponse.error.code);
+            if (signInResponse.error.code === "invalid_credentials") {
+              setError("Ez az email már foglalt");
+            } else {
+              setError(signInResponse.error.message);
+            }
+          } else {
+            console.log("Successfully signed in existing user!");
+            dispatch(login(signInResponse.data.user.id));
+            dispatch(setUserData(signInResponse.data.user));
+            dispatch(addSnack({ title: "Bejelentkeztél!" }));
+            router.navigate("/home");
+          }
+        }
+      }
+      console.log(data, error);
+    } catch (e) {
+      // A thrown (not returned) error — network failure, timeout, request
+      // aborted, etc. Without this, the function would exit here silently:
+      // no error shown, loading spinner stuck forever, and nothing to find
+      // server-side since the request never completed a round trip.
+      console.error("Unexpected error during registration:", e);
+      setError("Váratlan hiba történt. Ellenőrizd az internetkapcsolatod, és próbáld újra.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -267,7 +283,7 @@ export default function Index() {
           loading={loading}
           onPress={createUser}
           disabled={
-            isPasswordWeak || !name || password !== passwordAgain || !acceptConditions ||
+            loading || isPasswordWeak || !name || password !== passwordAgain || !acceptConditions ||
             (username.trim().length > 0 && usernameAvailable === false)
           }
         >

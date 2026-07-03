@@ -147,7 +147,8 @@ export default function UserPage() {
             },
             {
               icon: "exit-run",
-              onPress: () => {
+              onPress: async () => {
+                await supabase.auth.signOut();
                 dispatch(logout());
                 dispatch(clearBuziness());
                 dispatch(clearTutorialState());
