@@ -12,7 +12,6 @@ import { Spacing } from "@/constants/spacing";
 import { useDispatch, useSelector } from "react-redux";
 
 import * as WebBrowser from "expo-web-browser";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button } from "@/components/Button";
 import { ThemedText } from "@/components/ThemedText";
 import Smiley from "@/components/Smiley";
@@ -65,8 +64,7 @@ export default function Index() {
 
       switch (error.code) {
         case "email_not_confirmed":
-          AsyncStorage.setItem("email", email);
-          router.navigate("/csatlakozom/email-ellenorzes");
+          setError("Nincs megerősítve az email-címed");
           break;
         case "invalid_credentials":
         case "user_not_found":

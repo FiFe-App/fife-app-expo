@@ -82,20 +82,25 @@ function RootContent() {
 
   // Keep Redux auth state in sync with Supabase session
   useEffect(() => {
-    // On startup: if Redux has a uid but Supabase has no valid session, clear Redux
+    // On startup: if Redux's uid doesn't match the actual Supabase session
+    // (missing, or belonging to a different account left over from a prior
+    // login on this device), clear Redux so we don't show the wrong user.
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (uid && !session) dispatch(logout());
+      if (uid && (!session || session.user.id !== uid)) dispatch(logout());
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") {
         // Refresh token expired or explicit sign-out — clear Redux to match
+        dispatch(logout());
+      } else if (uid && session && session.user.id !== uid) {
+        // Session belongs to a different account than Redux thinks — resync
         dispatch(logout());
       }
     });
     return () => subscription.unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [uid]);
 
   // Fetch user location from Supabase on mount
   useEffect(() => {
@@ -263,15 +268,15 @@ function RootContent() {
                   options={{ headerShown: false, animation: "slide_from_right" }}
                 />
                 <Stack.Screen
-                  name="user/password-reset"
-                  options={{ title: "Jelszó visszaállítás" }}
-                />
-                <Stack.Screen
                   name="user/deleted-account"
                   options={{ headerShown: false, title: "Fiók törölve" }}
                 />
 
               </Stack.Protected>
+                <Stack.Screen
+                  name="user/password-reset"
+                  options={{ title: "Jelszó visszaállítás" }}
+                />
             </Stack>
             {pathname !== "/" && !pathname.includes("projekt") &&
               !pathname.includes("login") &&

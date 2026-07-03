@@ -1,6 +1,6 @@
 import { useMyLocation } from "@/hooks/useMyLocation";
 import React, { useMemo, useRef, useState } from "react";
-import { FlatList, Platform, Text, View } from "react-native";
+import { Platform, FlatList, Text, View } from "react-native";
 import {
   Button,
   Card,
