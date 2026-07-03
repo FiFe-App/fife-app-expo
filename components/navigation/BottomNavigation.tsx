@@ -48,7 +48,7 @@ const BottomNavigation = () => {
               color={usActive ? theme.colors.secondary : undefined}
             />
             <ThemedText type={usActive ? "defaultSemiBold" : "default"}>
-              Mi
+              Segítség
             </ThemedText>
           </View>
         </TouchableRipple>
@@ -65,16 +65,16 @@ const BottomNavigation = () => {
             </ThemedText>
           </View>
         </TouchableRipple>
-      <Measure name="user">
+      <Measure name="briefcase">
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user",{uid})}>
           <View style={{ alignItems: "center" }}>
             <Icon
-              source={profilActive ? "account" : "account-outline"}
+              source={profilActive ? "briefcase" : "briefcase-outline"}
               size={profilActive ? 30 : 24}
               color={profilActive ? theme.colors.secondary : undefined}
             />
             <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
-              Profil
+              Munka
             </ThemedText>
           </View>
         </TouchableRipple>

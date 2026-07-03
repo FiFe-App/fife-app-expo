@@ -1,12 +1,11 @@
 import { Spacing } from "@/constants/spacing";
 import { useState } from "react";
 import { View } from "react-native";
-import { Button, Card, IconButton, TextInput } from "react-native-paper";
+import { Button, Card, IconButton, TextInput, TouchableRipple } from "react-native-paper";
 import { ThemedText } from "@/components/ThemedText";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
 import EmotionPicker from "@/components/EmotionPicker";
-import { emotionAvailable } from "@/constants/emotionTiming";
-import { router } from "expo-router";
+import { Link } from "expo-router";
 
 type CardStatus = "idle" | "saving" | "saved" | "thanked" | "dismissed";
 
@@ -32,18 +31,16 @@ function EmotionCheckCardInner() {
 
   return (
     <Card style={{ margin: Spacing.lg }} elevation={1}>
-      <Card.Title
-        titleStyle={{ fontFamily: "Piazzolla-Medium" }}
-        title={(showForm ? "Hogy vagy ma?" : "Naplód")}
-        right={() => (
-          <View style={{ flexDirection: "row" }}>
+      <Link asChild href="/user/emotion-history">
+        <TouchableRipple>
+          <View style={{ flex:1,flexDirection:"row",alignItems:"center", paddingHorizontal:Spacing.md }}>
+            <ThemedText style={{flex:1}} type="subtitle">{showForm ? "Hogy vagy ma?" : "Naplód"}</ThemedText>
             <IconButton
               icon="calendar-month"
-              onPress={() => router.push("/user/emotion-history")}
             />
           </View>
-        )}
-      />
+        </TouchableRipple>
+      </Link>
       {status === "thanked" ? (
         <Card.Content 
         pointerEvents="none">

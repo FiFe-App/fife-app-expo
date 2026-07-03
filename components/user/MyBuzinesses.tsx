@@ -38,7 +38,7 @@ const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
       .from("buziness")
       .select("*, profiles ( full_name ), buzinessRecommendations ( count )")
       .eq("author", uid)
-      .order("created_at")
+      .order("created_at",{ascending:false})
       .then((res) => {
         if (res.data) {
           setBuzinesses(
@@ -63,7 +63,7 @@ const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
         </View>
       ) : buzinesses.length ? (
         <>
-          <SectionLabel label={myProfile ? "Bizniszeim" : `${name} bizniszei`} />
+          <SectionLabel label={myProfile ? "Mihez értek? (Bizniszeid)" : `${name} bizniszei`} />
           {buzinesses.map((buzinessItem) => (
             <BuzinessItem
               data={buzinessItem}

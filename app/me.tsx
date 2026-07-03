@@ -5,14 +5,47 @@ import ToDoList from "@/components/ToDoList";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { RootState } from "@/redux/store";
-import { router } from "expo-router";
 import { Image, ScrollView, StyleSheet, View } from "react-native";
-import { Card, FAB } from "react-native-paper";
-import { useSelector } from "react-redux";
+import { Card } from "react-native-paper";
+import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "@/components/ThemedText";
+import { emotionAvailable } from "@/constants/emotionTiming";
+import { supabase } from "@/lib/supabase/supabase";
+import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { setOptions, clearOptions } from "@/redux/reducers/infoReducer";
+import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
+import { logout } from "@/redux/reducers/userReducer";
+import { useFocusEffect, router } from "expo-router";
+import { useCallback } from "react";
 
 export default function MeScreen() {
   const { uid } = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
+
+    useFocusEffect(
+      useCallback(() => {
+          dispatch(
+            setOptions([
+              {
+                icon: "exit-run",
+                onPress: async () => {
+                  await supabase.auth.signOut();
+                  dispatch(logout());
+                  dispatch(clearBuziness());
+                  dispatch(clearTutorialState());
+                  dispatch(clearBuzinessSearchParams());
+                  router.navigate("/");
+                },
+                title: "Kijelentkezés",
+              },
+            ]),
+          );
+          return () => {
+            dispatch(clearOptions());
+          };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [uid]),
+    );
 
   if (!uid) return null;
   return (
@@ -24,7 +57,7 @@ export default function MeScreen() {
       >
         <Mantra />
         <ThemedText style={{textAlign:"center",margin:Spacing.lg}}>Ez egy biztonságos hely</ThemedText>
-        <EmotionCheckCard />
+        {emotionAvailable && <EmotionCheckCard />}
         <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
           <ToDoList />
           {false && <View style={styles.cardRow}>

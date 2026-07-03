@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabase/supabase";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
-import { setOptions, addSnack, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
+import { setOptions, clearOptions, addSnack, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
 import { setName, setThemePreference, logout } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
@@ -193,7 +193,9 @@ export default function Index() {
           },
         ]),
       );
-      return () => { };
+      return () => {
+        dispatch(clearOptions());
+      };
     }, [dispatch, myUid, profile, userLocation, usernameAvailable, notifyPush, notifyEmail, newsletter, emotionDailyPrompt]),
   );
   useFocusEffect(

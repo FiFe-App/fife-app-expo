@@ -39,9 +39,12 @@ export default function ToDoList() {
     <View style={{ gap: Spacing.sm }}>
       <View style={{ flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
         <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>
-          Feladataid
+          Lusta Lista
         </ThemedText>
       </View>
+        <ThemedText variant="labelSmall">
+          Mik azok a feladatok amiket mindig elnapolsz?
+        </ThemedText>
       <Surface
         style={{
           flexDirection: "column",
