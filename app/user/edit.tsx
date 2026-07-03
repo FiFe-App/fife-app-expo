@@ -219,6 +219,7 @@ export default function Index() {
       mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
+      aspect: [1,1],
       base64: true,
     }).catch((error) => {
       console.log(error);
