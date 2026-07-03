@@ -43,7 +43,7 @@ import {
   useFocusEffect,
   useGlobalSearchParams,
 } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from "react-native";
 import ImageModal from "react-native-image-modal";
 import openMap from "react-native-open-maps";
@@ -166,23 +166,29 @@ export default function Index() {
   const distanceText =
     distanceMeters != null ? toDistanceText(distanceMeters / 1000) : null;
 
-  useEffect(() => {
-    if (myBuziness)
-      dispatch(
-        setOptions([
-          {
-            title: "Mentés",
-            icon: "pencil",
-            onPress: async () => {
-              router.push("/biznisz/edit/" + id);
+  useFocusEffect(
+    useCallback(() => {
+      if (myBuziness) {
+        dispatch(
+          setOptions([
+            {
+              title: "Mentés",
+              icon: "pencil",
+              onPress: async () => {
+                router.push("/biznisz/edit/" + id);
+              },
             },
-          },
-        ]),
-      );
-    return () => {
-      dispatch(clearOptions());
-    };
-  }, [dispatch, id, myBuziness]);
+          ]),
+        );
+      } else {
+        dispatch(clearOptions());
+      }
+
+      return () => {
+        dispatch(clearOptions());
+      };
+    }, [dispatch, id, myBuziness]),
+  );
 
   useFocusEffect(
     useCallback(() => {

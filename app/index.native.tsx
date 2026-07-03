@@ -15,7 +15,7 @@ import { Logo } from "@/components/Logo";
 export default function NativeLanding() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
 
-  if (uid) return <Redirect href="/home" />;
+  if (uid) return <Redirect href="/me" />;
 
   return (
     <ThemedView style={{flex:1}} >
@@ -26,7 +26,15 @@ export default function NativeLanding() {
         <View style={{ flex: 1 }} />
   
         <View style={[styles.logoContainer,]}>
-          <Smiley style={{ width: 140, height: 140, borderRadius: BorderRadius.xl, zIndex: 100000 }} />
+          <Image
+            source={require("@/assets/images/HeroImage.png")}
+            contentFit="cover"
+            style={{
+              width: "110%",
+              minHeight: 240,
+              zIndex: 20,
+            }}
+          />
           <Logo style={{ width: 239, height: 40 }} />
         </View>
   

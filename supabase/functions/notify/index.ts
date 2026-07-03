@@ -5,6 +5,7 @@ import nodemailer from "npm:nodemailer@6";
 import {
   buzinessRecommendationHtml,
   commentHtml,
+  messageHtml,
   profileRecommendationHtml,
 } from "../_shared/email.ts";
 
@@ -25,17 +26,18 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-async function sendPushNotification(pushToken: string, message: string) {
+async function sendPushNotification(pushToken: string, message: string, data?: Record<string, unknown>) {
   if (!pushToken) {
     console.log("No push token, skipping push notification");
     return;
   }
-  const body = {
+  const body: Record<string, unknown> = {
     to: pushToken,
     title: "FiFe App",
     body: message,
     sound: "default",
   };
+  if (data) body.data = data;
   
   const res = await fetch("https://exp.host/--/api/v2/push/send", {
     method: "POST",
@@ -88,6 +90,7 @@ async function sendNotification(
   options: {
     subject?: string;
     htmlBuilder?: (recipientName: string | null) => string;
+    data?: Record<string, unknown>;
   } = {},
 ) {
   const prefs = await getNotificationPrefs(supabase, targetUserId);
@@ -95,7 +98,7 @@ async function sendNotification(
 
   const promises: Promise<unknown>[] = [];
   if (prefs.notify_push && prefs.push_token) {
-    promises.push(sendPushNotification(prefs.push_token, message));
+    promises.push(sendPushNotification(prefs.push_token, message, options.data));
   }
   if (prefs.notify_email && prefs.email) {
     const html = options.htmlBuilder
@@ -145,6 +148,7 @@ Deno.serve(async (req) => {
         await sendNotification(supabase, buziness.author, message, {
           subject: `${authorName} ajánlja a bizniszedet!`,
           htmlBuilder: (name) => buzinessRecommendationHtml(name, authorName, buzinessTitle, record.buziness_id),
+          data: { url: `/biznisz/${record.buziness_id}` },
         });
       }
     } else if (table === "profileRecommendations") {
@@ -160,6 +164,7 @@ Deno.serve(async (req) => {
         await sendNotification(supabase, record.profile_id, message, {
           subject: `${authorName} megbízhatónak jelölt!`,
           htmlBuilder: (name) => profileRecommendationHtml(name, authorName, record.author),
+          data: { url: `/user/${record.profile_id}` },
         });
       }
     } else if (table === "comments") {
@@ -179,6 +184,41 @@ Deno.serve(async (req) => {
           await sendNotification(supabase, buziness.author, message, {
             subject: `${authorName} kommentet írt a bizniszedhez!`,
             htmlBuilder: (name) => commentHtml(name, authorName, buzinessTitle, buzinessId),
+            data: { url: `/biznisz/${buzinessId}` },
+          });
+        }
+      }
+    } else if (table === "messages") {
+      // Notify recipient of a new message, rate-limited to 1 per 60s per sender→recipient pair
+      if (!record.to || record.to === record.author) {
+        // No recipient or self-message — skip
+      } else {
+        // Rate-limit: check if there's a recent message from same author→to within last 60s
+        const cutoff = new Date(new Date(record.created_at).getTime() - 3600).toISOString();
+        const { count } = await supabase
+          .from("messages")
+          .select("id", { count: "exact", head: true })
+          .eq("author", record.author)
+          .eq("to", record.to)
+          .gt("created_at", cutoff)
+          .lt("created_at", record.created_at)
+          .limit(1);
+
+        if (count && count > 0) {
+          console.log(`Rate-limited: message notification skipped for ${record.author} → ${record.to}`);
+        } else {
+          const authorRes = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", record.author)
+            .maybeSingle();
+          const senderName = authorRes.data?.full_name || "Valaki";
+          const preview = (record.text || "").slice(0, 100);
+          const message = `${senderName}: ${preview}`;
+          await sendNotification(supabase, record.to, message, {
+            subject: `${senderName} üzenetet küldött!`,
+            htmlBuilder: (name) => messageHtml(name, senderName, record.author, preview),
+            data: { url: `/chat/${record.author}` },
           });
         }
       }

@@ -8,13 +8,8 @@ import BlockUserModal from "@/components/user/BlockUserModal";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
 import ContactsCard from "@/components/buziness/ContactsCard";
-import {
-  clearBuziness,
-  clearBuzinessSearchParams,
-} from "@/redux/reducers/buzinessReducer";
-import { setOptions } from "@/redux/reducers/infoReducer";
+import { setOptions, clearOptions } from "@/redux/reducers/infoReducer";
 import { addSnack } from "@/redux/reducers/infoReducer";
-import { logout } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { TutorialState, UserState } from "@/redux/store.type";
 import { RecommendProfileButton } from "@/lib/supabase/RecommendProfileButton";
@@ -47,14 +42,13 @@ import globStyles from "@/constants/Styles";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import {
-  clearTutorialState,
-  viewFunction,
+  viewFunction
 } from "@/redux/reducers/tutorialReducer";
 import Measure from "@/components/tutorial/Measure";
 import SectionLabel from "@/components/buziness/SectionLabel";
 import { useAppTheme } from "@/assets/theme";
 
-type UserInfo = Tables<"profiles">;
+type UserInfo = Partial<Tables<"profiles">>;
 
 export default function UserPage() {
   const { uid: paramUid } = useLocalSearchParams<{ uid: string }>();
@@ -145,24 +139,13 @@ export default function UserPage() {
               onPress: () => router.push("/user/saved-buzinesses"),
               title: "Mentett bizniszek",
             },
-            {
-              icon: "exit-run",
-              onPress: async () => {
-                await supabase.auth.signOut();
-                dispatch(logout());
-                dispatch(clearBuziness());
-                dispatch(clearTutorialState());
-                dispatch(clearBuzinessSearchParams());
-                router.navigate("/");
-              },
-              title: "Kijelentkezés",
-            },
           ]),
         );
       setData(null);
       setNotFound(false);
       return () => {
         setShowRecommendsModal(false);
+        dispatch(clearOptions());
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [uid]),
@@ -175,8 +158,9 @@ export default function UserPage() {
         <ErrorScreen
           icon="account-off"
           title="Nem található"
-          text="Ez a felhasználó nem létezik vagy törölte fiókját."
+          text={"Ez a felhasználó nem létezik vagy törölte fiókját."}
         />
+        
       </>
     );
   }
@@ -323,7 +307,7 @@ export default function UserPage() {
               {contacts.length > 0 && (
                 <View style={{ width: "100%", gap: Spacing.sm }}>
                   <SectionLabel label="Elérhetőségek" />
-                  <ContactsCard contacts={contacts} />
+                  <ContactsCard contacts={contacts} isOwnProfile={myProfile} />
                 </View>
               )}
               {myProfile && contacts.length === 0 && (

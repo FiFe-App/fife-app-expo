@@ -1,11 +1,10 @@
-import { clearOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { useNavigation, usePathname, useSegments } from "expo-router";
-import React, { ReactNode, useRef } from "react";
-import { useEffect, useState } from "react";
+import { router, useNavigation, usePathname } from "expo-router";
+import React, { ReactNode } from "react";
+import { useState } from "react";
 import { Pressable, StyleSheet, View, ViewStyle } from "react-native";
 import { Appbar, Icon, Portal, Surface, Text } from "react-native-paper";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
@@ -16,19 +15,7 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
   const theme = useAppTheme();
   const { options } = useSelector((state: RootState) => state.info);
   const [showMenu, setShowMenu] = useState(false);
-  const dispatch = useDispatch();
-  const segments = useSegments();
   const pathname = usePathname();
-  const prevSegmentsKey = useRef<string | null>(null);
-
-  useEffect(() => {
-    const key = segments.join("/");
-    if (prevSegmentsKey.current !== null && prevSegmentsKey.current !== key) {
-      dispatch(clearOptions());
-    }
-    prevSegmentsKey.current = key;
-  }, [dispatch, segments]);
-
 
   return (
     <>
@@ -42,10 +29,10 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
       >
         <View style={{ width: 48 }} >
           {
-            pathname !== "/home" && pathname !== "/"
+            pathname !== "/home" && pathname !== "/" && pathname !== "/me"
             && <Appbar.BackAction
               onPress={() =>
-                navigation.canGoBack() ? navigation.goBack() : router.push("/home")
+                navigation.canGoBack() ? navigation.goBack() : router.push("/")
               }
             />
           }

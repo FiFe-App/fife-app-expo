@@ -59,6 +59,14 @@ const COPY = {
     cta:      "Biznisz megtekintése",
     ctaUrl:   (id: number | string) => `${HOME_URL}/biznisz/${id}`,
   },
+
+  message: {
+    message:  (senderName: string) =>
+      `<strong>${senderName}</strong> üzenetet küldött neked!`,
+    subtext:  (preview: string) => preview ? `„${preview}"` : "Nézd meg és válaszolj neki!",
+    cta:      "Válasz",
+    ctaUrl:   (senderUid: string) => `${HOME_URL}/user/${senderUid}`,
+  },
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -199,5 +207,22 @@ export function commentHtml(
       ${COPY.comment.subtext}
     </p>
     ${ctaButton(COPY.comment.cta, COPY.comment.ctaUrl(buzinessId))}`;
+  return layout(recipientName, body);
+}
+
+export function messageHtml(
+  recipientName: string | null,
+  senderName: string,
+  senderUid: string,
+  messagePreview: string,
+): string {
+  const body = `
+    <p style="font-size:18px;color:${COLOR.text};margin:0 0 8px 0;">
+      ${COPY.message.message(senderName)}
+    </p>
+    <p style="font-size:15px;color:${COLOR.textMuted};margin:0 0 24px 0;font-style:italic;">
+      ${COPY.message.subtext(messagePreview)}
+    </p>
+    ${ctaButton(COPY.message.cta, COPY.message.ctaUrl(senderUid))}`;
   return layout(recipientName, body);
 }

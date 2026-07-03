@@ -1,10 +1,11 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { UserState } from "../store.type";
+import { TaskItem, UserState } from "../store.type";
 import { DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
 
 const initialState: UserState = {
   uid: undefined,
   name: undefined,
+  messagingEnabled: false,
   userData: null,
   locationError: null,
   themePreference: DEFAULT_THEME_PREFERENCE,
@@ -37,6 +38,20 @@ const userReducer = createSlice({
     },
     setName: (state, { payload }) => {
       state.name = payload;
+    },
+    setMessagingEnabled: (state, { payload }: PayloadAction<boolean>) => {
+      state.messagingEnabled = payload;
+    },
+    setMantra: (state, { payload }: PayloadAction<string>) => {
+      state.mantra = payload;
+    },
+    addTask: (state, { payload }: PayloadAction<TaskItem>) => {
+      state.tasks = [...(state.tasks ?? []), payload];
+    },
+    toggleTask: (state, { payload }: PayloadAction<string>) => {
+      state.tasks = (state.tasks ?? []).map((task) =>
+        task.id === payload ? { ...task, checked: !task.checked } : task,
+      );
     },
     setLocationError: (state, { payload }: PayloadAction<string | null>) => {
       state.locationError = payload;
@@ -77,7 +92,7 @@ const userReducer = createSlice({
         radius: payload.radius,
       };
     },
-    setNotificationPrefs: (state, { payload }: PayloadAction<{ notifyPush: boolean; notifyEmail: boolean; newsletter: boolean }>) => {
+    setNotificationPrefs: (state, { payload }: PayloadAction<{ notifyPush: boolean; notifyEmail: boolean; newsletter: boolean; emotionDailyPrompt: boolean }>) => {
       state.notificationPrefs = payload;
     },
     addPreviousSearch: (state, { payload }: PayloadAction<string>) => {
@@ -100,6 +115,10 @@ export const {
   login,
   logout,
   setName,
+  setMessagingEnabled,
+  setMantra,
+  addTask,
+  toggleTask,
   setUserData,
   setLocationError,
   setThemePreference,

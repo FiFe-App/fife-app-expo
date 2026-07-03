@@ -1,5 +1,5 @@
 import { ThemedView } from "@/components/ThemedView";
-import { Platform, View } from "react-native";
+import { View } from "react-native";
 import { Image } from "expo-image";
 import { ThemedText } from "@/components/ThemedText";
 import { Spacing } from "@/constants/spacing";

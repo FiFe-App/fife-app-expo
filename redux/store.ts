@@ -9,6 +9,8 @@ import infoReducer from "./reducers/infoReducer";
 import tutorialReducer from "./reducers/tutorialReducer";
 import usersReducer from "./reducers/usersReducer";
 import appReducer from "./reducers/appReducer";
+import emotionLogsSlice from "./reducers/emotionLogsReducer";
+import chatReducer from "./reducers/chatReducer";
 
 export const rootReducer = combineReducers({
   comments: commentsReducer,
@@ -18,6 +20,8 @@ export const rootReducer = combineReducers({
   info: infoReducer,
   tutorial: tutorialReducer.reducer,
   app: appReducer.reducer,
+  chat: chatReducer,
+  emotionLogs: emotionLogsSlice.reducer,
 });
 
 export type RootReducer = ReturnType<typeof rootReducer>;

@@ -5,27 +5,29 @@ import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
 import { Link, Redirect, router, useLocalSearchParams, useNavigation } from "expo-router";
-import { useEffect, useState } from "react";
-import { View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { TextInput } from "react-native-paper";
 import { Spacing } from "@/constants/spacing";
 import { useDispatch, useSelector } from "react-redux";
 
-import { makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { Button } from "@/components/Button";
-import { useAppTheme } from "@/assets/theme";
 import { ThemedText } from "@/components/ThemedText";
+import Smiley from "@/components/Smiley";
 
 export default function Index() {
   const navigation = useNavigation();
-  const theme = useAppTheme();
   const dispatch = useDispatch();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const passwordRef = useRef<any>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const [focusedField, setFocusedField] = useState<"email" | "password" | null>(null);
   const { "#": hash, redirected_from } = useLocalSearchParams<{ "#": string; redirected_from?: string }>();
   const token_data = hash
     ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
@@ -97,59 +99,92 @@ export default function Index() {
 
   return (
     <ThemedView style={{ flex: 1 }} type="default">
-      <View style={{ maxWidth: 300, width: "100%", gap: Spacing.sm, margin: "auto" }}>
-        
-        <View style={{minHeight:60}}>
-          {!!error && <ThemedView style={{margin:6, alignItems:"center"}} type="error">
-            <ThemedText type="error">{error}</ThemedText>
-          </ThemedView>}
-        </View>
-        <TextInput
-          mode="outlined"
-          onChangeText={setEmail}
-          value={email}
-          label="E-mail"
-          autoComplete="email"
-          textContentType="emailAddress"
-          inputMode="email"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <TextInput
-          mode="outlined"
-          onChangeText={setPassword}
-          value={password}
-          label="Jelszó"
-          secureTextEntry={!showPassword}
-          autoComplete="current-password"
-          textContentType="password"
-          right={
-            <TextInput.Icon
-              icon={showPassword ? "eye" : "eye-off"}
-              onPress={() => setShowPassword(!showPassword)}
-            />
-          }
-        />
-        <Button
-          onPress={signInWithEmail}
-          loading={loading}
-          style={{marginTop: Spacing.md}}
-          mode="contained"
-          disabled={!password || !email}
-          type="secondary"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}
+        enabled
+      >
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: 24, paddingVertical: Spacing.xxxl }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          showsVerticalScrollIndicator={false}
         >
-          Bejelentkezés
-        </Button>
-        <View style={{ flexDirection: "row", justifyContent: "center" }}>
-          <Link href="/csatlakozom" asChild>
-            <Button>Még nincs fiókom</Button>
-          </Link>
-          <Link href="/user/password-reset" asChild>
-            <Button>Elfelejtettem a jelszavam</Button>
-          </Link>
-        </View>
-      </View>
+          <View style={{ maxWidth: 300, width: "100%", gap: Spacing.sm, alignSelf: "center" }}>
+            <View style={{ width: "100%", alignItems: "center" }}>
+              <Smiley style={{ width: 100, height: 100 }} />
+            </View>
+            <TextInput
+              mode="outlined"
+              onChangeText={setEmail}
+              value={email}
+              label="E-mail"
+              autoComplete="email"
+              textContentType="emailAddress"
+              inputMode="email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onFocus={() => {
+                setFocusedField("email");
+                scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+              }}
+              onBlur={() => setFocusedField((value) => (value === "email" ? null : value))}
+              onSubmitEditing={() => passwordRef.current?.focus()}
+            />
+            <TextInput
+              ref={passwordRef}
+              mode="outlined"
+              onChangeText={setPassword}
+              value={password}
+              label="Jelszó"
+              secureTextEntry={!showPassword}
+              autoComplete="current-password"
+              textContentType="password"
+              returnKeyType="go"
+              onFocus={() => {
+                setFocusedField("password");
+                scrollViewRef.current?.scrollTo({ y: 120, animated: true });
+              }}
+              onBlur={() => setFocusedField((value) => (value === "password" ? null : value))}
+              onSubmitEditing={signInWithEmail}
+              right={
+                <TextInput.Icon
+                  icon={showPassword ? "eye" : "eye-off"}
+                  onPress={() => setShowPassword(!showPassword)}
+                />
+              }
+            />
+            <Button
+              onPress={signInWithEmail}
+              loading={loading}
+              style={[{ marginTop: Spacing.md }, focusedField ? { opacity: 1 } : undefined]}
+              mode="contained"
+              disabled={!password || !email}
+              type="secondary"
+            >
+              Bejelentkezés
+            </Button>
+            <View style={{ minHeight: 60 }}>
+              {!!error && <ThemedView style={{ margin: 6, alignItems: "center" }} type="error">
+                <ThemedText type="error">{error}</ThemedText>
+              </ThemedView>}
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "center", flexWrap: "wrap", gap: Spacing.xs }}>
+              <Link href="/csatlakozom" asChild>
+                <Button>Még nincs fiókom</Button>
+              </Link>
+              <Link href="/user/password-reset" asChild>
+                <Button>Elfelejtettem a jelszavam</Button>
+              </Link>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }

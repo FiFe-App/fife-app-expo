@@ -1,24 +1,23 @@
 import { Route, router, useGlobalSearchParams, useSegments } from "expo-router";
 import { useRef, useCallback } from "react";
 import { StyleSheet, View } from "react-native";
-import { Badge, Icon, TouchableRipple } from "react-native-paper";
+import { Icon, TouchableRipple } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import { useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { RootState } from "@/redux/store";
-import globStyles from "@/constants/Styles";
 import { theme } from "@/assets/theme";
 import Measure from "../tutorial/Measure";
 import { ThemedView } from "../ThemedView";
+
 const BottomNavigation = () => {
   const segment = useSegments();
   const globalParams = useGlobalSearchParams();
-  const { functions } = useSelector((state: RootState) => state.tutorial);
   const { uid } = useSelector((state: RootState) => state.user);
 
-  const bizniszActive = segment[0]?.includes("biznisz");
   const profilActive = segment[0]?.includes("user");
-  const homeActive = segment[0]?.includes("home");
+  const meActive = segment[0] === "me";
+  const usActive = segment[0]?.includes("home") || segment[0]?.includes("fifeRadar");
   const lastNavTime = useRef(0);
 
   const navigateTo = useCallback((path: Route, params?: Record<string,string>) => {
@@ -40,47 +39,42 @@ const BottomNavigation = () => {
 
   return (
     <ThemedView style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level0 }}>
-      <Measure name="biznisz">
-        <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/biznisz")}>
-          <View style={{ alignItems: "center" }}>
-            <Icon
-              source="magnify"
-              size={bizniszActive ? 30 : 24}
-              color={bizniszActive ? theme.colors.secondary : undefined}
-            />
-            <ThemedText type={bizniszActive ? "defaultSemiBold" : "default"}>
-              Biznisz
-            </ThemedText>
-            {functions.includes("buzinessPage") && (
-              <Badge style={globStyles.badge}>ÚJ</Badge>
-            )}
-          </View>
-        </TouchableRipple>
-      </Measure>
       <Measure name="home">
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/home")}>
           <View style={{ alignItems: "center" }}>
             <Icon
-              source={homeActive ? "home" : "home-outline"}
-              size={homeActive ? 30 : 24}
-              color={homeActive ? theme.colors.secondary : undefined}
+              source={usActive ? "account-group" : "account-group-outline"}
+              size={usActive ? 30 : 24}
+              color={usActive ? theme.colors.secondary : undefined}
             />
-            <ThemedText type={homeActive ? "defaultSemiBold" : "default"}>
-              Otthon
+            <ThemedText type={usActive ? "defaultSemiBold" : "default"}>
+              Segítség
             </ThemedText>
           </View>
         </TouchableRipple>
       </Measure>
-      <Measure name="user">
-        <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user",{uid:uid!})}>
+        <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/me")}>
           <View style={{ alignItems: "center" }}>
             <Icon
-              source={profilActive ? "account" : "account-outline"}
+              source={meActive ? "home" : "home-outline"}
+              size={meActive ? 30 : 24}
+              color={meActive ? theme.colors.secondary : undefined}
+            />
+            <ThemedText type={meActive ? "defaultSemiBold" : "default"}>
+              Otthon
+            </ThemedText>
+          </View>
+        </TouchableRipple>
+      <Measure name="briefcase">
+        <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user",{uid})}>
+          <View style={{ alignItems: "center" }}>
+            <Icon
+              source={profilActive ? "briefcase" : "briefcase-outline"}
               size={profilActive ? 30 : 24}
               color={profilActive ? theme.colors.secondary : undefined}
             />
             <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
-              Profil
+              Munka
             </ThemedText>
           </View>
         </TouchableRipple>
