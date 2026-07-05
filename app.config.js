@@ -81,13 +81,15 @@ export default {
         "android": {
           "compileSdkVersion": 36,
           "targetSdkVersion": 36,
-          "minSdkVersion": 24
+          "minSdkVersion": 24,
+          "enableMinifyInReleaseBuilds": true,
+          "enableShrinkResourcesInReleaseBuilds": true
         },
         "ios": {
           "useFrameworks": "static"
         }
       }
-    ], 
+    ],
     [
         "expo-splash-screen",
         {
