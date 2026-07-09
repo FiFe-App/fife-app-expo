@@ -37,7 +37,7 @@ const UrlText = ({
 
     parts.push(
       <Pressable key={`l-${index}`} onPress={() => Linking.openURL(href)}>
-        <ThemedText style={[{ color: theme.colors.secondary }, style]}>{matched}</ThemedText>
+        <ThemedText style={[style, { color: theme.colors.secondary }]}>{matched}</ThemedText>
       </Pressable>,
     );
 

@@ -246,7 +246,7 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="chats"
-                  options={{ title: "Üzenetek" }}
+                  options={{ title: "Üzeneteid" }}
                 />
                 <Stack.Screen
                   name="chat/[uid]"

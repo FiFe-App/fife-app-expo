@@ -108,7 +108,7 @@ export default function Index() {
               variant="labelLarge"
               type="bold"
               onPress={() => router.push("/chats")}
-              style={{ color: theme.colors.primary }}
+              style={{ color: theme.colors.primary, flex:1 }}
             >
               Üzeneteid
             </ThemedText>

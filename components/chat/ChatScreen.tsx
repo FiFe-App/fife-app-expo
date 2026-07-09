@@ -10,9 +10,6 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Keyboard,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
 } from "react-native";
 import ProfileImage from "@/components/ProfileImage";
 import { useNavigation } from "@react-navigation/native";
@@ -33,9 +30,13 @@ import { ReplyPreview } from "./ReplyPreview";
 type Message = Tables<"messages">;
 
 const PAGE_SIZE = 30;
-const NEAR_BOTTOM_THRESHOLD = 80;
-const TOP_LOAD_THRESHOLD = 100;
 
+// Messages are kept newest-first and rendered in an *inverted* FlatList — the
+// standard chat pattern. This means the list starts pinned to the bottom for
+// free (no scrollToEnd juggling), stays pinned to the bottom as the keyboard
+// resizes the viewport, and "load more" naturally becomes onEndReached
+// (which fires when scrolling toward the array's end, i.e. the oldest
+// messages, since the list is flipped).
 export default function ChatScreen() {
   const dispatch = useDispatch();
   const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null);
@@ -59,9 +60,6 @@ export default function ChatScreen() {
   const [actionsMessage, setActionsMessage] = useState<Message | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const mountId = useRef(Date.now()).current;
-  const flatListRef = useRef<FlatList>(null);
-  const isNearBottomRef = useRef(true);
-  const initialScrollDoneRef = useRef(false);
   const navigation = useNavigation();
 
   useFocusEffect(
@@ -143,7 +141,7 @@ export default function ChatScreen() {
     }, [otherUid, myUid, otherUser, navigation, dispatch]),
   );
 
-  // Load latest page of messages
+  // Load the latest page of messages (newest first)
   const loadMessages = useCallback(async () => {
     if (!myUid || !otherUid) return;
 
@@ -161,23 +159,22 @@ export default function ChatScreen() {
       return;
     }
 
-    const page = (data || []).slice().reverse();
-    initialScrollDoneRef.current = false;
+    const page = data || [];
     setMessages(page);
-    setHasMoreOlder((data || []).length === PAGE_SIZE);
-    setOldestLoadedCreatedAt(page.length > 0 ? page[0].created_at : null);
+    setHasMoreOlder(page.length === PAGE_SIZE);
+    setOldestLoadedCreatedAt(page.length > 0 ? page[page.length - 1].created_at : null);
 
-    const realMessages = page.filter((m) => !m.text.startsWith("heart-"));
     if (otherUid) {
+      const realMessages = page.filter((m) => !m.text.startsWith("heart-"));
       const lastReadAt = realMessages.length > 0
-        ? realMessages[realMessages.length - 1].created_at
+        ? realMessages[0].created_at
         : new Date().toISOString();
       dispatch(setLastReadAt({ chatId: otherUid, lastReadAt }));
     }
     setLoading(false);
   }, [myUid, otherUid, dispatch]);
 
-  // Load an older page of messages when scrolling up
+  // Load an older page of messages when scrolling toward the top
   const loadOlderMessages = useCallback(async () => {
     if (!myUid || !otherUid || loadingOlder || !hasMoreOlder || !oldestLoadedCreatedAt) return;
     setLoadingOlder(true);
@@ -196,46 +193,12 @@ export default function ChatScreen() {
       return;
     }
 
-    const olderPage = (data || []).slice().reverse();
-    setMessages((prev) => [...olderPage, ...prev]);
-    setHasMoreOlder((data || []).length === PAGE_SIZE);
-    if (olderPage.length > 0) setOldestLoadedCreatedAt(olderPage[0].created_at);
+    const olderPage = data || [];
+    setMessages((prev) => [...prev, ...olderPage]);
+    setHasMoreOlder(olderPage.length === PAGE_SIZE);
+    if (olderPage.length > 0) setOldestLoadedCreatedAt(olderPage[olderPage.length - 1].created_at);
     setLoadingOlder(false);
   }, [myUid, otherUid, loadingOlder, hasMoreOlder, oldestLoadedCreatedAt]);
-
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
-      isNearBottomRef.current =
-        contentOffset.y + layoutMeasurement.height >= contentSize.height - NEAR_BOTTOM_THRESHOLD;
-
-      if (contentOffset.y < TOP_LOAD_THRESHOLD && hasMoreOlder && !loadingOlder) {
-        loadOlderMessages();
-      }
-    },
-    [hasMoreOlder, loadingOlder, loadOlderMessages],
-  );
-
-  // Scroll to bottom once, right after the initial page has rendered
-  useEffect(() => {
-    if (!loading && !initialScrollDoneRef.current && messages.length > 0) {
-      initialScrollDoneRef.current = true;
-      requestAnimationFrame(() => {
-        flatListRef.current?.scrollToEnd({ animated: false });
-      });
-    }
-  }, [loading, messages.length]);
-
-  // Keep the latest messages visible above the keyboard when it opens
-  useEffect(() => {
-    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const sub = Keyboard.addListener(showEvent, () => {
-      requestAnimationFrame(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      });
-    });
-    return () => sub.remove();
-  }, []);
 
   // Set up realtime subscription
   useEffect(() => {
@@ -265,17 +228,11 @@ export default function ChatScreen() {
 
             setMessages((prev) => {
               if (prev.some((m) => m.id === newMessage.id)) return prev;
-              return [...prev, newMessage];
+              return [newMessage, ...prev];
             });
 
             if (!isHeart && newMessage.author === otherUid && newMessage.to === myUid && otherUid) {
               dispatch(setLastReadAt({ chatId: otherUid, lastReadAt: newMessage.created_at }));
-            }
-
-            if (!isHeart && newMessage.author === otherUid && isNearBottomRef.current) {
-              requestAnimationFrame(() => {
-                flatListRef.current?.scrollToEnd({ animated: true });
-              });
             }
           }
         }
@@ -334,14 +291,10 @@ export default function ChatScreen() {
     } else if (data) {
       setMessages((prev) => {
         if (prev.some((m) => m.id === data.id)) return prev;
-        return [...prev, data];
+        return [data, ...prev];
       });
       clearDraft();
       setReplyingTo(null);
-      isNearBottomRef.current = true;
-      requestAnimationFrame(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      });
     }
 
     setSending(false);
@@ -377,7 +330,7 @@ export default function ChatScreen() {
           return;
         }
         if (data) {
-          setMessages((prev) => (prev.some((m) => m.id === data.id) ? prev : [...prev, data]));
+          setMessages((prev) => (prev.some((m) => m.id === data.id) ? prev : [data, ...prev]));
         }
       }
     },
@@ -481,8 +434,8 @@ export default function ChatScreen() {
     >
       <ThemedView style={styles.container}>
         <FlatList
-          ref={flatListRef}
           data={displayMessages}
+          inverted
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => {
             const replyToMessage = item.reply_to ? messageById.get(item.reply_to) ?? null : null;
@@ -505,14 +458,15 @@ export default function ChatScreen() {
           }}
           contentContainerStyle={styles.messagesList}
           keyboardShouldPersistTaps="handled"
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
-          ListHeaderComponent={
-            loadingOlder ? <ActivityIndicator style={styles.loadingOlder} /> : null
+          onEndReached={loadOlderMessages}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingOlder ? (
+              <ActivityIndicator style={[styles.loadingOlder, styles.invertedFix]} />
+            ) : null
           }
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
+            <View style={[styles.emptyContainer, styles.invertedFix]}>
               <Text variant="bodyLarge" style={{textAlign:"center"}}>
                 {otherUser
                   ? `Te és ${otherUser.full_name} még nem beszélgettetek az appon belül!`
@@ -592,8 +546,6 @@ const styles = StyleSheet.create({
   },
   profileName: {
     flexShrink: 1,
-    fontFamily: "Piazzolla-Regular",
-    fontWeight: "bold",
   },
   centerContainer: {
     flex: 1,
@@ -615,5 +567,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+  },
+  // ListEmptyComponent/ListHeaderComponent/ListFooterComponent aren't routed
+  // through the same per-cell flip correction as renderItem, so an inverted
+  // FlatList renders them upside down unless corrected manually.
+  invertedFix: {
+    transform: [{ scaleY: -1 }],
   },
 });

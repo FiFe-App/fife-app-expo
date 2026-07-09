@@ -74,7 +74,7 @@ const BottomNavigation = () => {
               color={profilActive ? theme.colors.secondary : undefined}
             />
             <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
-              Munka
+              Profilod
             </ThemedText>
           </View>
         </TouchableRipple>
