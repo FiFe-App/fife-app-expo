@@ -1,7 +1,9 @@
 import { ThemedView } from "@/components/ThemedView";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
+import { getUploadableImage } from "@/lib/supabase/imageUpload";
 import { RootState } from "@/redux/store";
+import * as ExpoImagePicker from "expo-image-picker";
 import { Link, useFocusEffect, useGlobalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, View, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
@@ -30,6 +32,7 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [image, setImage] = useState<ExpoImagePicker.ImagePickerAsset | null>(null);
   const [otherUser, setOtherUser] = useState<Tables<"profiles"> | null>(null);
   const hasMessagingEnabled = myMessagingEnabledFromRedux ?? false;
   const [otherHasMessagingEnabled, setOtherHasMessagingEnabled] = useState(false);
@@ -135,31 +138,46 @@ export default function ChatScreen() {
 
     loadMessages();
 
-    // Subscribe to new messages - listen to all messages and filter client-side
-    // because Supabase realtime filters don't support complex OR conditions well
+    // Subscribe to all changes - listen to all messages and filter client-side
+    // because Supabase realtime filters don't support complex OR conditions well.
+    // We need UPDATE too (not just INSERT): image attachments are uploaded
+    // after the message row is inserted, then attached via an update — same
+    // two-step insert-then-attach flow as comments.
     const channel = supabase
       .channel(`messages:${myUid}:${otherUid}:${mountId}`)
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "messages",
         },
         (payload) => {
-          const newMessage = payload.new as Message;
-          // Only add if it's relevant to this conversation
-          if (
-            (newMessage.author === myUid && newMessage.to === otherUid) ||
-            (newMessage.author === otherUid && newMessage.to === myUid)
-          ) {
-            setMessages((prev) => {
-              if (prev.some((m) => m.id === newMessage.id)) return prev;
-              return [...prev, newMessage];
-            });
+          if (payload.eventType === "INSERT") {
+            const newMessage = payload.new as Message;
+            // Only add if it's relevant to this conversation
+            if (
+              (newMessage.author === myUid && newMessage.to === otherUid) ||
+              (newMessage.author === otherUid && newMessage.to === myUid)
+            ) {
+              setMessages((prev) => {
+                if (prev.some((m) => m.id === newMessage.id)) return prev;
+                return [...prev, newMessage];
+              });
 
-            if (newMessage.author === otherUid && newMessage.to === myUid && otherUid) {
-              dispatch(setLastReadAt({ chatId: otherUid, lastReadAt: newMessage.created_at }));
+              if (newMessage.author === otherUid && newMessage.to === myUid && otherUid) {
+                dispatch(setLastReadAt({ chatId: otherUid, lastReadAt: newMessage.created_at }));
+              }
+            }
+          } else if (payload.eventType === "UPDATE") {
+            const updatedMessage = payload.new as Message;
+            if (
+              (updatedMessage.author === myUid && updatedMessage.to === otherUid) ||
+              (updatedMessage.author === otherUid && updatedMessage.to === myUid)
+            ) {
+              setMessages((prev) =>
+                prev.map((m) => (m.id === updatedMessage.id ? updatedMessage : m)),
+              );
             }
           }
         }
@@ -188,10 +206,74 @@ export default function ChatScreen() {
     dispatch(clearDraftMessage({ chatId: otherUid }));
   }, [dispatch, otherUid]);
 
+  const pickImage = async () => {
+    const result = await ExpoImagePicker.launchImageLibraryAsync({
+      mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      // Lower than the quality:1 used elsewhere — chat photos are sent much
+      // more often than profile/business photos, and a full-resolution
+      // photo inflates to a much larger base64 string, which is slow to
+      // decode client-side (see getUploadableImage) and slow to upload over
+      // mobile data. 0.7 keeps it visually fine while staying small.
+      quality: 0.7,
+      base64: true,
+    }).catch((error) => {
+      console.log(error);
+    });
+
+    if (result && !result?.canceled) {
+      setImage(result.assets[0]);
+    } else {
+      console.log("cancelled");
+    }
+  };
+
+  const dismissImage = () => setImage(null);
+
+  // Uploads happen after the message row exists, then attach the storage
+  // path via an update — same two-step insert-then-attach flow as comments.
+  const uploadMessageImage = async (
+    messageId: number,
+    pickedImage: ExpoImagePicker.ImagePickerAsset,
+  ) => {
+    if (!myUid) return;
+
+    const { data: uploadData, fileName, mimeType } = await getUploadableImage(pickedImage);
+
+    const { data: uploaded, error: uploadError } = await supabase.storage
+      .from("messageImages")
+      .upload(myUid + "/" + fileName, uploadData, {
+        contentType: mimeType,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Error uploading chat image:", uploadError);
+      return;
+    }
+    if (!uploaded?.path) return;
+
+    const { data: updated, error: updateError } = await supabase
+      .from("messages")
+      .update({ image: uploaded.path })
+      .eq("id", messageId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error("Error attaching image to message:", updateError);
+      return;
+    }
+    if (updated) {
+      setMessages((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+    }
+  };
+
   const sendMessage = async (text: string) => {
     if (!myUid || !otherUid || sending || !hasMessagingEnabled || !otherHasMessagingEnabled) return;
 
     setSending(true);
+    const pickedImage = image;
 
     const { data, error } = await supabase.from("messages").insert({
       author: myUid,
@@ -207,6 +289,11 @@ export default function ChatScreen() {
         return [...prev, data];
       });
       clearDraft();
+
+      if (pickedImage) {
+        setImage(null);
+        await uploadMessageImage(data.id, pickedImage);
+      }
     }
 
     setSending(false);
@@ -315,6 +402,9 @@ export default function ChatScreen() {
           onChangeText={setDraft}
           onSend={sendMessage}
           disabled={sending || !hasMessagingEnabled || !otherHasMessagingEnabled}
+          image={image}
+          onPickImage={pickImage}
+          onRemoveImage={dismissImage}
         />
       </ThemedView>
     </KeyboardAvoidingView>

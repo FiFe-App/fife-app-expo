@@ -4,7 +4,7 @@ import TagInput from "@/components/TagInput";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import {
-  addDialog,
+  showDialog,
   addSnack,
   hideLoading,
   showLoading,
@@ -272,7 +272,7 @@ export default function BuzinessEditScreen({
   );
 
   const handleOpenDialog = () => {
-    dispatch(addDialog({
+    dispatch(showDialog({
       title: "Mihez értesz?",
       text: `Ezen az oldalon fel tudsz venni egy új bizniszt a profilodba.
 A te bizniszeid azon hobbijaid, képességeid vagy szakmáid listája, amelyeket meg szeretnél osztani másokkal is.

@@ -319,6 +319,7 @@ export type Database = {
           author: string
           created_at: string
           id: number
+          image: string | null
           text: string
           to: string | null
         }
@@ -326,6 +327,7 @@ export type Database = {
           author: string
           created_at?: string
           id?: number
+          image?: string | null
           text: string
           to?: string | null
         }
@@ -333,6 +335,7 @@ export type Database = {
           author?: string
           created_at?: string
           id?: number
+          image?: string | null
           text?: string
           to?: string | null
         }

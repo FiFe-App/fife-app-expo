@@ -6,6 +6,7 @@ import { ThemedView } from "@/components/ThemedView";
 import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
+import { getUploadableImage } from "@/lib/supabase/imageUpload";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
@@ -237,15 +238,14 @@ export default function Index() {
     } else console.log("cancelled");
   };
   const uploadImage = async (image: ExpoImagePicker.ImagePickerAsset) => {
-    if (!image || !image.fileName) return;
+    if (!image || !myUid) return;
 
-    const response = await fetch(image.uri);
-    const blob = await response.blob();
-    const arrayBuffer = await new Response(blob).arrayBuffer();
+    const { data: uploadData, fileName, mimeType } = await getUploadableImage(image);
+
     const upload = await supabase.storage
       .from("avatars")
-      .upload(myUid + "/" + image.fileName, arrayBuffer, {
-        contentType: image.mimeType,
+      .upload(myUid + "/" + fileName, uploadData, {
+        contentType: mimeType,
         upsert: true,
       })
       .then(async ({ data, error }) => {
@@ -258,7 +258,7 @@ export default function Index() {
             .from("profiles")
             .upsert(
               {
-                avatar_url: image.fileName,
+                avatar_url: fileName,
                 id: myUid,
               },
               { onConflict: "id" },
@@ -267,7 +267,7 @@ export default function Index() {
               console.log("profile upsert", res);
             });
 
-        return image.fileName;
+        return fileName;
       })
       .catch((error) => {
         return error;

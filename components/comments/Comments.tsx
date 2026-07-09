@@ -9,6 +9,7 @@ import {
 import { RootState } from "@/redux/store";
 import { CommentsState, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
+import { getUploadableImage } from "@/lib/supabase/imageUpload";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -205,17 +206,16 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
     }
   };
   const uploadImage = async (storagePath: string, key: number) => {
-    if (!image || !image.fileName) return;
+    if (!image) return;
 
-    console.log("path: " + storagePath + "/" + key + "/" + image.fileName);
+    const { data: uploadData, fileName, mimeType } = await getUploadableImage(image);
 
-    const response = await fetch(image.uri);
-    const blob = await response.blob();
-    const arrayBuffer = await new Response(blob).arrayBuffer();
+    console.log("path: " + storagePath + "/" + key + "/" + fileName);
+
     const upload = await supabase.storage
       .from("comments")
-      .upload(storagePath + "/" + key + "/" + image.fileName, arrayBuffer, {
-        contentType: image.mimeType,
+      .upload(storagePath + "/" + key + "/" + fileName, uploadData, {
+        contentType: mimeType,
         upsert: false,
       })
       .then(async ({ data, error }) => {

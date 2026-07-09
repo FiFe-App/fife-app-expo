@@ -13,6 +13,10 @@ interface SupabaseImageProps {
   resizeMode?: ImageContentFit | undefined;
   propLoading?: boolean;
   modal?: boolean;
+  // Use a short-lived signed URL instead of the bucket's public URL. Required
+  // for private buckets (e.g. chat images), where there is no public URL to
+  // fall back to and access is enforced by storage RLS.
+  signed?: boolean;
 }
 
 const SupabaseImage = ({
@@ -22,6 +26,7 @@ const SupabaseImage = ({
   resizeMode,
   propLoading = false,
   modal = false,
+  signed = false,
 }: SupabaseImageProps) => {
   const theme = useAppTheme();
   const [source, setSource] = useState("");
@@ -32,6 +37,13 @@ const SupabaseImage = ({
 
     const getImage = async () => {
       if (!path) return { error: "No path" };
+      if (signed) {
+        const { data, error } = await supabase.storage
+          .from(bucket)
+          .createSignedUrl(path, 60 * 60);
+        if (error || !data) return { error: error?.message || "No image" };
+        return { data: { publicUrl: data.signedUrl }, error: null };
+      }
       const { data } = supabase.storage.from(bucket).getPublicUrl(path);
       if (!data) return { error: "No image" };
       return { data, error: null };
@@ -44,7 +56,7 @@ const SupabaseImage = ({
       .finally(() => {
         setLoading(false);
       });
-  }, [bucket, path]);
+  }, [bucket, path, signed]);
 
   return (
     <View>

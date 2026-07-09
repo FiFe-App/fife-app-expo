@@ -1,9 +1,11 @@
 import { Tables } from "@/database.types";
 import { RootState } from "@/redux/store";
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import { Card, Text, useTheme } from "react-native-paper";
+import { BorderRadius } from "@/constants/borderRadius";
+import React, { useState } from "react";
+import { Pressable, View, StyleSheet } from "react-native";
+import { Card, Modal, Portal, Text, useTheme } from "react-native-paper";
 import { useSelector } from "react-redux";
+import SupabaseImage from "../SupabaseImage";
 
 type Message = Tables<"messages">;
 
@@ -17,6 +19,7 @@ export function MessageItem({ message, selected, onPress }: MessageItemProps) {
   const theme = useTheme();
   const { uid } = useSelector((state: RootState) => state.user);
   const isMyMessage = message.author === uid;
+  const [imageExpanded, setImageExpanded] = useState(false);
 
   // Show short time if not selected, full timestamp if selected
   const fullTime = new Date(message.created_at).toLocaleString("hu-HU", {
@@ -62,6 +65,16 @@ export function MessageItem({ message, selected, onPress }: MessageItemProps) {
             color: colors[isMyMessage ? "my" : "their"].color
           },
         ]} >{message.text}</Text>
+          {message.image && (
+            <Pressable onPress={() => setImageExpanded(true)}>
+              <SupabaseImage
+                bucket="messageImages"
+                path={message.image}
+                signed
+                style={styles.attachedImage}
+              />
+            </Pressable>
+          )}
         </Card.Content>
       </Card>
       {selected && (
@@ -71,6 +84,25 @@ export function MessageItem({ message, selected, onPress }: MessageItemProps) {
         >
           {fullTime}
         </Text>
+      )}
+      {message.image && (
+        <Portal>
+          <Modal
+            visible={imageExpanded}
+            onDismiss={() => setImageExpanded(false)}
+            contentContainerStyle={{ shadowOpacity: 0 }}
+          >
+            <Pressable onPress={() => setImageExpanded(false)}>
+              <SupabaseImage
+                bucket="messageImages"
+                path={message.image}
+                signed
+                style={{ height: 600 }}
+                resizeMode="contain"
+              />
+            </Pressable>
+          </Modal>
+        </Portal>
       )}
     </View>
   );
@@ -93,6 +125,12 @@ const styles = StyleSheet.create({
   content: {
     paddingVertical: 8,
     paddingHorizontal: 12,
+  },
+  attachedImage: {
+    width: 160,
+    height: 160,
+    borderRadius: BorderRadius.md,
+    marginTop: 8,
   },
   time: {
     marginLeft: 4,

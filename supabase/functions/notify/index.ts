@@ -48,9 +48,9 @@ async function sendPushNotification(pushToken: string, message: string, data?: R
     },
     body: JSON.stringify(body),
   });
-  const data = await res.json();
-  console.log("Expo Push response:", data);
-  return data;
+  const resJson = await res.json();
+  console.log("Expo Push response:", resJson);
+  return resJson;
 }
 
 async function sendEmailNotification(email: string, subject: string, html: string) {
@@ -194,7 +194,7 @@ Deno.serve(async (req) => {
         // No recipient or self-message — skip
       } else {
         // Rate-limit: check if there's a recent message from same author→to within last 60s
-        const cutoff = new Date(new Date(record.created_at).getTime() - 3600).toISOString();
+        const cutoff = new Date(new Date(record.created_at).getTime() - 60000).toISOString();
         const { count } = await supabase
           .from("messages")
           .select("id", { count: "exact", head: true })

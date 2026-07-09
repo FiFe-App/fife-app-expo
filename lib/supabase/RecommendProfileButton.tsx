@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "./supabase";
-import { addDialog } from "@/redux/reducers/infoReducer";
+import { showDialog } from "@/redux/reducers/infoReducer";
 import { trackPromise } from "react-promise-tracker";
 import wrapper from "../functions/wrapper";
 
@@ -31,7 +31,7 @@ export const RecommendProfileButton = ({
     if (!myUid) return;
     if (recommended) {
       dispatch(
-        addDialog({
+        showDialog({
           title: "Mégsem bízol benne?",
           text: "Visszavonhatod a támogatásod, ha meggondoltad magad.",
           onSubmit: () => {
@@ -56,7 +56,7 @@ export const RecommendProfileButton = ({
       );
     } else {
       dispatch(
-        addDialog({
+        showDialog({
           title: "Bizotsan megbízol benne?",
           text: "Csak akkor jelöld őt megbízhatónak, ha úgy gondolod, hogy nem fog mást átverni.",
           onSubmit: () => {

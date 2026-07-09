@@ -27,7 +27,7 @@ const infoReducer = createSlice({
     ) => {
       state.notificationToken = action.payload;
     },
-    addDialog: (state, action: PayloadAction<DialogProps>) => {
+    showDialog: (state, action: PayloadAction<DialogProps>) => {
       state.dialogs = [
         ...(state.dialogs || []),
         { dismissable: true, ...action.payload },
@@ -82,7 +82,7 @@ const infoReducer = createSlice({
 
 export const {
   setNotificationToken,
-  addDialog,
+  showDialog,
   popDialog,
   setOptions,
   updateOption,

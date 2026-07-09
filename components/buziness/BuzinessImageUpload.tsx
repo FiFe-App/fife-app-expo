@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase/supabase";
+import { getUploadableImage } from "@/lib/supabase/imageUpload";
 import { RootState } from "@/redux/store";
 import { ImageDataType, UserState } from "@/redux/store.type";
 import * as ExpoImagePicker from "expo-image-picker";
@@ -72,28 +73,7 @@ const BuzinessImageUpload = ({ images, setImages, buzinessId, ref }: BuzinessIma
   ) => {
     if (!buzinessId || !image) return;
 
-    const fileName =
-      image.fileName ||
-      image.uri.split("/").pop() ||
-      `image_${Date.now()}.jpg`;
-    const mimeType = image.mimeType || "image/jpeg";
-
-    let uploadData: Uint8Array | Blob;
-    if (image.base64) {
-      // Use base64 directly — avoids fetch failures on iOS temp file URIs.
-      // Pass Uint8Array (ArrayBufferView), not .buffer — ArrayBuffer can be
-      // detached crossing the Hermes JSI bridge on iOS.
-      const b64 = image.base64.replace(/\s/g, ""); // strip any line breaks
-      const binaryString = atob(b64);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      uploadData = bytes;
-    } else {
-      const response = await fetch(image.uri);
-      uploadData = await response.blob();
-    }
+    const { data: uploadData, fileName, mimeType } = await getUploadableImage(image);
 
     const upload = await supabase.storage
       .from("buzinessImages")

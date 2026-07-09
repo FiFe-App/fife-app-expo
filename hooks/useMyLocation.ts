@@ -1,5 +1,5 @@
 import { dismissLocationAlert } from "@/redux/reducers/userReducer";
-import { addDialog } from "@/redux/reducers/infoReducer";
+import { showDialog } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { router } from "expo-router";
 
@@ -38,7 +38,7 @@ export function useMyLocation() {
       locationDialogDispatched = true;
       dispatch(dismissLocationAlert());
       dispatch(
-        addDialog({
+        showDialog({
           title: "Nincs megadva a helyzeted",
           text: "Add meg a környékedet a profilbeállításokban, hogy a közeledben kereshess.",
           submitText: "Beállítom",

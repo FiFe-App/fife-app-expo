@@ -12,15 +12,17 @@ import { ThemedText } from "@/components/ThemedText";
 import { emotionAvailable } from "@/constants/emotionTiming";
 import { supabase } from "@/lib/supabase/supabase";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
-import { setOptions, clearOptions } from "@/redux/reducers/infoReducer";
+import { setOptions, clearOptions, showDialog } from "@/redux/reducers/infoReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
-import { logout } from "@/redux/reducers/userReducer";
+import { dismissedIsItSafe, logout } from "@/redux/reducers/userReducer";
 import { useFocusEffect, router } from "expo-router";
 import { useCallback } from "react";
+import { Button } from "@/components/Button";
 
 export default function MeScreen() {
-  const { uid } = useSelector((state: RootState) => state.user);
+  const { uid, isItSafeDismissed } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
+  const isItSafeButtonText = `Ez a hely biztonságos${isItSafeDismissed ? "." : "?"}`;
 
     useFocusEffect(
       useCallback(() => {
@@ -47,6 +49,19 @@ export default function MeScreen() {
       }, [uid]),
     );
 
+  const showIsItSafeDialog = ()=>{
+    dispatch(showDialog({
+      title: "Igen, ez egy biztonságos hely",
+      text: "Ez a te privát saját oldalad. Senki nem látja azt amit ezen az oldalon leírsz/megadsz. ",
+      submitText: "Rendben",
+      //dismissable: false,
+      onSubmit: () => {
+        dispatch(dismissedIsItSafe());
+      },
+    }));
+  };
+
+
   if (!uid) return null;
   return (
     <ThemedView style={{ flex: 1 }} type="default">
@@ -56,7 +71,7 @@ export default function MeScreen() {
         automaticallyAdjustKeyboardInsets
       >
         <Mantra />
-        <ThemedText style={{textAlign:"center",margin:Spacing.lg}}>Ez egy biztonságos hely</ThemedText>
+        <Button mode={isItSafeDismissed ? "text" : "contained-tonal"} onPress={showIsItSafeDialog}>{isItSafeButtonText}</Button>
         {emotionAvailable && <EmotionCheckCard />}
         <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
           <ToDoList />
