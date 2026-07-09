@@ -11,7 +11,6 @@ const initialState: UserState = {
   themePreference: DEFAULT_THEME_PREFERENCE,
   savedBuzinesses: [],
   previousSearches: [],
-  locationAlertDismissed: false,
   inviteCardDismissed: false,
 };
 
@@ -69,9 +68,6 @@ const userReducer = createSlice({
       if (!state.savedBuzinesses) state.savedBuzinesses = [];
       state.savedBuzinesses = state.savedBuzinesses.filter((id) => id !== payload);
     },
-    dismissLocationAlert: (state) => {
-      state.locationAlertDismissed = true;
-    },
     dismissInviteCard: (state) => {
       state.inviteCardDismissed = true;
     },
@@ -126,7 +122,6 @@ export const {
   removeSavedBuziness,
   setLocation,
   setNotificationPrefs,
-  dismissLocationAlert,
   dismissInviteCard,
   addPreviousSearch,
   removeFromPreviousSearches,

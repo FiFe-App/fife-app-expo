@@ -9,6 +9,9 @@ import { ThemedView } from "../ThemedView";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
+import { useNoLocationAlert } from "@/hooks/useNoLocationAlert";
+import { NO_LOCATION_ERROR } from "@/hooks/useFifeSearch";
+import { Button } from "../Button";
 
 interface FiFeRadarProps {
   data: NearestProfile[];
@@ -54,6 +57,8 @@ export const FiFeRadar: React.FC<FiFeRadarProps> = ({
   const users = data.filter((item) => item.id !== "-1");
   const theme = useAppTheme();
 
+  useNoLocationAlert(error);
+
   return (
     <View>
       <Pressable
@@ -80,8 +85,13 @@ export const FiFeRadar: React.FC<FiFeRadarProps> = ({
         </View>
       </Pressable>
       {!!error && (
-        <ThemedView style={{ margin: 6, alignItems: "center" }} type="error">
+        <ThemedView style={{ margin: 6, alignItems: "center", gap: Spacing.xs }} type="error">
           <ThemedText type="error">{error}</ThemedText>
+          {error === NO_LOCATION_ERROR && (
+            <Button mode="text" onPress={() => router.push("/user/edit")}>
+              Beállítom
+            </Button>
+          )}
         </ThemedView>
       )}
       <FlatList

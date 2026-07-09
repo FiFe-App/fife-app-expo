@@ -6,6 +6,8 @@ import { RootState } from "@/redux/store";
 import { useMyLocation } from "./useMyLocation";
 import { NearestProfile } from "@/redux/store.type";
 
+export const NO_LOCATION_ERROR = "Nincs megadva a környéked";
+
 export function useFifeSearch() {
   const PAGE_SIZE = Math.floor(Dimensions.get("window").height / 100);
 
@@ -28,9 +30,7 @@ export function useFifeSearch() {
   const [skip, setSkip] = useState(0);
 
   const getSearchLocation = useCallback(() => {
-    const DEFAULT_LOCATION = { lat: 47.4979, long: 19.0402, distance: 100000 };
-
-    // Priority: 1) User-selected location, 2) GPS location, 3) profile location, 4) Budapest default
+    // Priority: 1) User-selected location, 2) GPS location, 3) profile location
     if (searchCircle?.location?.latitude != null && searchCircle?.location?.longitude != null) {
       return {
         lat: searchCircle.location.latitude,
@@ -52,7 +52,7 @@ export function useFifeSearch() {
         distance: 100000,
       };
     }
-    return DEFAULT_LOCATION;
+    return null;
   }, [searchCircle, myLocation, profileLocation]);
 
   const fetch = useCallback(async () => {
@@ -64,6 +64,13 @@ export function useFifeSearch() {
     setHasMore(true);
 
     const searchLocation = getSearchLocation();
+
+    if (!searchLocation) {
+      setError(NO_LOCATION_ERROR);
+      setData([]);
+      setLoading(false);
+      return;
+    }
 
     try {
       // Call nearest_profiles function with location parameters
@@ -101,6 +108,12 @@ export function useFifeSearch() {
     const nextSkip = skip + PAGE_SIZE;
 
     const searchLocation = getSearchLocation();
+
+    if (!searchLocation) {
+      setError(NO_LOCATION_ERROR);
+      setLoading(false);
+      return;
+    }
 
     try {
       const { data: profiles, error } = await supabase.rpc("nearest_profiles", {
