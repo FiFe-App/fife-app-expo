@@ -4,12 +4,16 @@ import { FiFeRadar } from "@/components/user/FiFeRadar";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Spacing } from "@/constants/spacing";
+import { computeUnreadCounts } from "@/lib/functions/computeUnreadCounts";
+import { supabase } from "@/lib/supabase/supabase";
+import { setUnreadCounts } from "@/redux/reducers/chatReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { clearOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { useCallback, useEffect } from "react";
 import { View } from "react-native";
 import {
+  Badge,
   Card,
   Icon
 } from "react-native-paper";
@@ -26,6 +30,8 @@ export default function Index() {
   const searchCircle = useSelector(
     (state: RootState) => state.users.userSearchParams?.searchCircle,
   );
+  const { lastReadAt, unreadCounts } = useSelector((state: RootState) => state.chat);
+  const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
   const theme = useAppTheme();
   const dispatch = useDispatch();
 
@@ -57,7 +63,21 @@ export default function Index() {
         fetchNearby();
       }
       if (uid) dispatch(viewFunction({ key: "homePage", uid }));
-    }, [data.length, nearbyBuzinesses.length, uid, dispatch, fetch, fetchNearby]),
+
+      if (uid && messagingEnabled) {
+        supabase
+          .from("messages")
+          .select("*")
+          .eq("to", uid)
+          .then(({ data: incoming, error }) => {
+            if (error) {
+              console.error("Error loading unread messages:", error);
+              return;
+            }
+            dispatch(setUnreadCounts(computeUnreadCounts(incoming || [], uid, lastReadAt)));
+          });
+      }
+    }, [data.length, nearbyBuzinesses.length, uid, messagingEnabled, lastReadAt, dispatch, fetch, fetchNearby]),
   );
 
   if (!uid) return null;
@@ -92,6 +112,11 @@ export default function Index() {
             >
               Üzeneteid
             </ThemedText>
+            {totalUnread > 0 && (
+              <Badge size={20} style={{ backgroundColor: theme.colors.error }}>
+                {totalUnread}
+              </Badge>
+            )}
           </Card>
         )}
         <FiFeRadar

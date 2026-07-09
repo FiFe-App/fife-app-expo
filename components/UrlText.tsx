@@ -1,6 +1,6 @@
 import { Linking, Pressable, StyleProp, Text, TextStyle } from "react-native";
 import { useAppTheme } from "@/assets/theme";
-import { ThemedText } from "../ThemedText";
+import { ThemedText } from "./ThemedText";
 
 const UrlText = ({
   text = "",

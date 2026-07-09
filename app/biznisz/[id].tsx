@@ -9,7 +9,7 @@ import BuzinessRecommendationsModal from "@/components/buziness/BuzinessRecommen
 import ContactsCard from "@/components/buziness/ContactsCard";
 import SectionLabel from "@/components/buziness/SectionLabel";
 import Comments from "@/components/comments/Comments";
-import UrlText from "@/components/comments/UrlText";
+import UrlText from "@/components/UrlText";
 import FiFeMap from "@/components/mapView/FiFeMap";
 import { LatLng, Marker } from "@/components/mapView/mapView";
 import { MyAppbar } from "@/components/MyAppBar";

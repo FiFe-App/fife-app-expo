@@ -190,7 +190,9 @@ Deno.serve(async (req) => {
       }
     } else if (table === "messages") {
       // Notify recipient of a new message, rate-limited to 1 per 60s per sender→recipient pair
-      if (!record.to || record.to === record.author) {
+      if (typeof record.text === "string" && record.text.startsWith("heart-")) {
+        // Heart reactions are stored as message rows but aren't real messages — skip
+      } else if (!record.to || record.to === record.author) {
         // No recipient or self-message — skip
       } else {
         // Rate-limit: check if there's a recent message from same author→to within last 60s
