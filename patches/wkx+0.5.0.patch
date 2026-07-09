@@ -9,23 +9,23 @@ index 1675337..265cf07 100644
  function BinaryReader(buffer, isBigEndian) {
      this.buffer = buffer;
 diff --git a/node_modules/wkx/lib/binarywriter.js b/node_modules/wkx/lib/binarywriter.js
-index 99dc454..eb06d4e 100644
+index 99dc454..2503651 100644
 --- a/node_modules/wkx/lib/binarywriter.js
 +++ b/node_modules/wkx/lib/binarywriter.js
 @@ -1,4 +1,6 @@
  module.exports = BinaryWriter;
-+import { Buffer } from "@craftzdog/react-native-buffer";
++var Buffer = require("buffer").Buffer;
 +
  
  function BinaryWriter(size, allowResize) {
      this.buffer = new Buffer(size);
 diff --git a/node_modules/wkx/lib/geometry.js b/node_modules/wkx/lib/geometry.js
-index 37d1bef..a32be9f 100644
+index 37d1bef..ece654b 100644
 --- a/node_modules/wkx/lib/geometry.js
 +++ b/node_modules/wkx/lib/geometry.js
 @@ -1,4 +1,6 @@
  module.exports = Geometry;
-+import { Buffer } from "@craftzdog/react-native-buffer";
++var Buffer = require("buffer").Buffer;
 +
  
  var Types = require('./types');
