@@ -1,5 +1,5 @@
 const locationToCoords = (geometry: string): number[] => {
-  const Buffer = require("@craftzdog/react-native-buffer").Buffer;
+  const Buffer = require("buffer").Buffer;
   const wkx = require("wkx");
 
   const wkbBuffer = new Buffer(geometry, "hex");

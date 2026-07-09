@@ -32,7 +32,6 @@
     ]
   },
   "dependencies": {
-    "@craftzdog/react-native-buffer": "^6.0.5",
     "@expo/match-media": "^0.4.0",
     "@expo/metro-runtime": "~55.0.9",
     "@expo/vector-icons": "^15.0.3",
