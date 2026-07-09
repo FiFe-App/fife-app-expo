@@ -254,7 +254,11 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="user/emotion-history"
-                  options={{ title: "Napló" }} 
+                  options={{ title: "Napló" }}
+                />
+                <Stack.Screen
+                  name="user/get-help"
+                  options={{ title: "Segítség kell?" }}
                 />
               </Stack.Protected>
               <Stack.Protected guard={!uid}>
