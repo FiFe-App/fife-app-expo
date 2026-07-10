@@ -287,7 +287,7 @@ function RootContent() {
               !pathname.startsWith("/biznisz/edit") && <BottomNavigation />}
           </View>
         </ThemedView>
-        <View style={{bottom:0,height:30,width:"100%",backgroundColor:theme.colors.background,position:"absolute",zIndex:-1}}/>
+        <View style={{bottom:0,height:30,width:"100%",backgroundColor:theme.colors.elevation.level1,position:"absolute",zIndex:-1}}/>
       </SafeAreaView>
     </PaperProvider>
   );
