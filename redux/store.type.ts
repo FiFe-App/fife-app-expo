@@ -28,6 +28,7 @@ export interface UserState {
   messagingEnabled?: boolean;
   tasks?: TaskItem[];
   locationAlertDismissed?: boolean;
+  isItSafeDismissed?: boolean;
   inviteCardDismissed?: boolean;
   notificationPrefs?: {
     notifyPush: boolean;
