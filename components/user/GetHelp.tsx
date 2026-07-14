@@ -58,7 +58,7 @@ export default function GetHelp() {
             <Icon source="phone-alert" size={28} color={theme.colors.onErrorContainer} />
             <View style={{ flex: 1 }}>
               <ThemedText type="bold" style={{ color: theme.colors.onErrorContainer }}>
-                Vészhelyzetben hívd a: 112
+                Vészhelyzetben hívd a 112-t
               </ThemedText>
             </View>
           </View>
@@ -128,17 +128,17 @@ export default function GetHelp() {
                       <Icon source={typeToIcon(contact.type)} size={20} color={theme.colors.primary} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text variant="bodyMedium">{contact.title}</Text>
-                      <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                      <ThemedText variant="bodyMedium">{contact.title}</ThemedText>
+                      <ThemedText variant="labelSmall" type="link">
                         {contact.data}
-                      </Text>
+                      </ThemedText>
                       {contact.description ? (
-                        <Text
+                        <ThemedText
                           variant="labelSmall"
                           style={{ color: theme.colors.onSurfaceVariant, marginTop: Spacing.xs }}
                         >
                           {contact.description}
-                        </Text>
+                        </ThemedText>
                       ) : null}
                     </View>
                     <Icon source="open-in-new" size={16} color={theme.colors.outline} />

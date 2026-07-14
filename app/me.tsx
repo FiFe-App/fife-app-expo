@@ -6,7 +6,7 @@ import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { RootState } from "@/redux/store";
 import { Image, ScrollView, StyleSheet, View } from "react-native";
-import { Card } from "react-native-paper";
+import { Card, Icon, Surface, TouchableRipple } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "@/components/ThemedText";
 import { emotionAvailable } from "@/constants/emotionTiming";
@@ -15,12 +15,14 @@ import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzin
 import { setOptions, clearOptions } from "@/redux/reducers/infoReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { logout } from "@/redux/reducers/userReducer";
-import { useFocusEffect, router } from "expo-router";
+import { useFocusEffect, router, Link } from "expo-router";
 import { useCallback } from "react";
+import { useAppTheme } from "@/assets/theme";
 
 export default function MeScreen() {
   const { uid } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
+  const theme = useAppTheme();
 
     useFocusEffect(
       useCallback(() => {
@@ -82,6 +84,27 @@ export default function MeScreen() {
               </Card.Content>
             </Card>
           </View>}
+
+          <Link asChild href="/user/get-help">
+            <TouchableRipple>
+              <Surface
+                elevation={1}
+                style={{
+                  borderRadius: BorderRadius.lg,
+                  marginBottom: Spacing.lg,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: Spacing.md,
+                  paddingVertical: Spacing.md,
+                  paddingHorizontal: Spacing.lg,
+                }}
+              >
+                <Icon source="lifebuoy" size={24} color={theme.colors.primary} />
+                <ThemedText style={{ flex: 1 }} type="defaultSemiBold">Segítség kell?</ThemedText>
+                <Icon source="chevron-right" size={20} color={theme.colors.outline} />
+              </Surface>
+            </TouchableRipple>
+          </Link>
         </View>
       </ScrollView>
     </ThemedView>
