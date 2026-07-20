@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "./supabase";
-import { addDialog } from "@/redux/reducers/infoReducer";
+import { showDialog } from "@/redux/reducers/infoReducer";
 import { trackPromise } from "react-promise-tracker";
 import wrapper from "../functions/wrapper";
 
@@ -34,7 +34,7 @@ export const RecommendBuzinessButton = ({
     if (!myUid) return;
     if (recommended) {
       dispatch(
-        addDialog({
+        showDialog({
           title: "Mégsem ajánlod?",
           text: "Visszavonhatod az ajánlásod, ha meggondoltad magad.",
           onSubmit: () => {
@@ -59,7 +59,7 @@ export const RecommendBuzinessButton = ({
       );
     } else {
       dispatch(
-        addDialog({
+        showDialog({
           title: "Bizotsan ajánlod?",
           text: "Csak akkor jelöld a bizniszt ajánlottnak, ha tudod, hogy valós és hasznos.",
           onSubmit: () => {
