@@ -83,14 +83,12 @@ export default function MeScreen() {
       >
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ gap: Spacing.md, paddingHorizontal: Spacing.lg, paddingTop: Spacing.md  }}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
       >
         <Mantra />
-        <Button mode={isItSafeDismissed ? "text" : "contained-tonal"} onPress={showIsItSafeDialog}>{isItSafeButtonText}</Button>
-        {emotionAvailable && <EmotionCheckCard />}
-        <View style={{ gap: Spacing.md, paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
+        <View style={{ }}>
           <Button 
             mode={isItSafeDismissed ? "text" : "contained-tonal"} 
             onPress={showIsItSafeDialog}>
