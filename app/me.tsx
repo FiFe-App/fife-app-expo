@@ -12,6 +12,8 @@ import { ThemedText } from "@/components/ThemedText";
 import { emotionAvailable } from "@/constants/emotionTiming";
 import { supabase } from "@/lib/supabase/supabase";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { clearDrafts } from "@/redux/reducers/chatReducer";
+import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { setOptions, clearOptions, showDialog } from "@/redux/reducers/infoReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { dismissedIsItSafe, logout } from "@/redux/reducers/userReducer";
@@ -36,6 +38,8 @@ export default function MeScreen() {
                   dispatch(clearBuziness());
                   dispatch(clearTutorialState());
                   dispatch(clearBuzinessSearchParams());
+                  dispatch(clearEmotionLogs());
+                  dispatch(clearDrafts());
                   router.navigate("/");
                 },
                 title: "Kijelentkezés",
@@ -51,8 +55,8 @@ export default function MeScreen() {
 
   const showIsItSafeDialog = ()=>{
     dispatch(showDialog({
-      title: "Igen, ez egy biztonságos hely",
-      text: "Ez a te privát saját oldalad. Senki nem látja azt amit ezen az oldalon leírsz/megadsz. ",
+      title: "Igen, ez egy biztonságos hely.",
+      text: "Ez a te saját oldalad, az itt megadott adataidat titkosítva tároljuk és senki nem férhet hozzájuk.",
       submitText: "Rendben",
       //dismissable: false,
       onSubmit: () => {

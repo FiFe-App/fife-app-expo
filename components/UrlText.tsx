@@ -1,6 +1,6 @@
 import { Linking, Pressable, StyleProp, Text, TextStyle } from "react-native";
 import { useAppTheme } from "@/assets/theme";
-import { ThemedText } from "../ThemedText";
+import { ThemedText } from "./ThemedText";
 
 const UrlText = ({
   text = "",
@@ -37,7 +37,7 @@ const UrlText = ({
 
     parts.push(
       <Pressable key={`l-${index}`} onPress={() => Linking.openURL(href)}>
-        <ThemedText style={[{ color: theme.colors.secondary }, style]}>{matched}</ThemedText>
+        <ThemedText style={[style, { color: theme.colors.secondary }]}>{matched}</ThemedText>
       </Pressable>,
     );
 

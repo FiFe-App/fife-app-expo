@@ -6,13 +6,15 @@ import { ThemedText } from "../ThemedText";
 import { useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { RootState } from "@/redux/store";
-import { theme } from "@/assets/theme";
+import { theme, useAppTheme } from "@/assets/theme";
 import Measure from "../tutorial/Measure";
 import { ThemedView } from "../ThemedView";
+import { BorderRadius } from "@/constants/borderRadius";
 
 const BottomNavigation = () => {
   const segment = useSegments();
   const globalParams = useGlobalSearchParams();
+  const theme = useAppTheme();
   const { uid } = useSelector((state: RootState) => state.user);
 
   const profilActive = segment[0]?.includes("user");
@@ -37,45 +39,48 @@ const BottomNavigation = () => {
     router.navigate(path, params);
   }, [segment, uid, globalParams]);
 
+  const showIcon = true;
+  const showText = false;
+
   return (
-    <ThemedView style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level0 }}>
+    <ThemedView type="card" style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level1, zIndex:1 }}>
       <Measure name="home">
-        <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/home")}>
+        <TouchableRipple style={{ ...styles.button, }} onPress={() => navigateTo("/home")}>
           <View style={{ alignItems: "center" }}>
-            <Icon
+            {showIcon && <Icon
               source={usActive ? "account-group" : "account-group-outline"}
               size={usActive ? 30 : 24}
-              color={usActive ? theme.colors.secondary : undefined}
-            />
-            <ThemedText type={usActive ? "defaultSemiBold" : "default"}>
+              color={usActive ? theme.colors.tertiary : theme.colors.tertiary}
+            />}
+            {showText && <ThemedText type={usActive ? "defaultSemiBold" : "default"}>
               Segítség
-            </ThemedText>
+            </ThemedText>}
           </View>
         </TouchableRipple>
       </Measure>
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/me")}>
           <View style={{ alignItems: "center" }}>
-            <Icon
-              source={meActive ? "home" : "home-outline"}
+            {showIcon && <Icon
+              source={meActive ? "account" : "account-outline"}
               size={meActive ? 30 : 24}
               color={meActive ? theme.colors.secondary : undefined}
-            />
-            <ThemedText type={meActive ? "defaultSemiBold" : "default"}>
-              Otthon
-            </ThemedText>
+            />}
+            {showText && <ThemedText type={meActive ? "defaultSemiBold" : "default"}>
+              Én
+            </ThemedText>}
           </View>
         </TouchableRipple>
       <Measure name="briefcase">
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user",{uid})}>
           <View style={{ alignItems: "center" }}>
-            <Icon
-              source={profilActive ? "briefcase" : "briefcase-outline"}
+            {showIcon && <Icon
+              source={profilActive ? "cog" : "cog-outline"}
               size={profilActive ? 30 : 24}
               color={profilActive ? theme.colors.secondary : undefined}
-            />
-            <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
-              Munka
-            </ThemedText>
+            />}
+            {showText && <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
+              Profilod
+            </ThemedText>}
           </View>
         </TouchableRipple>
       </Measure>
@@ -90,6 +95,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  we: {
+    
+
+  }
 });
 
 export default BottomNavigation;

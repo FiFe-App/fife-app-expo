@@ -3,11 +3,17 @@ import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
 import { Link, useFocusEffect, useGlobalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { FlatList, View, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FlatList,
+  View,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import ProfileImage from "@/components/ProfileImage";
 import { useNavigation } from "@react-navigation/native";
-import { ActivityIndicator, Text } from "react-native-paper";
+import { ActivityIndicator, Portal, Text } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { MessageItem } from "./MessageItem";
 import { MessageInput } from "./MessageInput";
@@ -16,9 +22,21 @@ import { clearDraftMessage, setDraftMessage, setLastReadAt } from "@/redux/reduc
 import { MyAppbar } from "../MyAppBar";
 import { MessagingDisabledCard } from "./MessagingDisabledCard";
 import { setMessagingEnabled } from "@/redux/reducers/userReducer";
+import { setOptions, clearOptions } from "@/redux/reducers/infoReducer";
+import ReportProfileModal from "@/components/user/ReportProfileModal";
+import { MessageActionsSheet } from "./MessageActionsSheet";
+import { ReplyPreview } from "./ReplyPreview";
 
 type Message = Tables<"messages">;
 
+const PAGE_SIZE = 30;
+
+// Messages are kept newest-first and rendered in an *inverted* FlatList — the
+// standard chat pattern. This means the list starts pinned to the bottom for
+// free (no scrollToEnd juggling), stays pinned to the bottom as the keyboard
+// resizes the viewport, and "load more" naturally becomes onEndReached
+// (which fires when scrolling toward the array's end, i.e. the oldest
+// messages, since the list is flipped).
 export default function ChatScreen() {
   const dispatch = useDispatch();
   const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null);
@@ -34,9 +52,14 @@ export default function ChatScreen() {
   const hasMessagingEnabled = myMessagingEnabledFromRedux ?? false;
   const [otherHasMessagingEnabled, setOtherHasMessagingEnabled] = useState(false);
   const [checkingMessaging, setCheckingMessaging] = useState(true);
+  const [hasMoreOlder, setHasMoreOlder] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [oldestLoadedCreatedAt, setOldestLoadedCreatedAt] = useState<string | null>(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [actionsMessage, setActionsMessage] = useState<Message | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const mountId = useRef(Date.now()).current;
-  const flatListRef = useRef<FlatList>(null);
   const navigation = useNavigation();
 
   useFocusEffect(
@@ -101,10 +124,24 @@ export default function ChatScreen() {
             </View>
           </Link>
         )} style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} /> });
-    }, [otherUid, myUid, otherUser, navigation]),
+
+      dispatch(
+        setOptions([
+          {
+            icon: "alert-octagon",
+            onPress: () => setShowReportModal(true),
+            title: "Jelentés",
+          },
+        ]),
+      );
+
+      return () => {
+        dispatch(clearOptions());
+      };
+    }, [otherUid, myUid, otherUser, navigation, dispatch]),
   );
 
-  // Load messages
+  // Load the latest page of messages (newest first)
   const loadMessages = useCallback(async () => {
     if (!myUid || !otherUid) return;
 
@@ -114,20 +151,54 @@ export default function ChatScreen() {
       .from("messages")
       .select("*")
       .or(`and(author.eq.${myUid},to.eq.${otherUid}),and(author.eq.${otherUid},to.eq.${myUid})`)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: false })
+      .limit(PAGE_SIZE);
 
     if (error) {
       console.error("Error loading messages:", error);
       return;
     }
 
-    setMessages(data || []);
+    const page = data || [];
+    setMessages(page);
+    setHasMoreOlder(page.length === PAGE_SIZE);
+    setOldestLoadedCreatedAt(page.length > 0 ? page[page.length - 1].created_at : null);
+
     if (otherUid) {
-      const lastReadAt = data && data.length > 0 ? data[data.length - 1].created_at : new Date().toISOString();
+      const realMessages = page.filter((m) => !m.text.startsWith("heart-"));
+      const lastReadAt = realMessages.length > 0
+        ? realMessages[0].created_at
+        : new Date().toISOString();
       dispatch(setLastReadAt({ chatId: otherUid, lastReadAt }));
     }
     setLoading(false);
   }, [myUid, otherUid, dispatch]);
+
+  // Load an older page of messages when scrolling toward the top
+  const loadOlderMessages = useCallback(async () => {
+    if (!myUid || !otherUid || loadingOlder || !hasMoreOlder || !oldestLoadedCreatedAt) return;
+    setLoadingOlder(true);
+
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .or(`and(author.eq.${myUid},to.eq.${otherUid}),and(author.eq.${otherUid},to.eq.${myUid})`)
+      .lt("created_at", oldestLoadedCreatedAt)
+      .order("created_at", { ascending: false })
+      .limit(PAGE_SIZE);
+
+    if (error) {
+      console.error("Error loading older messages:", error);
+      setLoadingOlder(false);
+      return;
+    }
+
+    const olderPage = data || [];
+    setMessages((prev) => [...prev, ...olderPage]);
+    setHasMoreOlder(olderPage.length === PAGE_SIZE);
+    if (olderPage.length > 0) setOldestLoadedCreatedAt(olderPage[olderPage.length - 1].created_at);
+    setLoadingOlder(false);
+  }, [myUid, otherUid, loadingOlder, hasMoreOlder, oldestLoadedCreatedAt]);
 
   // Set up realtime subscription
   useEffect(() => {
@@ -153,15 +224,30 @@ export default function ChatScreen() {
             (newMessage.author === myUid && newMessage.to === otherUid) ||
             (newMessage.author === otherUid && newMessage.to === myUid)
           ) {
+            const isHeart = newMessage.text.startsWith("heart-");
+
             setMessages((prev) => {
               if (prev.some((m) => m.id === newMessage.id)) return prev;
-              return [...prev, newMessage];
+              return [newMessage, ...prev];
             });
 
-            if (newMessage.author === otherUid && newMessage.to === myUid && otherUid) {
+            if (!isHeart && newMessage.author === otherUid && newMessage.to === myUid && otherUid) {
               dispatch(setLastReadAt({ chatId: otherUid, lastReadAt: newMessage.created_at }));
             }
           }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "messages",
+        },
+        (payload) => {
+          const oldId = (payload.old as { id?: number } | null)?.id;
+          if (oldId == null) return;
+          setMessages((prev) => prev.filter((m) => m.id !== oldId));
         }
       )
       .subscribe();
@@ -197,6 +283,7 @@ export default function ChatScreen() {
       author: myUid,
       to: otherUid,
       text,
+      reply_to: replyingTo?.id ?? null,
     }).select().single();
 
     if (error) {
@@ -204,13 +291,81 @@ export default function ChatScreen() {
     } else if (data) {
       setMessages((prev) => {
         if (prev.some((m) => m.id === data.id)) return prev;
-        return [...prev, data];
+        return [data, ...prev];
       });
       clearDraft();
+      setReplyingTo(null);
     }
 
     setSending(false);
   };
+
+  const toggleHeart = useCallback(
+    async (message: Message) => {
+      if (!myUid || !otherUid) return;
+      const heartText = `heart-${message.id}`;
+      const myHeartRow = messages.find((m) => m.author === myUid && m.text === heartText);
+
+      if (myHeartRow) {
+        const { error } = await supabase.from("messages").delete().eq("id", myHeartRow.id);
+        if (error) {
+          console.error("Error removing heart:", error);
+          return;
+        }
+        setMessages((prev) => prev.filter((m) => m.id !== myHeartRow.id));
+      } else {
+        const { data, error } = await supabase
+          .from("messages")
+          .insert({
+            author: myUid,
+            to: otherUid,
+            text: heartText,
+            created_at: message.created_at,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error("Error adding heart:", error);
+          return;
+        }
+        if (data) {
+          setMessages((prev) => (prev.some((m) => m.id === data.id) ? prev : [data, ...prev]));
+        }
+      }
+    },
+    [myUid, otherUid, messages],
+  );
+
+  const deleteMessage = useCallback(async (message: Message) => {
+    const { error } = await supabase.from("messages").delete().eq("id", message.id);
+    if (error) {
+      console.error("Error deleting message:", error);
+      return;
+    }
+    setMessages((prev) => prev.filter((m) => m.id !== message.id));
+  }, []);
+
+  const displayMessages = useMemo(
+    () => messages.filter((m) => !m.text.startsWith("heart-")),
+    [messages],
+  );
+
+  const heartedTexts = useMemo(() => {
+    const set = new Set<string>();
+    messages.forEach((m) => {
+      if (m.text.startsWith("heart-")) set.add(m.text);
+    });
+    return set;
+  }, [messages]);
+
+  const messageById = useMemo(() => {
+    const map = new Map<number, Message>();
+    messages.forEach((m) => map.set(m.id, m));
+    return map;
+  }, [messages]);
+
+  const otherUserLabel = otherUser?.full_name || otherUser?.username || "";
 
   if (checkingMessaging) {
     return (
@@ -252,7 +407,7 @@ export default function ChatScreen() {
 
               dispatch(setMessagingEnabled(myMessagingEnabled));
               setOtherHasMessagingEnabled(otherMessagingEnabled);
-              
+
               if (myMessagingEnabled && otherMessagingEnabled) {
                 loadMessages();
               }
@@ -279,22 +434,39 @@ export default function ChatScreen() {
     >
       <ThemedView style={styles.container}>
         <FlatList
-          ref={flatListRef}
-          data={messages}
+          data={displayMessages}
+          inverted
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <MessageItem
-              message={item}
-              selected={selectedMessageId === item.id}
-              onPress={() =>
-                setSelectedMessageId((prev) => (prev === item.id ? null : item.id))
-              }
-            />
-          )}
+          renderItem={({ item }) => {
+            const replyToMessage = item.reply_to ? messageById.get(item.reply_to) ?? null : null;
+            const replyToDeleted = !!item.reply_to && !replyToMessage;
+            return (
+              <MessageItem
+                message={item}
+                selected={selectedMessageId === item.id}
+                onPress={() =>
+                  setSelectedMessageId((prev) => (prev === item.id ? null : item.id))
+                }
+                hearted={heartedTexts.has(`heart-${item.id}`)}
+                onToggleHeart={() => toggleHeart(item)}
+                onLongPress={() => setActionsMessage(item)}
+                replyToMessage={replyToMessage}
+                replyToDeleted={replyToDeleted}
+                otherUserName={otherUserLabel || undefined}
+              />
+            );
+          }}
           contentContainerStyle={styles.messagesList}
           keyboardShouldPersistTaps="handled"
+          onEndReached={loadOlderMessages}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingOlder ? (
+              <ActivityIndicator style={[styles.loadingOlder, styles.invertedFix]} />
+            ) : null
+          }
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
+            <View style={[styles.emptyContainer, styles.invertedFix]}>
               <Text variant="bodyLarge" style={{textAlign:"center"}}>
                 {otherUser
                   ? `Te és ${otherUser.full_name} még nem beszélgettetek az appon belül!`
@@ -302,13 +474,15 @@ export default function ChatScreen() {
               </Text>
             </View>
           }
-          onContentSizeChange={() => {
-            // Auto-scroll to bottom when content changes
-            if (messages.length > 0) {
-              flatListRef.current?.scrollToEnd({ animated: true });
-            }
-          }}
         />
+
+        {replyingTo && (
+          <ReplyPreview
+            message={replyingTo}
+            authorLabel={replyingTo.author === myUid ? "magadnak" : otherUserLabel}
+            onCancel={() => setReplyingTo(null)}
+          />
+        )}
 
         <MessageInput
           value={draft}
@@ -317,6 +491,31 @@ export default function ChatScreen() {
           disabled={sending || !hasMessagingEnabled || !otherHasMessagingEnabled}
         />
       </ThemedView>
+
+      {!!otherUid && (
+        <Portal>
+          <ReportProfileModal
+            show={showReportModal}
+            setShow={setShowReportModal}
+            profileId={otherUid}
+            profileName={otherUserLabel}
+          />
+        </Portal>
+      )}
+
+      <MessageActionsSheet
+        visible={!!actionsMessage}
+        onDismiss={() => setActionsMessage(null)}
+        isOwn={actionsMessage?.author === myUid}
+        onReply={() => {
+          setReplyingTo(actionsMessage);
+          setActionsMessage(null);
+        }}
+        onDelete={() => {
+          if (actionsMessage) deleteMessage(actionsMessage);
+          setActionsMessage(null);
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -347,8 +546,6 @@ const styles = StyleSheet.create({
   },
   profileName: {
     flexShrink: 1,
-    fontFamily: "Piazzolla-Regular",
-    fontWeight: "bold",
   },
   centerContainer: {
     flex: 1,
@@ -359,6 +556,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingVertical: 8,
   },
+  loadingOlder: {
+    paddingVertical: 8,
+  },
   keyboardAvoiding: {
     flex: 1,
   },
@@ -367,5 +567,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+  },
+  // ListEmptyComponent/ListHeaderComponent/ListFooterComponent aren't routed
+  // through the same per-cell flip correction as renderItem, so an inverted
+  // FlatList renders them upside down unless corrected manually.
+  invertedFix: {
+    transform: [{ scaleY: -1 }],
   },
 });

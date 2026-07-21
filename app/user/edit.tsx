@@ -7,6 +7,8 @@ import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { clearDrafts } from "@/redux/reducers/chatReducer";
+import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 import { setOptions, clearOptions, addSnack, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
@@ -328,6 +330,8 @@ export default function Index() {
       dispatch(clearBuziness());
       dispatch(clearTutorialState());
       dispatch(clearBuzinessSearchParams());
+      dispatch(clearEmotionLogs());
+      dispatch(clearDrafts());
       router.navigate("/user/deleted-account");
     } catch (error) {
       console.error("Unexpected error:", error);

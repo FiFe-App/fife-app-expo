@@ -60,7 +60,7 @@ export default function Index() {
     });
 
     if (error) {
-      console.log(error.code);
+      console.log("Error",error);
 
       switch (error.code) {
         case "email_not_confirmed":
