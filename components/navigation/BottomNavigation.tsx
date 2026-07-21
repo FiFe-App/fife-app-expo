@@ -6,9 +6,10 @@ import { ThemedText } from "../ThemedText";
 import { useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { RootState } from "@/redux/store";
-import { useAppTheme } from "@/assets/theme";
+import { theme, useAppTheme } from "@/assets/theme";
 import Measure from "../tutorial/Measure";
 import { ThemedView } from "../ThemedView";
+import { BorderRadius } from "@/constants/borderRadius";
 
 const BottomNavigation = () => {
   const segment = useSegments();
@@ -44,12 +45,12 @@ const BottomNavigation = () => {
   return (
     <ThemedView type="card" style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level1, zIndex:1 }}>
       <Measure name="home">
-        <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/home")}>
+        <TouchableRipple style={{ ...styles.button, }} onPress={() => navigateTo("/home")}>
           <View style={{ alignItems: "center" }}>
             {showIcon && <Icon
               source={usActive ? "account-group" : "account-group-outline"}
               size={usActive ? 30 : 24}
-              color={usActive ? theme.colors.secondary : undefined}
+              color={usActive ? theme.colors.tertiary : theme.colors.tertiary}
             />}
             {showText && <ThemedText type={usActive ? "defaultSemiBold" : "default"}>
               Segítség
@@ -94,6 +95,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  we: {
+    
+
+  }
 });
 
 export default BottomNavigation;
