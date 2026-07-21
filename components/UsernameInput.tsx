@@ -82,7 +82,7 @@ export const UsernameInput: React.FC<UsernameInputProps> = ({
   }, [normalized, excludeUid]);
 
   const rightIcon = checking
-    ? undefined
+    ? "progress-question"
     : available === undefined
       ? undefined
       : available

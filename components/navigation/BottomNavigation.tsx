@@ -42,7 +42,7 @@ const BottomNavigation = () => {
   const showText = false;
 
   return (
-    <ThemedView type="card" style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level1 }}>
+    <ThemedView type="card" style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level1, zIndex:1 }}>
       <Measure name="home">
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/home")}>
           <View style={{ alignItems: "center" }}>
@@ -73,7 +73,7 @@ const BottomNavigation = () => {
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user",{uid})}>
           <View style={{ alignItems: "center" }}>
             {showIcon && <Icon
-              source={profilActive ? "briefcase" : "briefcase-outline"}
+              source={profilActive ? "cog" : "cog-outline"}
               size={profilActive ? 30 : 24}
               color={profilActive ? theme.colors.secondary : undefined}
             />}

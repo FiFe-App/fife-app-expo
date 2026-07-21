@@ -184,6 +184,7 @@ export function useEmotionLog() {
   return {
     shouldShowCard: cardTarget.shouldShow && !alreadyLogged && emotionDailyPrompt,
     isYesterday: cardTarget.isYesterday,
+    targetDate: cardTarget.targetDate,
     logs,
     saveLog,
     updateLog,

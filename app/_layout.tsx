@@ -273,10 +273,10 @@ function RootContent() {
                 />
 
               </Stack.Protected>
-                <Stack.Screen
-                  name="user/password-reset"
-                  options={{ title: "Jelszó visszaállítás" }}
-                />
+              <Stack.Screen
+                name="user/password-reset"
+                options={{ title: "Jelszó visszaállítás" }}
+              />
             </Stack>
             {pathname !== "/" && !pathname.includes("projekt") &&
               !pathname.includes("login") &&

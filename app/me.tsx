@@ -51,8 +51,8 @@ export default function MeScreen() {
 
   const showIsItSafeDialog = ()=>{
     dispatch(showDialog({
-      title: "Igen, ez egy biztonságos hely",
-      text: "Ez a te privát saját oldalad. Senki nem látja azt amit ezen az oldalon leírsz/megadsz. ",
+      title: "Igen, ez egy biztonságos hely.",
+      text: "Ez a te saját oldalad, az itt megadott adataidat titkosítva tároljuk és senki nem férhet hozzájuk.",
       submitText: "Rendben",
       //dismissable: false,
       onSubmit: () => {

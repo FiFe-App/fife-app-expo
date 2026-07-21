@@ -331,7 +331,7 @@ export default function UserPage() {
                       href={{ pathname: "/user/edit" }}
                     >
                       <Button mode="contained-tonal" style={{ borderRadius: BorderRadius.pill }}>
-                        Profilom szerkesztése
+                        Profil szerkesztése
                       </Button>
                     </Link>
                   </Measure>
