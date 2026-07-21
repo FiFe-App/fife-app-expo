@@ -99,7 +99,7 @@ export default function MeScreen() {
         automaticallyAdjustKeyboardInsets
       >
         <Mantra />
-        <View style={{ }}>
+        <View style={{ gap: Spacing.sm }}>
           <Button 
             mode={isItSafeDismissed ? "text" : "contained-tonal"} 
             onPress={showIsItSafeDialog}>
