@@ -14,6 +14,7 @@ const initialState: UserState = {
   locationAlertDismissed: false,
   inviteCardDismissed: false,
   mainTaskNotificationEnabled: true,
+  isItSafeDismissed: false,
 };
 
 const userReducer = createSlice({
@@ -87,6 +88,9 @@ const userReducer = createSlice({
     dismissInviteCard: (state) => {
       state.inviteCardDismissed = true;
     },
+    dismissedIsItSafe: (state) => {
+      state.isItSafeDismissed = true;
+    },
     setLocation: (state, { payload }: PayloadAction<{ latitude: number; longitude: number; radius: number }>) => {
       if (!state.userData) {
         state.userData = {
@@ -144,6 +148,7 @@ export const {
   dismissInviteCard,
   addPreviousSearch,
   removeFromPreviousSearches,
+  dismissedIsItSafe
 } = userReducer.actions;
 
 export default userReducer;

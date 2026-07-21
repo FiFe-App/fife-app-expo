@@ -1,7 +1,7 @@
 import toDistanceText from "@/lib/functions/distanceText";
 import wrapper from "@/lib/functions/wrapper";
 import { supabase } from "@/lib/supabase/supabase";
-import { addDialog } from "@/redux/reducers/infoReducer";
+import { showDialog } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { BuzinessItemInterface } from "@/redux/store.type";
 import { Link, router } from "expo-router";
@@ -55,7 +55,7 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
     e.stopPropagation();
     e.preventDefault();
     dispatch(
-      addDialog({
+      showDialog({
         title: title + " törlése?",
         text: "Nem fogod tudni visszavonni!",
         onSubmit: () => {

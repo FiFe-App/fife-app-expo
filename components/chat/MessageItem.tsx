@@ -1,22 +1,75 @@
 import { Tables } from "@/database.types";
 import { RootState } from "@/redux/store";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { View, StyleSheet } from "react-native";
-import { Card, Text, useTheme } from "react-native-paper";
+import { Card, Icon, Text, useTheme } from "react-native-paper";
 import { useSelector } from "react-redux";
+import UrlText from "../UrlText";
 
 type Message = Tables<"messages">;
 
+const DOUBLE_TAP_DELAY = 250;
 
 interface MessageItemProps {
   message: Message;
   selected: boolean;
   onPress: () => void;
+  hearted: boolean;
+  onToggleHeart: () => void;
+  onLongPress: () => void;
+  replyToMessage?: Message | null;
+  replyToDeleted?: boolean;
+  otherUserName?: string;
 }
-export function MessageItem({ message, selected, onPress }: MessageItemProps) {
+export function MessageItem({
+  message,
+  selected,
+  onPress,
+  hearted,
+  onToggleHeart,
+  onLongPress,
+  replyToMessage,
+  replyToDeleted,
+  otherUserName,
+}: MessageItemProps) {
   const theme = useTheme();
   const { uid } = useSelector((state: RootState) => state.user);
   const isMyMessage = message.author === uid;
+
+  const tapTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didLongPressRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (tapTimeout.current) clearTimeout(tapTimeout.current);
+    };
+  }, []);
+
+  const handlePress = () => {
+    if (didLongPressRef.current) {
+      didLongPressRef.current = false;
+      return;
+    }
+    if (tapTimeout.current) {
+      clearTimeout(tapTimeout.current);
+      tapTimeout.current = null;
+      onToggleHeart();
+    } else {
+      tapTimeout.current = setTimeout(() => {
+        tapTimeout.current = null;
+        onPress();
+      }, DOUBLE_TAP_DELAY);
+    }
+  };
+
+  const handleLongPress = () => {
+    if (tapTimeout.current) {
+      clearTimeout(tapTimeout.current);
+      tapTimeout.current = null;
+    }
+    didLongPressRef.current = true;
+    onLongPress();
+  };
 
   // Show short time if not selected, full timestamp if selected
   const fullTime = new Date(message.created_at).toLocaleString("hu-HU", {
@@ -28,12 +81,12 @@ export function MessageItem({ message, selected, onPress }: MessageItemProps) {
     second: "2-digit",
   });
   const colors = {
-    my:    { 
-      color: theme.colors.onPrimaryContainer, 
-      backgroundColor: theme.colors.primaryContainer 
+    my:    {
+      color: theme.colors.onPrimaryContainer,
+      backgroundColor: theme.colors.primaryContainer
     },
-    their: { 
-      color: theme.colors.onSurface, 
+    their: {
+      color: theme.colors.onSurface,
       backgroundColor: theme.colors.surface
     }
   };
@@ -45,25 +98,67 @@ export function MessageItem({ message, selected, onPress }: MessageItemProps) {
         isMyMessage ? styles.myMessageContainer : styles.theirMessageContainer,
       ]}
     >
-      <Card
-        mode="contained"
-        style={[
-          styles.card,
-          {
-            backgroundColor: colors[isMyMessage ? "my" : "their"].backgroundColor
-          },
-        ]}
-        onPress={onPress}
-      >
-        <Card.Content style={styles.content}>
-          <Text variant="bodyMedium"
-        style={[
-          {
-            color: colors[isMyMessage ? "my" : "their"].color
-          },
-        ]} >{message.text}</Text>
-        </Card.Content>
-      </Card>
+      {(replyToMessage || replyToDeleted) && (
+        <View style={styles.replyContainer}>
+          <View style={[styles.replyBar, { backgroundColor: theme.colors.primary }]} />
+          {replyToMessage ? (
+            <View style={{ flex: 1 }}>
+              <Text
+                variant="labelSmall"
+                style={{ color: theme.colors.onSurfaceVariant, fontWeight: "bold" }}
+                numberOfLines={1}
+              >
+                {replyToMessage.author === uid ? "Te" : otherUserName ?? ""}
+              </Text>
+              <Text
+                variant="bodySmall"
+                numberOfLines={1}
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                {replyToMessage.text}
+              </Text>
+            </View>
+          ) : (
+            <Text
+              variant="bodySmall"
+              style={{ color: theme.colors.onSurfaceVariant, fontStyle: "italic" }}
+            >
+              Törölt üzenetre válaszolt
+            </Text>
+          )}
+        </View>
+      )}
+      <View>
+        <Card
+          mode="contained"
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors[isMyMessage ? "my" : "their"].backgroundColor
+            },
+          ]}
+          onPress={handlePress}
+          onLongPress={handleLongPress}
+        >
+          <Card.Content style={styles.content}>
+            <UrlText
+              text={message.text}
+              style={{ color: colors[isMyMessage ? "my" : "their"].color }}
+            />
+          </Card.Content>
+        </Card>
+        {hearted && (
+          <View
+            style={[
+              styles.heartBadge,
+              isMyMessage ? { right: 4 } : { left: 4 },
+              { backgroundColor: theme.colors.surface },
+            ]}
+          >
+            <Icon source="heart" size={14} color="#e0245e" />
+          </View>
+        )}
+      </View>
       {selected && (
         <Text
           variant="labelSmall"
@@ -97,5 +192,29 @@ const styles = StyleSheet.create({
   time: {
     marginLeft: 4,
     marginTop: 4,
+  },
+  replyContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    maxWidth: "80%",
+    marginBottom: 2,
+    paddingHorizontal: 4,
+  },
+  replyBar: {
+    width: 3,
+    alignSelf: "stretch",
+    borderRadius: 2,
+  },
+  heartBadge: {
+    position: "absolute",
+    bottom: -8,
+    borderRadius: 10,
+    padding: 2,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
   },
 });

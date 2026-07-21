@@ -8,19 +8,27 @@ import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
 import { useFocusEffect, Redirect, Link } from "expo-router";
 import { useCallback, useState } from "react";
-import { ScrollView, View, Image } from "react-native";
+import { ScrollView, View, Image, Platform } from "react-native";
 import { emotionAvailable } from "@/constants/emotionTiming";
 import { Calendar } from "react-native-calendars";
 import { Divider, Icon, IconButton, Surface, TextInput, TouchableRipple } from "react-native-paper";
 
-type MarkedDates = Record<string, { selected: boolean; selectedColor: string; selectedTextColor: string }>;
+type MarkedDates = Record<
+  string,
+  {
+    customStyles: {
+      container: { backgroundColor: string; borderWidth: number; borderColor: string; borderRadius: number };
+      text: { color: string; marginTop?: number };
+    };
+  }
+>;
 
-export default function EmotionHistoryScreen() {
-
-  const theme = useAppTheme();
-  const { logs, updateLog, loadFromServer } = useEmotionLog();
-
-  const getTodayDateString = (): string => {
+// react-native-calendars centers the day number using a fixed marginTop (no vertical
+// centering on the cell) — a border on the cell eats into that space from the top,
+// so bordered days need their text nudged back up by the border width to stay aligned
+// with unbordered days.
+const DAY_TEXT_MARGIN_TOP = Platform.OS === "android" ? 4 : 6;
+  export const getTodayDateString = (): string => {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, "0");
@@ -28,8 +36,14 @@ export default function EmotionHistoryScreen() {
     return `${year}-${month}-${day}`;
   };
 
+export default function EmotionHistoryScreen() {
+
+  const theme = useAppTheme();
+  const { logs, updateLog, loadFromServer } = useEmotionLog();
+
+
+
   const [selectedDate, setSelectedDate] = useState<string | null>(getTodayDateString());
-  console.log(selectedDate);
   
   const [editMode, setEditMode] = useState(false);
   const [editRate, setEditRate] = useState<number | null>(null);
@@ -47,19 +61,35 @@ export default function EmotionHistoryScreen() {
   const markedDates: MarkedDates = logs.reduce<MarkedDates>((acc, log) => {
     const emotion = emotionByRate(log.rate);
     acc[log.log_date] = {
-      selected: true,
-      selectedColor: emotion?.color ?? "#9e9e9e",
-      selectedTextColor: "#fff",
+      customStyles: {
+        container: {
+          backgroundColor: emotion?.color ?? "#9e9e9e",
+          borderWidth: 0,
+          borderColor: "transparent",
+          borderRadius: 20,
+        },
+        text: { color: "#000" },
+      },
     };
     return acc;
   }, {});
 
   if (selectedDate) {
+    const hasLog = Boolean(markedDates[selectedDate]);
+    const selectedBorderWidth = 2;
     markedDates[selectedDate] = {
-      ...(markedDates[selectedDate] ?? {}),
-      selected: true,
-      selectedColor: markedDates[selectedDate]?.selectedColor ?? theme.colors.primary,
-      selectedTextColor: "#fff",
+      customStyles: {
+        container: {
+          backgroundColor: hasLog ? markedDates[selectedDate].customStyles.container.backgroundColor : "transparent",
+          borderWidth: selectedBorderWidth,
+          borderColor: theme.colors.primary,
+          borderRadius: 20,
+        },
+        text: {
+          color: hasLog ? "#000" : theme.colors.onSurface,
+          marginTop: DAY_TEXT_MARGIN_TOP - selectedBorderWidth,
+        },
+      },
     };
   }
 
@@ -80,11 +110,19 @@ export default function EmotionHistoryScreen() {
     setEditMode(true);
   };
 
+  const handleStartNew = () => {
+    setEditRate(null);
+    setEditNote("");
+    setEditMode(true);
+  };
+
   const handleSaveEdit = async () => {
     if (!selectedDate || editRate === null) return;
     await updateLog(selectedDate, editRate, editNote.trim() || undefined);
     setEditMode(false);
   };
+
+  const isFutureDate = selectedDate ? selectedDate > getTodayDateString() : false;
 
   return (
     <ThemedView style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -92,6 +130,7 @@ export default function EmotionHistoryScreen() {
 
         <Calendar
           markedDates={markedDates}
+          markingType="custom"
           onDayPress={handleDayPress}
           theme={{
             backgroundColor: theme.colors.background,
@@ -107,53 +146,50 @@ export default function EmotionHistoryScreen() {
 
         {selectedDate && (
           <Surface elevation={0} style={{ marginTop: Spacing.lg, borderRadius: BorderRadius.lg, padding: Spacing.md }}>
-            {selectedLog ? (
-              editMode ? (
-                <View>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: Spacing.sm }}>
-                    <ThemedText variant="titleSmall" type="bold">{new Date(selectedDate).toLocaleDateString("hu-HU")}</ThemedText>
-                    <IconButton icon="check" onPress={handleSaveEdit} />
-                  </View>
-                  <EmotionPicker value={editRate} onSelect={setEditRate} />
-                  <TextInput
-                    label="Jegyzet"
-                    value={editNote}
-                    onChangeText={setEditNote}
-                    multiline
-                    numberOfLines={100}
-                    style={{ marginTop: Spacing.sm }}
+            {editMode ? (
+              <View>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: Spacing.sm }}>
+                  <ThemedText variant="titleSmall" type="bold">{new Date(selectedDate).toLocaleDateString("hu-HU")}</ThemedText>
+                  <IconButton icon="check" onPress={handleSaveEdit} />
+                </View>
+                <EmotionPicker value={editRate} onSelect={setEditRate} />
+                <TextInput
+                  label="Jegyzet"
+                  value={editNote}
+                  onChangeText={setEditNote}
+                  multiline
+                  numberOfLines={100}
+                  style={{ marginTop: Spacing.sm }}
+                />
+              </View>
+            ) : selectedLog ? (
+              <View>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <ThemedText variant="labelLarge">{new Date(selectedDate).toLocaleDateString("hu-HU")}</ThemedText>
+                  <IconButton icon="pencil" onPress={handleStartEdit} />
+                </View>
+                <Divider style={{ marginVertical: Spacing.sm }} />
+                <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.md }}>
+                  <Image
+                    source={emotionByRate(selectedLog.rate)?.image}
+                    style={{ width: 48, height: 48 }}
                   />
                 </View>
-              ) : (
-                <View>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                    <ThemedText variant="labelLarge">{new Date(selectedDate).toLocaleDateString("hu-HU")}</ThemedText>
-                    <IconButton icon="pencil" onPress={handleStartEdit} />
-                  </View>
-                  <Divider style={{ marginVertical: Spacing.sm }} />
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.md }}>
-                    <Image
-                      source={emotionByRate(selectedLog.rate)?.image}
-                      style={{ width: 48, height: 48 }}
-                    />
-                  </View>
-                  {selectedLog.note ? (
-                    <ThemedText style={{ marginTop: Spacing.sm }}>{selectedLog.note}</ThemedText>
-                  ) : (
-                    <ThemedText style={{ marginTop: Spacing.sm }}>Nincs jegyzet.</ThemedText>
-                  )}
-                </View>
-              )
+                {selectedLog.note ? (
+                  <ThemedText style={{ marginTop: Spacing.sm }}>{selectedLog.note}</ThemedText>
+                ) : (
+                  <ThemedText style={{ marginTop: Spacing.sm }}>Nincs jegyzet.</ThemedText>
+                )}
+              </View>
             ) : (
-
-                <View>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                    <ThemedText variant="labelLarge">{new Date(selectedDate).toLocaleDateString("hu-HU")}</ThemedText>
-                  </View>
-                  <Divider style={{ marginVertical: Spacing.sm }} />    
-                  <ThemedText>Ezen a napon nincs bejegyzés.</ThemedText>
-
+              <View>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <ThemedText variant="labelLarge">{new Date(selectedDate).toLocaleDateString("hu-HU")}</ThemedText>
+                  {!isFutureDate && <IconButton icon="plus" onPress={handleStartNew} />}
                 </View>
+                <Divider style={{ marginVertical: Spacing.sm }} />
+                <ThemedText>Ezen a napon nincs bejegyzés.</ThemedText>
+              </View>
             )}
           </Surface>
         )}

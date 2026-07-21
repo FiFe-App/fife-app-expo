@@ -7,8 +7,6 @@ import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { Button } from "@/components/Button";
 import { Spacing } from "@/constants/spacing";
-import Smiley from "@/components/Smiley";
-import { BorderRadius } from "@/constants/borderRadius";
 import { ThemedView } from "@/components/ThemedView";
 import { Logo } from "@/components/Logo";
 

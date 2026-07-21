@@ -18,7 +18,7 @@ import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { Button, FAB, IconButton } from "react-native-paper";
 import mapStyles from "../mapView/style";
 import { Spacing } from "@/constants/spacing";
-import { addDialog } from "@/redux/reducers/infoReducer";
+import { showDialog } from "@/redux/reducers/infoReducer";
 
 interface BuzinessBuzinessMapProps {
   load: (arg0?: number) => void;
@@ -47,7 +47,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
   const panToMyLocation = () => {
     if (!myLocation) {
       dispatch(
-        addDialog({
+        showDialog({
           title: "Nem elérhető a pozíciód.",
           text: "Ha szeretnéd, hogy a hozzád közel található bizniszeket látsd, kapcsold be.",
           onSubmit: () => { },

@@ -18,6 +18,9 @@ export default {
       image: "./assets/images/Slimey.png",
       resizeMode: "contain",
       backgroundColor: "#fff5e0"
+    },
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false
     }
   },
   android: {
@@ -101,7 +104,8 @@ export default {
           },
           "imageWidth": 80
         }
-      ]
+      ],
+    "expo-secure-store"
   ],
   experiments: {
     typedRoutes: true,

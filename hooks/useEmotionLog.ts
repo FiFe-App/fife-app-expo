@@ -1,3 +1,4 @@
+import { decryptEmotionLog, encryptEmotionLog } from "@/lib/crypto/emotionLogEncryption";
 import { supabase } from "@/lib/supabase/supabase";
 import { mergeFromServer, markSynced, upsertLog } from "@/redux/reducers/emotionLogsReducer";
 import { RootState } from "@/redux/store";
@@ -10,6 +11,25 @@ import {
   emotionAvailable,
 } from "@/constants/emotionTiming";
 import { scheduleDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
+
+type LegacyRow = { id: string; log_date: string; rate: number; note: string | null };
+
+async function backfillLegacyRows(rows: LegacyRow[]) {
+  for (const row of rows) {
+    try {
+      const { data, nonce } = await encryptEmotionLog({
+        rate: row.rate,
+        note: row.note ?? undefined,
+      });
+      await supabase
+        .from("emotion_logs")
+        .update({ encrypted_data: data, nonce, rate: null, note: null })
+        .eq("id", row.id);
+    } catch {
+      // leave as legacy plaintext; will retry on next loadFromServer call
+    }
+  }
+}
 
 function formatDate(d: Date): string {
   const year = d.getFullYear();
@@ -59,10 +79,18 @@ export function useEmotionLog() {
       dispatch(upsertLog({ log_date: cardTarget.targetDate, rate, note }));
       skipReminderIfLoggedToday(cardTarget.targetDate);
       try {
+        const { data, nonce } = await encryptEmotionLog({ rate, note });
         await supabase
           .from("emotion_logs")
           .upsert(
-            { author: uid, rate, note: note ?? null, log_date: cardTarget.targetDate },
+            {
+              author: uid,
+              encrypted_data: data,
+              nonce,
+              rate: null,
+              note: null,
+              log_date: cardTarget.targetDate,
+            },
             { onConflict: "author,log_date" }
           );
         dispatch(markSynced(cardTarget.targetDate));
@@ -79,10 +107,11 @@ export function useEmotionLog() {
       dispatch(upsertLog({ log_date, rate, note }));
       skipReminderIfLoggedToday(log_date);
       try {
+        const { data, nonce } = await encryptEmotionLog({ rate, note });
         await supabase
           .from("emotion_logs")
           .upsert(
-            { author: uid, rate, note: note ?? null, log_date },
+            { author: uid, encrypted_data: data, nonce, rate: null, note: null, log_date },
             { onConflict: "author,log_date" }
           );
         dispatch(markSynced(log_date));
@@ -98,10 +127,18 @@ export function useEmotionLog() {
     const pending = logs.filter((l) => !l.synced);
     for (const log of pending) {
       try {
+        const { data, nonce } = await encryptEmotionLog({ rate: log.rate, note: log.note });
         await supabase
           .from("emotion_logs")
           .upsert(
-            { author: uid, rate: log.rate, note: log.note ?? null, log_date: log.log_date },
+            {
+              author: uid,
+              encrypted_data: data,
+              nonce,
+              rate: null,
+              note: null,
+              log_date: log.log_date,
+            },
             { onConflict: "author,log_date" }
           );
         dispatch(markSynced(log.log_date));
@@ -115,25 +152,52 @@ export function useEmotionLog() {
     if (!uid) return;
     const { data } = await supabase
       .from("emotion_logs")
-      .select("rate, note, log_date, created_at")
+      .select("id, encrypted_data, nonce, rate, note, log_date, created_at")
       .eq("author", uid)
       .order("log_date", { ascending: false });
-    if (data) {
-      const mapped: EmotionLogLocal[] = data.map((row) => ({
-        log_date: row.log_date,
-        rate: row.rate,
-        note: row.note ?? undefined,
-        synced: true,
-        created_at: row.created_at,
-        updated_at: row.created_at,
-      }));
-      dispatch(mergeFromServer(mapped));
+    if (!data) return;
+
+    const mapped: EmotionLogLocal[] = [];
+    const legacyRows: LegacyRow[] = [];
+
+    for (const row of data) {
+      if (row.encrypted_data && row.nonce) {
+        const plain = await decryptEmotionLog({ data: row.encrypted_data, nonce: row.nonce });
+        if (plain) {
+          mapped.push({
+            log_date: row.log_date,
+            rate: plain.rate,
+            note: plain.note,
+            synced: true,
+            created_at: row.created_at,
+            updated_at: row.created_at,
+          });
+        }
+        // else: decryption failed (corrupt/tampered/wrong key) — skip, don't crash
+      } else if (row.rate != null) {
+        mapped.push({
+          log_date: row.log_date,
+          rate: row.rate,
+          note: row.note ?? undefined,
+          synced: true,
+          created_at: row.created_at,
+          updated_at: row.created_at,
+        });
+        legacyRows.push({ id: row.id, log_date: row.log_date, rate: row.rate, note: row.note });
+      }
+    }
+
+    dispatch(mergeFromServer(mapped));
+
+    if (legacyRows.length > 0) {
+      backfillLegacyRows(legacyRows);
     }
   }, [uid, dispatch]);
 
   return {
     shouldShowCard: cardTarget.shouldShow && !alreadyLogged && emotionDailyPrompt,
     isYesterday: cardTarget.isYesterday,
+    targetDate: cardTarget.targetDate,
     logs,
     saveLog,
     updateLog,

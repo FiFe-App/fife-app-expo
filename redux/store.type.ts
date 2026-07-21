@@ -29,6 +29,7 @@ export interface UserState {
   tasks?: TaskItem[];
   mainTaskNotificationEnabled?: boolean;
   locationAlertDismissed?: boolean;
+  isItSafeDismissed?: boolean;
   inviteCardDismissed?: boolean;
   notificationPrefs?: {
     notifyPush: boolean;
