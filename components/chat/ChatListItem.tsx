@@ -52,41 +52,38 @@ export function ChatListItem({
                   </Text>
                 )}
               </View>
-              {lastMessage && (
-                <Text
-                  variant="bodyMedium"
-                  numberOfLines={1}
-                  style={{
-                    color: theme.colors.onSurfaceVariant,
-                  }}
-                >
-                  {lastMessage.text}
-                </Text>
-              )}
-              {!lastMessage && (
-                <Text
-                  variant="bodySmall"
-                  style={{ color: theme.colors.onSurfaceVariant }}
-                >
-                  Üzenet küldése
-                </Text>
-              )}
-            </View>
-            {unreadCount > 0 && (
-              <View
-                style={[
-                  styles.badge,
-                  { backgroundColor: theme.colors.primary },
-                ]}
-              >
-                <Text
-                  variant="labelSmall"
-                  style={{ color: theme.colors.onPrimary }}
-                >
-                  {unreadCount}
-                </Text>
+              <View style={{flexDirection:"row",alignItems:"center"}}>
+                
+                {unreadCount > 0 && (
+                  <View
+                    style={[
+                      styles.badge,
+                      { backgroundColor: theme.colors.secondary,marginHorizontal:8 },
+                    ]}
+                  >
+                  </View>
+                )}  
+                {lastMessage && (
+                  <Text
+                    variant="bodyMedium"
+                    numberOfLines={1}
+                    style={{
+                      color: theme.colors.onSurfaceVariant,
+                    }}
+                  >
+                    {lastMessage.text}
+                  </Text>
+                )}
+                {!lastMessage && (
+                  <Text
+                    variant="bodySmall"
+                    style={{ color: theme.colors.onSurfaceVariant }}
+                  >
+                    Üzenet küldése
+                  </Text>
+                )}
               </View>
-            )}
+            </View>
           </View>
         </View>
       </TouchableRipple>
@@ -122,12 +119,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   badge: {
-    minWidth: 24,
-    height: 24,
+    width: 8,
+    height: 8,
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 6,
     marginLeft: 8,
   },
 });
