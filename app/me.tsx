@@ -77,9 +77,32 @@ export default function MeScreen() {
         automaticallyAdjustKeyboardInsets
       >
         <Mantra />
-        <Button mode={isItSafeDismissed ? "text" : "contained-tonal"} onPress={showIsItSafeDialog}>{isItSafeButtonText}</Button>
-        {emotionAvailable && <EmotionCheckCard />}
-        <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
+        <View style={{ gap: Spacing.md, paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
+          <Button 
+            mode={isItSafeDismissed ? "text" : "contained-tonal"} 
+            onPress={showIsItSafeDialog}>
+              {isItSafeButtonText}
+          </Button>
+          <Link asChild href="/user/get-help">
+            <TouchableRipple>
+              <Surface
+                elevation={1}
+                style={{
+                  borderRadius: BorderRadius.lg,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: Spacing.md,
+                  paddingVertical: Spacing.md,
+                  paddingHorizontal: Spacing.lg,
+                }}
+              >
+                <Icon source="lifebuoy" size={24} color={theme.colors.primary} />
+                <ThemedText style={{ flex: 1 }} type="defaultSemiBold">Segítség kell?</ThemedText>
+                <Icon source="chevron-right" size={20} color={theme.colors.outline} />
+              </Surface>
+            </TouchableRipple>
+          </Link>
+          {emotionAvailable && <EmotionCheckCard />}
           <ToDoList />
           {false && <View style={styles.cardRow}>
             <Card style={[styles.card, styles.cardSpacing]} theme={{colors: {shadow:"red"}}} onPress={() => {}}>
@@ -103,27 +126,6 @@ export default function MeScreen() {
               </Card.Content>
             </Card>
           </View>}
-
-          <Link asChild href="/user/get-help">
-            <TouchableRipple>
-              <Surface
-                elevation={1}
-                style={{
-                  borderRadius: BorderRadius.lg,
-                  marginBottom: Spacing.lg,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: Spacing.md,
-                  paddingVertical: Spacing.md,
-                  paddingHorizontal: Spacing.lg,
-                }}
-              >
-                <Icon source="lifebuoy" size={24} color={theme.colors.primary} />
-                <ThemedText style={{ flex: 1 }} type="defaultSemiBold">Segítség kell?</ThemedText>
-                <Icon source="chevron-right" size={20} color={theme.colors.outline} />
-              </Surface>
-            </TouchableRipple>
-          </Link>
         </View>
       </ScrollView>
     </ThemedView>

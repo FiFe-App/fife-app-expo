@@ -26,7 +26,7 @@ function EmotionCheckCardInner() {
   };
 
   return (
-    <Card style={{ margin: Spacing.lg }} elevation={1}>
+    <Card style={{ marginVertical: Spacing.sm }} elevation={1}>
       <Link asChild href="/user/emotion-history">
         <TouchableRipple>
           <View style={{ flex:1,flexDirection:"row",alignItems:"center", paddingHorizontal:Spacing.md }}>

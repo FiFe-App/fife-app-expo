@@ -128,6 +128,26 @@ export default function EmotionHistoryScreen() {
     <ThemedView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={{ padding: Spacing.md }}>
 
+        <Link asChild href="/user/get-help">
+          <TouchableRipple>
+            <Surface
+              elevation={1}
+              style={{
+                borderRadius: BorderRadius.lg,
+                marginBottom: Spacing.lg,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: Spacing.md,
+                paddingVertical: Spacing.md,
+                paddingHorizontal: Spacing.lg,
+              }}
+            >
+              <Icon source="lifebuoy" size={24} color={theme.colors.primary} />
+              <ThemedText style={{ flex: 1 }} type="defaultSemiBold">Segítség kell?</ThemedText>
+              <Icon source="chevron-right" size={20} color={theme.colors.outline} />
+            </Surface>
+          </TouchableRipple>
+        </Link>
         <Calendar
           markedDates={markedDates}
           markingType="custom"
@@ -194,26 +214,6 @@ export default function EmotionHistoryScreen() {
           </Surface>
         )}
 
-        <Link asChild href="/user/get-help">
-          <TouchableRipple>
-            <Surface
-              elevation={1}
-              style={{
-                borderRadius: BorderRadius.lg,
-                marginBottom: Spacing.lg,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: Spacing.md,
-                paddingVertical: Spacing.md,
-                paddingHorizontal: Spacing.lg,
-              }}
-            >
-              <Icon source="lifebuoy" size={24} color={theme.colors.primary} />
-              <ThemedText style={{ flex: 1 }} type="defaultSemiBold">Segítség kell?</ThemedText>
-              <Icon source="chevron-right" size={20} color={theme.colors.outline} />
-            </Surface>
-          </TouchableRipple>
-        </Link>
       </ScrollView>
     </ThemedView>
   );
