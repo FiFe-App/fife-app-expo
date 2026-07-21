@@ -5,7 +5,7 @@ import ToDoList from "@/components/ToDoList";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { RootState } from "@/redux/store";
-import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { Image, Keyboard, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Card, Icon, Surface, TouchableRipple } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "@/components/ThemedText";
@@ -17,7 +17,7 @@ import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { setOptions, clearOptions, showDialog } from "@/redux/reducers/infoReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { dismissedIsItSafe, logout } from "@/redux/reducers/userReducer";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useFocusEffect, router, Link } from "expo-router";
 import { Button } from "@/components/Button";
 import { useAppTheme } from "@/assets/theme";
@@ -28,6 +28,26 @@ export default function MeScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const theme = useAppTheme();
   const isItSafeButtonText = `Ez a hely biztonságos${isItSafeDismissed ? "." : "?"}`;
+
+  // Edge-to-edge Android does not resize the window for the keyboard, and a
+  // KeyboardAvoidingView does not reliably reveal an input sitting at the
+  // bottom of scroll content. Instead, pad the scroll content by the real
+  // keyboard height so there is room to scroll the "Új feladat" input above
+  // the keyboard (iOS uses automaticallyAdjustKeyboardInsets and stays at 0).
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const show = Keyboard.addListener("keyboardDidShow", (e) =>
+      setKeyboardHeight(e.endCoordinates.height),
+    );
+    const hide = Keyboard.addListener("keyboardDidHide", () =>
+      setKeyboardHeight(0),
+    );
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
     useFocusEffect(
       useCallback(() => {
@@ -72,18 +92,9 @@ export default function MeScreen() {
   if (!uid) return null;
   return (
     <ThemedView style={{ flex: 1 }} type="default">
-      {/* iOS uses the ScrollView's automaticallyAdjustKeyboardInsets; this app is
-          edge-to-edge on Android where that prop is a no-op and the window does
-          not resize, so the Lusta Lista / hangulatnapló inputs need an active
-          KeyboardAvoidingView. enabled per-OS so neither double-compensates. */}
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior="height"
-        enabled={Platform.OS === "android"}
-      >
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={{ gap: Spacing.md, paddingHorizontal: Spacing.lg, paddingTop: Spacing.md  }}
+        contentContainerStyle={{ gap: Spacing.md, paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: keyboardHeight }}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
       >
@@ -143,7 +154,6 @@ export default function MeScreen() {
           </View>}
         </View>
       </ScrollView>
-      </KeyboardAvoidingView>
     </ThemedView>
   );
 }

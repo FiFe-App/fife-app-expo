@@ -33,9 +33,10 @@ export default function ToDoList({ onRequestScrollIntoView }: ToDoListProps) {
     if (Platform.OS !== "android" || !onRequestScrollIntoView) return;
     const sub = Keyboard.addListener("keyboardDidShow", () => {
       // Defer a frame so the KeyboardAvoidingView has shrunk the scroll
-      // viewport before we scroll the input to the bottom of it.
+      // padded the scroll content by the keyboard height (creating the room to
+      // scroll) before we scroll the input to the bottom of it.
       if (inputFocusedRef.current) {
-        setTimeout(onRequestScrollIntoView, 50);
+        setTimeout(onRequestScrollIntoView, 120);
       }
     });
     return () => sub.remove();
