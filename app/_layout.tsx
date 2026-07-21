@@ -35,7 +35,6 @@ import { clearDrafts } from "@/redux/reducers/chatReducer";
 import { supabase } from "@/lib/supabase/supabase";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
-import { showMainTaskNotification, clearMainTaskNotification } from "@/lib/notifications/mainTaskNotification";
 import { setStatusBarColor } from "@/redux/reducers/infoReducer";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
 import { emotionAvailable } from "@/constants/emotionTiming";
@@ -58,10 +57,6 @@ function RootContent() {
   const deviceColorScheme = useColorScheme(); // Auto-detect device theme
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
   const { uid } = useSelector((state: RootState) => state.user);
-  const tasks = useSelector((state: RootState) => state.user.tasks);
-  const mainTaskNotificationEnabled = useSelector(
-    (state: RootState) => state.user.mainTaskNotificationEnabled ?? true
-  );
   const { statusBarColor, bottomBarColor } = useSelector((state: RootState) => state.info);
   const hasInitialized = React.useRef(false);
 
@@ -157,22 +152,6 @@ function RootContent() {
       }
     });
   }, [uid, dispatch]);
-
-  // Keep the persistent "fő feladat" notification in sync with the first
-  // unfinished Lusta Lista task (native-only, local notification).
-  useEffect(() => {
-    if (Platform.OS === "web") return;
-    if (!uid) {
-      clearMainTaskNotification().catch(() => {});
-      return;
-    }
-    const mainTask = tasks?.find((task) => !task.checked);
-    if (mainTaskNotificationEnabled && mainTask) {
-      showMainTaskNotification(mainTask.title).catch(() => {});
-    } else {
-      clearMainTaskNotification().catch(() => {});
-    }
-  }, [uid, tasks, mainTaskNotificationEnabled]);
 
   const router = useRouter();
 
