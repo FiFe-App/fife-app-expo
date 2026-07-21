@@ -27,7 +27,6 @@ export interface UserState {
   mantra?: string;
   messagingEnabled?: boolean;
   tasks?: TaskItem[];
-  mainTaskNotificationEnabled?: boolean;
   locationAlertDismissed?: boolean;
   isItSafeDismissed?: boolean;
   inviteCardDismissed?: boolean;
