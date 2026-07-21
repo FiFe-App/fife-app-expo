@@ -8,7 +8,9 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   EMOTION_MAX_TIME_FOR_YESTERDAY,
   EMOTION_MIN_TIME_FOR_TODAY,
+  emotionAvailable,
 } from "@/constants/emotionTiming";
+import { scheduleDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
 
 type LegacyRow = { id: string; log_date: string; rate: number; note: string | null };
 
@@ -62,10 +64,20 @@ export function useEmotionLog() {
   const cardTarget = getCardTarget(new Date());
   const alreadyLogged = logs.some((l) => l.log_date === cardTarget.targetDate);
 
+  const skipReminderIfLoggedToday = useCallback(
+    (log_date: string) => {
+      if (!emotionAvailable || !emotionDailyPrompt) return;
+      if (log_date !== formatDate(new Date())) return;
+      scheduleDailyEmotionReminder(true).catch(() => {});
+    },
+    [emotionDailyPrompt]
+  );
+
   const saveLog = useCallback(
     async (rate: number, note?: string) => {
       if (!uid) return;
       dispatch(upsertLog({ log_date: cardTarget.targetDate, rate, note }));
+      skipReminderIfLoggedToday(cardTarget.targetDate);
       try {
         const { data, nonce } = await encryptEmotionLog({ rate, note });
         await supabase
@@ -86,13 +98,14 @@ export function useEmotionLog() {
         // stays synced: false — will retry on next syncPendingLogs call
       }
     },
-    [uid, cardTarget.targetDate, dispatch]
+    [uid, cardTarget.targetDate, dispatch, skipReminderIfLoggedToday]
   );
 
   const updateLog = useCallback(
     async (log_date: string, rate: number, note?: string) => {
       if (!uid) return;
       dispatch(upsertLog({ log_date, rate, note }));
+      skipReminderIfLoggedToday(log_date);
       try {
         const { data, nonce } = await encryptEmotionLog({ rate, note });
         await supabase
@@ -106,7 +119,7 @@ export function useEmotionLog() {
         // stays synced: false
       }
     },
-    [uid, dispatch]
+    [uid, dispatch, skipReminderIfLoggedToday]
   );
 
   const syncPendingLogs = useCallback(async () => {

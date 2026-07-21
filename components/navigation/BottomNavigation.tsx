@@ -61,7 +61,7 @@ const BottomNavigation = () => {
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/me")}>
           <View style={{ alignItems: "center" }}>
             {showIcon && <Icon
-              source={meActive ? "account" : "account-outline"}
+              source={meActive ? "home" : "home-outline"}
               size={meActive ? 30 : 24}
               color={meActive ? theme.colors.secondary : undefined}
             />}
@@ -74,7 +74,7 @@ const BottomNavigation = () => {
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user",{uid})}>
           <View style={{ alignItems: "center" }}>
             {showIcon && <Icon
-              source={profilActive ? "cog" : "cog-outline"}
+              source={profilActive ? "account" : "account-outline"}
               size={profilActive ? 30 : 24}
               color={profilActive ? theme.colors.secondary : undefined}
             />}

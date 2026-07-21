@@ -13,6 +13,7 @@ const initialState: UserState = {
   previousSearches: [],
   locationAlertDismissed: false,
   inviteCardDismissed: false,
+  mainTaskNotificationEnabled: true,
   isItSafeDismissed: false,
 };
 
@@ -53,6 +54,17 @@ const userReducer = createSlice({
       state.tasks = (state.tasks ?? []).map((task) =>
         task.id === payload ? { ...task, checked: !task.checked } : task,
       );
+    },
+    reorderTasks: (state, { payload }: PayloadAction<TaskItem[]>) => {
+      // payload is the new order of the currently visible tasks; any tasks
+      // not included (hidden-at-mount, already-completed ones) keep their
+      // relative order and stay appended after the reordered visible ones.
+      const reorderedIds = new Set(payload.map((task) => task.id));
+      const rest = (state.tasks ?? []).filter((task) => !reorderedIds.has(task.id));
+      state.tasks = [...payload, ...rest];
+    },
+    setMainTaskNotificationEnabled: (state, { payload }: PayloadAction<boolean>) => {
+      state.mainTaskNotificationEnabled = payload;
     },
     setLocationError: (state, { payload }: PayloadAction<string | null>) => {
       state.locationError = payload;
@@ -123,6 +135,8 @@ export const {
   setMantra,
   addTask,
   toggleTask,
+  reorderTasks,
+  setMainTaskNotificationEnabled,
   setUserData,
   setLocationError,
   setThemePreference,

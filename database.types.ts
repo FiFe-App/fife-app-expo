@@ -314,6 +314,33 @@ export type Database = {
           },
         ]
       }
+      help_contacts: {
+        Row: {
+          created_at: string
+          data: string
+          description: string | null
+          id: number
+          title: string
+          type: Database["public"]["Enums"]["contact_type"]
+        }
+        Insert: {
+          created_at?: string
+          data: string
+          description?: string | null
+          id?: number
+          title: string
+          type: Database["public"]["Enums"]["contact_type"]
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          description?: string | null
+          id?: number
+          title?: string
+          type?: Database["public"]["Enums"]["contact_type"]
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           author: string
