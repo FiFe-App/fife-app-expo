@@ -60,8 +60,8 @@ const Register = () => {
     <ThemedView style={{ flex: 1, minHeight: 0, padding: Spacing.sm, paddingTop: Spacing.xxxl, paddingBottom: 60 }}>
       <KeyboardAvoidingView
         style={{ flex: 1, minHeight: 0 }}
-        behavior={Platform.OS === "ios" ? "padding" : "padding"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 24}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}
       >
         <View style={{ flex: 1, minHeight: 0 }}>
           <ThemedText type="title" style={{ marginBottom: Spacing.lg }}>

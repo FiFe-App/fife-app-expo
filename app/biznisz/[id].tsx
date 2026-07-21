@@ -44,7 +44,7 @@ import {
   useGlobalSearchParams,
 } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from "react-native";
+import { ScrollView, useWindowDimensions, View } from "react-native";
 import ImageModal from "react-native-image-modal";
 import openMap from "react-native-open-maps";
 import {
@@ -285,11 +285,6 @@ export default function Index() {
           title="Biznisz"
           style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} />
       }} />
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}
-      >
       <ThemedView style={{ flex: 1 }}>
         {!data && !error && (
           <View style={{ paddingTop: Spacing.xxxl, alignItems: "center" }}>
@@ -671,7 +666,6 @@ export default function Index() {
           </Portal>
         )}
       </ThemedView>
-      </KeyboardAvoidingView>
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase/supabase";
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import {
   Button,
   Modal,
@@ -84,6 +84,9 @@ const ReportProfileModal = ({
 
   return (
     <Modal visible={show} onDismiss={handleDismiss}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
       <ThemedView
         style={{
           padding: Spacing.xl,
@@ -98,7 +101,7 @@ const ReportProfileModal = ({
             <ThemedText>Igyekszünk utánajárni hogy mi is történt!</ThemedText>
           </View>
         ) : (
-          <ScrollView>
+          <ScrollView keyboardShouldPersistTaps="handled">
             <ThemedText type="subtitle" style={{ marginBottom: Spacing.lg }}>
               Feljelented őt: {profileName}?
             </ThemedText>
@@ -150,6 +153,7 @@ const ReportProfileModal = ({
           </ScrollView>
         )}
       </ThemedView>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

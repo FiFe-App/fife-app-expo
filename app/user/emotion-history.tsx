@@ -88,7 +88,11 @@ export default function EmotionHistoryScreen() {
 
   return (
     <ThemedView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <ScrollView contentContainerStyle={{ padding: Spacing.md }}>
+      <ScrollView
+        contentContainerStyle={{ padding: Spacing.md }}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+      >
 
         <Calendar
           markedDates={markedDates}

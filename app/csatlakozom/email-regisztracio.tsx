@@ -53,6 +53,9 @@ export default function Index() {
   const passwordAgainRef = useRef<{ focus: () => void } | null>(null);
   const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
   const isPasswordWeak = !passwordRegex.exec(password)?.length;
+  const canSubmit =
+    !loading && !isPasswordWeak && !!name && password === passwordAgain && acceptConditions &&
+    !(username.trim().length > 0 && usernameAvailable === false);
 
   const { uid, userData, notificationPrefs }: UserState = useSelector((state: RootState) => state.user);
   const policiesAccepted = useSelector((state: RootState) => state.info.policiesAccepted);
@@ -172,7 +175,7 @@ export default function Index() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, minHeight: 0 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
     >
       <ThemedView style={{ flex: 1, minHeight: 0, padding: Spacing.lg, paddingTop: Spacing.xxxl }}>
@@ -209,7 +212,7 @@ export default function Index() {
                 autoCapitalize="words"
                 autoCorrect={false}
                 returnKeyType="next"
-                blurOnSubmit={false}
+                submitBehavior="submit"
                 onFocus={() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })}
                 onSubmitEditing={() => focusNextInput(usernameRef)}
               />
@@ -239,7 +242,7 @@ export default function Index() {
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="next"
-              blurOnSubmit={false}
+              submitBehavior="submit"
               onFocus={() => scrollViewRef.current?.scrollTo({ y: 180, animated: true })}
               onSubmitEditing={() => focusNextInput(passwordRef)}
             />
@@ -253,7 +256,7 @@ export default function Index() {
               autoComplete="new-password"
               textContentType="newPassword"
               returnKeyType="next"
-              blurOnSubmit={false}
+              submitBehavior="submit"
               onFocus={() => scrollViewRef.current?.scrollTo({ y: 280, animated: true })}
               onSubmitEditing={() => focusNextInput(passwordAgainRef)}
               right={
@@ -287,7 +290,7 @@ export default function Index() {
               textContentType="newPassword"
               returnKeyType="done"
               onFocus={() => scrollViewRef.current?.scrollTo({ y: 360, animated: true })}
-              onSubmitEditing={() => createUser()}
+              onSubmitEditing={() => canSubmit && createUser()}
               right={
                 <PaperTextInput.Icon
                   icon={
@@ -328,10 +331,7 @@ export default function Index() {
               style={{marginTop:Spacing.lg}}
               loading={loading}
               onPress={createUser}
-              disabled={
-                loading || isPasswordWeak || !name || password !== passwordAgain || !acceptConditions ||
-                (username.trim().length > 0 && usernameAvailable === false)
-              }
+              disabled={!canSubmit}
             >
               Regisztrálok
             </Button>

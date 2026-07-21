@@ -96,6 +96,8 @@ export default function ToDoList() {
           value={newTitle}
           onChangeText={setNewTitle}
           onSubmitEditing={handleAdd}
+          returnKeyType="done"
+          submitBehavior="submit"
           style={{
             backgroundColor: "transparent",
             marginTop: visibleTasks.length ? Spacing.xs : 0,

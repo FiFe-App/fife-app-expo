@@ -385,6 +385,8 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
             value={text}
             onChangeText={setText}
             onSubmitEditing={handleSend}
+            returnKeyType="send"
+            submitBehavior="submit"
             disabled={!uid || loading}
             placeholder={
               uid

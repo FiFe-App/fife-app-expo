@@ -5,7 +5,6 @@ import { Image } from "expo-image";
 import { Text } from "react-native-paper";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
-import { ThemedInput as TextInput } from "@/components/ThemedInput";
 import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 import { Link, Redirect, useNavigation } from "expo-router";
 import { useEffect } from "react";
@@ -217,59 +216,6 @@ const Banner = () => {
         <Button mode="contained">Regisztrálok</Button>
       </Link>
     </ThemedView>
-  );
-};
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const Newsletter = () => {
-  const { isDesktop, screenPadding } = useBreakpoint();
-  return (
-    <View style={{ marginHorizontal: screenPadding }}>
-      <Text variant="displayMedium">
-        Ne maradj le, iratkozz fel a hírlevélre!
-      </Text>
-      <ThemedView
-        style={[{ paddingVertical: Spacing.lg, alignItems: "flex-start", gap: Spacing.xxxl }]}
-        responsive={800}
-        reverseOnCol
-      >
-        <View
-          style={[
-            styles.flex1,
-            styles.rightSide,
-            { width: "100%", justifyContent: "center", flex: undefined },
-          ]}
-        >
-          <Image
-            source={require("@/assets/images/Phone.png")}
-            contentFit="contain"
-            style={{ width: "100%", minHeight: 350, zIndex: 20 }}
-          />
-        </View>
-        <View
-          style={[
-            isDesktop ? [styles.flex1] : {},
-            { gap: Spacing.lg, width: "100%", alignItems: "center" },
-          ]}
-        >
-          <View style={{ width: "100%", padding: Spacing.xxl, gap: Spacing.lg }}>
-            <Text variant="labelLarge">E-mail címed</Text>
-            <TextInput mode="outlined" placeholder="email@fifeapp.hu" />
-            <Text variant="labelLarge">Üzenet (opcionális)</Text>
-            <TextInput
-              numberOfLines={5}
-              multiline
-              mode="outlined"
-              placeholder="Mit gondolsz?"
-            />
-            <View style={{ alignItems: "flex-end" }}>
-              <Button type="secondary" big>
-                Küldés
-              </Button>
-            </View>
-          </View>
-        </View>
-      </ThemedView>
-    </View>
   );
 };
 const AboutMe = () => {

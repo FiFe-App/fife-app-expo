@@ -346,7 +346,11 @@ export default function Index() {
   if (myUid)
     return (
       <ThemedView style={{ flex: 1, paddingBottom: Spacing.xxl }}>
-        <ScrollView style={{ flex: 1, padding: Spacing.sm }}>
+        <ScrollView
+          style={{ flex: 1, padding: Spacing.sm }}
+          keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets
+        >
           <View style={{ alignItems: "center", marginBottom: Spacing.lg }}>
             <View style={{ width: 200 }}>
               <ProfileImage

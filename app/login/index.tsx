@@ -101,7 +101,7 @@ export default function Index() {
     <ThemedView style={{ flex: 1 }} type="default">
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}
         enabled
       >
@@ -128,7 +128,7 @@ export default function Index() {
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="next"
-              blurOnSubmit={false}
+              submitBehavior="submit"
               onFocus={() => {
                 setFocusedField("email");
                 scrollViewRef.current?.scrollTo({ y: 0, animated: true });
@@ -151,7 +151,7 @@ export default function Index() {
                 scrollViewRef.current?.scrollTo({ y: 120, animated: true });
               }}
               onBlur={() => setFocusedField((value) => (value === "password" ? null : value))}
-              onSubmitEditing={signInWithEmail}
+              onSubmitEditing={() => email && password && signInWithEmail()}
               right={
                 <TextInput.Icon
                   icon={showPassword ? "eye" : "eye-off"}
