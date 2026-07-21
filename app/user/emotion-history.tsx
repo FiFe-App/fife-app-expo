@@ -6,12 +6,12 @@ import { emotionByRate } from "@/constants/emotions";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
-import { useFocusEffect, Redirect } from "expo-router";
+import { useFocusEffect, Redirect, Link } from "expo-router";
 import { useCallback, useState } from "react";
 import { ScrollView, View, Image, Platform } from "react-native";
 import { emotionAvailable } from "@/constants/emotionTiming";
 import { Calendar } from "react-native-calendars";
-import { Divider, IconButton, Surface, TextInput } from "react-native-paper";
+import { Divider, Icon, IconButton, Surface, TextInput, TouchableRipple } from "react-native-paper";
 
 type MarkedDates = Record<
   string,
@@ -128,6 +128,26 @@ export default function EmotionHistoryScreen() {
     <ThemedView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={{ padding: Spacing.md }}>
 
+        <Link asChild href="/user/get-help">
+          <TouchableRipple>
+            <Surface
+              elevation={1}
+              style={{
+                borderRadius: BorderRadius.lg,
+                marginBottom: Spacing.lg,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: Spacing.md,
+                paddingVertical: Spacing.md,
+                paddingHorizontal: Spacing.lg,
+              }}
+            >
+              <Icon source="lifebuoy" size={24} color={theme.colors.primary} />
+              <ThemedText style={{ flex: 1 }} type="defaultSemiBold">Segítség kell?</ThemedText>
+              <Icon source="chevron-right" size={20} color={theme.colors.outline} />
+            </Surface>
+          </TouchableRipple>
+        </Link>
         <Calendar
           markedDates={markedDates}
           markingType="custom"
@@ -193,6 +213,7 @@ export default function EmotionHistoryScreen() {
             )}
           </Surface>
         )}
+
       </ScrollView>
     </ThemedView>
   );
