@@ -30,6 +30,8 @@ import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import FakeSearchInput from "@/components/FakeSearchInput";
 import { RootState } from "@/redux/store";
 import { setLocation, logout, setNotificationPrefs } from "@/redux/reducers/userReducer";
+import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
+import { clearDrafts } from "@/redux/reducers/chatReducer";
 import { supabase } from "@/lib/supabase/supabase";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
@@ -86,16 +88,24 @@ function RootContent() {
     // (missing, or belonging to a different account left over from a prior
     // login on this device), clear Redux so we don't show the wrong user.
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (uid && (!session || session.user.id !== uid)) dispatch(logout());
+      if (uid && (!session || session.user.id !== uid)) {
+        dispatch(logout());
+        dispatch(clearEmotionLogs());
+        dispatch(clearDrafts());
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") {
         // Refresh token expired or explicit sign-out — clear Redux to match
         dispatch(logout());
+        dispatch(clearEmotionLogs());
+        dispatch(clearDrafts());
       } else if (uid && session && session.user.id !== uid) {
         // Session belongs to a different account than Redux thinks — resync
         dispatch(logout());
+        dispatch(clearEmotionLogs());
+        dispatch(clearDrafts());
       }
     });
     return () => subscription.unsubscribe();

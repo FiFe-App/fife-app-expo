@@ -25,6 +25,9 @@ const chatReducer = createSlice({
     clearDraftMessage: (state, action: PayloadAction<{ chatId: string }>) => {
       delete state.drafts[action.payload.chatId];
     },
+    clearDrafts: (state) => {
+      state.drafts = {};
+    },
     setLastReadAt: (
       state,
       action: PayloadAction<{ chatId: string; lastReadAt: string }>,
@@ -58,6 +61,7 @@ const chatReducer = createSlice({
 export const {
   setDraftMessage,
   clearDraftMessage,
+  clearDrafts,
   setLastReadAt,
   setUnreadCount,
   setUnreadCounts,
