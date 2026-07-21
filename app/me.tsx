@@ -18,12 +18,13 @@ import { setOptions, clearOptions, showDialog } from "@/redux/reducers/infoReduc
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { dismissedIsItSafe, logout } from "@/redux/reducers/userReducer";
 import { useFocusEffect, router } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { Button } from "@/components/Button";
 
 export default function MeScreen() {
   const { uid, isItSafeDismissed } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
+  const scrollRef = useRef<ScrollView>(null);
   const isItSafeButtonText = `Ez a hely biztonságos${isItSafeDismissed ? "." : "?"}`;
 
     useFocusEffect(
@@ -79,6 +80,7 @@ export default function MeScreen() {
         enabled={Platform.OS === "android"}
       >
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={{ paddingBottom: 120 }}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
@@ -87,7 +89,11 @@ export default function MeScreen() {
         <Button mode={isItSafeDismissed ? "text" : "contained-tonal"} onPress={showIsItSafeDialog}>{isItSafeButtonText}</Button>
         {emotionAvailable && <EmotionCheckCard />}
         <View style={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.md }}>
-          <ToDoList />
+          <ToDoList
+            onRequestScrollIntoView={() =>
+              scrollRef.current?.scrollToEnd({ animated: true })
+            }
+          />
           {false && <View style={styles.cardRow}>
             <Card style={[styles.card, styles.cardSpacing]} theme={{colors: {shadow:"red"}}} onPress={() => {}}>
               <Card.Content style={styles.cardContent}>
