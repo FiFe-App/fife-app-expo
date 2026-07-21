@@ -285,10 +285,15 @@ export default function Index() {
           title="Biznisz"
           style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} />
       }} />
+      {/* iOS keyboard handling comes from the ScrollView's
+          automaticallyAdjustKeyboardInsets (below); this app is edge-to-edge on
+          Android where that prop is a no-op and the window does not resize, so
+          Android needs an active KeyboardAvoidingView instead. enabled per-OS so
+          neither platform double-compensates. */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}
+        behavior="height"
+        enabled={Platform.OS === "android"}
       >
       <ThemedView style={{ flex: 1 }}>
         {!data && !error && (

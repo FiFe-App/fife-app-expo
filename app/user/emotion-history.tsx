@@ -8,7 +8,7 @@ import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
 import { useFocusEffect, Redirect, Link } from "expo-router";
 import { useCallback, useState } from "react";
-import { ScrollView, View, Image, Platform } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View, Image } from "react-native";
 import { emotionAvailable } from "@/constants/emotionTiming";
 import { Calendar } from "react-native-calendars";
 import { Divider, Icon, IconButton, Surface, TextInput, TouchableRipple } from "react-native-paper";
@@ -126,7 +126,20 @@ export default function EmotionHistoryScreen() {
 
   return (
     <ThemedView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <ScrollView contentContainerStyle={{ padding: Spacing.md }}>
+      {/* iOS uses the ScrollView's automaticallyAdjustKeyboardInsets; this app is
+          edge-to-edge on Android where that prop is a no-op and the window does
+          not resize, so Android needs an active KeyboardAvoidingView. enabled
+          per-OS so neither platform double-compensates. */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior="height"
+        enabled={Platform.OS === "android"}
+      >
+      <ScrollView
+        contentContainerStyle={{ padding: Spacing.md }}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+      >
 
         <Link asChild href="/user/get-help">
           <TouchableRipple>
@@ -215,6 +228,7 @@ export default function EmotionHistoryScreen() {
         )}
 
       </ScrollView>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Keyboard, Platform, View } from "react-native";
 import { Icon, Surface, Text, TextInput, TouchableRipple } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -9,7 +9,15 @@ import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
 import { ThemedText } from "./ThemedText";
 
-export default function ToDoList() {
+interface ToDoListProps {
+  // Called when the input is focused and the keyboard opens, so a parent
+  // ScrollView can scroll this (bottom-of-content) input above the keyboard.
+  // Needed on edge-to-edge Android, where the window does not resize and a
+  // KeyboardAvoidingView alone cannot reveal an input inside scroll content.
+  onRequestScrollIntoView?: () => void;
+}
+
+export default function ToDoList({ onRequestScrollIntoView }: ToDoListProps) {
   const theme = useAppTheme();
   const dispatch = useDispatch();
   const tasks = useSelector((state: RootState) => state.user.tasks) ?? [];
@@ -96,6 +104,15 @@ export default function ToDoList() {
           value={newTitle}
           onChangeText={setNewTitle}
           onSubmitEditing={handleAdd}
+          onFocus={() => {
+            inputFocusedRef.current = true;
+            onRequestScrollIntoView?.();
+          }}
+          onBlur={() => {
+            inputFocusedRef.current = false;
+          }}
+          returnKeyType="done"
+          submitBehavior="submit"
           style={{
             backgroundColor: "transparent",
             marginTop: visibleTasks.length ? Spacing.xs : 0,

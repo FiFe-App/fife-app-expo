@@ -128,7 +128,7 @@ export default function Index() {
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="next"
-              blurOnSubmit={false}
+              submitBehavior="submit"
               onFocus={() => {
                 setFocusedField("email");
                 scrollViewRef.current?.scrollTo({ y: 0, animated: true });
@@ -151,7 +151,7 @@ export default function Index() {
                 scrollViewRef.current?.scrollTo({ y: 120, animated: true });
               }}
               onBlur={() => setFocusedField((value) => (value === "password" ? null : value))}
-              onSubmitEditing={signInWithEmail}
+              onSubmitEditing={() => email && password && signInWithEmail()}
               right={
                 <TextInput.Icon
                   icon={showPassword ? "eye" : "eye-off"}

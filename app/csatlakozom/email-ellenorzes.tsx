@@ -5,7 +5,7 @@ import { login, setUserData } from "@/redux/reducers/userReducer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
 import { useDispatch } from "react-redux";
 import { Spacing } from "@/constants/spacing";
@@ -100,6 +100,10 @@ export default function Index() {
 
   return (
     <ThemedView style={{ flex: 1, padding: Spacing.lg }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
       <View style={{ justifyContent: "center", marginBottom: Spacing.lg }}></View>
       <View
         style={{
@@ -131,6 +135,13 @@ export default function Index() {
                 placeholder="Az új email-címed"
                 value={email}
                 onChangeText={setEmail}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="email"
+                textContentType="emailAddress"
+                keyboardType="email-address"
+                returnKeyType="send"
+                onSubmitEditing={() => email && send()}
               />
             </>
           )}
@@ -147,6 +158,7 @@ export default function Index() {
             <Button onPress={() => setEdit(true)}>Elírtad az email-címed?</Button>}
         </View>
       </View>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }

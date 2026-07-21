@@ -35,7 +35,7 @@ export function MessageInput({
         placeholder="Írj üzenetet..."
         value={value}
         onChangeText={onChangeText}
-        submitBehavior="blurAndSubmit"
+        submitBehavior="submit"
         returnKeyType="send"
         onSubmitEditing={handleSend}
         disabled={disabled}

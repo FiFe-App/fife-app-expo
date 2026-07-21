@@ -268,7 +268,7 @@ export default function UserPage() {
                       )}
                     </View>
                     <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                      Támogatók
+                      Támogató
                     </Text>
                   </View>
                 </TouchableRipple>
@@ -284,7 +284,7 @@ export default function UserPage() {
                       {connectionsCount}
                     </Text>
                     <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                      Kapcsolatok
+                      Kapcsolat
                     </Text>
                   </View>
                 </TouchableRipple>

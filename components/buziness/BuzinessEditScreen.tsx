@@ -14,7 +14,7 @@ import { CircleType, ImageDataType, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { router, Stack, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import {
   Dialog,
   HelperText,
@@ -294,6 +294,10 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
         options={{ title: editId ? "Biznisz szerkesztése" : "Új Biznisz" }}
       />
       <ThemedView style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{
@@ -302,6 +306,7 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
             paddingBottom: Spacing.xxl,
             gap: Spacing.lg,
           }}
+          keyboardShouldPersistTaps="handled"
         >
           <View
             style={{
@@ -551,6 +556,7 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
             Mentés
           </Button>
         </Surface>
+        </KeyboardAvoidingView>
 
         <Portal>
           <Modal

@@ -103,7 +103,7 @@ export const UsernameInput: React.FC<UsernameInputProps> = ({
         autoComplete="username-new"
         textContentType="username"
         returnKeyType={returnKeyType}
-        blurOnSubmit={false}
+        submitBehavior="submit"
         onFocus={onFocus}
         onSubmitEditing={onSubmitEditing}
         left={<TextInput.Affix textStyle={{ opacity: 0.5 }} text="www.fifeapp.hu/@" />}

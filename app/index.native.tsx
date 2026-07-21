@@ -43,7 +43,7 @@ export default function NativeLanding() {
         <View style={{ flex: 1 }} />
         <View style={styles.buttonsContainer}>
           <Link asChild href="/csatlakozom">
-            <Button mode="contained" type="secondary" big style={{width:"100%"}}>
+            <Button mode="contained" type="secondary" style={{width:"100%"}}>
               Regisztrálok
             </Button>
           </Link>
