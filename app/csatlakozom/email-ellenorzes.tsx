@@ -102,7 +102,7 @@ export default function Index() {
     <ThemedView style={{ flex: 1, padding: Spacing.lg }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
       <View style={{ justifyContent: "center", marginBottom: Spacing.lg }}></View>
       <View

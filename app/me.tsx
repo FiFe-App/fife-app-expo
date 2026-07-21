@@ -5,7 +5,7 @@ import ToDoList from "@/components/ToDoList";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { RootState } from "@/redux/store";
-import { Image, ScrollView, StyleSheet, View } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Card } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "@/components/ThemedText";
@@ -69,6 +69,15 @@ export default function MeScreen() {
   if (!uid) return null;
   return (
     <ThemedView style={{ flex: 1 }} type="default">
+      {/* iOS uses the ScrollView's automaticallyAdjustKeyboardInsets; this app is
+          edge-to-edge on Android where that prop is a no-op and the window does
+          not resize, so the Lusta Lista / hangulatnapló inputs need an active
+          KeyboardAvoidingView. enabled per-OS so neither double-compensates. */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior="height"
+        enabled={Platform.OS === "android"}
+      >
       <ScrollView
         contentContainerStyle={{ paddingBottom: 120 }}
         keyboardShouldPersistTaps="handled"
@@ -103,6 +112,7 @@ export default function MeScreen() {
           </View>}
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }

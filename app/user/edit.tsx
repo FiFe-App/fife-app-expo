@@ -19,7 +19,7 @@ import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { ScrollView, View, TouchableWithoutFeedback, Platform, Text } from "react-native";
+import { KeyboardAvoidingView, ScrollView, View, TouchableWithoutFeedback, Platform, Text } from "react-native";
 import {
   Button,
   Divider,
@@ -350,6 +350,15 @@ export default function Index() {
   if (myUid)
     return (
       <ThemedView style={{ flex: 1, paddingBottom: Spacing.xxl }}>
+        {/* iOS uses the ScrollView's automaticallyAdjustKeyboardInsets; this app
+            is edge-to-edge on Android where that prop is a no-op and the window
+            does not resize, so Android needs an active KeyboardAvoidingView.
+            enabled per-OS so neither platform double-compensates. */}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior="height"
+          enabled={Platform.OS === "android"}
+        >
         <ScrollView
           style={{ flex: 1, padding: Spacing.sm }}
           keyboardShouldPersistTaps="handled"
@@ -617,6 +626,7 @@ export default function Index() {
             </Dialog>
           </Portal>
         </ScrollView>
+        </KeyboardAvoidingView>
         <Portal>
           <Modal
             visible={locationMenuVisible}

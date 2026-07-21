@@ -85,7 +85,7 @@ const ReportProfileModal = ({
   return (
     <Modal visible={show} onDismiss={handleDismiss}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
       <ThemedView
         style={{

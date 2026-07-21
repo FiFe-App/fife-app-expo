@@ -81,7 +81,7 @@ export default function PasswordResetScreen() {
     <ThemedView style={{ flex: 1 }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
           contentContainerStyle={{ padding: Spacing.lg, flexGrow: 1 }}

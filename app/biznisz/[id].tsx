@@ -44,7 +44,7 @@ import {
   useGlobalSearchParams,
 } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { ScrollView, useWindowDimensions, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from "react-native";
 import ImageModal from "react-native-image-modal";
 import openMap from "react-native-open-maps";
 import {
@@ -285,6 +285,16 @@ export default function Index() {
           title="Biznisz"
           style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} />
       }} />
+      {/* iOS keyboard handling comes from the ScrollView's
+          automaticallyAdjustKeyboardInsets (below); this app is edge-to-edge on
+          Android where that prop is a no-op and the window does not resize, so
+          Android needs an active KeyboardAvoidingView instead. enabled per-OS so
+          neither platform double-compensates. */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior="height"
+        enabled={Platform.OS === "android"}
+      >
       <ThemedView style={{ flex: 1 }}>
         {!data && !error && (
           <View style={{ paddingTop: Spacing.xxxl, alignItems: "center" }}>
@@ -666,6 +676,7 @@ export default function Index() {
           </Portal>
         )}
       </ThemedView>
+      </KeyboardAvoidingView>
     </>
   );
 }

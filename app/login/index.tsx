@@ -101,7 +101,7 @@ export default function Index() {
     <ThemedView style={{ flex: 1 }} type="default">
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}
         enabled
       >
