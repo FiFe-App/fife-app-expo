@@ -27,20 +27,6 @@ export default function ToDoList({ onRequestScrollIntoView }: ToDoListProps) {
     tasks.filter((task) => task.checked).map((task) => task.id),
   );
   const [newTitle, setNewTitle] = useState("");
-  const inputFocusedRef = useRef(false);
-
-  useEffect(() => {
-    if (Platform.OS !== "android" || !onRequestScrollIntoView) return;
-    const sub = Keyboard.addListener("keyboardDidShow", () => {
-      // Defer a frame so the KeyboardAvoidingView has shrunk the scroll
-      // padded the scroll content by the keyboard height (creating the room to
-      // scroll) before we scroll the input to the bottom of it.
-      if (inputFocusedRef.current) {
-        setTimeout(onRequestScrollIntoView, 120);
-      }
-    });
-    return () => sub.remove();
-  }, [onRequestScrollIntoView]);
 
   const visibleTasks = tasks.filter((task) => !hiddenIds.includes(task.id));
 
