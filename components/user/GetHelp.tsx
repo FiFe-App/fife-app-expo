@@ -1,23 +1,20 @@
+import ContactsCard from "@/components/buziness/ContactsCard";
 import { ThemedText } from "@/components/ThemedText";
 import { useAppTheme } from "@/assets/theme";
 import { BorderRadius } from "@/constants/borderRadius";
 import { Spacing } from "@/constants/spacing";
 import { Tables } from "@/database.types";
 import { useHelpContacts } from "@/hooks/useHelpContacts";
-import getLinkForHelpContact from "@/lib/functions/getLinkForHelpContact";
-import typeToIcon from "@/lib/functions/typeToIcon";
-import { addSnack } from "@/redux/reducers/infoReducer";
-import * as Clipboard from "expo-clipboard";
+import helpContactToContacts from "@/lib/functions/helpContactToContacts";
 import React, { useMemo, useState } from "react";
 import { Linking, ScrollView, View } from "react-native";
-import { ActivityIndicator, Icon, Surface, Text, TextInput, TouchableRipple } from "react-native-paper";
-import { useDispatch } from "react-redux";
+import { ActivityIndicator, Dialog, Icon, Portal, Surface, TextInput, TouchableRipple } from "react-native-paper";
 
 export default function GetHelp() {
   const theme = useAppTheme();
-  const dispatch = useDispatch();
   const { contacts, loading } = useHelpContacts();
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<Tables<"help_contacts"> | null>(null);
 
   const filteredContacts = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("hu-HU");
@@ -28,15 +25,10 @@ export default function GetHelp() {
     );
   }, [contacts, search]);
 
-  const handleContactPress = (contact: Tables<"help_contacts">) => {
-    const link = getLinkForHelpContact(contact);
-    if (!link) return;
-    Linking.openURL(link).catch(() => {
-      Clipboard.setStringAsync(contact.data).then(() => {
-        dispatch(addSnack({ title: "Vágólapra másolva!" }));
-      });
-    });
-  };
+  const selectedContacts = useMemo(
+    () => (selected ? helpContactToContacts(selected) : []),
+    [selected]
+  );
 
   return (
     <ScrollView contentContainerStyle={{ padding: Spacing.md }}>
@@ -98,14 +90,7 @@ export default function GetHelp() {
                     }}
                   />
                 )}
-                <TouchableRipple
-                  onPress={() => handleContactPress(contact)}
-                  onLongPress={() => {
-                    Clipboard.setStringAsync(contact.data).then(() => {
-                      dispatch(addSnack({ title: "Vágólapra másolva!" }));
-                    });
-                  }}
-                >
+                <TouchableRipple onPress={() => setSelected(contact)}>
                   <View
                     style={{
                       flexDirection: "row",
@@ -125,23 +110,21 @@ export default function GetHelp() {
                         justifyContent: "center",
                       }}
                     >
-                      <Icon source={typeToIcon(contact.type)} size={20} color={theme.colors.primary} />
+                      <Icon source="lifebuoy" size={20} color={theme.colors.primary} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <ThemedText variant="bodyMedium">{contact.title}</ThemedText>
-                      <ThemedText variant="labelSmall" type="link">
-                        {contact.data}
-                      </ThemedText>
                       {contact.description ? (
                         <ThemedText
                           variant="labelSmall"
                           style={{ color: theme.colors.onSurfaceVariant, marginTop: Spacing.xs }}
+                          numberOfLines={2}
                         >
                           {contact.description}
                         </ThemedText>
                       ) : null}
                     </View>
-                    <Icon source="open-in-new" size={16} color={theme.colors.outline} />
+                    <Icon source="chevron-right" size={20} color={theme.colors.outline} />
                   </View>
                 </TouchableRipple>
               </React.Fragment>
@@ -149,6 +132,18 @@ export default function GetHelp() {
           </Surface>
         )}
       </View>
+
+      <Portal>
+        <Dialog visible={!!selected} onDismiss={() => setSelected(null)}>
+          <Dialog.Title>{selected?.title}</Dialog.Title>
+          <Dialog.Content>
+            {selected?.description ? (
+              <ThemedText style={{ marginBottom: Spacing.md }}>{selected.description}</ThemedText>
+            ) : null}
+            {selectedContacts.length > 0 && <ContactsCard contacts={selectedContacts} />}
+          </Dialog.Content>
+        </Dialog>
+      </Portal>
     </ScrollView>
   );
 }

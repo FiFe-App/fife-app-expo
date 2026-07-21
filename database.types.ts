@@ -316,30 +316,44 @@ export type Database = {
       }
       help_contacts: {
         Row: {
+          buziness_id: number | null
           created_at: string
-          data: string
           description: string | null
           id: number
+          place: string | null
+          tel: string | null
           title: string
-          type: Database["public"]["Enums"]["contact_type"]
+          web: string | null
         }
         Insert: {
+          buziness_id?: number | null
           created_at?: string
-          data: string
           description?: string | null
           id?: number
+          place?: string | null
+          tel?: string | null
           title: string
-          type: Database["public"]["Enums"]["contact_type"]
+          web?: string | null
         }
         Update: {
+          buziness_id?: number | null
           created_at?: string
-          data?: string
           description?: string | null
           id?: number
+          place?: string | null
+          tel?: string | null
           title?: string
-          type?: Database["public"]["Enums"]["contact_type"]
+          web?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "help_contacts_buziness_id_fkey"
+            columns: ["buziness_id"]
+            isOneToOne: false
+            referencedRelation: "buziness"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -799,6 +813,7 @@ export type Database = {
         | "FACEBOOK"
         | "PLACE"
         | "MESSAGE"
+        | "BUZINESS"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -938,6 +953,7 @@ export const Constants = {
         "FACEBOOK",
         "PLACE",
         "MESSAGE",
+        "BUZINESS",
       ],
     },
   },

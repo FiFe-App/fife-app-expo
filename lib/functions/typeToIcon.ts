@@ -8,6 +8,7 @@ const typeToIcon = (type: string | undefined): IconSource => {
   if (type === "PLACE") return "map-marker";
   if (type === "WEB") return "web";
   if (type === "MESSAGE") return "message";
+  if (type === "BUZINESS") return "office-building";
   if (type === "OTHER") return "dots-horizontal";
   return "dots-horizontal";
 };

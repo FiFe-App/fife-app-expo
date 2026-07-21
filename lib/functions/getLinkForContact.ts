@@ -12,6 +12,10 @@ const getLinkForContact = (
   if (contact.type === "FACEBOOK")
     return "https://facebook.com/" + contact.data;
   if (contact.type === "WEB") return "https://" + contact.data;
+  if (contact.type === "PLACE")
+    return "https://www.google.com/maps/search/?api=1&query=" +
+      encodeURIComponent(contact.data);
+  if (contact.type === "BUZINESS") return `/biznisz/${contact.data}` as Href<string>;
   if (contact.type === "MESSAGE") return `/chat/${contact.author}` as Href<string>;
   return "";
 };
