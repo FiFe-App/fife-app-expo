@@ -12,10 +12,10 @@ import {
 
 type LegacyRow = { id: string; log_date: string; rate: number; note: string | null };
 
-async function backfillLegacyRows(rows: LegacyRow[]) {
+async function backfillLegacyRows(uid: string, rows: LegacyRow[]) {
   for (const row of rows) {
     try {
-      const { data, nonce } = await encryptEmotionLog({
+      const { data, nonce } = await encryptEmotionLog(uid, {
         rate: row.rate,
         note: row.note ?? undefined,
       });
@@ -67,7 +67,7 @@ export function useEmotionLog() {
       if (!uid) return;
       dispatch(upsertLog({ log_date: cardTarget.targetDate, rate, note }));
       try {
-        const { data, nonce } = await encryptEmotionLog({ rate, note });
+        const { data, nonce } = await encryptEmotionLog(uid, { rate, note });
         await supabase
           .from("emotion_logs")
           .upsert(
@@ -94,7 +94,7 @@ export function useEmotionLog() {
       if (!uid) return;
       dispatch(upsertLog({ log_date, rate, note }));
       try {
-        const { data, nonce } = await encryptEmotionLog({ rate, note });
+        const { data, nonce } = await encryptEmotionLog(uid, { rate, note });
         await supabase
           .from("emotion_logs")
           .upsert(
@@ -114,7 +114,7 @@ export function useEmotionLog() {
     const pending = logs.filter((l) => !l.synced);
     for (const log of pending) {
       try {
-        const { data, nonce } = await encryptEmotionLog({ rate: log.rate, note: log.note });
+        const { data, nonce } = await encryptEmotionLog(uid, { rate: log.rate, note: log.note });
         await supabase
           .from("emotion_logs")
           .upsert(
@@ -149,7 +149,7 @@ export function useEmotionLog() {
 
     for (const row of data) {
       if (row.encrypted_data && row.nonce) {
-        const plain = await decryptEmotionLog({ data: row.encrypted_data, nonce: row.nonce });
+        const plain = await decryptEmotionLog(uid, { data: row.encrypted_data, nonce: row.nonce });
         if (plain) {
           mapped.push({
             log_date: row.log_date,
@@ -177,7 +177,7 @@ export function useEmotionLog() {
     dispatch(mergeFromServer(mapped));
 
     if (legacyRows.length > 0) {
-      backfillLegacyRows(legacyRows);
+      backfillLegacyRows(uid, legacyRows);
     }
   }, [uid, dispatch]);
 
