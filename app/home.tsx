@@ -39,6 +39,7 @@ export default function Index() {
   const {
     data: nearbyBuzinesses,
     fetch: fetchNearby,
+    fetchNextPage: fetchNearbyNext,
     loading: buzinessesLoading,
     error: buzinessError,
   } = useNearbyBuzinesses();
@@ -87,6 +88,13 @@ export default function Index() {
         style={{ flex: 1, minHeight: 0 }}
         stickyHeaderIndices={[messagingEnabled ? 2 : 2]}
         contentContainerStyle={{ flexGrow: 1, paddingBottom: Spacing.xxl }}
+        onScroll={({ nativeEvent }) => {
+          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+          const distanceFromBottom =
+            contentSize.height - contentOffset.y - layoutMeasurement.height;
+          if (distanceFromBottom < 300) fetchNearbyNext();
+        }}
+        scrollEventThrottle={200}
       >
         {messagingEnabled && (
           <Card
@@ -157,6 +165,9 @@ export default function Index() {
               <BuzinessItem data={buziness} />
             </View>
           ))}
+          {buzinessesLoading && nearbyBuzinesses.length > 0 && (
+            <ActivityIndicator style={{ marginTop: Spacing.md }} />
+          )}
         </View>
       </ScrollView>
     </ThemedView>

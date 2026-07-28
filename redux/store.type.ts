@@ -43,6 +43,7 @@ export interface UserState {
     providerData: unknown;
     createdAt: Date;
     lastLoginAt: Date;
+    avatar_url?: string | null;
     location?: {
       lng: number;
       lat: number;
