@@ -18,7 +18,6 @@ import { BorderRadius } from "@/constants/borderRadius";
 import { Spacing } from "@/constants/spacing";
 import { Tables } from "@/database.types";
 import { useMyLocation } from "@/hooks/useMyLocation";
-import elapsedTime from "@/lib/functions/elapsedTime";
 import toDistanceText from "@/lib/functions/distanceText";
 import getDistance from "@/lib/functions/getDistance";
 import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
@@ -75,17 +74,29 @@ const StatItem = ({
   value,
   label,
   onPress,
+  avatar,
 }: {
-  value: string | number | null;
+  value?: string | number | null;
   label: string;
   onPress?: () => void;
+  avatar?: { uid: string; url?: string | null };
 }) => {
   const theme = useAppTheme();
   const inner = (
     <View style={{ alignItems: "center", paddingVertical: Spacing.xs }}>
-      <Text variant="headlineSmall" style={{ fontWeight: "700", color: theme.colors.primary }}>
-        {value}
-      </Text>
+      {avatar ? (
+        <ProfileImage
+          uid={avatar.uid}
+          avatar_url={avatar.url}
+          style={{ width: 28, height: 28, borderRadius: BorderRadius.full, marginBottom: 2 }}
+        />
+      ) : (
+        <View style={{height:28,justifyContent:"center"}}>
+          <Text variant="headlineSmall" style={{ fontWeight: "700", color: theme.colors.primary }}>
+            {value}
+          </Text>
+        </View>
+      )}
       <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
         {label}
       </Text>
@@ -354,30 +365,6 @@ export default function Index() {
                     })}
                   </View>
 
-                  <Link
-                    asChild
-                    href={{ pathname: "/user/[uid]", params: { uid: data.author } }}
-                  >
-                    <TouchableRipple style={{ borderRadius: BorderRadius.sm, alignSelf: "flex-start" }}>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: Spacing.xs,
-                          paddingVertical: Spacing.xs,
-                        }}
-                      >
-                        <ProfileImage
-                          uid={data.author}
-                          style={{ width: 24, height: 24, borderRadius: BorderRadius.full }}
-                          avatar_url={data.avatarUrl}
-                        />
-                        <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                          {data.authorName} biznisze
-                        </Text>
-                      </View>
-                    </TouchableRipple>
-                  </Link>
                 </View>
 
                 {/* Description */}
@@ -398,6 +385,23 @@ export default function Index() {
                   }}
                   elevation={1}
                 >
+                  {!distanceText && (
+                    <>
+                      <StatItem
+                        avatar={{ uid: data.author, url: data.avatarUrl }}
+                        label={data.authorName ?? ""}
+                        onPress={() =>
+                          router.push({
+                            pathname: "/user/[uid]",
+                            params: { uid: data.author },
+                          })
+                        }
+                      />
+
+                      <StatDivider />
+                    </>
+                  )}
+
                   <StatItem
                     value={recommendations?.length ?? 0}
                     label="Ajánlás"
@@ -416,7 +420,7 @@ export default function Index() {
                     onPress={() => goToTab("reviews")}
                   />
 
-                  {distanceText ? (
+                  {distanceText && (
                     <>
                       <StatDivider />
                       <StatItem
@@ -425,15 +429,7 @@ export default function Index() {
                         onPress={data.location ? goToMap : undefined}
                       />
                     </>
-                  ) : data.created_at ? (
-                    <>
-                      <StatDivider />
-                      <StatItem
-                        value={elapsedTime(Date.parse(data.created_at.toString()))}
-                        label="Kora"
-                      />
-                    </>
-                  ) : null}
+                  )}
                 </Surface>
 
                 {/* Primary CTA + secondary actions */}

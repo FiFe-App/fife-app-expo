@@ -20,8 +20,8 @@ export default function Ertesitesek() {
           Értesítések
         </ThemedText>
         <ThemedText type="subtitle" style={{ marginBottom: 24 }}>
-          Szólunk, ha valaki ajánlja a bizniszedet, megbízhatónak jelöl, vagy
-          kommentet ír. Te döntöd el, hogyan értesülj róla!
+          Kapsz értesítőt ha valaki ajánlja a bizniszedet, megbízhatónak jelöl, vagy
+          kommentet ír.
         </ThemedText>
       </View>
       <View style={{ gap: 20 }}>

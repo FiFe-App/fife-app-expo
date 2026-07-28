@@ -31,6 +31,7 @@ export default function FifeRadarScreen() {
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const { fetch, data, fetchNextPage, hasMore, error } = useFifeSearch();
 
+
   useEffect(() => {
     fetch();
   }, [searchCircle]);
