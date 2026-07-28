@@ -10,12 +10,14 @@ import { theme, useAppTheme } from "@/assets/theme";
 import Measure from "../tutorial/Measure";
 import { ThemedView } from "../ThemedView";
 import { BorderRadius } from "@/constants/borderRadius";
+import ProfileImage from "../ProfileImage";
 
 const BottomNavigation = () => {
   const segment = useSegments();
   const globalParams = useGlobalSearchParams();
   const theme = useAppTheme();
-  const { uid } = useSelector((state: RootState) => state.user);
+  const { uid, userData } = useSelector((state: RootState) => state.user);
+  const avatarUrl = userData?.avatar_url;
 
   const profilActive = segment[0]?.includes("user");
   const meActive = segment[0] === "me";
@@ -73,11 +75,34 @@ const BottomNavigation = () => {
       <Measure name="briefcase">
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user",{uid})}>
           <View style={{ alignItems: "center" }}>
-            {showIcon && <Icon
-              source={profilActive ? "account" : "account-outline"}
-              size={profilActive ? 30 : 24}
-              color={profilActive ? theme.colors.secondary : undefined}
-            />}
+            {showIcon && (uid && avatarUrl ? (
+              <View
+                style={{
+                  width: profilActive ? 30 : 24,
+                  height: profilActive ? 30 : 24,
+                  borderRadius: BorderRadius.full,
+                  overflow: "hidden",
+                  borderWidth: profilActive ? 2 : 0,
+                  borderColor: theme.colors.secondary,
+                }}
+              >
+                <ProfileImage
+                  uid={uid}
+                  avatar_url={avatarUrl}
+                  style={{
+                    width: profilActive ? 30 : 24,
+                    height: profilActive ? 30 : 24,
+                    borderRadius: BorderRadius.full,
+                  }}
+                />
+              </View>
+            ) : (
+              <Icon
+                source={profilActive ? "account" : "account-outline"}
+                size={profilActive ? 30 : 24}
+                color={profilActive ? theme.colors.secondary : undefined}
+              />
+            ))}
             {showText && <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
               Profilod
             </ThemedText>}

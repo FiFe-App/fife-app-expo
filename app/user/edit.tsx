@@ -12,7 +12,7 @@ import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 import { setOptions, clearOptions, addSnack, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
-import { setName, setThemePreference, logout } from "@/redux/reducers/userReducer";
+import { setName, setThemePreference, logout, setUserData } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
@@ -213,6 +213,7 @@ export default function Index() {
     await supabase.storage.from("avatars").remove([myUid + "/" + profile.avatar_url]);
     await supabase.from("profiles").update({ avatar_url: null }).eq("id", myUid);
     setProfile({ ...profile, avatar_url: null });
+    dispatch(setUserData({ avatar_url: null }));
     setImageLoading(false);
   };
 
@@ -238,6 +239,8 @@ export default function Index() {
         // Revert to the previous avatar if the upload produced no path
         // (e.g. cancelled mid-flight) so we never leave a blank image.
         setProfile({ ...profile, avatar_url: res ?? previousAvatar });
+        // Keep redux userData in sync so the BottomNavigation avatar updates.
+        if (res) dispatch(setUserData({ avatar_url: res }));
       } catch (error) {
         console.log("image upload failed", error);
         setProfile({ ...profile, avatar_url: previousAvatar });
