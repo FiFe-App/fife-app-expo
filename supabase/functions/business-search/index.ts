@@ -178,8 +178,12 @@ Deno.serve(async (req) => {
       .eq("author_profile.bad_boy", isBadBoy);
     if (ingyen) q = q.eq("ingyen", true);
     res = await q
-      .range(skip || 0, (skip || 0) + (take < 1 ? 20 : take) - 1)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      // Tiebreaker so rows with identical created_at (e.g. bulk-inserted in
+      // the same transaction, where now() is constant) sort deterministically.
+      // Without this, OFFSET pagination can skip or repeat rows across pages.
+      .order("id", { ascending: false })
+      .range(skip || 0, (skip || 0) + (take < 1 ? 20 : take) - 1);
   }
   if (res.error) {
     console.error("search rpc error", res.error);
