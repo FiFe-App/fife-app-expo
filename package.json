@@ -3,8 +3,8 @@
   "main": "expo-router/entry",
   "version": "1.0.1",
   "scripts": {
-    "dev": "node -e \"require('fs').copyFileSync('.env.dev','.env')\" && expo start -w",
-    "prod": "node -e \"require('fs').copyFileSync('.env.prod','.env')\" && expo start -w",
+    "dev": "node -e \"require('fs').copyFileSync('.env.dev','.env')\" && expo start",
+    "prod": "node -e \"require('fs').copyFileSync('.env.prod','.env')\" && expo start",
     "android": "expo run:android",
     "build": "node -e \"require('fs').copyFileSync('.env.prod','.env')\" && npx expo export --platform web",
     "ios": "expo run:ios",
@@ -60,6 +60,7 @@
     "expo-notifications": "~55.0.17",
     "expo-router": "~55.0.10",
     "expo-screen-orientation": "~55.0.11",
+    "expo-secure-store": "~55.0.15",
     "expo-splash-screen": "~55.0.15",
     "expo-status-bar": "~55.0.5",
     "expo-system-ui": "~55.0.13",
@@ -94,6 +95,8 @@
     "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
     "resize-observer-polyfill": "^1.5.1",
+    "tweetnacl": "^1.0.3",
+    "tweetnacl-util": "^0.15.1",
     "util": "^0.12.5",
     "wkx": "^0.5.0"
   },

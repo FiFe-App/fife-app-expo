@@ -82,7 +82,7 @@ export const UsernameInput: React.FC<UsernameInputProps> = ({
   }, [normalized, excludeUid]);
 
   const rightIcon = checking
-    ? undefined
+    ? "progress-question"
     : available === undefined
       ? undefined
       : available
@@ -103,7 +103,7 @@ export const UsernameInput: React.FC<UsernameInputProps> = ({
         autoComplete="username-new"
         textContentType="username"
         returnKeyType={returnKeyType}
-        blurOnSubmit={false}
+        submitBehavior="submit"
         onFocus={onFocus}
         onSubmitEditing={onSubmitEditing}
         left={<TextInput.Affix textStyle={{ opacity: 0.5 }} text="www.fifeapp.hu/@" />}

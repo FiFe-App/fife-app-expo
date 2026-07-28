@@ -27,6 +27,7 @@ export interface UserState {
   mantra?: string;
   messagingEnabled?: boolean;
   tasks?: TaskItem[];
+  isItSafeDismissed?: boolean;
   inviteCardDismissed?: boolean;
   notificationPrefs?: {
     notifyPush: boolean;
@@ -41,6 +42,7 @@ export interface UserState {
     providerData: unknown;
     createdAt: Date;
     lastLoginAt: Date;
+    avatar_url?: string | null;
     location?: {
       lng: number;
       lat: number;

@@ -1,11 +1,13 @@
 import { ThemedView } from "@/components/ThemedView";
 import { Tables } from "@/database.types";
+import { computeUnreadCounts } from "@/lib/functions/computeUnreadCounts";
 import { supabase } from "@/lib/supabase/supabase";
+import { setUnreadCounts } from "@/redux/reducers/chatReducer";
 import { RootState } from "@/redux/store";
 import React, { useCallback, useEffect, useState } from "react";
 import { FlatList, RefreshControl, View, StyleSheet } from "react-native";
 import { ActivityIndicator, Text } from "react-native-paper";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { ChatListItem } from "./ChatListItem";
 import { useFocusEffect } from "expo-router";
 import { MessagingDisabledCard } from "./MessagingDisabledCard";
@@ -19,7 +21,9 @@ interface ChatInfo {
 }
 
 export default function ChatList() {
+  const dispatch = useDispatch();
   const { uid: myUid, messagingEnabled } = useSelector((state: RootState) => state.user);
+  const { lastReadAt, unreadCounts } = useSelector((state: RootState) => state.chat);
   const [chats, setChats] = useState<ChatInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -47,11 +51,13 @@ export default function ChatList() {
         return;
       }
 
-      // Get unique user IDs from messages
+      // Get unique user IDs from messages (heart reactions aren't real messages
+      // and shouldn't show up as a conversation's last message)
+      const realMessages = messages.filter((msg) => !msg.text.startsWith("heart-"));
       const userIds = new Set<string>();
       const lastMessageMap = new Map<string, Message>();
 
-      messages.forEach((msg) => {
+      realMessages.forEach((msg) => {
         const otherUserId = msg.author === myUid ? msg.to : msg.author;
         if (otherUserId) {
           userIds.add(otherUserId);
@@ -60,6 +66,8 @@ export default function ChatList() {
           }
         }
       });
+
+      dispatch(setUnreadCounts(computeUnreadCounts(messages, myUid, lastReadAt)));
 
       // Load profiles for all users
       const { data: profiles, error: profilesError } = await supabase
@@ -94,7 +102,7 @@ export default function ChatList() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [myUid]);
+  }, [myUid, lastReadAt, dispatch]);
 
   useFocusEffect(
     useCallback(() => {
@@ -137,6 +145,7 @@ export default function ChatList() {
           <ChatListItem
             otherUser={item.otherUser}
             lastMessage={item.lastMessage}
+            unreadCount={unreadCounts[item.otherUser.id] ?? 0}
           />
         )}
         contentContainerStyle={chats.length === 0 ? styles.emptyContainer : styles.listContent}

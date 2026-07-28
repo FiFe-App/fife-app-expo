@@ -7,8 +7,6 @@ import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { Button } from "@/components/Button";
 import { Spacing } from "@/constants/spacing";
-import Smiley from "@/components/Smiley";
-import { BorderRadius } from "@/constants/borderRadius";
 import { ThemedView } from "@/components/ThemedView";
 import { Logo } from "@/components/Logo";
 
@@ -45,7 +43,7 @@ export default function NativeLanding() {
         <View style={{ flex: 1 }} />
         <View style={styles.buttonsContainer}>
           <Link asChild href="/csatlakozom">
-            <Button mode="contained" type="secondary" big style={{width:"100%"}}>
+            <Button mode="contained" type="secondary" style={{width:"100%"}}>
               Regisztrálok
             </Button>
           </Link>

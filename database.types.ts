@@ -314,11 +314,39 @@ export type Database = {
           },
         ]
       }
+      help_contacts: {
+        Row: {
+          created_at: string
+          data: string
+          description: string | null
+          id: number
+          title: string
+          type: Database["public"]["Enums"]["contact_type"]
+        }
+        Insert: {
+          created_at?: string
+          data: string
+          description?: string | null
+          id?: number
+          title: string
+          type: Database["public"]["Enums"]["contact_type"]
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          description?: string | null
+          id?: number
+          title?: string
+          type?: Database["public"]["Enums"]["contact_type"]
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           author: string
           created_at: string
           id: number
+          reply_to: number | null
           text: string
           to: string | null
         }
@@ -326,6 +354,7 @@ export type Database = {
           author: string
           created_at?: string
           id?: number
+          reply_to?: number | null
           text: string
           to?: string | null
         }
@@ -333,10 +362,19 @@ export type Database = {
           author?: string
           created_at?: string
           id?: number
+          reply_to?: number | null
           text?: string
           to?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       posts: {
         Row: {
@@ -413,31 +451,9 @@ export type Database = {
         Row: {
           id: string
           author: string
-          rate: number
-          log_date: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          author: string
-          rate: number
-          log_date: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          author?: string
-          rate?: number
-          log_date?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      emotion_logs: {
-        Row: {
-          id: string
-          author: string
-          rate: number
+          encrypted_data: string | null
+          nonce: string | null
+          rate: number | null
           note: string | null
           log_date: string
           created_at: string
@@ -445,7 +461,9 @@ export type Database = {
         Insert: {
           id?: string
           author: string
-          rate: number
+          encrypted_data?: string | null
+          nonce?: string | null
+          rate?: number | null
           note?: string | null
           log_date: string
           created_at?: string
@@ -453,7 +471,9 @@ export type Database = {
         Update: {
           id?: string
           author?: string
-          rate?: number
+          encrypted_data?: string | null
+          nonce?: string | null
+          rate?: number | null
           note?: string | null
           log_date?: string
           created_at?: string

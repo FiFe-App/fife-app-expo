@@ -29,7 +29,7 @@ import {
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import SupabaseImage from "../SupabaseImage";
-import UrlText from "./UrlText";
+import UrlText from "../UrlText";
 import { Comment, CommentsProps } from "./comments.types";
 import { ThemedText } from "../ThemedText";
 import { addSnack } from "@/redux/reducers/infoReducer";
@@ -385,6 +385,8 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
             value={text}
             onChangeText={setText}
             onSubmitEditing={handleSend}
+            returnKeyType="send"
+            submitBehavior="submit"
             disabled={!uid || loading}
             placeholder={
               uid

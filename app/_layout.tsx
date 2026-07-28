@@ -30,6 +30,8 @@ import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import FakeSearchInput from "@/components/FakeSearchInput";
 import { RootState } from "@/redux/store";
 import { setLocation, logout, setNotificationPrefs } from "@/redux/reducers/userReducer";
+import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
+import { clearDrafts } from "@/redux/reducers/chatReducer";
 import { supabase } from "@/lib/supabase/supabase";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
@@ -86,16 +88,24 @@ function RootContent() {
     // (missing, or belonging to a different account left over from a prior
     // login on this device), clear Redux so we don't show the wrong user.
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (uid && (!session || session.user.id !== uid)) dispatch(logout());
+      if (uid && (!session || session.user.id !== uid)) {
+        dispatch(logout());
+        dispatch(clearEmotionLogs());
+        dispatch(clearDrafts());
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") {
         // Refresh token expired or explicit sign-out — clear Redux to match
         dispatch(logout());
+        dispatch(clearEmotionLogs());
+        dispatch(clearDrafts());
       } else if (uid && session && session.user.id !== uid) {
         // Session belongs to a different account than Redux thinks — resync
         dispatch(logout());
+        dispatch(clearEmotionLogs());
+        dispatch(clearDrafts());
       }
     });
     return () => subscription.unsubscribe();
@@ -246,7 +256,7 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="chats"
-                  options={{ title: "Üzenetek" }}
+                  options={{ title: "Üzeneteid" }}
                 />
                 <Stack.Screen
                   name="chat/[uid]"
@@ -254,7 +264,11 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="user/emotion-history"
-                  options={{ title: "Napló" }} 
+                  options={{ title: "Napló" }}
+                />
+                <Stack.Screen
+                  name="user/get-help"
+                  options={{ title: "Segítség kell?" }}
                 />
               </Stack.Protected>
               <Stack.Protected guard={!uid}>
@@ -273,10 +287,10 @@ function RootContent() {
                 />
 
               </Stack.Protected>
-                <Stack.Screen
-                  name="user/password-reset"
-                  options={{ title: "Jelszó visszaállítás" }}
-                />
+              <Stack.Screen
+                name="user/password-reset"
+                options={{ title: "Jelszó visszaállítás" }}
+              />
             </Stack>
             {pathname !== "/" && !pathname.includes("projekt") &&
               !pathname.includes("login") &&
@@ -287,7 +301,7 @@ function RootContent() {
               !pathname.startsWith("/biznisz/edit") && <BottomNavigation />}
           </View>
         </ThemedView>
-        <View style={{bottom:0,height:30,width:"100%",backgroundColor:theme.colors.background,position:"absolute",zIndex:-1}}/>
+        <View style={{bottom:0,height:30,width:"100%",backgroundColor:theme.colors.elevation.level1,position:"absolute",zIndex:-1}}/>
       </SafeAreaView>
     </PaperProvider>
   );

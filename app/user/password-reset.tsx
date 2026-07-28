@@ -1,8 +1,8 @@
 import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
 import { supabase } from "@/lib/supabase/supabase";
-import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { TextInput, Text, Card } from "react-native-paper";
 import { Link, useLocalSearchParams } from "expo-router";
 import { theme } from "@/assets/theme";
@@ -30,6 +30,7 @@ export default function PasswordResetScreen() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const confirmRef = useRef<{ focus: () => void } | null>(null);
 
   // If link opened with tokens, establish session then move to reset stage
   useEffect(() => {
@@ -77,95 +78,120 @@ export default function PasswordResetScreen() {
   };
 
   return (
-    <ThemedView style={{ flex: 1, padding: Spacing.lg }}>
-      <View
-        style={{
-          maxWidth: 420,
-          width: "100%",
-          marginHorizontal: "auto",
-          gap: Spacing.lg,
-        }}
+    <ThemedView style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        {stage === "request" && (
-          <>
-            <Text variant="headlineSmall">Elfelejtett jelszó</Text>
-            <Text >Add meg azt e-mail-t, amivel regisztráltál korábban!</Text>
-            <TextInput
-              mode="outlined"
-              label="E-mail"
-              autoCapitalize="none"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-            />
-            <Button
-              mode="contained"
-              onPress={sendEmail}
-              loading={loading}
-              disabled={!email}
-            >
-              Visszaállító email küldése
-            </Button>
-          </>
-        )}
-        {stage === "reset" && (
-          <>
-            <Text variant="headlineSmall">Új jelszó beállítása</Text>
-            <TextInput
-              mode="outlined"
-              label="Új jelszó"
-              secureTextEntry={!showPw}
-              value={password}
-              onChangeText={setPassword}
-              right={
-                <TextInput.Icon
-                  icon={showPw ? "eye" : "eye-off"}
-                  onPress={() => setShowPw((s) => !s)}
-                />
-              }
-            />
-            <TextInput
-              mode="outlined"
-              label="Jelszó megerősítése"
-              secureTextEntry={!showPw}
-              value={confirm}
-              onChangeText={setConfirm}
-            />
-            <Button
-              mode="contained"
-              onPress={updatePassword}
-              loading={loading}
-              disabled={!password || !confirm || !!(message && stage == "reset")}
-            >
-              Jelszó mentése
-            </Button>
-          </>
-        )}
-        {(sent || error || message) && (
-          <Card style={{ padding: Spacing.xl }} contentStyle={{ gap: Spacing.md }}>
-            {error && <Text style={{ color: theme.colors.error }}>{error}</Text>}
-            {message && (
-              <Text style={{ color: stage === "reset" ? theme.colors.tertiary : undefined }}>
-                {message}
-              </Text>
-            )}
-            {stage === "reset" && message && !error && (
-              <Link href="/login" asChild>
-                <Button mode="contained">Bejelentkezés</Button>
-              </Link>
-            )}
-          </Card>
-        )}
-        <View
-          style={{ alignItems: "center", justifyContent: "center", margin: Spacing.xxl }}
+        <ScrollView
+          contentContainerStyle={{ padding: Spacing.lg, flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
         >
-          <Image
-            source={require("@/assets/images/Phone.png")}
-            style={{ width: "80%", aspectRatio: 1 / 1, resizeMode: "cover" }}
-            contentFit="cover"
-          />
-        </View>
-      </View>
+          <View
+            style={{
+              maxWidth: 420,
+              width: "100%",
+              marginHorizontal: "auto",
+              gap: Spacing.lg,
+            }}
+          >
+            {stage === "request" && (
+              <>
+                <Text variant="headlineSmall">Elfelejtett jelszó</Text>
+                <Text >Add meg azt e-mail-t, amivel regisztráltál korábban!</Text>
+                <TextInput
+                  mode="outlined"
+                  label="E-mail"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="email"
+                  textContentType="emailAddress"
+                  keyboardType="email-address"
+                  returnKeyType="send"
+                  value={email}
+                  onChangeText={setEmail}
+                  onSubmitEditing={() => email && sendEmail()}
+                />
+                <Button
+                  mode="contained"
+                  onPress={sendEmail}
+                  loading={loading}
+                  disabled={!email}
+                >
+                  Visszaállító email küldése
+                </Button>
+              </>
+            )}
+            {stage === "reset" && (
+              <>
+                <Text variant="headlineSmall">Új jelszó beállítása</Text>
+                <TextInput
+                  mode="outlined"
+                  label="Új jelszó"
+                  secureTextEntry={!showPw}
+                  value={password}
+                  onChangeText={setPassword}
+                  autoComplete="new-password"
+                  textContentType="newPassword"
+                  returnKeyType="next"
+                  submitBehavior="submit"
+                  onSubmitEditing={() => confirmRef.current?.focus()}
+                  right={
+                    <TextInput.Icon
+                      icon={showPw ? "eye" : "eye-off"}
+                      onPress={() => setShowPw((s) => !s)}
+                    />
+                  }
+                />
+                <TextInput
+                  ref={confirmRef as never}
+                  mode="outlined"
+                  label="Jelszó megerősítése"
+                  secureTextEntry={!showPw}
+                  value={confirm}
+                  onChangeText={setConfirm}
+                  autoComplete="new-password"
+                  textContentType="newPassword"
+                  returnKeyType="done"
+                  onSubmitEditing={() => password && confirm && updatePassword()}
+                />
+                <Button
+                  mode="contained"
+                  onPress={updatePassword}
+                  loading={loading}
+                  disabled={!password || !confirm || !!(message && stage == "reset")}
+                >
+                  Jelszó mentése
+                </Button>
+              </>
+            )}
+            {(sent || error || message) && (
+              <Card style={{ padding: Spacing.xl }} contentStyle={{ gap: Spacing.md }}>
+                {error && <Text style={{ color: theme.colors.error }}>{error}</Text>}
+                {message && (
+                  <Text style={{ color: stage === "reset" ? theme.colors.tertiary : undefined }}>
+                    {message}
+                  </Text>
+                )}
+                {stage === "reset" && message && !error && (
+                  <Link href="/login" asChild>
+                    <Button mode="contained">Bejelentkezés</Button>
+                  </Link>
+                )}
+              </Card>
+            )}
+            <View
+              style={{ alignItems: "center", justifyContent: "center", margin: Spacing.xxl }}
+            >
+              <Image
+                source={require("@/assets/images/Phone.png")}
+                style={{ width: "80%", aspectRatio: 1 / 1, resizeMode: "cover" }}
+                contentFit="cover"
+              />
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }
