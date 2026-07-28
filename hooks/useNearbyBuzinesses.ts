@@ -93,7 +93,15 @@ export function useNearbyBuzinesses(take = 5) {
     setError(null);
     try {
       const buzinesses = await runSearch(skipRef.current);
-      setData((prev) => [...prev, ...buzinesses]);
+      setData((prev) => {
+        // Guard against duplicate rows across pages (e.g. unstable ordering
+        // when many businesses share the same created_at), which would
+        // otherwise produce duplicate React keys and make the list appear
+        // stuck on scroll.
+        const seenIds = new Set(prev.map((b) => b.id));
+        const newBuzinesses = buzinesses.filter((b) => !seenIds.has(b.id));
+        return [...prev, ...newBuzinesses];
+      });
       const more = buzinesses.length === take;
       setHasMore(more);
       hasMoreRef.current = more;
