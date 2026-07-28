@@ -12,7 +12,7 @@ import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 import { setOptions, clearOptions, addSnack, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
-import { setName, setThemePreference, logout } from "@/redux/reducers/userReducer";
+import { setName, setThemePreference, logout, setUserData } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
@@ -213,6 +213,7 @@ export default function Index() {
     await supabase.storage.from("avatars").remove([myUid + "/" + profile.avatar_url]);
     await supabase.from("profiles").update({ avatar_url: null }).eq("id", myUid);
     setProfile({ ...profile, avatar_url: null });
+    dispatch(setUserData({ avatar_url: null }));
     setImageLoading(false);
   };
 
@@ -230,52 +231,77 @@ export default function Index() {
     if (result && !result?.canceled) {
       console.log(result);
 
+      const previousAvatar = profile?.avatar_url ?? null;
       setProfile({ ...profile, avatar_url: "" });
       setImageLoading(true);
-      uploadImage(result.assets[0]).then((res) => {
-        setProfile({ ...profile, avatar_url: res });
+      try {
+        const res = await uploadImage(result.assets[0]);
+        // Revert to the previous avatar if the upload produced no path
+        // (e.g. cancelled mid-flight) so we never leave a blank image.
+        setProfile({ ...profile, avatar_url: res ?? previousAvatar });
+        // Keep redux userData in sync so the BottomNavigation avatar updates.
+        if (res) dispatch(setUserData({ avatar_url: res }));
+      } catch (error) {
+        console.log("image upload failed", error);
+        setProfile({ ...profile, avatar_url: previousAvatar });
+        dispatch(
+          addSnack({ title: "A kép feltöltése nem sikerült. Kérlek próbáld újra." }),
+        );
+      } finally {
         setImageLoading(false);
-      });
+      }
     } else console.log("cancelled");
   };
   const uploadImage = async (image: ExpoImagePicker.ImagePickerAsset) => {
-    if (!image || !image.fileName) return;
+    if (!image || !myUid) return;
 
-    const response = await fetch(image.uri);
-    const blob = await response.blob();
-    const arrayBuffer = await new Response(blob).arrayBuffer();
-    const upload = await supabase.storage
+    // Android's launchImageLibraryAsync often returns fileName: null, so derive
+    // a name from the URI (or a timestamp) instead of keying off image.fileName.
+    const fileName =
+      image.fileName ||
+      image.uri.split("/").pop() ||
+      `avatar_${Date.now()}.jpg`;
+    const mimeType = image.mimeType || "image/jpeg";
+
+    let uploadData: Uint8Array | Blob;
+    if (image.base64) {
+      // Use the base64 payload directly. fetch(uri).blob() is unreliable on
+      // Android content:// URIs (and iOS temp file URIs) — it can throw or hang,
+      // which previously left the avatar spinner stuck forever. Pass a
+      // Uint8Array (ArrayBufferView), not .buffer, which can detach on the JSI
+      // bridge.
+      const b64 = image.base64.replace(/\s/g, ""); // strip any line breaks
+      const binaryString = atob(b64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      uploadData = bytes;
+    } else {
+      const response = await fetch(image.uri);
+      uploadData = await response.blob();
+    }
+
+    const { data, error } = await supabase.storage
       .from("avatars")
-      .upload(myUid + "/" + image.fileName, arrayBuffer, {
-        contentType: image.mimeType,
+      .upload(myUid + "/" + fileName, uploadData, {
+        contentType: mimeType,
         upsert: true,
-      })
-      .then(async ({ data, error }) => {
-        console.log("upload", data);
-        if (error)
-          console.log(error);
-
-        if (data?.path && myUid)
-          supabase
-            .from("profiles")
-            .upsert(
-              {
-                avatar_url: image.fileName,
-                id: myUid,
-              },
-              { onConflict: "id" },
-            )
-            .then((res) => {
-              console.log("profile upsert", res);
-            });
-
-        return image.fileName;
-      })
-      .catch((error) => {
-        return error;
       });
 
-    return upload;
+    if (error) {
+      console.log("avatar upload error", error);
+      throw error;
+    }
+
+    if (data?.path) {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert({ avatar_url: fileName, id: myUid }, { onConflict: "id" });
+      if (profileError) console.log("profile upsert error", profileError);
+    }
+
+    return fileName;
   };
   
   const handleDeleteProfile = () => {

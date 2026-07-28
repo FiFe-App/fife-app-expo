@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Keyboard, Platform, View } from "react-native";
+import { useState } from "react";
+import { View } from "react-native";
 import { Icon, Surface, Text, TextInput, TouchableRipple } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -105,11 +105,7 @@ export default function ToDoList({ onRequestScrollIntoView }: ToDoListProps) {
           onChangeText={setNewTitle}
           onSubmitEditing={handleAdd}
           onFocus={() => {
-            inputFocusedRef.current = true;
             onRequestScrollIntoView?.();
-          }}
-          onBlur={() => {
-            inputFocusedRef.current = false;
           }}
           returnKeyType="done"
           submitBehavior="submit"

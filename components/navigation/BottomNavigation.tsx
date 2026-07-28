@@ -6,16 +6,18 @@ import { ThemedText } from "../ThemedText";
 import { useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { RootState } from "@/redux/store";
-import { theme, useAppTheme } from "@/assets/theme";
+import { useAppTheme } from "@/assets/theme";
 import Measure from "../tutorial/Measure";
 import { ThemedView } from "../ThemedView";
 import { BorderRadius } from "@/constants/borderRadius";
+import ProfileImage from "../ProfileImage";
 
 const BottomNavigation = () => {
   const segment = useSegments();
   const globalParams = useGlobalSearchParams();
   const theme = useAppTheme();
-  const { uid } = useSelector((state: RootState) => state.user);
+  const { uid, userData } = useSelector((state: RootState) => state.user);
+  const avatarUrl = userData?.avatar_url;
 
   const profilActive = segment[0]?.includes("user");
   const meActive = segment[0] === "me";
@@ -42,6 +44,9 @@ const BottomNavigation = () => {
   const showIcon = true;
   const showText = false;
 
+  const selectedSize = 30;
+  const normalSize = 30;
+
   return (
     <ThemedView type="card" style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level1, zIndex:1 }}>
       <Measure name="home">
@@ -49,11 +54,11 @@ const BottomNavigation = () => {
           <View style={{ alignItems: "center" }}>
             {showIcon && <Icon
               source={usActive ? "account-group" : "account-group-outline"}
-              size={usActive ? 30 : 24}
+              size={usActive ? selectedSize : normalSize}
               color={usActive ? theme.colors.tertiary : theme.colors.tertiary}
             />}
             {showText && <ThemedText type={usActive ? "defaultSemiBold" : "default"}>
-              Segítség
+              Közösség
             </ThemedText>}
           </View>
         </TouchableRipple>
@@ -62,22 +67,45 @@ const BottomNavigation = () => {
           <View style={{ alignItems: "center" }}>
             {showIcon && <Icon
               source={meActive ? "home" : "home-outline"}
-              size={meActive ? 30 : 24}
+              size={meActive ? selectedSize : normalSize}
               color={meActive ? theme.colors.secondary : undefined}
             />}
             {showText && <ThemedText type={meActive ? "defaultSemiBold" : "default"}>
-              Én
+              Otthon
             </ThemedText>}
           </View>
         </TouchableRipple>
       <Measure name="briefcase">
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user",{uid})}>
           <View style={{ alignItems: "center" }}>
-            {showIcon && <Icon
-              source={profilActive ? "account" : "account-outline"}
-              size={profilActive ? 30 : 24}
-              color={profilActive ? theme.colors.secondary : undefined}
-            />}
+              {showIcon && (uid && avatarUrl ? (<View
+                style={{
+                  width: profilActive ? selectedSize+2 : normalSize,
+                  height: profilActive ? selectedSize+2 : normalSize,
+                  borderRadius: BorderRadius.sm,
+                  overflow: "hidden",
+                  padding:1,
+                  borderWidth: profilActive ? 2 : 0,
+                  borderColor: theme.colors.primary,
+                }}
+              >
+                <ProfileImage
+                  uid={uid}
+                  avatar_url={avatarUrl}
+                  style={{
+                    width: profilActive ? selectedSize-4 : normalSize-2,
+                    height: profilActive ? selectedSize-4 : normalSize-2,
+                    borderRadius: 4,
+                  }}
+                />
+                </View>
+              ) : (
+              <Icon
+                source={profilActive ? "account" : "account-outline"}
+                size={profilActive ? selectedSize : normalSize}
+                color={profilActive ? theme.colors.secondary : undefined}
+              />
+            ))}
             {showText && <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
               Profilod
             </ThemedText>}
