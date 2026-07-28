@@ -6,7 +6,7 @@ import { RootState } from "@/redux/store";
 import { useMyLocation } from "./useMyLocation";
 import { NearestProfile } from "@/redux/store.type";
 
-export const NO_LOCATION_ERROR = "Nincs megadva a környéked";
+export const NO_LOCATION_ERROR = "Add meg a környéked, hogy lásd kik laknak ott";
 
 export function useFifeSearch() {
   const PAGE_SIZE = Math.floor(Dimensions.get("window").height / 100);

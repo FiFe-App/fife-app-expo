@@ -146,7 +146,7 @@ export default function Index() {
         >
           <View style={{ flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
             <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>
-              Közeli Bizniszek
+              {searchCircle ? "Közeli" : "Budapesti"} Bizniszek
             </ThemedText>
             <Icon size={18} color={theme.colors.secondary} source="map-marker" />
           </View>

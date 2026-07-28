@@ -19,7 +19,6 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/Button";
 import { useFifeSearch } from "@/hooks/useFifeSearch";
-import { useNoLocationAlert } from "@/hooks/useNoLocationAlert";
 
 export default function FifeRadarScreen() {
   const { uid } = useSelector((state: RootState) => state.user);
@@ -32,7 +31,6 @@ export default function FifeRadarScreen() {
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const { fetch, data, fetchNextPage, hasMore, error } = useFifeSearch();
 
-  useNoLocationAlert(error);
 
   useEffect(() => {
     fetch();

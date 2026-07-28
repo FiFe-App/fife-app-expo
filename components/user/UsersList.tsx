@@ -32,18 +32,22 @@ export const UsersList: React.FC<UsersListProps> = ({
   );
   const loading = userSearchParams?.loading || false;
 
-  return (
-    <View style={styles.container}>
-      {!!error && (
-        <ThemedView style={{ margin: 6, alignItems: "center", gap: Spacing.xs }} type="error">
-          <ThemedText type="error">{error}</ThemedText>
+  if (error) return (
+        <ThemedView style={{ flex:1, justifyContent:"center", margin: 6, alignItems: "center", gap: Spacing.md, padding:Spacing.sm }}>
+          <View>
+            <ThemedText>{error}</ThemedText>
+          </View>
           {error === NO_LOCATION_ERROR && (
-            <Button mode="text" onPress={() => router.push("/user/edit")}>
+            <Button mode="contained" onPress={() => router.push("/user/edit")}>
               Beállítom
             </Button>
           )}
         </ThemedView>
-      )}
+      );
+
+  return (
+    <View style={styles.container}>
+
       <FlatList
         data={data}
         keyExtractor={(item, index) => item.id === "-1" ? `divider-${index}` : item.id}
