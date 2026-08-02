@@ -111,7 +111,7 @@ export interface BuzinessItemInterface {
   author: string;
   authorName?: string;
   avatarUrl?: string | null;
-  images?: ImageDataType[];
+  images?: MediaDataType[];
   recommendations: number | { count: number }[];
   created_at?: string;
   ingyen?: boolean;
@@ -201,9 +201,16 @@ export interface ChatState {
   unreadCounts: Record<string, number>;
 }
 
-export interface ImageDataType extends ImagePickerAsset {
+export type MediaKindType = "image" | "video" | "audio";
+
+export interface MediaDataType extends ImagePickerAsset {
   description?: string;
   path: string;
   url: string;
   status: "toUpload" | "uploaded" | "toDelete";
+  /**
+   * Only images were supported at first, so this can be missing on older
+   * records — use `getMediaKind` instead of reading it directly.
+   */
+  mediaType?: MediaKindType;
 }

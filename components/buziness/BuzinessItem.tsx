@@ -1,4 +1,5 @@
 import toDistanceText from "@/lib/functions/distanceText";
+import getMediaKind from "@/lib/functions/getMediaKind";
 import wrapper from "@/lib/functions/wrapper";
 import { supabase } from "@/lib/supabase/supabase";
 import { showDialog } from "@/redux/reducers/infoReducer";
@@ -46,6 +47,20 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
       : "";
 
   const isNew = data?.created_at && new Date().getTime() - new Date(data.created_at).getTime() < 1000 * 60 * 60 * 24 * 10;
+
+  const mediaCounts = (
+    [
+      { kind: "image", icon: "image", label: "kép" },
+      { kind: "video", icon: "video", label: "videó" },
+      { kind: "audio", icon: "music-note", label: "hang" },
+    ] as const
+  )
+    .map((type) => ({
+      ...type,
+      count:
+        data.images?.filter((i) => getMediaKind(i) === type.kind).length || 0,
+    }))
+    .filter((type) => type.count > 0);
 
   const splitted = titleAndCats?.split(" $ ");
   const title = splitted?.[0] || "";
@@ -97,7 +112,11 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
           <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.sm }}>
             <MetaStat icon="account-group">{recommendations} ember ajánlja</MetaStat>
             {!!distanceText && <MetaStat icon="map-marker">{distanceText}</MetaStat>}
-            {!!data.images?.length && <MetaStat icon="image">{data?.images?.length || 0} kép</MetaStat>}
+            {mediaCounts.map((stat) => (
+              <MetaStat key={stat.label} icon={stat.icon}>
+                {stat.count} {stat.label}
+              </MetaStat>
+            ))}
           </View>
           <Text variant="bodyMedium" numberOfLines={4} ellipsizeMode="tail" style={{ flex: 1 }}>
             {description}

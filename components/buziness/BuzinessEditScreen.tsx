@@ -10,7 +10,7 @@ import {
   showLoading,
 } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { CircleType, ImageDataType, UserState } from "@/redux/store.type";
+import { CircleType, MediaDataType, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { router, Stack, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -32,10 +32,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { Marker } from "../mapView/mapView";
 import FiFeMap from "../mapView/FiFeMap";
 import { ThemedView } from "../ThemedView";
-import BuzinessImageUpload, {
-  BuzinessImageUploadHandle,
-} from "./BuzinessImageUpload";
+import BuzinessMediaUpload, {
+  BuzinessMediaUploadHandle,
+} from "./BuzinessMediaUpload";
 import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
+import getMediaKind from "@/lib/functions/getMediaKind";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 import BuzinessItem from "./BuzinessItem";
 import { Button } from "../Button";
@@ -75,8 +76,8 @@ export default function BuzinessEditScreen({
   const [defaultContact, setDefaultContact] = useState<number | undefined>();
 
   const [ingyen, setIngyen] = useState(false);
-  const [images, setImages] = useState<ImageDataType[]>([]);
-  const imagesUploadRef = useRef<BuzinessImageUploadHandle | null>(null);
+  const [media, setMedia] = useState<MediaDataType[]>([]);
+  const mediaUploadRef = useRef<BuzinessMediaUploadHandle | null>(null);
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
       | PostgrestSingleResponse<unknown>
@@ -155,21 +156,24 @@ export default function BuzinessEditScreen({
       })
       .then(async (res) => {
         const buzinessId = editId ?? res.data?.id;
-        if (images.length && buzinessId) {
-          const newImages = await imagesUploadRef.current?.uploadImages(
+        if (media.length && buzinessId) {
+          const newMedia = await mediaUploadRef.current?.uploadMedia(
             buzinessId,
           );
-          if (uid && newImages)
+          if (uid && newMedia)
             await supabase
               .from("buziness")
               .update({
                 author: uid,
-                images: newImages
-                  .filter((i) => i.status !== "toDelete")
+                images: newMedia
+                  .filter((i) => i.status !== "toDelete" && !!i.path)
                   .map((i) =>
                     JSON.stringify({
                       description: i.description,
                       path: i.path,
+                      mediaType: getMediaKind(i),
+                      fileName: i.fileName,
+                      mimeType: i.mimeType,
                     }),
                   ) as string[],
               })
@@ -188,7 +192,7 @@ export default function BuzinessEditScreen({
     defaultContact,
     dispatch,
     editId,
-    images.length,
+    media.length,
     ingyen,
     newBuziness,
     selectedLocation,
@@ -253,7 +257,7 @@ export default function BuzinessEditScreen({
               if (editingBuziness.defaultContact)
                 setDefaultContact(editingBuziness.defaultContact);
               if (editingBuziness.images)
-                setImages(getImagesUrlFromSupabase(editingBuziness.images));
+                setMedia(getImagesUrlFromSupabase(editingBuziness.images));
               if (editingBuziness.location) {
                 const cords = locationToCoords(
                   String(editingBuziness.location),
@@ -465,13 +469,13 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
           </View>
 
           <View style={{ gap: Spacing.sm }}>
-            <SectionLabel label="Képek" optional />
+            <SectionLabel label="Képek, videók, hangok" optional />
             <Surface elevation={1} style={surfaceStyle}>
-              <BuzinessImageUpload
-                images={images}
-                setImages={setImages}
+              <BuzinessMediaUpload
+                media={media}
+                setMedia={setMedia}
                 buzinessId={editId}
-                ref={imagesUploadRef}
+                ref={mediaUploadRef}
               />
             </Surface>
           </View>
@@ -524,7 +528,7 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
                 description:
                   newBuziness.description ||
                   "Hosszabb leírás hogy miről szól a bizniszed.",
-                images: images,
+                images: media,
                 location: circle
                   ? `POINT(${circle.location.longitude} ${circle.location.latitude})`
                   : null,
