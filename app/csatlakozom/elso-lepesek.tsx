@@ -7,7 +7,7 @@ import { UserState } from "@/redux/store.type";
 import { fetchUserProfile } from "@/lib/auth/fetchUserProfile";
 import { Image } from "expo-image";
 import { Link, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import { ActivityIndicator, Button, Icon } from "react-native-paper";
 import { Spacing } from "@/constants/spacing";
@@ -19,9 +19,14 @@ export default function Index() {
   const { "#": hash } = useLocalSearchParams<{ "#": string }>();
   console.log(hash);
 
-  const token_data = hash
-    ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
-    : null;
+  // Keyed on the raw fragment: rebuilding this object on every render made it a
+  // new dependency each time, so the effect below re-ran after each of its own
+  // dispatches and kept calling `setSession`/`fetchUserProfile` in a loop.
+  const token_data = useMemo(
+    () =>
+      hash ? Object.fromEntries(hash.split("&").map((e) => e.split("="))) : null,
+    [hash],
+  );
   const [error, setError] = useState<string | null>(
     uid || token_data ? null : "A regisztráció nem sikerült.",
   );
