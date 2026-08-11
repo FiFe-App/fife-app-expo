@@ -8,6 +8,7 @@
 import { screen, waitFor } from "@testing-library/react-native";
 
 jest.mock("expo-router", () => require("@/test-utils/mocks/expo-router"));
+jest.mock("expo-linking", () => require("@/test-utils/mocks/expo-linking"));
 
 import FirstSteps from "@/app/csatlakozom/elso-lepesek";
 import {
@@ -15,8 +16,10 @@ import {
   __setLocalSearchParams,
   router,
 } from "@/test-utils/mocks/expo-router";
+import { login } from "@/redux/reducers/userReducer";
+import { __resetLinking, __setLinkingURL } from "@/test-utils/mocks/expo-linking";
 import { __resetSupabase, __setTableRow, auth } from "@/test-utils/mocks/supabase";
-import { renderWithProviders } from "@/test-utils/renderWithProviders";
+import { createTestStore, renderWithProviders } from "@/test-utils/renderWithProviders";
 import { userEvent } from "@testing-library/react-native";
 
 const CONFIRMATION_HASH = "access_token=access-123&refresh_token=refresh-456&type=signup";
@@ -38,8 +41,59 @@ const profileExists = () => {
 beforeEach(() => {
   __resetRouter();
   __resetSupabase();
+  __resetLinking();
   __setLocalSearchParams({});
   auth.setSession.mockResolvedValue({ data: { user: confirmedUser }, error: null });
+});
+
+describe("registration / first steps, opened by a native deep link", () => {
+  // Regression guard for the reported bug: on Android the confirmation link
+  // opened the app on this screen and it said "A regisztráció nem sikerült."
+  // even though the account had just been confirmed. expo-router rebuilds a
+  // native deep link's path without the fragment, so the tokens never reached
+  // `useLocalSearchParams()["#"]` — only the raw launch URL still has them.
+  const DEEP_LINK = `com.fife.app://csatlakozom/elso-lepesek#${CONFIRMATION_HASH}`;
+
+  it("takes the session from the launch URL, not the route params", async () => {
+    profileExists();
+    __setLinkingURL(DEEP_LINK);
+    __setLocalSearchParams({}); // expo-router dropped the fragment
+
+    const { store } = await renderWithProviders(<FirstSteps />);
+
+    await waitFor(() =>
+      expect(auth.setSession).toHaveBeenCalledWith({
+        access_token: "access-123",
+        refresh_token: "refresh-456",
+      }),
+    );
+    expect(await screen.findByText("Gratulálok!")).toBeOnTheScreen();
+    expect(store.getState().user.uid).toBe(confirmedUser.id);
+  });
+
+  it("does not claim the registration failed", async () => {
+    profileExists();
+    __setLinkingURL(DEEP_LINK);
+
+    await renderWithProviders(<FirstSteps />);
+    await screen.findByText("Gratulálok!");
+
+    expect(screen.queryByText("A regisztráció nem sikerült.")).not.toBeOnTheScreen();
+  });
+
+  it("does not spend the launch URL again once signed in", async () => {
+    // The launch URL stays readable for the rest of the app's lifetime, so
+    // revisiting this screen must not replay a token that is already used.
+    profileExists();
+    __setLinkingURL(DEEP_LINK);
+    const store = createTestStore();
+    store.dispatch(login(confirmedUser.id));
+
+    await renderWithProviders(<FirstSteps />, { store });
+
+    expect(auth.setSession).not.toHaveBeenCalled();
+    expect(screen.getByText("Gratulálok!")).toBeOnTheScreen();
+  });
 });
 
 describe("registration / first steps", () => {

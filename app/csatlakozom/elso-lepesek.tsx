@@ -8,10 +8,10 @@ import { fetchUserProfile } from "@/lib/auth/fetchUserProfile";
 import {
   describeAuthRedirectError,
   getAuthRedirectTokens,
-  parseAuthRedirectFragment,
 } from "@/lib/auth/authRedirectParams";
+import { useAuthRedirectParams } from "@/hooks/useAuthRedirectParams";
 import { Image } from "expo-image";
-import { Link, useLocalSearchParams } from "expo-router";
+import { Link } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import { ActivityIndicator, Button, Icon } from "react-native-paper";
@@ -23,12 +23,12 @@ const PROFILE_FAILED = "Nem sikerült betölteni a profilodat. Próbáld újra!"
 export default function Index() {
   const dispatch = useDispatch();
   const { uid }: UserState = useSelector((state: RootState) => state.user);
-  const { "#": hash } = useLocalSearchParams<{ "#": string }>();
+  const params = useAuthRedirectParams();
 
-  // All three are keyed on the raw fragment: rebuilding them on every render
-  // made them new dependencies each time, so the effect below re-ran after each
-  // of its own dispatches and kept calling `setSession`/`fetchUserProfile`.
-  const params = useMemo(() => parseAuthRedirectFragment(hash), [hash]);
+  // Both are keyed on the parsed params, which are themselves memoised on the
+  // fragment: rebuilding them on every render made them new dependencies each
+  // time, so the effect below re-ran after each of its own dispatches and kept
+  // calling `setSession`/`fetchUserProfile`.
   const linkError = useMemo(() => describeAuthRedirectError(params), [params]);
   const tokens = useMemo(() => getAuthRedirectTokens(params), [params]);
 
@@ -43,7 +43,9 @@ export default function Index() {
     // A refused link carries the reason instead of tokens. Handing that to
     // `setSession` only yields "Auth session missing!", which hides why it
     // failed and offers the user no way forward.
-    if (!tokens) return;
+    // `uid` guards against re-exchanging an already-spent launch URL, which
+    // stays readable for the rest of the app's lifetime.
+    if (!tokens || uid) return;
 
     let cancelled = false;
     supabase.auth.setSession(tokens).then(async ({ data, error }) => {
@@ -64,7 +66,7 @@ export default function Index() {
     return () => {
       cancelled = true;
     };
-  }, [dispatch, tokens]);
+  }, [dispatch, tokens, uid]);
 
   // Derived rather than held in state: both the route params and the restored
   // session can land after the first render, and an error latched on that first
