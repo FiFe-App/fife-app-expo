@@ -6,8 +6,10 @@ import {
   buzinessRecommendationHtml,
   commentHtml,
   messageHtml,
+  newsletterHtml,
   profileRecommendationHtml,
 } from "../_shared/email.ts";
+import { unsubscribeUrl } from "../_shared/unsubscribe.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || Deno.env.get("EXPO_PUBLIC_SUPABASE_URL") || "";
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -48,30 +50,54 @@ async function sendPushNotification(pushToken: string, message: string, data?: R
     },
     body: JSON.stringify(body),
   });
-  const data = await res.json();
-  console.log("Expo Push response:", data);
-  return data;
+  const result = await res.json();
+  console.log("Expo Push response:", result);
+  return result;
 }
 
-async function sendEmailNotification(email: string, subject: string, html: string) {
-  if (!smtpHost || !smtpUser || !smtpPass) {
-    console.error("Missing SMTP credentials, skipping email");
-    return;
-  }
-  try {
-    const transporter = nodemailer.createTransport({
+// Pooled transporter: a newsletter run sends hundreds of mails and must not
+// open a fresh SMTP connection per recipient.
+let transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
+
+function getTransporter() {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
       secure: smtpPort === 465,
       auth: { user: smtpUser, pass: smtpPass },
+      pool: true,
+      maxConnections: 3,
+      maxMessages: 100,
     });
-    await transporter.sendMail({
-      from: smtpFrom,
-      to: email,
-      subject,
-      html,
-    });
-    console.log("Email sent to", email);
+  }
+  return transporter;
+}
+
+async function sendEmailNotification(
+  email: string,
+  subject: string,
+  html: string,
+  headers?: Record<string, string>,
+) {
+  if (!smtpHost || !smtpUser || !smtpPass) {
+    console.error("Missing SMTP credentials, skipping email");
+    return;
+  }
+  await getTransporter().sendMail({
+    from: smtpFrom,
+    to: email,
+    subject,
+    html,
+    ...(headers ? { headers } : {}),
+  });
+  console.log("Email sent to", email);
+}
+
+/** Transactional notifications must never fail the whole webhook on an SMTP error. */
+async function sendEmailNotificationSafe(email: string, subject: string, html: string) {
+  try {
+    await sendEmailNotification(email, subject, html);
   } catch (err) {
     console.error("SMTP error:", err);
   }
@@ -104,13 +130,119 @@ async function sendNotification(
     const html = options.htmlBuilder
       ? options.htmlBuilder(prefs.full_name ?? null)
       : `<p>${message}</p>`;
-    promises.push(sendEmailNotification(prefs.email, options.subject || "FiFe értesítés", html));
+    promises.push(sendEmailNotificationSafe(prefs.email, options.subject || "FiFe értesítés", html));
   }
   if (promises.length === 0) {
     console.log(`User ${targetUserId} has all notifications disabled or missing tokens`);
     return;
   }
   await Promise.all(promises);
+}
+
+type NewsletterRecord = {
+  id: number;
+  subject: string;
+  title: string | null;
+  body: string;
+  cta_label: string | null;
+  cta_url: string | null;
+  recipients: string[] | null;
+  status: string;
+};
+
+// Sent in small batches so one bad address can't stall the run and so we stay
+// under the SMTP provider's rate limit.
+const NEWSLETTER_BATCH_SIZE = parseInt(Deno.env.get("NEWSLETTER_BATCH_SIZE") || "10");
+const NEWSLETTER_BATCH_DELAY_MS = parseInt(Deno.env.get("NEWSLETTER_BATCH_DELAY_MS") || "1000");
+
+async function sendNewsletter(
+  supabase: ReturnType<typeof createClient>,
+  record: NewsletterRecord,
+) {
+  // Guard against re-sends: only a freshly inserted, still-pending row is sent.
+  const { data: claimed, error: claimError } = await supabase
+    .from("newsletters")
+    .update({ status: "sending" })
+    .eq("id", record.id)
+    .eq("status", "pending")
+    .select("id");
+
+  if (claimError) {
+    // Runs detached in waitUntil — log and stop rather than reject unhandled.
+    console.error(`Newsletter ${record.id}: could not claim row:`, claimError);
+    return;
+  }
+  if (!claimed || claimed.length === 0) {
+    console.log(`Newsletter ${record.id} is not pending — skipping`);
+    return;
+  }
+
+  try {
+    const explicit = record.recipients?.filter((e) => e && e.trim() !== "") ?? [];
+    const { data: recipients, error } = await supabase.rpc("get_newsletter_recipients", {
+      p_emails: explicit.length > 0 ? explicit : null,
+    });
+    if (error) throw error;
+
+    const list = (recipients ?? []) as { email: string; full_name: string | null }[];
+    console.log(
+      `Newsletter ${record.id}: ${list.length} recipient(s)`,
+      explicit.length > 0 ? "(explicit list)" : "(all subscribers)",
+    );
+
+    let sent = 0;
+    let failed = 0;
+
+    for (let i = 0; i < list.length; i += NEWSLETTER_BATCH_SIZE) {
+      const batch = list.slice(i, i + NEWSLETTER_BATCH_SIZE);
+      const results = await Promise.allSettled(
+        batch.map(async (recipient) => {
+          const url = await unsubscribeUrl(recipient.email);
+          await sendEmailNotification(
+            recipient.email,
+            record.subject,
+            newsletterHtml(recipient.full_name, record, url),
+            {
+              // RFC 8058 — lets Gmail/Outlook show a native unsubscribe button.
+              "List-Unsubscribe": `<${url}>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            },
+          );
+        }),
+      );
+
+      for (const result of results) {
+        if (result.status === "fulfilled") {
+          sent++;
+        } else {
+          failed++;
+          console.error("Newsletter send failed:", result.reason);
+        }
+      }
+
+      if (i + NEWSLETTER_BATCH_SIZE < list.length && NEWSLETTER_BATCH_DELAY_MS > 0) {
+        await new Promise((resolve) => setTimeout(resolve, NEWSLETTER_BATCH_DELAY_MS));
+      }
+    }
+
+    await supabase
+      .from("newsletters")
+      .update({
+        status: "sent",
+        sent_count: sent,
+        failed_count: failed,
+        sent_at: new Date().toISOString(),
+      })
+      .eq("id", record.id);
+
+    console.log(`Newsletter ${record.id} done: ${sent} sent, ${failed} failed`);
+  } catch (err) {
+    console.error(`Newsletter ${record.id} failed:`, err);
+    await supabase
+      .from("newsletters")
+      .update({ status: "failed", error: String(err) })
+      .eq("id", record.id);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -134,7 +266,19 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
   try {
-    if (table === "buzinessRecommendations") {
+    if (table === "newsletters") {
+      // A newsletter run can take minutes — answer the webhook right away and
+      // keep sending in the background so pg_net doesn't time out on us.
+      const task = sendNewsletter(supabase, record as NewsletterRecord);
+      if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
+        EdgeRuntime.waitUntil(task);
+      } else {
+        await task;
+      }
+      return new Response(JSON.stringify({ ok: true, queued: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } else if (table === "buzinessRecommendations") {
       // Fetch the author's name and the buziness owner + title
       const [authorRes, buzinessRes] = await Promise.all([
         supabase.from("profiles").select("full_name").eq("id", record.author).maybeSingle(),
