@@ -92,6 +92,71 @@ describe("registration / first steps", () => {
     expect(store.getState().tutorial.isTutorialActive).toBe(true);
   });
 
+  describe("when Supabase rejects the confirmation link", () => {
+    // A failed `/auth/v1/verify` does not send tokens back — it redirects here
+    // with the reason in the fragment. Feeding that to `setSession` only
+    // produces "Auth session missing!", which tells the user nothing.
+    const EXPIRED_LINK_HASH =
+      "error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired";
+
+    it("explains an expired link and points at a new one", async () => {
+      __setLocalSearchParams({ "#": EXPIRED_LINK_HASH });
+
+      await renderWithProviders(<FirstSteps />);
+
+      expect(
+        await screen.findByText(
+          "Ez a megerősítő link lejárt, vagy már felhasználtad. Kérj egy újat!",
+        ),
+      ).toBeOnTheScreen();
+      expect(auth.setSession).not.toHaveBeenCalled();
+    });
+
+    it("sends the user back to request a fresh confirmation e-mail", async () => {
+      const user = userEvent.setup();
+      __setLocalSearchParams({ "#": EXPIRED_LINK_HASH });
+
+      await renderWithProviders(<FirstSteps />);
+      await user.press(screen.getByRole("button", { name: "Megpróbálom újra" }));
+
+      expect(router.navigate).toHaveBeenCalledWith("/csatlakozom/email-ellenorzes");
+    });
+
+    it("shows the reason Supabase gave for anything else", async () => {
+      __setLocalSearchParams({
+        "#": "error=server_error&error_description=Database+error+saving+new+user",
+      });
+
+      await renderWithProviders(<FirstSteps />);
+
+      expect(
+        await screen.findByText("Database error saving new user"),
+      ).toBeOnTheScreen();
+      expect(auth.setSession).not.toHaveBeenCalled();
+    });
+  });
+
+  it("recovers when the route params only arrive after the first render", async () => {
+    profileExists();
+
+    const view = await renderWithProviders(<FirstSteps />);
+    expect(screen.getByText("A regisztráció nem sikerült.")).toBeOnTheScreen();
+
+    __setLocalSearchParams({ "#": CONFIRMATION_HASH });
+    await view.rerender(<FirstSteps />);
+
+    expect(await screen.findByText("Gratulálok!")).toBeOnTheScreen();
+  });
+
+  it("says so when the profile cannot be loaded, rather than spinning forever", async () => {
+    __setTableRow("profiles", { data: null, error: null });
+    __setLocalSearchParams({ "#": CONFIRMATION_HASH });
+
+    await renderWithProviders(<FirstSteps />);
+
+    expect(await screen.findByText("Valami hiba történt!")).toBeOnTheScreen();
+  });
+
   it("reports a rejected confirmation link", async () => {
     auth.setSession.mockResolvedValue({
       data: { user: null },

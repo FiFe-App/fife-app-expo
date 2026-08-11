@@ -85,6 +85,20 @@ describe("registration / e-mail verification", () => {
     ).toBeOnTheScreen();
   });
 
+  it("points the re-sent link back at this app, not at a dev machine", async () => {
+    await renderWithProviders(<EmailVerification />);
+    await screen.findByText(SIGNED_UP_EMAIL);
+
+    await fireEvent.press(resendButton());
+
+    await waitFor(() => expect(auth.resend).toHaveBeenCalled());
+    // Same redirect the sign-up step asks for — it used to be hardcoded to
+    // http://localhost:8081, which no user's device can open.
+    expect(auth.resend.mock.calls[0][0].options.emailRedirectTo).toBe(
+      "fife://csatlakozom/elso-lepesek",
+    );
+  });
+
   it("asks the user to wait when they re-send too often", async () => {
     auth.resend.mockResolvedValue({
       data: null,
