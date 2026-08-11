@@ -22,6 +22,7 @@ export const auth = {
   setSession: jest.fn(),
   refreshSession: jest.fn(),
   resend: jest.fn(),
+  resetPasswordForEmail: jest.fn(),
   updateUser: jest.fn(),
   onAuthStateChange: jest.fn(() => ({ data: { subscription: { unsubscribe: jest.fn() } } })),
   startAutoRefresh: jest.fn(),

@@ -57,7 +57,7 @@ describe("describeAuthRedirectError", () => {
   it("translates the codes we have wording for", () => {
     expect(
       describeAuthRedirectError({ error: "access_denied", error_code: "otp_expired" }),
-    ).toBe("Ez a megerősítő link lejárt, vagy már felhasználtad. Kérj egy újat!");
+    ).toBe("Ez a link lejárt, vagy már felhasználtad. Kérj egy újat!");
   });
 
   it("falls back to the description Supabase supplied", () => {

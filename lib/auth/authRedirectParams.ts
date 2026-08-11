@@ -49,9 +49,13 @@ export const getAuthRedirectTokens = (params: AuthRedirectParams | null) => {
   return { access_token: params.access_token, refresh_token: params.refresh_token };
 };
 
+// Wording stays neutral between "confirm your e-mail" and "reset your
+// password" — both flows land here with the same codes.
+const EXPIRED = "Ez a link lejárt, vagy már felhasználtad. Kérj egy újat!";
+
 const MESSAGES: Record<string, string> = {
-  otp_expired: "Ez a megerősítő link lejárt, vagy már felhasználtad. Kérj egy újat!",
-  access_denied: "Ez a megerősítő link lejárt, vagy már felhasználtad. Kérj egy újat!",
+  otp_expired: EXPIRED,
+  access_denied: EXPIRED,
 };
 
 /** The reason Supabase refused the link, in Hungarian where we have wording for it. */

@@ -160,7 +160,7 @@ describe("registration / first steps", () => {
 
       expect(
         await screen.findByText(
-          "Ez a megerősítő link lejárt, vagy már felhasználtad. Kérj egy újat!",
+          "Ez a link lejárt, vagy már felhasználtad. Kérj egy újat!",
         ),
       ).toBeOnTheScreen();
       expect(auth.setSession).not.toHaveBeenCalled();
