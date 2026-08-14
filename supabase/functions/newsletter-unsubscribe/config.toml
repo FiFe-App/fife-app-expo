@@ -1,0 +1,4 @@
+[function]
+# Clicked straight from an email — there is no JWT. The HMAC token in the
+# query string is what authorizes the unsubscribe.
+verify_jwt = false

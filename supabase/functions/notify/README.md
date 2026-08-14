@@ -9,6 +9,8 @@ Handles all transactional notifications for FiFe. Triggered by database webhooks
 | `buzinessRecommendations` | Buziness owner |
 | `profileRecommendations` | Recommended profile |
 | `comments` (key `buziness/{id}`) | Buziness owner |
+| `messages` | Message recipient |
+| `newsletters` | Every newsletter subscriber, or an explicit address list — see [Newsletter](#newsletter) |
 
 ## Architecture
 
@@ -19,9 +21,95 @@ DB INSERT
             └─ notify/index.ts
                  ├─ getNotificationPrefs()  — calls get_notification_prefs_for() RPC
                  ├─ sendPushNotification()  — Expo Push API
-                 └─ sendEmailNotification() — nodemailer → Rackhost SMTP
-                      └─ html from _shared/email.ts templates
+                 ├─ sendEmailNotification() — nodemailer → Rackhost SMTP
+                 │    └─ html from _shared/email.ts templates
+                 └─ sendNewsletter()        — newsletters table only
+                      ├─ get_newsletter_recipients() RPC → who + their name
+                      └─ batched sends, each with its own unsubscribe link
+                           └─ /functions/v1/newsletter-unsubscribe (verify_jwt = false)
+                                └─ newsletter_unsubscribe() RPC
 ```
+
+## Newsletter
+
+Sending a newsletter is one `INSERT`. The `AFTER INSERT` trigger on
+`public.newsletters` posts to this function, exactly like every other
+notification — no separate cron, queue or admin service.
+
+```sql
+-- To every subscriber (profiles.newsletter = true):
+INSERT INTO public.newsletters (subject, title, body, cta_label, cta_url)
+VALUES (
+  'Nyári FiFe hírlevél',
+  'Mi történt a nyáron?',
+  '<p>Új funkciók érkeztek a FiFe Appba!</p>',
+  'Irány a FiFe App',
+  'https://fifeapp.hu'
+);
+
+-- To specific addresses only (test send, targeted mail):
+INSERT INTO public.newsletters (subject, body, recipients)
+VALUES ('Teszt', '<p>Csak nekem.</p>', ARRAY['kristofakos1229@gmail.com']);
+```
+
+| Column | Meaning |
+|---|---|
+| `subject` | Email subject (required) |
+| `title` | Headline above the body. Falls back to `subject` |
+| `body` | HTML fragment (required). Inline styles only — Gmail strips `<style>` |
+| `cta_label` + `cta_url` | Optional red CTA button. Both or neither |
+| `recipients` | `NULL`/empty → **all subscribers**. Otherwise exactly these addresses |
+| `status` | `pending` → `sending` → `sent` \| `failed`, written back by this function |
+| `sent_count`, `failed_count`, `sent_at`, `error` | Run result, written back by this function |
+
+Check how a send went:
+
+```sql
+SELECT id, subject, status, sent_count, failed_count, sent_at, error
+FROM public.newsletters ORDER BY id DESC;
+```
+
+The table has RLS on with **no policies**, so only the SQL editor / service role
+can read or write it — the app can't send newsletters or read past ones.
+
+### Who receives it
+
+`get_newsletter_recipients(p_emails)` resolves the audience and returns
+`email` + `full_name`, so every mail is greeted with the recipient's own name
+(`Szia Anna!`). Addresses on the suppression list are dropped in both modes —
+an unsubscribed person is not mailed even if listed explicitly. Explicit
+addresses do not have to belong to a user; unknown ones simply get `Szia!`.
+
+### Unsubscribe
+
+Every newsletter mail ends with a personal unsubscribe link and carries
+`List-Unsubscribe` / `List-Unsubscribe-Post` headers, so Gmail and Outlook show
+their own native unsubscribe button. Transactional mails are unaffected — they
+have no unsubscribe link.
+
+The link points at the [`newsletter-unsubscribe`](../newsletter-unsubscribe/index.ts)
+function and carries `?email=…&token=…`, where the token is
+`HMAC-SHA256(email, NEWSLETTER_SECRET)`. Nothing per-recipient is stored, and
+an address can only be unsubscribed by someone who actually received a mail for
+it. Clicking it:
+
+1. verifies the HMAC (constant-time),
+2. calls `newsletter_unsubscribe(email)` — sets `profiles.newsletter = false`
+   and records the address in `public.newsletter_unsubscribes`,
+3. shows a FiFe-styled confirmation page.
+
+Flipping the newsletter switch back on in the app clears the suppression entry
+(trigger `on_newsletter_resubscribe`), so resubscribing works.
+
+### Delivery
+
+The function answers the webhook immediately and finishes the run in
+`EdgeRuntime.waitUntil`, so a large send can't time out `pg_net`. Mails go out
+in batches (default 10, 1s apart) over one pooled SMTP connection, and a single
+bad address only increments `failed_count`. Re-delivery of the same webhook is
+a no-op: only a row still in `pending` is claimed.
+
+Tuning (optional secrets): `NEWSLETTER_BATCH_SIZE`, `NEWSLETTER_BATCH_DELAY_MS`.
 
 ## Email templates
 
@@ -111,6 +199,10 @@ These settings are **wiped on `supabase db reset`** — run the two `ALTER DATAB
 | `SMTP_USER` | `supabase secrets set` | SMTP username/email |
 | `SMTP_PASS` | `supabase secrets set` | SMTP password |
 | `SMTP_FROM` | `supabase secrets set` | From address (e.g. `info@fifeapp.hu`) |
+| `NEWSLETTER_SECRET` | `supabase secrets set` (optional) | HMAC key for unsubscribe links. Defaults to the service role key. Changing it invalidates links in already-sent mails |
+| `FUNCTIONS_BASE_URL` | `supabase secrets set` (optional) | Base URL used to build unsubscribe links. Defaults to `$SUPABASE_URL/functions/v1` |
+| `NEWSLETTER_BATCH_SIZE` | `supabase secrets set` (optional) | Mails per batch, default `10` |
+| `NEWSLETTER_BATCH_DELAY_MS` | `supabase secrets set` (optional) | Pause between batches, default `1000` |
 
 Set secrets for production:
 ```bash
@@ -126,10 +218,16 @@ supabase secrets set SMTP_HOST=smtp.rackhost.hu SMTP_PORT=465 SMTP_USER=... SMTP
 5. Check Mailpit at `http://127.0.0.1:54324` for the rendered email
 6. Check push in edge runtime logs: `docker logs supabase_edge_runtime_fife-app-expo --tail 50`
 
+For the newsletter, set `newsletter = true` on a few test profiles, insert a row
+into `public.newsletters`, then check Mailpit — one mail per subscriber — and
+click the unsubscribe link in the footer. Locally the link resolves to
+`http://127.0.0.1:54321/functions/v1/newsletter-unsubscribe`.
+
 ## Deployment
 
 ```bash
 supabase functions deploy notify
+supabase functions deploy newsletter-unsubscribe   # public, verify_jwt = false
 supabase secrets set SMTP_HOST=... SMTP_PASS=... # etc.
 ```
 

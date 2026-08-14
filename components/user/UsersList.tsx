@@ -10,7 +10,7 @@ import { useSelector } from "react-redux";
 import { NearestProfile, User } from "@/redux/store.type";
 import { ThemedView } from "../ThemedView";
 import { Button } from "../Button";
-import { NO_LOCATION_ERROR } from "@/hooks/useFifeSearch";
+import { NO_LOCATION_ERROR, NO_NEARBY_USERS, NO_NEARBY_USERS_HINT } from "@/hooks/useFifeSearch";
 
 interface UsersListProps {
   load: () => void;
@@ -60,20 +60,28 @@ export const UsersList: React.FC<UsersListProps> = ({
         }
         ListFooterComponent={
           <>
-            <View style={{ padding: Spacing.lg }}>
-              {(!!data.length && canLoadMore ? (
+            <View style={{ padding: Spacing.lg, gap: Spacing.xs }}>
+              {!!data.length && canLoadMore ? (
                 <ActivityIndicator />
-              ) : (
+              ) : data.length ? (
                 <ThemedText style={{ alignSelf: "center" }}>
                   Nem található több fife
                 </ThemedText>
-              ))}
+              ) : (
+                // No results at all — "no more" would be misleading here.
+                <>
+                  <ThemedText style={{ alignSelf: "center" }}>{NO_NEARBY_USERS}</ThemedText>
+                  <ThemedText variant="labelSmall" style={{ alignSelf: "center", textAlign: "center" }}>
+                    {NO_NEARBY_USERS_HINT}
+                  </ThemedText>
+                </>
+              )}
             </View>
             {footerContent}
           </>
         }
         onEndReached={() => {
-          if (canLoadMore && !loading) {
+          if (canLoadMore && !loading && data.length > 0) {
             load();
           }
         }}

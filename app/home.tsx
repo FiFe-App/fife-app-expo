@@ -82,11 +82,18 @@ export default function Index() {
   );
 
   if (!uid) return null;
+
+  // Index of the "Bizniszek" header among the ScrollView's children.
+  // React.Children.toArray() drops falsy children, so the messages card not
+  // being rendered shifts every index below it up by one — pointing the sticky
+  // index at the buziness list and docking the whole list to the top.
+  const stickyHeaderIndex = messagingEnabled ? 2 : 1;
+
   return (
     <ThemedView style={{ flex: 1, minHeight: 0 }} type="default">
       <ScrollView
         style={{ flex: 1, minHeight: 0 }}
-        stickyHeaderIndices={[messagingEnabled ? 2 : 2]}
+        stickyHeaderIndices={[stickyHeaderIndex]}
         contentContainerStyle={{ flexGrow: 1, paddingBottom: Spacing.xxl }}
         onScroll={({ nativeEvent }) => {
           const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
