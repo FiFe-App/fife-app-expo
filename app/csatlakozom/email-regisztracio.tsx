@@ -1,22 +1,21 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { supabase } from "@/lib/supabase/supabase";
-import { login, setUserData } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Redirect, router } from "expo-router";
+import { Link, Redirect, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { openBrowserAsync } from "expo-web-browser";
 import { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
-import { addSnack } from "@/redux/reducers/infoReducer";
 import { makeRedirectUri } from "expo-auth-session";
 import { Button, Checkbox, HelperText, Icon, TextInput as PaperTextInput } from "react-native-paper";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import UsernameInput from "@/components/UsernameInput";
 import { Spacing } from "@/constants/spacing";
+import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
 
 // Type for signup metadata
@@ -33,7 +32,6 @@ interface SignupMetadata {
 
 export default function Index() {
   const theme = useAppTheme();
-  const dispatch = useDispatch();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -44,6 +42,7 @@ export default function Index() {
   const [acceptConditions, setAcceptConditions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const [existingAccount, setExistingAccount] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const nameRef = useRef<{ focus: () => void } | null>(null);
@@ -69,7 +68,9 @@ export default function Index() {
 
   const createUser = async () => {
     setLoading(true);
-    
+    setError(undefined);
+    setExistingAccount(false);
+
     // Ensure we have required fields
     if (!email.trim() || !name.trim()) {
       setError("Email és név megadása kötelező");
@@ -128,30 +129,13 @@ export default function Index() {
           AsyncStorage.setItem("email", email);
           router.navigate("/csatlakozom/email-ellenorzes");
         } else {
+          // Supabase hides that an address is taken by returning a user with no
+          // identities and no error. Tell the user plainly and hand them to the
+          // login screen: signing them in from here swallowed the sign-up they
+          // actually asked for, and it also made this form report whether a
+          // given password matched an existing account.
           console.log("Email address is already taken.");
-          const signInResponse = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-
-          if (signInResponse.error) {
-            console.error(
-              "An error occurred during sign-in:",
-              signInResponse.error.message,
-            );
-            console.log(signInResponse.error.code);
-            if (signInResponse.error.code === "invalid_credentials") {
-              setError("Ez az email már foglalt");
-            } else {
-              setError(signInResponse.error.message);
-            }
-          } else {
-            console.log("Successfully signed in existing user!");
-            dispatch(login(signInResponse.data.user.id));
-            dispatch(setUserData(signInResponse.data.user));
-            dispatch(addSnack({ title: "Bejelentkeztél!" }));
-            router.navigate("/me");
-          }
+          setExistingAccount(true);
         }
       }
       console.log(data, error);
@@ -232,7 +216,12 @@ export default function Index() {
             <PaperTextInput
               ref={emailRef as never}
               mode="outlined"
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                // The "you already have an account" prompt is about the address
+                // that was submitted, so a new one makes it stale.
+                setExistingAccount(false);
+              }}
               value={email}
               label="E-mail*"
               autoComplete="email"
@@ -338,6 +327,25 @@ export default function Index() {
             {!!error && <ThemedView style={{margin:6, alignItems:"center"}} type="error">
               <ThemedText type="error">{error}</ThemedText>
             </ThemedView>}
+            {existingAccount && (
+              <ThemedView
+                type="card"
+                style={{
+                  margin: 6,
+                  padding: Spacing.md,
+                  gap: Spacing.sm,
+                  alignItems: "center",
+                  borderRadius: BorderRadius.md,
+                }}
+              >
+                <ThemedText style={{ textAlign: "center" }}>
+                  Ezzel az e-mail-címmel már van fiókod.
+                </ThemedText>
+                <Link href="/login" asChild>
+                  <Button mode="contained">Bejelentkezés</Button>
+                </Link>
+              </ThemedView>
+            )}
           </View>
         </ScrollView>
       </ThemedView>
