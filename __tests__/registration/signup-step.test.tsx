@@ -6,7 +6,7 @@
  * typed) is folded into the Supabase sign-up metadata here, so the metadata
  * assertions below are really assertions about the whole flow.
  */
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, screen, userEvent, waitFor } from "@testing-library/react-native";
 import { openBrowserAsync } from "expo-web-browser";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -292,39 +292,83 @@ describe("registration / sign-up form", () => {
   });
 
   describe("when the e-mail address is already registered", () => {
-    it("tells the user the address is taken if the password does not match", async () => {
+    it("says the address already has an account", async () => {
       signUpResolvesTo(existingUser);
-      auth.signInWithPassword.mockResolvedValue({
-        data: { user: null, session: null },
-        error: { code: "invalid_credentials", message: "Invalid login credentials" },
-      });
       await renderWithProviders(<EmailRegistration />);
 
       await fillSignUpForm();
       await fireEvent.press(submitButton());
 
-      expect(await screen.findByText("Ez az email már foglalt")).toBeOnTheScreen();
-      expect(router.navigate).not.toHaveBeenCalled();
+      expect(
+        await screen.findByText("Ezzel az e-mail-címmel már van fiókod."),
+      ).toBeOnTheScreen();
     });
 
-    it("signs the returning user in instead of creating a second account", async () => {
+    it("does not sign the user in behind their back", async () => {
+      // Even with the right password this must not quietly become a login: the
+      // user asked to register, and answering "that password is correct" from a
+      // sign-up form turns it into a password oracle.
       signUpResolvesTo(existingUser);
-      auth.signInWithPassword.mockResolvedValue({
-        data: { user: { id: "existing-user", email: VALID.email }, session: {} },
-        error: null,
-      });
       const { store } = await renderWithProviders(<EmailRegistration />);
 
       await fillSignUpForm();
       await fireEvent.press(submitButton());
 
-      await waitFor(() => expect(router.navigate).toHaveBeenCalledWith("/me"));
-      expect(auth.signInWithPassword).toHaveBeenCalledWith({
-        email: VALID.email,
-        password: VALID.password,
-      });
-      expect(store.getState().user.uid).toBe("existing-user");
-      expect(store.getState().info.snacks).toContainEqual({ title: "Bejelentkeztél!" });
+      await screen.findByText("Ezzel az e-mail-címmel már van fiókod.");
+      expect(auth.signInWithPassword).not.toHaveBeenCalled();
+      expect(store.getState().user.uid).toBeUndefined();
+      expect(router.navigate).not.toHaveBeenCalled();
+    });
+
+    it("offers the way over to signing in", async () => {
+      const user = userEvent.setup();
+      signUpResolvesTo(existingUser);
+      await renderWithProviders(<EmailRegistration />);
+
+      await fillSignUpForm();
+      await fireEvent.press(submitButton());
+      await screen.findByText("Ezzel az e-mail-címmel már van fiókod.");
+
+      await user.press(screen.getByRole("button", { name: "Bejelentkezés" }));
+
+      expect(router.navigate).toHaveBeenCalledWith("/login");
+    });
+
+    it("drops the prompt once a different address is typed", async () => {
+      signUpResolvesTo(existingUser);
+      await renderWithProviders(<EmailRegistration />);
+
+      await fillSignUpForm();
+      await fireEvent.press(submitButton());
+      await screen.findByText("Ezzel az e-mail-címmel már van fiókod.");
+
+      await fireEvent.changeText(inputByLabel("E-mail*"), "someone.else@example.com");
+
+      expect(
+        screen.queryByText("Ezzel az e-mail-címmel már van fiókod."),
+      ).not.toBeOnTheScreen();
+    });
+
+    it("clears a stale error when the form is submitted again", async () => {
+      signUpResolvesTo(null, { code: "over_email_send_rate_limit", message: "rate limited" });
+      await renderWithProviders(<EmailRegistration />);
+
+      await fillSignUpForm();
+      await fireEvent.press(submitButton());
+      await screen.findByText(
+        "Túl sok próbálkozás. Kérlek várj egy kicsit, majd próbáld újra.",
+      );
+
+      signUpResolvesTo(newUser);
+      await fireEvent.press(submitButton());
+
+      await waitFor(() =>
+        expect(
+          screen.queryByText(
+            "Túl sok próbálkozás. Kérlek várj egy kicsit, majd próbáld újra.",
+          ),
+        ).not.toBeOnTheScreen(),
+      );
     });
   });
 
