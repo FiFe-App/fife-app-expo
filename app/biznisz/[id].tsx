@@ -9,6 +9,7 @@ import BuzinessRecommendationsModal from "@/components/buziness/BuzinessRecommen
 import ContactsCard from "@/components/buziness/ContactsCard";
 import SectionLabel from "@/components/buziness/SectionLabel";
 import Comments from "@/components/comments/Comments";
+import MediaView from "@/components/media/MediaView";
 import UrlText from "@/components/UrlText";
 import FiFeMap from "@/components/mapView/FiFeMap";
 import { LatLng, Marker } from "@/components/mapView/mapView";
@@ -21,6 +22,7 @@ import { useMyLocation } from "@/hooks/useMyLocation";
 import toDistanceText from "@/lib/functions/distanceText";
 import getDistance from "@/lib/functions/getDistance";
 import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
+import getMediaKind from "@/lib/functions/getMediaKind";
 import getLinkForContact from "@/lib/functions/getLinkForContact";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import typeToIcon from "@/lib/functions/typeToIcon";
@@ -31,7 +33,7 @@ import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import {
   BuzinessItemInterface,
-  ImageDataType,
+  MediaDataType,
   UserState,
 } from "@/redux/store.type";
 import { PostgrestError } from "@supabase/supabase-js";
@@ -44,7 +46,6 @@ import {
 } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from "react-native";
-import ImageModal from "react-native-image-modal";
 import openMap from "react-native-open-maps";
 import {
   ActivityIndicator,
@@ -138,7 +139,7 @@ export default function Index() {
       : null;
   const categories = data?.title?.split(" $ ");
   const title = categories?.[0];
-  const [images, setImages] = useState<ImageDataType[]>([]);
+  const [media, setMedia] = useState<MediaDataType[]>([]);
 
   const myBuziness = myUid === data?.author;
   const { myLocation } = useMyLocation();
@@ -264,7 +265,7 @@ export default function Index() {
                 });}
 
               try {
-                if (data?.images) setImages(getImagesUrlFromSupabase(data.images));
+                if (data?.images) setMedia(getImagesUrlFromSupabase(data.images));
               } catch (error) {
                 console.log("image error");
                 
@@ -494,41 +495,32 @@ export default function Index() {
                 </View>
               </ThemedView>
 
-              {/* IMAGES — horizontal carousel */}
-              {images.length > 0 && (
+              {/* MEDIA — horizontal carousel of images, videos and audio */}
+              {media.length > 0 && (
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   style={{ marginTop: Spacing.xl }}
                   contentContainerStyle={{ paddingHorizontal: Spacing.md, gap: Spacing.sm }}
                 >
-                  {images.map((image, ind) => (
-                    <View key={"image-" + ind} style={{ width: 160 }}>
-                      <ImageModal
-                        source={{ uri: image.url }}
-                        resizeMode="cover"
-                        modalImageResizeMode="contain"
-                        overlayBackgroundColor="#00000096"
-                        style={{ width: 160, height: 160, borderRadius: BorderRadius.lg }}
-                        renderFooter={() => (
-                          <ScrollView style={{ maxHeight: 250 }}>
-                            <ThemedText style={{ color: "white", textShadowColor: "black", textShadowRadius: 3 }}>
-                              {image.description}
-                            </ThemedText>
-                          </ScrollView>
+                  {media.map((item, ind) => {
+                    // Audio players need room for their controls.
+                    const itemWidth = getMediaKind(item) === "audio" ? 260 : 160;
+                    return (
+                      <View key={"media-" + ind} style={{ width: itemWidth }}>
+                        <MediaView media={item} width={itemWidth} height={160} />
+                        {!!item.description && (
+                          <Text
+                            variant="labelSmall"
+                            numberOfLines={1}
+                            style={{ color: theme.colors.onSurfaceVariant, paddingTop: Spacing.xs }}
+                          >
+                            {item.description}
+                          </Text>
                         )}
-                      />
-                      {!!image.description && (
-                        <Text
-                          variant="labelSmall"
-                          numberOfLines={1}
-                          style={{ color: theme.colors.onSurfaceVariant, paddingTop: Spacing.xs }}
-                        >
-                          {image.description}
-                        </Text>
-                      )}
-                    </View>
-                  ))}
+                      </View>
+                    );
+                  })}
                 </ScrollView>
               )}
 
