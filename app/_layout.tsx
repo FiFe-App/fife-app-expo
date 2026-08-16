@@ -129,23 +129,31 @@ function RootContent() {
     });
   }, [uid, dispatch]);
 
-  // Register push token and schedule emotion reminder on login (native-only)
+  // Hydrate notification prefs on login, then reconcile the things that
+  // live outside the database: the Expo push token (which can be
+  // invalidated by a reinstall) and the scheduled local reminder.
+  // The prefs themselves are only ever changed through
+  // useNotificationPrefs — this effect never writes them.
   useEffect(() => {
-    if (!uid || Platform.OS === "web") return;
+    if (!uid) return;
     supabase.rpc("get_my_notification_prefs").then(async ({ data }) => {
       const prefs = data?.[0];
       if (!prefs) return;
       dispatch(setNotificationPrefs({
         notifyPush: prefs.notify_push ?? false,
-        notifyEmail: prefs.notify_email ?? false,
+        notifyEmail: prefs.notify_email ?? true,
         newsletter: prefs.newsletter ?? false,
-        emotionDailyPrompt: prefs.emotion_daily_prompt ?? true,
+        emotionDailyPrompt: prefs.emotion_daily_prompt ?? false,
+        pushAskedAt: prefs.push_asked_at ?? null,
+        emotionPromptAskedAt: prefs.emotion_prompt_asked_at ?? null,
+        newsletterAskedAt: prefs.newsletter_asked_at ?? null,
       }));
+      if (Platform.OS === "web") return;
       if (prefs.notify_push) {
         const token = await registerForPushNotificationsAsync();
         if (token) await supabase.rpc("update_my_push_token", { token });
       }
-      if (emotionAvailable && (prefs.emotion_daily_prompt ?? true)) {
+      if (emotionAvailable && prefs.emotion_daily_prompt) {
         await scheduleDailyEmotionReminder();
       } else {
         await cancelDailyEmotionReminder();
