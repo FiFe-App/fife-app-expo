@@ -10,7 +10,7 @@ Handles all transactional notifications for FiFe. Triggered by database webhooks
 | `profileRecommendations` | Recommended profile |
 | `comments` (key `buziness/{id}`) | Buziness owner |
 | `messages` | Message recipient |
-| `newsletters` | Every newsletter subscriber, or an explicit address list — see [Newsletter](#newsletter) |
+| `newsletters` | Every newsletter subscriber, or an explicit address list, by email and/or push — see [Newsletter](#newsletter) |
 
 ## Architecture
 
@@ -24,10 +24,11 @@ DB INSERT
                  ├─ sendEmailNotification() — nodemailer → Rackhost SMTP
                  │    └─ html from _shared/email.ts templates
                  └─ sendNewsletter()        — newsletters table only
-                      ├─ get_newsletter_recipients() RPC → who + their name
-                      └─ batched sends, each with its own unsubscribe link
-                           └─ /functions/v1/newsletter-unsubscribe (verify_jwt = false)
-                                └─ newsletter_unsubscribe() RPC
+                      ├─ get_newsletter_recipients() RPC → who + name + push token
+                      ├─ type email/both → batched mails, each with an unsubscribe link
+                      │    └─ /functions/v1/newsletter-unsubscribe (verify_jwt = false)
+                      │         └─ newsletter_unsubscribe() RPC
+                      └─ type push/both  → Expo Push API, batches of 100
 ```
 
 ## Newsletter
@@ -47,6 +48,11 @@ VALUES (
   'https://fifeapp.hu'
 );
 
+-- Same issue as a push notification instead of an email:
+INSERT INTO public.newsletters (type, subject, body, push_text, cta_url)
+VALUES ('push', 'Nyári FiFe hírlevél', '<p>Új funkciók érkeztek!</p>',
+        'Új funkciók érkeztek a FiFe Appba!', 'https://fifeapp.hu/biznisz/42');
+
 -- To specific addresses only (test send, targeted mail):
 INSERT INTO public.newsletters (subject, body, recipients)
 VALUES ('Teszt', '<p>Csak nekem.</p>', ARRAY['kristofakos1229@gmail.com']);
@@ -54,20 +60,50 @@ VALUES ('Teszt', '<p>Csak nekem.</p>', ARRAY['kristofakos1229@gmail.com']);
 
 | Column | Meaning |
 |---|---|
-| `subject` | Email subject (required) |
-| `title` | Headline above the body. Falls back to `subject` |
+| `type` | `email` (default), `push`, or `both` — see [Channels](#channels) |
+| `subject` | Email subject, and the push title when `title` is empty (required) |
+| `title` | Headline above the body / push title. Falls back to `subject` |
 | `body` | HTML fragment (required). Inline styles only — Gmail strips `<style>` |
+| `push_text` | Notification body. Falls back to `body` stripped to plain text (180 chars) |
 | `cta_label` + `cta_url` | Optional red CTA button. Both or neither |
 | `recipients` | `NULL`/empty → **all subscribers**. Otherwise exactly these addresses |
 | `status` | `pending` → `sending` → `sent` \| `failed`, written back by this function |
-| `sent_count`, `failed_count`, `sent_at`, `error` | Run result, written back by this function |
+| `email_sent_count`, `email_failed_count` | Email run result |
+| `push_sent_count`, `push_failed_count` | Push run result |
+| `sent_at`, `error` | Run result, written back by this function |
 
 Check how a send went:
 
 ```sql
-SELECT id, subject, status, sent_count, failed_count, sent_at, error
+SELECT id, subject, type, status,
+       email_sent_count, email_failed_count,
+       push_sent_count, push_failed_count, sent_at, error
 FROM public.newsletters ORDER BY id DESC;
 ```
+
+### Channels
+
+`type` picks how an issue is delivered. Both channels draw from the same
+audience (`recipients`, or every subscriber), so `both` reaches one person
+twice — once in their inbox, once on their phone.
+
+| `type` | Goes to |
+|---|---|
+| `email` | Every recipient with an address (the default) |
+| `push` | Recipients who have a push token **and** `notify_push = true` |
+| `both` | Both of the above |
+
+`newsletter` is the marketing consent and `notify_push` is the channel
+consent, so a push newsletter needs both — someone who subscribed to the
+newsletter but turned push off gets the email and no notification. Recipients
+without a token (web-only users, or explicit addresses with no account) are
+skipped and logged, not counted as failures.
+
+Push goes out through the Expo Push API in batches of 100 (their per-request
+cap), and each message's ticket is checked individually — a stale token fails
+that one notification and nothing else. If `cta_url` points at `fifeapp.hu`,
+the path is attached as `data.url` so tapping the notification deep-links into
+that screen; off-site CTAs are dropped and the tap just opens the app.
 
 The table has RLS on with **no policies**, so only the SQL editor / service role
 can read or write it — the app can't send newsletters or read past ones.
@@ -81,6 +117,9 @@ an unsubscribed person is not mailed even if listed explicitly. Explicit
 addresses do not have to belong to a user; unknown ones simply get `Szia!`.
 
 ### Unsubscribe
+
+Push newsletters carry no unsubscribe link — turning off push in the profile
+settings (`notify_push`) or the newsletter switch itself stops them.
 
 Every newsletter mail ends with a personal unsubscribe link and carries
 `List-Unsubscribe` / `List-Unsubscribe-Post` headers, so Gmail and Outlook show

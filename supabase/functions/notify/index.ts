@@ -55,6 +55,55 @@ async function sendPushNotification(pushToken: string, message: string, data?: R
   return result;
 }
 
+type PushMessage = {
+  to: string;
+  title: string;
+  body: string;
+  sound: "default";
+  data?: Record<string, unknown>;
+};
+
+/**
+ * Send up to 100 notifications in one Expo request (their per-request cap).
+ * Returns per-message outcomes: Expo answers with one ticket per message, and
+ * a ticket can fail on its own (e.g. DeviceNotRegistered) while the request
+ * as a whole succeeds.
+ */
+async function sendPushBatch(messages: PushMessage[]): Promise<{ ok: number; failed: number }> {
+  if (messages.length === 0) return { ok: 0, failed: 0 };
+
+  const res = await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + expoAccessToken,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(messages),
+  });
+
+  if (!res.ok) {
+    console.error("Expo Push request failed:", res.status, await res.text());
+    return { ok: 0, failed: messages.length };
+  }
+
+  const body = await res.json();
+  const tickets: { status?: string; message?: string }[] = body?.data ?? [];
+  let ok = 0;
+  let failed = 0;
+  for (const ticket of tickets) {
+    if (ticket?.status === "ok") {
+      ok++;
+    } else {
+      failed++;
+      console.error("Expo Push ticket error:", ticket?.message ?? JSON.stringify(ticket));
+    }
+  }
+  // No ticket for a message means we can't confirm it — count it as failed.
+  failed += Math.max(0, messages.length - tickets.length);
+  return { ok, failed };
+}
+
 // Pooled transporter: a newsletter run sends hundreds of mails and must not
 // open a fresh SMTP connection per recipient.
 let transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
@@ -141,19 +190,98 @@ async function sendNotification(
 
 type NewsletterRecord = {
   id: number;
+  type: "email" | "push" | "both" | null;
   subject: string;
   title: string | null;
   body: string;
+  push_text: string | null;
   cta_label: string | null;
   cta_url: string | null;
   recipients: string[] | null;
   status: string;
 };
 
+type NewsletterRecipient = {
+  email: string;
+  full_name: string | null;
+  push_token: string | null;
+  notify_push: boolean | null;
+};
+
 // Sent in small batches so one bad address can't stall the run and so we stay
 // under the SMTP provider's rate limit.
 const NEWSLETTER_BATCH_SIZE = parseInt(Deno.env.get("NEWSLETTER_BATCH_SIZE") || "10");
 const NEWSLETTER_BATCH_DELAY_MS = parseInt(Deno.env.get("NEWSLETTER_BATCH_DELAY_MS") || "1000");
+// Expo accepts at most 100 messages per request.
+const PUSH_BATCH_SIZE = 100;
+const PUSH_BODY_MAX_LENGTH = 180;
+
+/** Plain-text fallback for the push body when push_text isn't set. */
+function htmlToPlainText(html: string): string {
+  const text = html
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<\/(p|div|h[1-6]|li)>/gi, " ")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text.length > PUSH_BODY_MAX_LENGTH
+    ? text.slice(0, PUSH_BODY_MAX_LENGTH - 1).trimEnd() + "…"
+    : text;
+}
+
+/**
+ * Tapping a notification does router.push(data.url), which needs an in-app
+ * path — so only same-site CTAs become a deep link. Anything external is
+ * dropped and the tap just opens the app.
+ */
+function ctaUrlToAppPath(ctaUrl: string | null): string | undefined {
+  if (!ctaUrl) return undefined;
+  if (ctaUrl.startsWith("/")) return ctaUrl;
+  try {
+    const url = new URL(ctaUrl);
+    if (url.hostname !== "fifeapp.hu" && url.hostname !== "www.fifeapp.hu") return undefined;
+    return `${url.pathname}${url.search}` || "/";
+  } catch {
+    return undefined;
+  }
+}
+
+async function sendNewsletterPush(
+  record: NewsletterRecord,
+  recipients: NewsletterRecipient[],
+): Promise<{ ok: number; failed: number }> {
+  // newsletter = marketing consent, notify_push = channel consent. Need both.
+  const targets = recipients.filter((r) => r.push_token && r.notify_push);
+  const skipped = recipients.length - targets.length;
+  if (skipped > 0) {
+    console.log(`Newsletter ${record.id}: ${skipped} recipient(s) without push consent or token`);
+  }
+  if (targets.length === 0) return { ok: 0, failed: 0 };
+
+  const url = ctaUrlToAppPath(record.cta_url);
+  const messages: PushMessage[] = targets.map((recipient) => ({
+    to: recipient.push_token as string,
+    title: record.title || record.subject,
+    body: record.push_text?.trim() || htmlToPlainText(record.body),
+    sound: "default",
+    ...(url ? { data: { url } } : {}),
+  }));
+
+  let ok = 0;
+  let failed = 0;
+  for (let i = 0; i < messages.length; i += PUSH_BATCH_SIZE) {
+    const result = await sendPushBatch(messages.slice(i, i + PUSH_BATCH_SIZE));
+    ok += result.ok;
+    failed += result.failed;
+  }
+  return { ok, failed };
+}
 
 async function sendNewsletter(
   supabase: ReturnType<typeof createClient>,
@@ -184,58 +312,70 @@ async function sendNewsletter(
     });
     if (error) throw error;
 
-    const list = (recipients ?? []) as { email: string; full_name: string | null }[];
+    const list = (recipients ?? []) as NewsletterRecipient[];
+    const type = record.type ?? "email";
     console.log(
-      `Newsletter ${record.id}: ${list.length} recipient(s)`,
+      `Newsletter ${record.id} (${type}): ${list.length} recipient(s)`,
       explicit.length > 0 ? "(explicit list)" : "(all subscribers)",
     );
 
     let sent = 0;
     let failed = 0;
 
-    for (let i = 0; i < list.length; i += NEWSLETTER_BATCH_SIZE) {
-      const batch = list.slice(i, i + NEWSLETTER_BATCH_SIZE);
-      const results = await Promise.allSettled(
-        batch.map(async (recipient) => {
-          const url = await unsubscribeUrl(recipient.email);
-          await sendEmailNotification(
-            recipient.email,
-            record.subject,
-            newsletterHtml(recipient.full_name, record, url),
-            {
-              // RFC 8058 — lets Gmail/Outlook show a native unsubscribe button.
-              "List-Unsubscribe": `<${url}>`,
-              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-            },
-          );
-        }),
-      );
+    if (type === "email" || type === "both") {
+      for (let i = 0; i < list.length; i += NEWSLETTER_BATCH_SIZE) {
+        const batch = list.slice(i, i + NEWSLETTER_BATCH_SIZE);
+        const results = await Promise.allSettled(
+          batch.map(async (recipient) => {
+            const url = await unsubscribeUrl(recipient.email);
+            await sendEmailNotification(
+              recipient.email,
+              record.subject,
+              newsletterHtml(recipient.full_name, record, url),
+              {
+                // RFC 8058 — lets Gmail/Outlook show a native unsubscribe button.
+                "List-Unsubscribe": `<${url}>`,
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+              },
+            );
+          }),
+        );
 
-      for (const result of results) {
-        if (result.status === "fulfilled") {
-          sent++;
-        } else {
-          failed++;
-          console.error("Newsletter send failed:", result.reason);
+        for (const result of results) {
+          if (result.status === "fulfilled") {
+            sent++;
+          } else {
+            failed++;
+            console.error("Newsletter send failed:", result.reason);
+          }
+        }
+
+        if (i + NEWSLETTER_BATCH_SIZE < list.length && NEWSLETTER_BATCH_DELAY_MS > 0) {
+          await new Promise((resolve) => setTimeout(resolve, NEWSLETTER_BATCH_DELAY_MS));
         }
       }
-
-      if (i + NEWSLETTER_BATCH_SIZE < list.length && NEWSLETTER_BATCH_DELAY_MS > 0) {
-        await new Promise((resolve) => setTimeout(resolve, NEWSLETTER_BATCH_DELAY_MS));
-      }
     }
+
+    const push = (type === "push" || type === "both")
+      ? await sendNewsletterPush(record, list)
+      : { ok: 0, failed: 0 };
 
     await supabase
       .from("newsletters")
       .update({
         status: "sent",
-        sent_count: sent,
-        failed_count: failed,
+        email_sent_count: sent,
+        email_failed_count: failed,
+        push_sent_count: push.ok,
+        push_failed_count: push.failed,
         sent_at: new Date().toISOString(),
       })
       .eq("id", record.id);
 
-    console.log(`Newsletter ${record.id} done: ${sent} sent, ${failed} failed`);
+    console.log(
+      `Newsletter ${record.id} done: email ${sent} sent / ${failed} failed, ` +
+      `push ${push.ok} sent / ${push.failed} failed`,
+    );
   } catch (err) {
     console.error(`Newsletter ${record.id} failed:`, err);
     await supabase
