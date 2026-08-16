@@ -5,6 +5,14 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
+import {
+  AVATARS_BUCKET,
+  getAvatarPath,
+  getAvatarThumbnailFileName,
+  getAvatarThumbnailPath,
+} from "@/lib/functions/avatarPaths";
+import createThumbnail from "@/lib/functions/createThumbnail";
+import getUploadData from "@/lib/functions/getUploadData";
 import { supabase } from "@/lib/supabase/supabase";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { clearDrafts } from "@/redux/reducers/chatReducer";
@@ -89,6 +97,7 @@ export default function Index() {
         }
         if (data) {
           setProfile(data[0]);
+          if (data[0]?.avatar_url) backfillThumbnail(data[0].avatar_url);
           // Fetch own location via secure function
           const { data: loc } = await supabase.rpc("get_my_profile_location");
           const myLoc = loc?.[0];
@@ -210,7 +219,12 @@ export default function Index() {
   const deleteImage = async () => {
     if (!myUid || !profile?.avatar_url) return;
     setImageLoading(true);
-    await supabase.storage.from("avatars").remove([myUid + "/" + profile.avatar_url]);
+    await supabase.storage
+      .from(AVATARS_BUCKET)
+      .remove([
+        getAvatarPath(myUid, profile.avatar_url),
+        getAvatarThumbnailPath(myUid, profile.avatar_url),
+      ]);
     await supabase.from("profiles").update({ avatar_url: null }).eq("id", myUid);
     setProfile({ ...profile, avatar_url: null });
     dispatch(setUserData({ avatar_url: null }));
@@ -252,6 +266,43 @@ export default function Index() {
       }
     } else console.log("cancelled");
   };
+  // Avatars uploaded before thumbnails existed only have the original. The
+  // owner is the only one who may write into their folder, so the missing
+  // thumbnail is generated here, the next time they open their profile.
+  const backfillThumbnail = async (fileName: string) => {
+    if (!myUid) return;
+    const thumbnailName = getAvatarThumbnailFileName(fileName);
+    const { data } = await supabase.storage
+      .from(AVATARS_BUCKET)
+      .list(myUid, { search: thumbnailName });
+    if (data?.some((file) => file.name === thumbnailName)) return;
+
+    const { data: original } = supabase.storage
+      .from(AVATARS_BUCKET)
+      .getPublicUrl(getAvatarPath(myUid, fileName));
+    await uploadThumbnail(original.publicUrl, fileName);
+  };
+
+  // Every avatar is shown small (28–100pt) almost everywhere, so a downscaled
+  // copy is uploaded next to the original and used for those. A failure here is
+  // not fatal: ProfileImage falls back to the original.
+  const uploadThumbnail = async (uri: string, fileName: string) => {
+    if (!myUid) return;
+    try {
+      const thumbnail = await createThumbnail(uri);
+      const { error } = await supabase.storage
+        .from(AVATARS_BUCKET)
+        .upload(
+          getAvatarThumbnailPath(myUid, fileName),
+          await getUploadData(thumbnail),
+          { contentType: "image/jpeg", upsert: true },
+        );
+      if (error) console.log("avatar thumbnail upload error", error);
+    } catch (error) {
+      console.log("avatar thumbnail error", error);
+    }
+  };
+
   const uploadImage = async (image: ExpoImagePicker.ImagePickerAsset) => {
     if (!image || !myUid) return;
 
@@ -263,28 +314,14 @@ export default function Index() {
       `avatar_${Date.now()}.jpg`;
     const mimeType = image.mimeType || "image/jpeg";
 
-    let uploadData: Uint8Array | Blob;
-    if (image.base64) {
-      // Use the base64 payload directly. fetch(uri).blob() is unreliable on
-      // Android content:// URIs (and iOS temp file URIs) — it can throw or hang,
-      // which previously left the avatar spinner stuck forever. Pass a
-      // Uint8Array (ArrayBufferView), not .buffer, which can detach on the JSI
-      // bridge.
-      const b64 = image.base64.replace(/\s/g, ""); // strip any line breaks
-      const binaryString = atob(b64);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      uploadData = bytes;
-    } else {
-      const response = await fetch(image.uri);
-      uploadData = await response.blob();
-    }
+    // fetch(uri).blob() is unreliable on Android content:// URIs (and iOS temp
+    // file URIs) — it can throw or hang, which previously left the avatar
+    // spinner stuck forever, so the base64 payload is used where available.
+    const uploadData = await getUploadData(image);
 
     const { data, error } = await supabase.storage
-      .from("avatars")
-      .upload(myUid + "/" + fileName, uploadData, {
+      .from(AVATARS_BUCKET)
+      .upload(getAvatarPath(myUid, fileName), uploadData, {
         contentType: mimeType,
         upsert: true,
       });
@@ -293,6 +330,8 @@ export default function Index() {
       console.log("avatar upload error", error);
       throw error;
     }
+
+    await uploadThumbnail(image.uri, fileName);
 
     if (data?.path) {
       const { error: profileError } = await supabase
