@@ -1,6 +1,6 @@
 import React from "react";
 import { FlatList, Pressable, View } from "react-native";
-import { ActivityIndicator, Icon, Text } from "react-native-paper";
+import { ActivityIndicator, Icon } from "react-native-paper";
 import { Link, router } from "expo-router";
 import { NearestProfile } from "@/redux/store.type";
 import ProfileImage from "../ProfileImage";
@@ -9,6 +9,8 @@ import { ThemedView } from "../ThemedView";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
+import { NO_LOCATION_ERROR, NO_NEARBY_USERS, NO_NEARBY_USERS_HINT } from "@/hooks/useFifeSearch";
+import { Button } from "../Button";
 
 interface FiFeRadarProps {
   data: NearestProfile[];
@@ -80,8 +82,15 @@ export const FiFeRadar: React.FC<FiFeRadarProps> = ({
         </View>
       </Pressable>
       {!!error && (
-        <ThemedView style={{ margin: 6, alignItems: "center" }} type="error">
-          <ThemedText type="error">{error}</ThemedText>
+        <ThemedView style={{ flex:1, margin: 6, alignItems: "center", gap: Spacing.sm, padding:Spacing.sm }}>
+          <View style={{flex:1,flexShrink:1}}>
+            <ThemedText type="label">{error}</ThemedText>
+          </View>
+          {error === NO_LOCATION_ERROR && (
+            <Button mode="contained" onPress={() => router.push("/user/edit")}>
+              Beállítom
+            </Button>
+          )}
         </ThemedView>
       )}
       <FlatList
@@ -99,7 +108,9 @@ export const FiFeRadar: React.FC<FiFeRadarProps> = ({
         }}
         showsHorizontalScrollIndicator={false}
         onEndReached={() => {
-          if (canLoadMore && !loading) load?.();
+          // An empty horizontal list is "at the end" on mount, which would
+          // request page 2 before page 1 has even arrived.
+          if (canLoadMore && !loading && users.length > 0) load?.();
         }}
         onEndReachedThreshold={0.7}
         ListFooterComponent={
@@ -108,7 +119,18 @@ export const FiFeRadar: React.FC<FiFeRadarProps> = ({
           ) : null
         }
         ListEmptyComponent={
-          loading ? <ActivityIndicator style={{ padding: Spacing.lg }} /> : null
+          loading ? (
+            <ActivityIndicator style={{ padding: Spacing.lg }} />
+          ) : error ? null : (
+            // Search ran and found nobody — say so instead of rendering a
+            // blank strip that looks like a failed load.
+            <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, gap: Spacing.xs }}>
+              <ThemedText type="label">{NO_NEARBY_USERS}</ThemedText>
+              <ThemedText variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                {NO_NEARBY_USERS_HINT}
+              </ThemedText>
+            </View>
+          )
         }
       />
     </View>

@@ -447,6 +447,24 @@ export type Database = {
           },
         ]
       }
+      emotion_keys: {
+        Row: {
+          author: string
+          key: string
+          created_at: string
+        }
+        Insert: {
+          author: string
+          key: string
+          created_at?: string
+        }
+        Update: {
+          author?: string
+          key?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       emotion_logs: {
         Row: {
           id: string

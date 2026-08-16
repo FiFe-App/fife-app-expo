@@ -53,9 +53,10 @@ type UserInfo = Partial<Tables<"profiles">>;
 export default function UserPage() {
   const { uid: paramUid } = useLocalSearchParams<{ uid: string }>();
   const uid: string = paramUid ?? "";
-  const { uid: myUid }: UserState = useSelector(
+  const { uid: myUid, userData }: UserState = useSelector(
     (state: RootState) => state.user,
   );
+  const myAvatarUrl = userData?.avatar_url ?? null;
   const { functions }: TutorialState = useSelector(
     (state: RootState) => state.tutorial,
   );
@@ -64,7 +65,9 @@ export default function UserPage() {
   const dispatch = useDispatch();
   const myProfile = myUid === uid;
   const [data, setData] = useState<UserInfo | null>(null);
-  const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [recommendations, setRecommendations] = useState<
+    { author: string; avatar_url: string | null }[]
+  >([]);
   const [contacts, setContacts] = useState<Tables<"contacts">[]>([]);
   const [connectionsCount, setConnectionsCount] = useState(0);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
@@ -72,7 +75,7 @@ export default function UserPage() {
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [notFound, setNotFound] = useState(false);
-  const iRecommended = recommendations.includes(myUid || "");
+  const iRecommended = recommendations.some((r) => r.author === myUid);
 
   useFocusEffect(
     useCallback(() => {
@@ -84,7 +87,7 @@ export default function UserPage() {
         supabase
           .from("profiles")
           .select(
-            "id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions, profileRecommendations!profileRecommendations_profile_id_fkey(*)",
+            "id, full_name, username, avatar_url, website, created_at, updated_at, viewed_functions, profileRecommendations!profileRecommendations_profile_id_fkey(author, profiles!profileRecommendations_author_fkey(avatar_url))",
           )
           .eq("id", uid)
           .maybeSingle()
@@ -98,7 +101,10 @@ export default function UserPage() {
               setData(data);
               setNotFound(false);
               setRecommendations(
-                data.profileRecommendations.map((pr) => pr.author),
+                data.profileRecommendations.map((pr) => ({
+                  author: pr.author,
+                  avatar_url: pr.profiles?.avatar_url ?? null,
+                })),
               );
             } else {
               setNotFound(true);
@@ -203,7 +209,7 @@ export default function UserPage() {
               {/* Centered avatar with gold ring */}
               <View style={{ alignItems: "center", gap: Spacing.md }}>
                 <View style={{
-                  borderRadius: BorderRadius.full,
+                  borderRadius: BorderRadius.xl,
                   borderWidth: 3,
                   borderColor: theme.colors.primary,
                   padding: 3,
@@ -212,7 +218,7 @@ export default function UserPage() {
                     modal
                     uid={uid}
                     avatar_url={data.avatar_url}
-                    style={{ width: 100, height: 100, borderRadius: BorderRadius.full }}
+                    style={{ width: 100, height: 100, borderRadius: BorderRadius.md }}
                   />
                 </View>
                 <Text variant="headlineMedium" style={{ textAlign: "center" }}>
@@ -259,21 +265,38 @@ export default function UserPage() {
                   style={{ flex: 1, alignItems: "center", borderRadius: BorderRadius.md }}
                 >
                   <View style={{ alignItems: "center", paddingVertical: Spacing.xs }}>
-                    <View style={{ flexDirection: "row", alignItems: "center" }}>
-                      <Text variant="headlineSmall" style={{ fontWeight: "700", color: theme.colors.primary }}>
-                        {recommendations.length}
-                      </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", minHeight: 32 }}>
+                      <View style={{ flexDirection: "row" }}>
+                        {recommendations.slice(0, 3).map((rec, i) => (
+                          <View
+                            key={rec.author}
+                            style={{
+                              marginLeft: i === 0 ? 0 : -Spacing.sm,
+                              borderRadius: BorderRadius.full,
+                              borderWidth: 2,
+                              borderColor: theme.colors.surface,
+                              zIndex: 3 - i,
+                            }}
+                          >
+                            <ProfileImage
+                              uid={rec.author}
+                              avatar_url={rec.avatar_url}
+                              style={{ width: 26, height: 26, borderRadius: BorderRadius.full }}
+                            />
+                          </View>
+                        ))}
+                      </View>
                       {functions.includes("friendsProfile") && (
                         <Badge style={globStyles.badge}>ÚJ</Badge>
                       )}
                     </View>
                     <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                      Támogató
+                      Megbíznak benne
                     </Text>
                   </View>
                 </TouchableRipple>
 
-                <View style={{ width: 1, backgroundColor: theme.colors.outlineVariant, marginVertical: Spacing.xs }} />
+                {false&&<><View style={{ width: 1, backgroundColor: theme.colors.outlineVariant, marginVertical: Spacing.xs }} />
 
                 <TouchableRipple
                   onPress={() => router.push({ pathname: "/user/[uid]/connections", params: { uid } })}
@@ -287,15 +310,17 @@ export default function UserPage() {
                       Kapcsolat
                     </Text>
                   </View>
-                </TouchableRipple>
+                </TouchableRipple></>}
 
                 <View style={{ width: 1, backgroundColor: theme.colors.outlineVariant, marginVertical: Spacing.xs }} />
 
                 {data?.created_at && (
                   <View style={{ flex: 1, alignItems: "center", paddingVertical: Spacing.xs }}>
-                    <Text variant="headlineSmall" style={{ fontWeight: "700", color: theme.colors.primary }}>
-                      {elapsedTime(Date.parse(data.created_at.toString()))}
-                    </Text>
+                    <View style={{height:28,justifyContent:"center"}}>
+                      <Text variant="headlineSmall" style={{ fontWeight: "700", color: theme.colors.primary }}>
+                        {elapsedTime(Date.parse(data.created_at.toString()))}
+                      </Text>
+                    </View>
                     <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
                       Fife
                     </Text>
@@ -304,7 +329,7 @@ export default function UserPage() {
               </Surface>
 
               {/* Contacts */}
-              {contacts.length > 0 && (
+              {!myProfile && contacts.length > 0 && (
                 <View style={{ width: "100%", gap: Spacing.sm }}>
                   <SectionLabel label="Elérhetőségek" />
                   <ContactsCard contacts={contacts} isOwnProfile={myProfile} />
@@ -331,7 +356,7 @@ export default function UserPage() {
                       href={{ pathname: "/user/edit" }}
                     >
                       <Button mode="contained-tonal" style={{ borderRadius: BorderRadius.pill }}>
-                        Profil szerkesztése
+                        Profilom szerkesztése
                       </Button>
                     </Link>
                   </Measure>
@@ -343,10 +368,13 @@ export default function UserPage() {
                     setRecommended={(recommendedByMe) => {
                       if (myUid) {
                         if (recommendedByMe)
-                          setRecommendations([...recommendations, myUid]);
+                          setRecommendations([
+                            ...recommendations,
+                            { author: myUid, avatar_url: myAvatarUrl },
+                          ]);
                         else
                           setRecommendations(
-                            recommendations.filter((uid) => uid !== myUid),
+                            recommendations.filter((r) => r.author !== myUid),
                           );
                       }
                     }}

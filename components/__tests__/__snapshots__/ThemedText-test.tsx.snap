@@ -5,17 +5,33 @@ exports[`renders correctly 1`] = `
   style={
     [
       {
-        "color": "#11181C",
+        "textAlign": "left",
       },
       {
-        "fontSize": 16,
-        "lineHeight": 24,
+        "color": "rgba(28, 27, 31, 1)",
+        "writingDirection": "ltr",
       },
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
+      [
+        {
+          "fontFamily": "System",
+          "fontSize": 14,
+          "fontWeight": "400",
+          "letterSpacing": 0.25,
+          "lineHeight": 20,
+        },
+        [
+          {
+            "color": "rgba(28, 27, 31, 1)",
+            "fontFamily": "RedHatText",
+          },
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          false,
+          undefined,
+        ],
+      ],
     ]
   }
 >
