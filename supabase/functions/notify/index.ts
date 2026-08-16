@@ -9,6 +9,7 @@ import {
   newsletterHtml,
   profileRecommendationHtml,
 } from "../_shared/email.ts";
+import { isServiceRoleRequest } from "../_shared/auth.ts";
 import { unsubscribeUrl } from "../_shared/unsubscribe.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || Deno.env.get("EXPO_PUBLIC_SUPABASE_URL") || "";
@@ -250,14 +251,30 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  console.log("env", supabaseUrl);
+  // This function sends push notifications and emails to arbitrary users, so it
+  // must only be reachable by the database trigger, which posts with the service
+  // role key. Without this check the public anon key is enough to spoof any
+  // notification to any user.
+  if (!supabaseServiceRoleKey) {
+    console.error("Missing SUPABASE_SERVICE_ROLE_KEY");
+    return new Response(JSON.stringify({ error: "Server configuration error" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
+  if (!isServiceRoleRequest(req, supabaseServiceRoleKey)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 401,
+    });
+  }
+
   const payload = await req.json();
-  console.log("Webhook payload:", JSON.stringify(payload));
 
   const { table, record } = payload;
 
-  if (!record || !supabaseServiceRoleKey) {
-    return new Response(JSON.stringify({ error: "Invalid payload or missing credentials" }), {
+  if (!record) {
+    return new Response(JSON.stringify({ error: "Invalid payload" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
     });
