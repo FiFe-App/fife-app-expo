@@ -215,7 +215,9 @@ Deno.serve(async (req) => {
             .eq("id", record.author)
             .maybeSingle();
           const senderName = authorRes.data?.full_name || "Valaki";
-          const preview = (record.text || "").slice(0, 100);
+          const preview =
+            (record.text || "").slice(0, 100) ||
+            (record.image ? "📷 Képet küldött" : "");
           const message = `${senderName}: ${preview}`;
           await sendNotification(supabase, record.to, message, {
             subject: `${senderName} üzenetet küldött!`,

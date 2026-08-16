@@ -1,14 +1,14 @@
 import { Spacing } from "@/constants/spacing";
 import getMediaKind from "@/lib/functions/getMediaKind";
+import getUploadData from "@/lib/functions/getUploadData";
 import { supabase } from "@/lib/supabase/supabase";
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { MediaDataType, MediaKindType, UserState } from "@/redux/store.type";
 import * as DocumentPicker from "expo-document-picker";
-import { File as FileSystemFile } from "expo-file-system";
 import * as ExpoImagePicker from "expo-image-picker";
 import { useImperativeHandle, useState } from "react";
-import { Platform, ScrollView, useWindowDimensions, View } from "react-native";
+import { ScrollView, useWindowDimensions, View } from "react-native";
 import { IconButton, Text, TextInput } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import MediaView from "../media/MediaView";
@@ -152,30 +152,6 @@ const BuzinessMediaUpload = ({
       });
     } else console.log("cancelled");
     setLoading(false);
-  };
-
-  const getUploadData = async (
-    item: MediaDataType,
-  ): Promise<Uint8Array | Blob> => {
-    if (item.base64) {
-      // Use base64 directly — avoids fetch failures on iOS temp file URIs.
-      // Pass Uint8Array (ArrayBufferView), not .buffer — ArrayBuffer can be
-      // detached crossing the Hermes JSI bridge on iOS.
-      const b64 = item.base64.replace(/\s/g, ""); // strip any line breaks
-      const binaryString = atob(b64);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      return bytes;
-    }
-    if (Platform.OS === "web") {
-      const response = await fetch(item.uri);
-      return response.blob();
-    }
-    // Videos and audio carry no base64, and reading the file directly works
-    // where fetch() fails on iOS temp file URIs.
-    return new FileSystemFile(item.uri).bytes();
   };
 
   const uploadMedia = async (item: MediaDataType, buzinessId: number) => {

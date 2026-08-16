@@ -19,6 +19,9 @@ import { MessageItem } from "./MessageItem";
 import { MessageInput } from "./MessageInput";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { clearDraftMessage, setDraftMessage, setLastReadAt } from "@/redux/reducers/chatReducer";
+import { addSnack } from "@/redux/reducers/infoReducer";
+import getUploadData from "@/lib/functions/getUploadData";
+import * as ExpoImagePicker from "expo-image-picker";
 import { MyAppbar } from "../MyAppBar";
 import { MessagingDisabledCard } from "./MessagingDisabledCard";
 import { setMessagingEnabled } from "@/redux/reducers/userReducer";
@@ -30,6 +33,7 @@ import { ReplyPreview } from "./ReplyPreview";
 type Message = Tables<"messages">;
 
 const PAGE_SIZE = 30;
+const MESSAGE_IMAGES_BUCKET = "messageImages";
 
 // Messages are kept newest-first and rendered in an *inverted* FlatList — the
 // standard chat pattern. This means the list starts pinned to the bottom for
@@ -57,6 +61,8 @@ export default function ChatScreen() {
   const [oldestLoadedCreatedAt, setOldestLoadedCreatedAt] = useState<string | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [pendingImage, setPendingImage] =
+    useState<ExpoImagePicker.ImagePickerAsset | null>(null);
   const [actionsMessage, setActionsMessage] = useState<Message | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const mountId = useRef(Date.now()).current;
@@ -261,6 +267,12 @@ export default function ChatScreen() {
     };
   }, [myUid, otherUid, hasMessagingEnabled, otherHasMessagingEnabled, loadMessages, dispatch, mountId]);
 
+  // Drafts are kept per chat in redux, the attached image is not — drop it when
+  // the screen is reused for another conversation.
+  useEffect(() => {
+    setPendingImage(null);
+  }, [otherUid]);
+
   const setDraft = useCallback(
     (text: string) => {
       if (!otherUid) return;
@@ -274,20 +286,67 @@ export default function ChatScreen() {
     dispatch(clearDraftMessage({ chatId: otherUid }));
   }, [dispatch, otherUid]);
 
+  // The image is uploaded before the row is inserted so that the recipient gets
+  // the complete message from the realtime INSERT event.
+  const uploadImage = async (
+    image: ExpoImagePicker.ImagePickerAsset,
+  ): Promise<string | null> => {
+    if (!myUid) return null;
+
+    const name = image.fileName || image.uri.split("?")[0].split("/").pop() || "";
+    const extension = name.includes(".") ? name.split(".").pop() : "jpg";
+    const path = `${myUid}/${Date.now()}.${extension}`;
+
+    const uploadData = await getUploadData(image).catch((error) => {
+      console.error("Error reading image:", error);
+      return null;
+    });
+    if (!uploadData) return null;
+
+    const { data, error } = await supabase.storage
+      .from(MESSAGE_IMAGES_BUCKET)
+      .upload(path, uploadData, {
+        contentType: image.mimeType || "image/jpeg",
+        upsert: false,
+      });
+
+    if (error) {
+      console.error("Error uploading image:", error);
+      return null;
+    }
+    return data?.path ?? null;
+  };
+
   const sendMessage = async (text: string) => {
     if (!myUid || !otherUid || sending || !hasMessagingEnabled || !otherHasMessagingEnabled) return;
+    if (!text && !pendingImage) return;
 
     setSending(true);
+
+    let imagePath: string | null = null;
+    if (pendingImage) {
+      imagePath = await uploadImage(pendingImage);
+      if (!imagePath) {
+        dispatch(addSnack({ title: "A kép feltöltése nem sikerült." }));
+        setSending(false);
+        return;
+      }
+    }
 
     const { data, error } = await supabase.from("messages").insert({
       author: myUid,
       to: otherUid,
       text,
+      image: imagePath,
       reply_to: replyingTo?.id ?? null,
     }).select().single();
 
     if (error) {
       console.error("Error sending message:", error);
+      dispatch(addSnack({ title: "Az üzenet küldése nem sikerült." }));
+      // Nothing points at the uploaded file anymore, so don't leave it behind.
+      if (imagePath)
+        await supabase.storage.from(MESSAGE_IMAGES_BUCKET).remove([imagePath]);
     } else if (data) {
       setMessages((prev) => {
         if (prev.some((m) => m.id === data.id)) return prev;
@@ -295,6 +354,7 @@ export default function ChatScreen() {
       });
       clearDraft();
       setReplyingTo(null);
+      setPendingImage(null);
     }
 
     setSending(false);
@@ -343,6 +403,8 @@ export default function ChatScreen() {
       console.error("Error deleting message:", error);
       return;
     }
+    if (message.image)
+      await supabase.storage.from(MESSAGE_IMAGES_BUCKET).remove([message.image]);
     setMessages((prev) => prev.filter((m) => m.id !== message.id));
   }, []);
 
@@ -488,6 +550,8 @@ export default function ChatScreen() {
           value={draft}
           onChangeText={setDraft}
           onSend={sendMessage}
+          image={pendingImage}
+          onImageChange={setPendingImage}
           disabled={sending || !hasMessagingEnabled || !otherHasMessagingEnabled}
         />
       </ThemedView>
