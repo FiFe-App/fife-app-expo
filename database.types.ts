@@ -615,6 +615,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          author: string
+          created_at: string
+          emotion_daily_prompt: boolean
+          encrypted_data: string | null
+          home_add_buziness_card_dismissed: boolean
+          invite_card_dismissed: boolean
+          is_it_safe_dismissed: boolean
+          newsletter: boolean
+          nonce: string | null
+          notify_email: boolean
+          notify_push: boolean
+          saved_buzinesses: Json
+          theme_preference: string
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          created_at?: string
+          emotion_daily_prompt?: boolean
+          encrypted_data?: string | null
+          home_add_buziness_card_dismissed?: boolean
+          invite_card_dismissed?: boolean
+          is_it_safe_dismissed?: boolean
+          newsletter?: boolean
+          nonce?: string | null
+          notify_email?: boolean
+          notify_push?: boolean
+          saved_buzinesses?: Json
+          theme_preference?: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          emotion_daily_prompt?: boolean
+          encrypted_data?: string | null
+          home_add_buziness_card_dismissed?: boolean
+          invite_card_dismissed?: boolean
+          is_it_safe_dismissed?: boolean
+          newsletter?: boolean
+          nonce?: string | null
+          notify_email?: boolean
+          notify_push?: boolean
+          saved_buzinesses?: Json
+          theme_preference?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

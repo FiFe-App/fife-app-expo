@@ -12,7 +12,7 @@ import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 import { setOptions, clearOptions, addSnack, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
-import { setName, setThemePreference, logout, setUserData } from "@/redux/reducers/userReducer";
+import { setName, setThemePreference, logout, setUserData, setNotificationPrefs } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
@@ -61,6 +61,9 @@ export default function Index() {
   const [notifyEmail, setNotifyEmail] = useState(false);
   const [newsletter, setNewsletter] = useState(false);
   const [emotionDailyPrompt, setEmotionDailyPrompt] = useState(true);
+  const storedNotificationPrefs = useSelector(
+    (state: RootState) => state.user.notificationPrefs,
+  ) ?? { notifyPush: false, notifyEmail: false, newsletter: false, emotionDailyPrompt: true };
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -104,15 +107,12 @@ export default function Index() {
               });
             }
           }
-          // Fetch notification preferences
-          const { data: prefsData } = await supabase.rpc("get_my_notification_prefs");
-          const prefs = prefsData?.[0];
-          if (prefs) {
-            setNotifyPush(prefs.notify_push ?? false);
-            setNotifyEmail(prefs.notify_email ?? false);
-            setNewsletter(prefs.newsletter ?? false);
-            setEmotionDailyPrompt(prefs.emotion_daily_prompt ?? true);
-          }
+          // Notification preferences come from the user_settings row that the
+          // root layout already synced into Redux — no extra round-trip needed.
+          setNotifyPush(storedNotificationPrefs.notifyPush);
+          setNotifyEmail(storedNotificationPrefs.notifyEmail);
+          setNewsletter(storedNotificationPrefs.newsletter);
+          setEmotionDailyPrompt(storedNotificationPrefs.emotionDailyPrompt);
           console.log(data);
           setLoading(false);
           dispatch(hideLoading());
@@ -164,11 +164,23 @@ export default function Index() {
               },
             );
             if (locError) console.log("location update error", locError);
-            // Save notification preferences
+            // Save notification preferences straight to user_settings so they
+            // are durable the moment the button is pressed, then mirror them
+            // into Redux to keep the settings sync in step. upsert rather than
+            // update: an update would silently affect zero rows if the settings
+            // row were ever missing.
             await supabase
-              .from("profiles")
-              .update({ notify_push: notifyPush, notify_email: notifyEmail, newsletter, emotion_daily_prompt: emotionDailyPrompt })
-              .eq("id", myUid);
+              .from("user_settings")
+              .upsert(
+                { author: myUid, notify_push: notifyPush, notify_email: notifyEmail, newsletter, emotion_daily_prompt: emotionDailyPrompt },
+                { onConflict: "author" },
+              );
+            dispatch(setNotificationPrefs({
+              notifyPush,
+              notifyEmail,
+              newsletter,
+              emotionDailyPrompt,
+            }));
             // If push enabled, ensure we have a token registered
             if (notifyPush) {
               const token = await registerForPushNotificationsAsync();

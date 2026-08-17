@@ -29,7 +29,7 @@ import { MyAppbar } from "@/components/MyAppBar";
 import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import FakeSearchInput from "@/components/FakeSearchInput";
 import { RootState } from "@/redux/store";
-import { setLocation, logout, setNotificationPrefs } from "@/redux/reducers/userReducer";
+import { setLocation, logout } from "@/redux/reducers/userReducer";
 import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearDrafts } from "@/redux/reducers/chatReducer";
 import { supabase } from "@/lib/supabase/supabase";
@@ -37,6 +37,7 @@ import { registerForPushNotificationsAsync } from "@/lib/notifications/registerF
 import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
 import { setStatusBarColor } from "@/redux/reducers/infoReducer";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { emotionAvailable } from "@/constants/emotionTiming";
 
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
@@ -57,6 +58,13 @@ function RootContent() {
   const deviceColorScheme = useColorScheme(); // Auto-detect device theme
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
   const { uid } = useSelector((state: RootState) => state.user);
+  const settingsSyncedAt = useSelector((state: RootState) => state.user.settingsSyncedAt);
+  const notifyPush = useSelector(
+    (state: RootState) => state.user.notificationPrefs?.notifyPush ?? false,
+  );
+  const emotionDailyPrompt = useSelector(
+    (state: RootState) => state.user.notificationPrefs?.emotionDailyPrompt ?? true,
+  );
   const { statusBarColor, bottomBarColor } = useSelector((state: RootState) => state.info);
   const hasInitialized = React.useRef(false);
 
@@ -68,6 +76,7 @@ function RootContent() {
   }, []);
 
   const { syncPendingLogs, loadFromServer } = useEmotionLog();
+  const { loadFromServer: loadSettings } = useUserSettings();
 
   // Manage Supabase token auto-refresh and offline sync on foreground
   useEffect(() => {
@@ -129,29 +138,31 @@ function RootContent() {
     });
   }, [uid, dispatch]);
 
-  // Register push token and schedule emotion reminder on login (native-only)
+  // Pull the user's settings row on login. Unlike the old notification-prefs
+  // fetch this runs on web too, because it carries the mantra, Lusta Lista,
+  // theme and previous searches as well as the notification flags.
   useEffect(() => {
-    if (!uid || Platform.OS === "web") return;
-    supabase.rpc("get_my_notification_prefs").then(async ({ data }) => {
-      const prefs = data?.[0];
-      if (!prefs) return;
-      dispatch(setNotificationPrefs({
-        notifyPush: prefs.notify_push ?? false,
-        notifyEmail: prefs.notify_email ?? false,
-        newsletter: prefs.newsletter ?? false,
-        emotionDailyPrompt: prefs.emotion_daily_prompt ?? true,
-      }));
-      if (prefs.notify_push) {
+    if (!uid) return;
+    loadSettings();
+  }, [uid, loadSettings]);
+
+  // Register push token and schedule emotion reminder (native-only). Driven by
+  // the prefs the settings sync put in Redux, so toggling a preference takes
+  // effect immediately instead of only on the next login.
+  useEffect(() => {
+    if (!uid || Platform.OS === "web" || !settingsSyncedAt) return;
+    (async () => {
+      if (notifyPush) {
         const token = await registerForPushNotificationsAsync();
         if (token) await supabase.rpc("update_my_push_token", { token });
       }
-      if (emotionAvailable && (prefs.emotion_daily_prompt ?? true)) {
+      if (emotionAvailable && emotionDailyPrompt) {
         await scheduleDailyEmotionReminder();
       } else {
         await cancelDailyEmotionReminder();
       }
-    });
-  }, [uid, dispatch]);
+    })();
+  }, [uid, settingsSyncedAt, notifyPush, emotionDailyPrompt]);
 
   const router = useRouter();
 

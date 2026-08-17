@@ -53,6 +53,33 @@ export interface UserState {
   themePreference: "light" | "dark" | "auto";
   savedBuzinesses: number[];
   previousSearches: string[];
+  /**
+   * `updated_at` of the user_settings row this state was last hydrated from or
+   * pushed to. Undefined means "never synced with the server on this device".
+   */
+  settingsSyncedAt?: string;
+}
+
+/**
+ * The preference set mirrored to public.user_settings. `mantra`, `tasks` and
+ * `previousSearches` travel inside the row's encrypted blob; the rest are plain
+ * columns. See lib/crypto/settingsEncryption.ts.
+ */
+export interface UserSettingsPayload {
+  mantra?: string;
+  tasks: TaskItem[];
+  previousSearches: string[];
+  themePreference: "light" | "dark" | "auto";
+  savedBuzinesses: number[];
+  isItSafeDismissed: boolean;
+  inviteCardDismissed: boolean;
+  homeAddBuzinessCardDismissed: boolean;
+  notificationPrefs: {
+    notifyPush: boolean;
+    notifyEmail: boolean;
+    newsletter: boolean;
+    emotionDailyPrompt: boolean;
+  };
 }
 
 export type User = Tables<"profiles"> & {
