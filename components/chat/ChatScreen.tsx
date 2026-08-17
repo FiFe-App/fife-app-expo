@@ -26,10 +26,16 @@ import { setOptions, clearOptions } from "@/redux/reducers/infoReducer";
 import ReportProfileModal from "@/components/user/ReportProfileModal";
 import { MessageActionsSheet } from "./MessageActionsSheet";
 import { ReplyPreview } from "./ReplyPreview";
+import { DateSeparator } from "./DateSeparator";
+import { isSameCalendarDay } from "@/lib/functions/formatChatDate";
+import { Spacing } from "@/constants/spacing";
 
 type Message = Tables<"messages">;
 
 const PAGE_SIZE = 30;
+
+/** Messages further apart than this get extra breathing room between them. */
+const LARGE_GAP_THRESHOLD_MS = 60 * 60 * 1000;
 
 // Messages are kept newest-first and rendered in an *inverted* FlatList — the
 // standard chat pattern. This means the list starts pinned to the bottom for
@@ -437,23 +443,47 @@ export default function ChatScreen() {
           data={displayMessages}
           inverted
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const replyToMessage = item.reply_to ? messageById.get(item.reply_to) ?? null : null;
             const replyToDeleted = !!item.reply_to && !replyToMessage;
+
+            // displayMessages is newest-first, so the message *older* than this
+            // one — the one rendered directly above it — is the next entry in
+            // the array, not the previous one. Cells in an inverted FlatList are
+            // flip-corrected individually, so within a cell anything rendered
+            // before the message still appears above it.
+            const older = displayMessages[index + 1] ?? null;
+
+            // No older message means this is the start of the conversation as
+            // far as the list knows, so it always gets a timestamp.
+            const showDateSeparator =
+              !older || !isSameCalendarDay(item.created_at, older.created_at);
+
+            // The separator already provides a visual break, so only add the
+            // extra gap when there isn't one.
+            const showLargeGap =
+              !showDateSeparator &&
+              !!older &&
+              new Date(item.created_at).getTime() - new Date(older.created_at).getTime() >
+                LARGE_GAP_THRESHOLD_MS;
+
             return (
-              <MessageItem
-                message={item}
-                selected={selectedMessageId === item.id}
-                onPress={() =>
-                  setSelectedMessageId((prev) => (prev === item.id ? null : item.id))
-                }
-                hearted={heartedTexts.has(`heart-${item.id}`)}
-                onToggleHeart={() => toggleHeart(item)}
-                onLongPress={() => setActionsMessage(item)}
-                replyToMessage={replyToMessage}
-                replyToDeleted={replyToDeleted}
-                otherUserName={otherUserLabel || undefined}
-              />
+              <View style={showLargeGap ? styles.largeGap : undefined}>
+                {showDateSeparator && <DateSeparator date={item.created_at} />}
+                <MessageItem
+                  message={item}
+                  selected={selectedMessageId === item.id}
+                  onPress={() =>
+                    setSelectedMessageId((prev) => (prev === item.id ? null : item.id))
+                  }
+                  hearted={heartedTexts.has(`heart-${item.id}`)}
+                  onToggleHeart={() => toggleHeart(item)}
+                  onLongPress={() => setActionsMessage(item)}
+                  replyToMessage={replyToMessage}
+                  replyToDeleted={replyToDeleted}
+                  otherUserName={otherUserLabel || undefined}
+                />
+              </View>
             );
           }}
           contentContainerStyle={styles.messagesList}
@@ -555,6 +585,9 @@ const styles = StyleSheet.create({
   messagesList: {
     flexGrow: 1,
     paddingVertical: 8,
+  },
+  largeGap: {
+    marginTop: Spacing.lg,
   },
   loadingOlder: {
     paddingVertical: 8,
