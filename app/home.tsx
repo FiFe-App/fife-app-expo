@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import BuzinessItem from "@/components/buziness/BuzinessItem";
 import { FiFeRadar } from "@/components/user/FiFeRadar";
 import { ThemedText } from "@/components/ThemedText";
@@ -12,11 +12,7 @@ import { clearOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { useCallback, useEffect } from "react";
 import { View } from "react-native";
-import {
-  Badge,
-  Card,
-  Icon
-} from "react-native-paper";
+import { Icon } from "react-native-paper";
 import { ScrollView } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,8 +26,7 @@ export default function Index() {
   const searchCircle = useSelector(
     (state: RootState) => state.users.userSearchParams?.searchCircle,
   );
-  const { lastReadAt, unreadCounts } = useSelector((state: RootState) => state.chat);
-  const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
+  const { lastReadAt } = useSelector((state: RootState) => state.chat);
   const theme = useAppTheme();
   const dispatch = useDispatch();
 
@@ -84,10 +79,7 @@ export default function Index() {
   if (!uid) return null;
 
   // Index of the "Bizniszek" header among the ScrollView's children.
-  // React.Children.toArray() drops falsy children, so the messages card not
-  // being rendered shifts every index below it up by one — pointing the sticky
-  // index at the buziness list and docking the whole list to the top.
-  const stickyHeaderIndex = messagingEnabled ? 2 : 1;
+  const stickyHeaderIndex = 1;
 
   return (
     <ThemedView style={{ flex: 1, minHeight: 0 }} type="default">
@@ -103,37 +95,6 @@ export default function Index() {
         }}
         scrollEventThrottle={200}
       >
-        {messagingEnabled && (
-          <Card
-            style={{
-              marginHorizontal: Spacing.sm,
-              marginTop: Spacing.sm,
-              marginBottom: Spacing.sm,
-              paddingHorizontal: Spacing.lg,
-              paddingVertical: Spacing.sm,
-              borderRadius: 12,
-            }}
-            contentStyle={{
-              gap: Spacing.xs,
-              flexDirection: "row",
-            }}
-          >
-            <Icon size={18} color={theme.colors.primary} source="message" />
-            <ThemedText
-              variant="labelLarge"
-              type="bold"
-              onPress={() => router.push("/chats")}
-              style={{ color: theme.colors.primary, flex:1 }}
-            >
-              Üzeneteid
-            </ThemedText>
-            {totalUnread > 0 && (
-              <Badge size={20} style={{ backgroundColor: theme.colors.error }}>
-                {totalUnread}
-              </Badge>
-            )}
-          </Card>
-        )}
         <FiFeRadar
           data={data}
           load={fetchNextPage}

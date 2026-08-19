@@ -42,7 +42,7 @@ const BottomNavigation = () => {
   }, [segment, uid, globalParams]);
 
   const showIcon = true;
-  const showText = false;
+  const showText = true;
 
   const selectedSize = 30;
   const normalSize = 30;

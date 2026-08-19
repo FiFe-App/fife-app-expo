@@ -42,11 +42,17 @@ import globStyles from "@/constants/Styles";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import {
-  viewFunction
+  viewFunction,
+  clearTutorialState
 } from "@/redux/reducers/tutorialReducer";
+import { logout } from "@/redux/reducers/userReducer";
+import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
+import { clearDrafts } from "@/redux/reducers/chatReducer";
 import Measure from "@/components/tutorial/Measure";
 import SectionLabel from "@/components/buziness/SectionLabel";
 import { useAppTheme } from "@/assets/theme";
+import { ThemedText } from "../ThemedText";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
@@ -144,6 +150,20 @@ export default function UserPage() {
               icon: "archive",
               onPress: () => router.push("/user/saved-buzinesses"),
               title: "Mentett bizniszek",
+            },
+            {
+              icon: "exit-run",
+              onPress: async () => {
+                await supabase.auth.signOut();
+                dispatch(logout());
+                dispatch(clearBuziness());
+                dispatch(clearTutorialState());
+                dispatch(clearBuzinessSearchParams());
+                dispatch(clearEmotionLogs());
+                dispatch(clearDrafts());
+                router.navigate("/");
+              },
+              title: "Kijelentkezés",
             },
           ]),
         );
@@ -317,9 +337,9 @@ export default function UserPage() {
                 {data?.created_at && (
                   <View style={{ flex: 1, alignItems: "center", paddingVertical: Spacing.xs }}>
                     <View style={{height:28,justifyContent:"center"}}>
-                      <Text variant="headlineSmall" style={{ fontWeight: "700", color: theme.colors.primary }}>
+                      <ThemedText variant="headlineSmall" style={{ fontWeight: "700", color: theme.colors.primary }}>
                         {elapsedTime(Date.parse(data.created_at.toString()))}
-                      </Text>
+                      </ThemedText>
                     </View>
                     <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
                       Fife

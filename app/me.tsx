@@ -10,15 +10,9 @@ import { Card, Icon, Surface, TouchableRipple } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "@/components/ThemedText";
 import { emotionAvailable } from "@/constants/emotionTiming";
-import { supabase } from "@/lib/supabase/supabase";
-import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
-import { clearDrafts } from "@/redux/reducers/chatReducer";
-import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
-import { setOptions, clearOptions, showDialog } from "@/redux/reducers/infoReducer";
-import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
-import { dismissedIsItSafe, logout } from "@/redux/reducers/userReducer";
-import { useCallback } from "react";
-import { useFocusEffect, router, Link } from "expo-router";
+import { showDialog } from "@/redux/reducers/infoReducer";
+import { dismissedIsItSafe } from "@/redux/reducers/userReducer";
+import { Link } from "expo-router";
 import { Button } from "@/components/Button";
 import { useAppTheme } from "@/assets/theme";
 import { useKeyboardScrollIntoView } from "@/hooks/useKeyboardScrollIntoView";
@@ -29,33 +23,6 @@ export default function MeScreen() {
   const { scrollRef, keyboardHeight, handleScroll, registerFocusedInput } = useKeyboardScrollIntoView();
   const theme = useAppTheme();
   const isItSafeButtonText = `Ez a hely biztonságos${isItSafeDismissed ? "." : "?"}`;
-
-    useFocusEffect(
-      useCallback(() => {
-          dispatch(
-            setOptions([
-              {
-                icon: "exit-run",
-                onPress: async () => {
-                  await supabase.auth.signOut();
-                  dispatch(logout());
-                  dispatch(clearBuziness());
-                  dispatch(clearTutorialState());
-                  dispatch(clearBuzinessSearchParams());
-                  dispatch(clearEmotionLogs());
-                  dispatch(clearDrafts());
-                  router.navigate("/");
-                },
-                title: "Kijelentkezés",
-              },
-            ]),
-          );
-          return () => {
-            dispatch(clearOptions());
-          };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      }, [uid]),
-    );
 
   const showIsItSafeDialog = ()=>{
     dispatch(showDialog({

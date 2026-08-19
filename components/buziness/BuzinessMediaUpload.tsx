@@ -9,10 +9,20 @@ import * as DocumentPicker from "expo-document-picker";
 import * as ExpoImagePicker from "expo-image-picker";
 import { useImperativeHandle, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
-import { IconButton, Text, TextInput } from "react-native-paper";
+import {
+  Button,
+  Dialog,
+  Icon,
+  IconButton,
+  Portal,
+  Text,
+  TextInput,
+  TouchableRipple,
+} from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import MediaView from "../media/MediaView";
 import { ThemedText } from "../ThemedText";
+import { useAppTheme } from "@/assets/theme";
 
 /** Supabase storage rejects bigger uploads, so stop them before they start. */
 const MAX_MEDIA_SIZE = 50 * 1024 * 1024;
@@ -32,6 +42,31 @@ const DESCRIPTION_PLACEHOLDER: Record<MediaKindType, string> = {
   video: "Mesélj erről a videóról",
   audio: "Mesélj erről a hangfelvételről",
 };
+
+/**
+ * Images and videos come from the gallery, audio from the file manager, so a
+ * single picker cannot serve all three — the add button asks first instead.
+ */
+const MEDIA_OPTIONS = [
+  {
+    kind: "image",
+    icon: "image-plus",
+    label: "Kép",
+    hint: "A galériádból",
+  },
+  {
+    kind: "video",
+    icon: "video-plus",
+    label: "Videó",
+    hint: "A galériádból",
+  },
+  {
+    kind: "audio",
+    icon: "music-note-plus",
+    label: "Hang",
+    hint: "A fájljaid közül",
+  },
+] as const;
 
 // Storage keys travel through URLs, so keep them to plain characters.
 const sanitizeFileName = (fileName: string) =>
@@ -84,7 +119,9 @@ const BuzinessMediaUpload = ({
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
+  const theme = useAppTheme();
   const [loading, setLoading] = useState(false);
+  const [pickerVisible, setPickerVisible] = useState(false);
 
   const addMedia = (newMedia: MediaDataType) => {
     if (newMedia.fileSize && newMedia.fileSize > MAX_MEDIA_SIZE) {
@@ -178,19 +215,24 @@ const BuzinessMediaUpload = ({
         contentType: mimeType,
         upsert: true,
       })
-      .then(async (res) => {
-        console.log("storage upload result:", res);
-        return res;
-      })
       .catch((error) => {
         console.error("Upload error:", error);
-        return error;
+        return { data: null, error };
       });
 
-    if (upload?.error)
-      dispatch(addSnack({ title: `A(z) ${fileName} feltöltése nem sikerült.` }));
+    if (upload?.error) {
+      console.error("storage upload failed:", fileName, mimeType, upload.error);
+      // Without the reason every failure looks the same, so a bucket that
+      // rejects the file type is indistinguishable from a dropped connection.
+      dispatch(
+        addSnack({
+          title: `A(z) ${fileName} feltöltése nem sikerült: ${upload.error.message}`,
+        }),
+      );
+      return "";
+    }
 
-    return upload?.data?.path;
+    return upload?.data?.path ?? "";
   };
   const deleteMedia = async (item: MediaDataType) => {
     const deleteRes = await supabase.storage
@@ -286,32 +328,67 @@ const BuzinessMediaUpload = ({
             </View>
           );
         })}
-        <View style={{ gap: Spacing.xs, paddingHorizontal: Spacing.xs }}>
-          {(
-            [
-              { kind: "image", icon: "image-plus", label: "Kép" },
-              { kind: "video", icon: "video-plus", label: "Videó" },
-              { kind: "audio", icon: "music-note-plus", label: "Hang" },
-            ] as const
-          ).map((option) => (
-            <View key={option.kind} style={{ alignItems: "center" }}>
-              <IconButton
-                icon={option.icon}
-                mode="contained"
-                iconColor="black"
-                disabled={loading}
-                accessibilityLabel={`${option.label} hozzáadása`}
-                onPress={() =>
-                  option.kind === "audio"
-                    ? pickAudio()
-                    : pickImageOrVideo(option.kind)
-                }
-              />
-              <Text variant="labelSmall">{option.label}</Text>
-            </View>
-          ))}
+        <View style={{ alignItems: "center", paddingHorizontal: Spacing.xs }}>
+          <IconButton
+            icon="plus"
+            mode="contained"
+            iconColor="black"
+            disabled={loading}
+            accessibilityLabel="Média hozzáadása"
+            onPress={() => setPickerVisible(true)}
+          />
+          <Text variant="labelSmall">Hozzáadás</Text>
         </View>
       </ScrollView>
+
+      <Portal>
+        <Dialog
+          visible={pickerVisible}
+          onDismiss={() => setPickerVisible(false)}
+        >
+          <Dialog.Title>Mit szeretnél hozzáadni?</Dialog.Title>
+          <Dialog.Content style={{ paddingHorizontal: 0 }}>
+            {MEDIA_OPTIONS.map((option) => (
+              <TouchableRipple
+                key={option.kind}
+                onPress={() => {
+                  setPickerVisible(false);
+                  if (option.kind === "audio") pickAudio();
+                  else pickImageOrVideo(option.kind);
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: Spacing.md,
+                    paddingVertical: Spacing.md,
+                    paddingHorizontal: Spacing.lg,
+                  }}
+                >
+                  <Icon
+                    source={option.icon}
+                    size={24}
+                    color={theme.colors.primary}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text variant="bodyLarge">{option.label}</Text>
+                    <Text
+                      variant="bodySmall"
+                      style={{ color: theme.colors.onSurfaceVariant }}
+                    >
+                      {option.hint}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableRipple>
+            ))}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setPickerVisible(false)}>Mégse</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 };

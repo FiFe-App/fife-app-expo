@@ -12,12 +12,12 @@ const Register = () => {
           type="title"
           style={{ textAlign: "left", marginBottom: 16 }}
         >
-          Az utca túloldalán lehet a segítség
+          Ez egy eszköz ami segít neked a mindennapokban
         </ThemedText>
         <ThemedText>
-          A FiFe Budapesten indul – a szomszédaid lehetnek a legjobb segítőtársaid. Nincs szükség távoli ügyfélszolgálatokra és multikra. 
-          {"\n"}Elég ha itt vagyunk egymásnak.
-          
+          A FiFe App ambíciózusan két fronton indít támadást, hogy segítsen neked.
+          {"\n"}<ThemedText type="bold">Offline</ThemedText>, vagyis egy saját, személyes teret nyit neked, valamint egy
+          <ThemedText type="bold"> Online</ThemedText>, segítői hálózatba enged belépni.
         </ThemedText>
       </View>
       <View
@@ -26,13 +26,13 @@ const Register = () => {
           left: 0,
           position: "absolute",
           width: "100%",
-          paddingTop: 20,
+          paddingTop: 60,
           alignItems: "center",
         }}
       >
         <Image
           source={require("@/assets/images/Community_Big.png")}
-          style={{ width: "100%", height: 500, resizeMode: "cover" }}
+          style={{ width: "100%", height: 450, resizeMode: "cover" }}
           contentFit="cover"
           contentPosition="top"
         />

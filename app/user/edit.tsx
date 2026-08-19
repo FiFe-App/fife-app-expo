@@ -20,7 +20,7 @@ import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 import { setOptions, clearOptions, addSnack, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
-import { setName, setThemePreference, logout, setUserData } from "@/redux/reducers/userReducer";
+import { setName, setThemePreference, logout, setUserData, setLocation } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
@@ -173,6 +173,21 @@ export default function Index() {
               },
             );
             if (locError) console.log("location update error", locError);
+            // Redux only reads the location back on login/app start, so without
+            // this the FiFe Radar keeps claiming no location is set until the
+            // app is restarted.
+            else
+              dispatch(
+                setLocation(
+                  userLocation
+                    ? {
+                      latitude: userLocation.location.latitude,
+                      longitude: userLocation.location.longitude,
+                      radius: userLocation.radius,
+                    }
+                    : null,
+                ),
+              );
             // Save notification preferences
             await supabase
               .from("profiles")

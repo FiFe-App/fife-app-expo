@@ -75,8 +75,10 @@ const userReducer = createSlice({
     dismissedIsItSafe: (state) => {
       state.isItSafeDismissed = true;
     },
-    setLocation: (state, { payload }: PayloadAction<{ latitude: number; longitude: number; radius: number }>) => {
+    // null clears the stored location (the user deleted it in the profile editor)
+    setLocation: (state, { payload }: PayloadAction<{ latitude: number; longitude: number; radius: number } | null>) => {
       if (!state.userData) {
+        if (!payload) return;
         state.userData = {
           authorization: "",
           email: "",
@@ -86,11 +88,13 @@ const userReducer = createSlice({
           lastLoginAt: new Date(),
         };
       }
-      state.userData.location = {
-        lat: payload.latitude,
-        lng: payload.longitude,
-        radius: payload.radius,
-      };
+      state.userData.location = payload
+        ? {
+          lat: payload.latitude,
+          lng: payload.longitude,
+          radius: payload.radius,
+        }
+        : undefined;
     },
     setNotificationPrefs: (state, { payload }: PayloadAction<{ notifyPush: boolean; notifyEmail: boolean; newsletter: boolean; emotionDailyPrompt: boolean }>) => {
       state.notificationPrefs = payload;
