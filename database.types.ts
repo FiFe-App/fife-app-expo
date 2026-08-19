@@ -507,13 +507,16 @@ export type Database = {
           bad_boy: boolean
           created_at: string | null
           emotion_daily_prompt: boolean
+          emotion_prompt_asked_at: string | null
           full_name: string
           id: string
           location: unknown
           location_radius_m: number | null
           newsletter: boolean
+          newsletter_asked_at: string | null
           notify_email: boolean
           notify_push: boolean
+          push_asked_at: string | null
           push_token: string | null
           updated_at: string | null
           username: string | null
@@ -525,13 +528,16 @@ export type Database = {
           bad_boy?: boolean
           created_at?: string | null
           emotion_daily_prompt?: boolean
+          emotion_prompt_asked_at?: string | null
           full_name: string
           id: string
           location?: unknown
           location_radius_m?: number | null
           newsletter?: boolean
+          newsletter_asked_at?: string | null
           notify_email?: boolean
           notify_push?: boolean
+          push_asked_at?: string | null
           push_token?: string | null
           updated_at?: string | null
           username?: string | null
@@ -543,13 +549,16 @@ export type Database = {
           bad_boy?: boolean
           created_at?: string | null
           emotion_daily_prompt?: boolean
+          emotion_prompt_asked_at?: string | null
           full_name?: string
           id?: string
           location?: unknown
           location_radius_m?: number | null
           newsletter?: boolean
+          newsletter_asked_at?: string | null
           notify_email?: boolean
           notify_push?: boolean
+          push_asked_at?: string | null
           push_token?: string | null
           updated_at?: string | null
           username?: string | null
@@ -627,9 +636,12 @@ export type Database = {
         Args: never
         Returns: {
           emotion_daily_prompt: boolean
+          emotion_prompt_asked_at: string
           newsletter: boolean
+          newsletter_asked_at: string
           notify_email: boolean
           notify_push: boolean
+          push_asked_at: string
         }[]
       }
       get_my_profile_location: {

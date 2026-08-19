@@ -1,5 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { TaskItem, UserState } from "../store.type";
+import { NotificationPrefs, TaskItem, UserState } from "../store.type";
 import { DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
 
 const initialState: UserState = {
@@ -96,8 +96,12 @@ const userReducer = createSlice({
         }
         : undefined;
     },
-    setNotificationPrefs: (state, { payload }: PayloadAction<{ notifyPush: boolean; notifyEmail: boolean; newsletter: boolean; emotionDailyPrompt: boolean }>) => {
+    setNotificationPrefs: (state, { payload }: PayloadAction<NotificationPrefs>) => {
       state.notificationPrefs = payload;
+    },
+    patchNotificationPrefs: (state, { payload }: PayloadAction<Partial<NotificationPrefs>>) => {
+      if (!state.notificationPrefs) return;
+      state.notificationPrefs = { ...state.notificationPrefs, ...payload };
     },
     addPreviousSearch: (state, { payload }: PayloadAction<string>) => {
       if (!payload.trim()) return;
@@ -130,6 +134,7 @@ export const {
   removeSavedBuziness,
   setLocation,
   setNotificationPrefs,
+  patchNotificationPrefs,
   dismissInviteCard,
   addPreviousSearch,
   removeFromPreviousSearches,

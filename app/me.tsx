@@ -1,6 +1,7 @@
 import { ThemedView } from "@/components/ThemedView";
 import Mantra from "@/components/Mantra";
 import EmotionCheckCard from "@/components/EmotionCheckCard";
+import NotificationPrompts from "@/components/notifications/NotificationPrompts";
 import ToDoList from "@/components/ToDoList";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
@@ -74,6 +75,7 @@ export default function MeScreen() {
               </Surface>
             </TouchableRipple>
           </Link>
+          <NotificationPrompts />
           {emotionAvailable && <EmotionCheckCard onNoteFocus={registerFocusedInput} />}
           <ToDoList
             onRequestScrollIntoView={() =>

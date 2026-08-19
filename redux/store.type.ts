@@ -21,6 +21,17 @@ export interface TaskItem {
   checked: boolean;
 }
 
+export interface NotificationPrefs {
+  notifyPush: boolean;
+  notifyEmail: boolean;
+  newsletter: boolean;
+  emotionDailyPrompt: boolean;
+  /** null = the user has never been asked this question. */
+  pushAskedAt: string | null;
+  emotionPromptAskedAt: string | null;
+  newsletterAskedAt: string | null;
+}
+
 export interface UserState {
   uid?: string;
   name?: string;
@@ -29,12 +40,7 @@ export interface UserState {
   tasks?: TaskItem[];
   isItSafeDismissed?: boolean;
   inviteCardDismissed?: boolean;
-  notificationPrefs?: {
-    notifyPush: boolean;
-    notifyEmail: boolean;
-    newsletter: boolean;
-    emotionDailyPrompt: boolean;
-  };
+  notificationPrefs?: NotificationPrefs;
   userData?: {
     authorization: string;
     email: string;
