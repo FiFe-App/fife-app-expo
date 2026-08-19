@@ -18,7 +18,7 @@ import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzin
 import { clearDrafts } from "@/redux/reducers/chatReducer";
 import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
-import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
+import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 import { setOptions, clearOptions, addSnack, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
 import { setName, setThemePreference, logout, setUserData } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
@@ -65,10 +65,10 @@ export default function Index() {
   const [themeMenuVisible, setThemeMenuVisible] = useState(false);
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [userLocation, setUserLocation] = useState<CircleType | undefined>();
-  const [notifyPush, setNotifyPush] = useState(false);
-  const [notifyEmail, setNotifyEmail] = useState(false);
-  const [newsletter, setNewsletter] = useState(false);
-  const [emotionDailyPrompt, setEmotionDailyPrompt] = useState(true);
+  // Notification toggles persist immediately rather than on save: enabling
+  // one can trigger an OS permission dialog, and a toggle that silently
+  // bounces back later (permission denied) would be baffling.
+  const { prefs, setPref } = useNotificationPrefs();
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -112,15 +112,6 @@ export default function Index() {
                 radius: Number(myLoc.location_radius_m ?? 0),
               });
             }
-          }
-          // Fetch notification preferences
-          const { data: prefsData } = await supabase.rpc("get_my_notification_prefs");
-          const prefs = prefsData?.[0];
-          if (prefs) {
-            setNotifyPush(prefs.notify_push ?? false);
-            setNotifyEmail(prefs.notify_email ?? false);
-            setNewsletter(prefs.newsletter ?? false);
-            setEmotionDailyPrompt(prefs.emotion_daily_prompt ?? true);
           }
           console.log(data);
           setLoading(false);
@@ -173,18 +164,6 @@ export default function Index() {
               },
             );
             if (locError) console.log("location update error", locError);
-            // Save notification preferences
-            await supabase
-              .from("profiles")
-              .update({ notify_push: notifyPush, notify_email: notifyEmail, newsletter, emotion_daily_prompt: emotionDailyPrompt })
-              .eq("id", myUid);
-            // If push enabled, ensure we have a token registered
-            if (notifyPush) {
-              const token = await registerForPushNotificationsAsync();
-              if (token) {
-                await supabase.rpc("update_my_push_token", { token });
-              }
-            }
             setProfile({ ...profile, location: userLocation?.location || null });
             dispatch(setName(profile?.full_name));
             console.log(res);
@@ -207,7 +186,7 @@ export default function Index() {
       return () => {
         dispatch(clearOptions());
       };
-    }, [dispatch, myUid, profile, userLocation, usernameAvailable, notifyPush, notifyEmail, newsletter, emotionDailyPrompt]),
+    }, [dispatch, myUid, profile, userLocation, usernameAvailable]),
   );
   useFocusEffect(
     useCallback(() => {
@@ -582,18 +561,24 @@ export default function Index() {
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <View style={{ flex: 1 }}>
                   <ThemedText>Push értesítések</ThemedText>
-                  <ThemedText type="label">Értesítések a telefonodon</ThemedText>
+                  <ThemedText type="label">Ajánlások, kommentek és üzenetek a telefonodon</ThemedText>
                 </View>
-                <Switch value={notifyPush} onValueChange={setNotifyPush} />
+                <Switch
+                  value={prefs.notifyPush}
+                  onValueChange={(v) => { setPref("notifyPush", v); }}
+                />
               </View>
             )}
-            {emotionAvailable && (
+            {emotionAvailable && Platform.OS !== "web" && (
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <View style={{ flex: 1 }}>
-                  <ThemedText>Napi hangulatnapló</ThemedText>
-                  <ThemedText type="label">Kérdezzem meg minden nap, hogy milyen napod volt?</ThemedText>
+                  <ThemedText>Napi emlékeztető</ThemedText>
+                  <ThemedText type="label">Este 8-kor szólunk, hogy vezesd a hangulatnaplódat</ThemedText>
                 </View>
-                <Switch value={emotionDailyPrompt} onValueChange={setEmotionDailyPrompt} />
+                <Switch
+                  value={prefs.emotionDailyPrompt}
+                  onValueChange={(v) => { setPref("emotionDailyPrompt", v); }}
+                />
               </View>
             )}
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -601,14 +586,20 @@ export default function Index() {
                 <ThemedText>Email értesítések</ThemedText>
                 <ThemedText type="label">Értesítések a(z) {userData?.email} címedre</ThemedText>
               </View>
-              <Switch value={notifyEmail} onValueChange={setNotifyEmail} />
+              <Switch
+                value={prefs.notifyEmail}
+                onValueChange={(v) => { setPref("notifyEmail", v); }}
+              />
             </View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <View style={{ flex: 1 }}>
                 <ThemedText>Kérek hírlevelet</ThemedText>
                 <ThemedText type="label">Újdonságok és tippek emailben</ThemedText>
               </View>
-              <Switch value={newsletter} onValueChange={setNewsletter} />
+              <Switch
+                value={prefs.newsletter}
+                onValueChange={(v) => { setPref("newsletter", v); }}
+              />
             </View>
           </View>
           <Divider />

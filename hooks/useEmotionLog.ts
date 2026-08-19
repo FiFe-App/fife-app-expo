@@ -54,9 +54,6 @@ export function getCardTarget(now: Date) {
 export function useEmotionLog() {
   const dispatch = useDispatch();
   const { uid } = useSelector((state: RootState) => state.user);
-  const emotionDailyPrompt = useSelector(
-    (state: RootState) => state.user.notificationPrefs?.emotionDailyPrompt ?? true
-  );
   const logs = useSelector((state: RootState) => state.emotionLogs.logs);
 
   const cardTarget = getCardTarget(new Date());
@@ -182,7 +179,10 @@ export function useEmotionLog() {
   }, [uid, dispatch]);
 
   return {
-    shouldShowCard: cardTarget.shouldShow && !alreadyLogged && emotionDailyPrompt,
+    // Not gated on emotion_daily_prompt: that preference controls the
+    // 20:00 push reminder only. The in-app card is not a notification,
+    // needs no OS permission, and stays available to everyone.
+    shouldShowCard: cardTarget.shouldShow && !alreadyLogged,
     isYesterday: cardTarget.isYesterday,
     targetDate: cardTarget.targetDate,
     logs,

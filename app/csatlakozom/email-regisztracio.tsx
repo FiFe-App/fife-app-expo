@@ -24,9 +24,6 @@ interface SignupMetadata {
   username: string;
   location?: string; // PostGIS POINT string format
   location_radius_m?: number;
-  notify_push?: boolean;
-  notify_email?: boolean;
-  newsletter?: boolean;
   bad_boy?: boolean;
 }
 
@@ -56,7 +53,7 @@ export default function Index() {
     !loading && !isPasswordWeak && !!name && password === passwordAgain && acceptConditions &&
     !(username.trim().length > 0 && usernameAvailable === false);
 
-  const { uid, userData, notificationPrefs }: UserState = useSelector((state: RootState) => state.user);
+  const { uid, userData }: UserState = useSelector((state: RootState) => state.user);
   const policiesAccepted = useSelector((state: RootState) => state.info.policiesAccepted);
   const userLocation = userData?.location;
   WebBrowser.maybeCompleteAuthSession(); // required for web only
@@ -96,13 +93,8 @@ export default function Index() {
         }
       }
 
-      // Add notification preferences from onboarding
-      if (notificationPrefs) {
-        metadata.notify_push = notificationPrefs.notifyPush;
-        metadata.notify_email = notificationPrefs.notifyEmail;
-        metadata.newsletter = notificationPrefs.newsletter;
-      }
-
+      // Notification preferences are no longer collected during signup —
+      // each one is asked contextually on /me once the user is in the app.
       metadata.bad_boy = !policiesAccepted;
 
       const { data, error } = await supabase.auth.signUp({
