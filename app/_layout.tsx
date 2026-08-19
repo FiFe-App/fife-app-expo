@@ -39,6 +39,9 @@ import { registerForPushNotificationsAsync } from "@/lib/notifications/registerF
 import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
 import { setStatusBarColor } from "@/redux/reducers/infoReducer";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
+import { useAppVersionGate } from "@/hooks/useAppVersionGate";
+import UpdateRequiredScreen from "@/components/version/UpdateRequiredScreen";
+import UpdateAvailableCard from "@/components/version/UpdateAvailableCard";
 import { emotionAvailable } from "@/constants/emotionTiming";
 
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
@@ -71,6 +74,7 @@ function RootContent() {
   }, []);
 
   const { syncPendingLogs, loadFromServer } = useEmotionLog();
+  const versionGate = useAppVersionGate();
 
   // Manage Supabase token auto-refresh and offline sync on foreground
   useEffect(() => {
@@ -219,6 +223,24 @@ function RootContent() {
       dispatch(setStatusBarColor(theme.colors.surface));
   }, [isDarkMode, theme.colors.background, bottomBarColor, dispatch, pathname]);
 
+  // A blocked build never reaches the router: an old client talking to a
+  // backend it no longer matches is exactly what the gate exists to stop.
+  if (versionGate.blocked) {
+    return (
+      <PaperProvider theme={theme}>
+        <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+          <UpdateRequiredScreen
+            status={versionGate.status}
+            currentVersion={versionGate.currentVersion}
+            checking={versionGate.checking}
+            onRetry={versionGate.recheck}
+          />
+        </SafeAreaView>
+      </PaperProvider>
+    );
+  }
+
   return (
     <PaperProvider theme={theme}>
       <StatusBar
@@ -228,6 +250,15 @@ function RootContent() {
         <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
           <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
             <InfoLayer />
+            {/* Only inside the app itself — the nudge has no business on the
+                public landing page or in the middle of signing up. */}
+            {versionGate.updateAvailable && versionGate.status && !!uid &&
+              pathname !== "/" && !pathname.includes("csatlakozom") && (
+              <UpdateAvailableCard
+                status={versionGate.status}
+                onDismiss={versionGate.dismissUpdate}
+              />
+            )}
             <Stack
               screenOptions={{ header: (props: NativeStackHeaderProps) => <MyAppbar title={props.options.title} /> }}
             >

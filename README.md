@@ -36,3 +36,47 @@ A projektet első körben webes környezetben fejlesztjük, mobilra.
  3. ```npm start -w```
  4. Az alapértelmezett böngészőben megnyílik az app.
 
+
+## Verziókezelés (régi verziók blokkolása)
+
+Kiadáskor a régi kliensek kizárhatók, hogy ne beszéljenek olyan backenddel,
+amihez már nem passzolnak. A szabályok a `public.app_versions` táblában
+laknak, platformonként egy sorban:
+
+| oszlop | mit csinál |
+| --- | --- |
+| `min_version` | ez alatt az app el sem indul (kötelező frissítés) |
+| `latest_version` | ez alatt eldobható "van új verzió" kártya jelenik meg |
+| `update_url` | ide visz a Frissítés gomb (weben mindig újratöltés) |
+| `blocked_message` / `update_message` | opcionális saját szöveg a két esethez |
+
+Kiadás menete:
+
+1. Emeld a verziót az `app.config.js` **és** a `package.json` `version`
+   mezőjében (ezt a számot jelenti a kliens magáról).
+2. Buildelj és tölts fel (`eas build` / `npm run deploy-prod`).
+3. Ha a bolt/deploy már kiszolgálja az új verziót, futtasd a Supabase SQL
+   editorban (vagy `psql`-lel):
+
+```sql
+-- csak jelezzük, hogy van új verzió
+update public.app_versions
+   set latest_version = '1.1.0', updated_at = now()
+ where platform in ('android', 'ios', 'web');
+
+-- ha a réginek tényleg le kell állnia (kötelező frissítés)
+update public.app_versions
+   set min_version = '1.1.0',
+       blocked_message = 'Ez a verzió már nem használható, kérlek frissíts.',
+       updated_at = now()
+ where platform = 'android';
+```
+
+`min_version` sosem lehet nagyobb `latest_version`-nél — erre külön
+constraint vigyáz, hogy ne lehessen véletlenül mindenkit kizárni.
+
+A kliens az indításkor és minden előtérbe hozáskor (max. 5 percenként)
+megkérdezi a `get_app_version_status` függvényt. Ha a hívás hibázik vagy
+nincs sor az adott platformra, az app **nem** blokkol: a kapu udvariassági
+kérés a felhasználó felé, a tényleges jogosultságokat továbbra is az RLS és
+az edge functionök tartják be.
