@@ -80,10 +80,40 @@ const createQueryBuilder = (table: string) => {
   return builder;
 };
 
+/**
+ * One mock per bucket, kept between calls so a test can assert on
+ * `storage.from("x").createSignedUrl` after the code under test ran.
+ */
+const buckets = new Map<string, Record<string, jest.Mock>>();
+
+export const storageBucket = (bucket: string) => {
+  let existing = buckets.get(bucket);
+  if (!existing) {
+    existing = {
+      upload: jest.fn(() => Promise.resolve({ data: null, error: null })),
+      remove: jest.fn(() => Promise.resolve({ data: [], error: null })),
+      list: jest.fn(() => Promise.resolve({ data: [], error: null })),
+      getPublicUrl: jest.fn((path: string) => ({
+        data: { publicUrl: `https://example.test/${bucket}/${path}` },
+      })),
+      createSignedUrl: jest.fn(() =>
+        Promise.resolve({ data: null, error: null }),
+      ),
+    };
+    buckets.set(bucket, existing);
+  }
+  return existing;
+};
+
 export const supabase = {
   auth,
   from: jest.fn((table: string) => createQueryBuilder(table)),
-  rpc: jest.fn(() => Promise.resolve({ data: null, error: null })),
+  // Typed loosely on purpose: tests call `.mockResolvedValue` with real rows,
+  // and read back `mock.calls[n][1]` to assert on the arguments.
+  rpc: jest.fn(
+    (_fn?: string, _args?: Record<string, unknown>): Promise<QueryResult> =>
+      Promise.resolve({ data: null, error: null }),
+  ),
   channel: jest.fn(() => ({
     on: jest.fn().mockReturnThis(),
     subscribe: jest.fn().mockReturnThis(),
@@ -91,13 +121,15 @@ export const supabase = {
   })),
   removeChannel: jest.fn(),
   functions: { invoke: jest.fn(() => Promise.resolve({ data: null, error: null })) },
-  storage: { from: jest.fn(() => ({ upload: jest.fn(), getPublicUrl: jest.fn() })) },
+  storage: { from: jest.fn((bucket: string) => storageBucket(bucket)) },
 };
 
 /** Clears recorded calls and registered table results. Call from `beforeEach`. */
 export const __resetSupabase = () => {
   tableRows.clear();
   tableRow.clear();
+  buckets.clear();
+  supabase.storage.from.mockClear();
   (Object.values(auth) as jest.Mock[]).forEach((fn) => fn.mockReset());
   auth.onAuthStateChange.mockReturnValue({
     data: { subscription: { unsubscribe: jest.fn() } },

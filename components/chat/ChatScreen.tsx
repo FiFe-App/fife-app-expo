@@ -25,6 +25,7 @@ import * as ExpoImagePicker from "expo-image-picker";
 import { MyAppbar } from "../MyAppBar";
 import { MessagingDisabledCard } from "./MessagingDisabledCard";
 import { setMessagingEnabled } from "@/redux/reducers/userReducer";
+import { fetchMessagingEnabled } from "@/lib/chat/messagingContact";
 import { setOptions, clearOptions } from "@/redux/reducers/infoReducer";
 import ReportProfileModal from "@/components/user/ReportProfileModal";
 import { MessageActionsSheet } from "./MessageActionsSheet";
@@ -76,27 +77,17 @@ export default function ChatScreen() {
 
       // Check if both users have MESSAGE contact enabled
       const checkMessaging = async () => {
-        // Check current user's MESSAGE contact
-        const { data: myMessageContact } = await supabase
-          .from("contacts")
-          .select("*")
-          .eq("author", currentMyUid)
-          .eq("type", "MESSAGE")
-          .maybeSingle();
+        const [myMessagingEnabled, otherMessagingEnabled] = await Promise.all([
+          fetchMessagingEnabled(currentMyUid),
+          fetchMessagingEnabled(currentOtherUid),
+        ]);
 
-        // Check other user's MESSAGE contact
-        const { data: otherMessageContact } = await supabase
-          .from("contacts")
-          .select("*")
-          .eq("author", currentOtherUid)
-          .eq("type", "MESSAGE")
-          .maybeSingle();
-
-        const myMessagingEnabled = !!(myMessageContact && myMessageContact.data);
-        const otherMessagingEnabled = !!(otherMessageContact && otherMessageContact.data);
-
-        dispatch(setMessagingEnabled(myMessagingEnabled));
-        setOtherHasMessagingEnabled(otherMessagingEnabled);
+        // A failed check says nothing about the account, so leave the previous
+        // answer standing rather than claiming messaging is switched off.
+        if (myMessagingEnabled !== null)
+          dispatch(setMessagingEnabled(myMessagingEnabled));
+        if (otherMessagingEnabled !== null)
+          setOtherHasMessagingEnabled(otherMessagingEnabled);
         setCheckingMessaging(false);
       };
 
@@ -447,28 +438,17 @@ export default function ChatScreen() {
             // Re-check both users' messaging status
             (async () => {
               if (!myUid || !otherUid) return;
-              const currentMyUid = myUid;
-              const currentOtherUid = otherUid;
 
-              const { data: myMessageContact } = await supabase
-                .from("contacts")
-                .select("*")
-                .eq("author", currentMyUid)
-                .eq("type", "MESSAGE")
-                .maybeSingle();
+              const [myMessagingEnabled, otherMessagingEnabled] =
+                await Promise.all([
+                  fetchMessagingEnabled(myUid),
+                  fetchMessagingEnabled(otherUid),
+                ]);
 
-              const { data: otherMessageContact } = await supabase
-                .from("contacts")
-                .select("*")
-                .eq("author", currentOtherUid)
-                .eq("type", "MESSAGE")
-                .maybeSingle();
-
-              const myMessagingEnabled = !!(myMessageContact && myMessageContact.data);
-              const otherMessagingEnabled = !!(otherMessageContact && otherMessageContact.data);
-
-              dispatch(setMessagingEnabled(myMessagingEnabled));
-              setOtherHasMessagingEnabled(otherMessagingEnabled);
+              if (myMessagingEnabled !== null)
+                dispatch(setMessagingEnabled(myMessagingEnabled));
+              if (otherMessagingEnabled !== null)
+                setOtherHasMessagingEnabled(otherMessagingEnabled);
 
               if (myMessagingEnabled && otherMessagingEnabled) {
                 loadMessages();

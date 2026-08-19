@@ -30,7 +30,8 @@ import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import FakeSearchInput from "@/components/FakeSearchInput";
 import MessagesAppbarAction from "@/components/navigation/MessagesAppbarAction";
 import { RootState } from "@/redux/store";
-import { setLocation, logout, setNotificationPrefs } from "@/redux/reducers/userReducer";
+import { setLocation, logout, setNotificationPrefs, setMessagingEnabled } from "@/redux/reducers/userReducer";
+import { fetchMessagingEnabled } from "@/lib/chat/messagingContact";
 import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearDrafts } from "@/redux/reducers/chatReducer";
 import { supabase } from "@/lib/supabase/supabase";
@@ -128,6 +129,15 @@ function RootContent() {
           radius: myLoc.location_radius_m ?? 0,
         }));
       }
+    });
+  }, [uid, dispatch]);
+
+  // `messagingEnabled` is persisted, so a stale value decides whether the chat
+  // link shows long before any screen re-checks it. Refresh it on every start.
+  useEffect(() => {
+    if (!uid) return;
+    fetchMessagingEnabled(uid).then((enabled) => {
+      if (enabled !== null) dispatch(setMessagingEnabled(enabled));
     });
   }, [uid, dispatch]);
 

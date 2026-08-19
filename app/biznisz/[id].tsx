@@ -117,7 +117,7 @@ const StatItem = ({
 
 export default function Index() {
   const theme = useAppTheme();
-  const { height: windowHeight } = useWindowDimensions();
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const { id: paramId } = useGlobalSearchParams();
   const dispatch = useDispatch();
   const { uid: myUid }: UserState = useSelector(
@@ -140,6 +140,11 @@ export default function Index() {
   const categories = data?.title?.split(" $ ");
   const title = categories?.[0];
   const [media, setMedia] = useState<MediaDataType[]>([]);
+  // Audio players need the full row width for their controls, so they get
+  // their own column below the image/video carousel instead of sharing it.
+  const visualMedia = media.filter((item) => getMediaKind(item) !== "audio");
+  const audioMedia = media.filter((item) => getMediaKind(item) === "audio");
+  const audioItemWidth = windowWidth - Spacing.md * 2;
 
   const myBuziness = myUid === data?.author;
   const { myLocation } = useMyLocation();
@@ -495,33 +500,49 @@ export default function Index() {
                 </View>
               </ThemedView>
 
-              {/* MEDIA — horizontal carousel of images, videos and audio */}
-              {media.length > 0 && (
+              {/* MEDIA — horizontal carousel of images and videos */}
+              {visualMedia.length > 0 && (
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   style={{ marginTop: Spacing.xl }}
                   contentContainerStyle={{ paddingHorizontal: Spacing.md, gap: Spacing.sm }}
                 >
-                  {media.map((item, ind) => {
-                    // Audio players need room for their controls.
-                    const itemWidth = getMediaKind(item) === "audio" ? 260 : 160;
-                    return (
-                      <View key={"media-" + ind} style={{ width: itemWidth }}>
-                        <MediaView media={item} width={itemWidth} height={160} />
-                        {!!item.description && (
-                          <Text
-                            variant="labelSmall"
-                            numberOfLines={1}
-                            style={{ color: theme.colors.onSurfaceVariant, paddingTop: Spacing.xs }}
-                          >
-                            {item.description}
-                          </Text>
-                        )}
-                      </View>
-                    );
-                  })}
+                  {visualMedia.map((item, ind) => (
+                    <View key={"media-" + ind} style={{ width: 160 }}>
+                      <MediaView media={item} width={160} height={160} />
+                      {!!item.description && (
+                        <Text
+                          variant="labelSmall"
+                          numberOfLines={1}
+                          style={{ color: theme.colors.onSurfaceVariant, paddingTop: Spacing.xs }}
+                        >
+                          {item.description}
+                        </Text>
+                      )}
+                    </View>
+                  ))}
                 </ScrollView>
+              )}
+
+              {/* Other media (audio) — stacked in a column below */}
+              {audioMedia.length > 0 && (
+                <View style={{ marginTop: Spacing.xs, paddingHorizontal: Spacing.md, gap: Spacing.sm }}>
+                  {audioMedia.map((item, ind) => (
+                    <View key={"audio-" + ind}>
+                      <MediaView media={item} width={audioItemWidth} />
+                      {!!item.description && (
+                        <Text
+                          variant="labelSmall"
+                          numberOfLines={1}
+                          style={{ color: theme.colors.onSurfaceVariant, paddingTop: Spacing.xs }}
+                        >
+                          {item.description}
+                        </Text>
+                      )}
+                    </View>
+                  ))}
+                </View>
               )}
 
             </View>

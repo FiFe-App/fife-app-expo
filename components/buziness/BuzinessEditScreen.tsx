@@ -469,7 +469,7 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
           </View>
 
           <View style={{ gap: Spacing.sm }}>
-            <SectionLabel label="Képek, videók, hangok" optional />
+            <SectionLabel label="Képek, videó, zene" optional />
             <Surface elevation={1} style={surfaceStyle}>
               <BuzinessMediaUpload
                 media={media}

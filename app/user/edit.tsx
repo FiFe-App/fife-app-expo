@@ -543,11 +543,6 @@ export default function Index() {
             <ThemedText type="label" style={{ marginBottom: Spacing.sm }}>
               Add meg a lakhelyedet, hogy lásd a fiféket a környékeden.
             </ThemedText>
-            {!userLocation && (
-              <ThemedText type="label" style={{ marginBottom: Spacing.md }}>
-                Nincs lakhely beállítva
-              </ThemedText>
-            )}
             <View style={{ flexDirection: "row", gap: Spacing.xs, flexWrap: "wrap" }}>
               <Button
                 mode="outlined"
@@ -557,6 +552,11 @@ export default function Index() {
               >
                 {userLocation ? "Környék módosítása" : "Megadom a környékemet"}
               </Button>
+            {!userLocation && (
+              <ThemedText type="label" style={{ marginBottom: Spacing.md }}>
+                Nincs lakhely beállítva
+              </ThemedText>
+            )}
               {userLocation && (
                 <Button
                   mode="text"

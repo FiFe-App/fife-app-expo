@@ -1,7 +1,7 @@
 /**
  * Registration flow — the wizard chrome in `app/csatlakozom/_layout.tsx`.
  *
- * The layout owns the six-step order, the progress dots and the Vissza/Tovább
+ * The layout owns the five-step order, the progress dots and the Vissza/Tovább
  * buttons. The screens themselves never navigate between steps, so this is the
  * only place the step order is expressed.
  *
@@ -38,8 +38,7 @@ describe("registration / wizard navigation", () => {
     // the wizard's own "Tovább" only covers the way up to the sign-up form.
     const steps = [
       ["/csatlakozom", "/csatlakozom/iranyelvek"],
-      ["/csatlakozom/iranyelvek", "/csatlakozom/ertesitesek"],
-      ["/csatlakozom/ertesitesek", "/csatlakozom/email-regisztracio"],
+      ["/csatlakozom/iranyelvek", "/csatlakozom/email-regisztracio"],
     ] as const;
 
     for (const [current, expected] of steps) {
@@ -68,7 +67,7 @@ describe("registration / wizard navigation", () => {
 
   it("steps back to the previous page from a later step", async () => {
     const user = userEvent.setup();
-    __setPathname("/csatlakozom/ertesitesek");
+    __setPathname("/csatlakozom/email-regisztracio");
 
     await renderWithProviders(<RegistrationLayout />);
     await user.press(back());

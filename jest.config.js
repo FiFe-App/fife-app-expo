@@ -7,7 +7,15 @@ module.exports = {
   // specifier, so Jest needs that directory in its module search path too.
   moduleDirectories: ["node_modules", "node_modules/expo/node_modules"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
-  testPathIgnorePatterns: ["/node_modules/", "/dist/", "/.expo/"],
+  // `.claude/worktrees` holds throwaway checkouts of this same repo, so
+  // without this every worktree contributes a second, stale copy of every
+  // test — including snapshots taken against older components.
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/dist/",
+    "/.expo/",
+    "/.claude/",
+  ],
   // jest-expo's default list, plus `react-redux`, which resolves to an ESM
   // build under the "react-native" export condition and has to be transformed.
   transformIgnorePatterns: [

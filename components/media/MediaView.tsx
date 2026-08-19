@@ -166,7 +166,7 @@ const MediaView = ({
 
   if (kind === "audio")
     return (
-      <View style={[{ height, justifyContent: "center" }, style]}>
+      <View style={[{ justifyContent: "center" }, style]}>
         <AudioMediaView
           uri={media.url}
           title={media.fileName || media.description || undefined}
@@ -188,8 +188,6 @@ const MediaView = ({
             <ScrollView style={{ maxHeight: 250 }}>
               <ThemedText
                 style={{
-                  color: "white",
-                  textShadowColor: "black",
                   textShadowRadius: 3,
                 }}
               >

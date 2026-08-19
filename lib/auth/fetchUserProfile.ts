@@ -3,6 +3,7 @@ import { Dispatch } from "@reduxjs/toolkit";
 import { supabase } from "@/lib/supabase/supabase";
 import { login, setMessagingEnabled, setName, setUserData } from "@/redux/reducers/userReducer";
 import { loadViewedFunctions } from "@/redux/reducers/tutorialReducer";
+import { fetchMessagingEnabled } from "@/lib/chat/messagingContact";
 
 export async function fetchUserProfile(user: User, dispatch: Dispatch) {
   const { data: profile } = await supabase
@@ -33,14 +34,8 @@ export async function fetchUserProfile(user: User, dispatch: Dispatch) {
     ...(locationData ? { location: locationData } : {}),
   }));
 
-  const { data: messagingContact } = await supabase
-    .from("contacts")
-    .select("data")
-    .eq("author", user.id)
-    .eq("type", "MESSAGE")
-    .maybeSingle();
-
-  dispatch(setMessagingEnabled(Boolean(messagingContact?.data)));
+  const messagingEnabled = await fetchMessagingEnabled(user.id);
+  if (messagingEnabled !== null) dispatch(setMessagingEnabled(messagingEnabled));
 
   if (profile.viewed_functions) {
     dispatch(loadViewedFunctions(profile.viewed_functions));

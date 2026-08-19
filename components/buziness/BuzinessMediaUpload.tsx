@@ -23,6 +23,8 @@ import { useDispatch, useSelector } from "react-redux";
 import MediaView from "../media/MediaView";
 import { ThemedText } from "../ThemedText";
 import { useAppTheme } from "@/assets/theme";
+import { ThemedView } from "../ThemedView";
+import { BorderRadius } from "@/constants/borderRadius";
 
 /** Supabase storage rejects bigger uploads, so stop them before they start. */
 const MAX_MEDIA_SIZE = 50 * 1024 * 1024;
@@ -258,9 +260,6 @@ const BuzinessMediaUpload = ({
   };
   return (
     <View>
-      <ThemedText style={{ padding: 8 }}>
-        Képek, videók és hangok feltöltése
-      </ThemedText>
       <ScrollView
         horizontal
         contentContainerStyle={{ alignItems: "center", gap: 4 }}
@@ -304,6 +303,20 @@ const BuzinessMediaUpload = ({
                 </>
               )}
               <MediaView media={item} width={width} height={200} />
+              {kind === "audio" && (
+                <TextInput
+                  style={{ width: width }}
+                  value={media[ind]?.fileName || ""}
+                  placeholder="Zene címe"
+                  onChangeText={(text) => {
+                    setMedia(
+                      media.map((i, ind2) => {
+                        return ind2 === ind ? { ...i, fileName: text } : i;
+                      }),
+                    );
+                  }}
+                />
+              )}
               <TextInput
                 style={{ width: width }}
                 value={media[ind]?.description || ""}
@@ -346,43 +359,18 @@ const BuzinessMediaUpload = ({
           visible={pickerVisible}
           onDismiss={() => setPickerVisible(false)}
         >
-          <Dialog.Title>Mit szeretnél hozzáadni?</Dialog.Title>
-          <Dialog.Content style={{ paddingHorizontal: 0 }}>
-            {MEDIA_OPTIONS.map((option) => (
-              <TouchableRipple
+          <Dialog.Title style={{fontWeight:"400",fontFamily:"Piazzolla-ExtraBold"}}>Mit szeretnél hozzáadni?</Dialog.Title>
+          <Dialog.Content style={{ padding: Spacing.lg,gap:Spacing.sm,flexDirection:"row",flexWrap:"wrap",justifyContent:"center" }}>     
+              {MEDIA_OPTIONS.map((option) => (
+                <Button 
+                mode="contained-tonal"
                 key={option.kind}
                 onPress={() => {
                   setPickerVisible(false);
                   if (option.kind === "audio") pickAudio();
                   else pickImageOrVideo(option.kind);
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: Spacing.md,
-                    paddingVertical: Spacing.md,
-                    paddingHorizontal: Spacing.lg,
-                  }}
-                >
-                  <Icon
-                    source={option.icon}
-                    size={24}
-                    color={theme.colors.primary}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Text variant="bodyLarge">{option.label}</Text>
-                    <Text
-                      variant="bodySmall"
-                      style={{ color: theme.colors.onSurfaceVariant }}
-                    >
-                      {option.hint}
-                    </Text>
-                  </View>
-                </View>
-              </TouchableRipple>
-            ))}
+                }} icon={option.icon}>{option.label}</Button>
+              ))}
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setPickerVisible(false)}>Mégse</Button>

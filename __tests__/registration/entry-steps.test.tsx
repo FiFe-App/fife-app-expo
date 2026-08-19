@@ -20,7 +20,9 @@ describe("registration / entry screen", () => {
   it("opens with the pitch for joining", async () => {
     await renderWithProviders(<RegistrationIntro />);
 
-    expect(screen.getByText("Az utca túloldalán lehet a segítség")).toBeOnTheScreen();
+    expect(
+      screen.getByText("Ez egy eszköz ami segít neked a mindennapokban"),
+    ).toBeOnTheScreen();
   });
 });
 

@@ -23,6 +23,7 @@ import {
   renderWithProviders,
   type TestStore,
 } from "@/test-utils/renderWithProviders";
+import { DEFAULT_NOTIFICATION_PREFS } from "@/hooks/useNotificationPrefs";
 
 const VALID = {
   name: "Kovács Anna",
@@ -172,14 +173,6 @@ describe("registration / sign-up form", () => {
       const store: TestStore = createTestStore();
       store.dispatch(acceptPolicies());
       store.dispatch(setLocation({ latitude: 47.4979, longitude: 19.0402, radius: 1500 }));
-      store.dispatch(
-        setNotificationPrefs({
-          notifyPush: true,
-          notifyEmail: false,
-          newsletter: true,
-          emotionDailyPrompt: true,
-        }),
-      );
       __setTableRows("profiles", { data: [], error: null });
 
       await renderWithProviders(<EmailRegistration />, { store });
@@ -193,11 +186,38 @@ describe("registration / sign-up form", () => {
         username: "anna",
         location: "POINT(19.0402 47.4979)",
         location_radius_m: 1500,
-        notify_push: true,
-        notify_email: false,
-        newsletter: true,
         bad_boy: false,
       });
+    });
+
+    it("leaves the notification preferences out of sign-up entirely", async () => {
+      // The onboarding step that asked for these was replaced by contextual
+      // prompt cards on /me, so nothing should be collected here any more.
+      const store: TestStore = createTestStore();
+      store.dispatch(acceptPolicies());
+      store.dispatch(
+        setNotificationPrefs({
+          ...DEFAULT_NOTIFICATION_PREFS,
+          notifyPush: true,
+          notifyEmail: false,
+          newsletter: true,
+        }),
+      );
+      __setTableRows("profiles", { data: [], error: null });
+
+      await renderWithProviders(<EmailRegistration />, { store });
+      await fillSignUpForm({ username: "anna" });
+      await waitFor(() => expect(submitButton()).toBeEnabled());
+      await fireEvent.press(submitButton());
+
+      await waitFor(() => expect(auth.signUp).toHaveBeenCalledTimes(1));
+      expect(auth.signUp.mock.calls[0][0].options.data).toEqual(
+        expect.not.objectContaining({
+          notify_push: expect.anything(),
+          notify_email: expect.anything(),
+          newsletter: expect.anything(),
+        }),
+      );
     });
 
     it("flags a user who skipped the pledge as a bad boy", async () => {
