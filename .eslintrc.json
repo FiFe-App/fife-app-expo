@@ -30,6 +30,15 @@
         "jest.config.js"
       ],
       "env": { "node": true }
+    },
+    {
+      "files": [
+        "jest.setup.js",
+        "test-utils/**/*.[jt]s?(x)",
+        "**/__tests__/**/*.[jt]s?(x)",
+        "**/*.test.[jt]s?(x)"
+      ],
+      "env": { "jest": true, "node": true }
     }
   ],
   "rules": {

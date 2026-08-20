@@ -19,17 +19,28 @@ import { MessageItem } from "./MessageItem";
 import { MessageInput } from "./MessageInput";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { clearDraftMessage, setDraftMessage, setLastReadAt } from "@/redux/reducers/chatReducer";
+import { addSnack } from "@/redux/reducers/infoReducer";
+import getUploadData from "@/lib/functions/getUploadData";
+import * as ExpoImagePicker from "expo-image-picker";
 import { MyAppbar } from "../MyAppBar";
 import { MessagingDisabledCard } from "./MessagingDisabledCard";
 import { setMessagingEnabled } from "@/redux/reducers/userReducer";
+import { fetchMessagingEnabled } from "@/lib/chat/messagingContact";
 import { setOptions, clearOptions } from "@/redux/reducers/infoReducer";
 import ReportProfileModal from "@/components/user/ReportProfileModal";
 import { MessageActionsSheet } from "./MessageActionsSheet";
 import { ReplyPreview } from "./ReplyPreview";
+import { DateSeparator } from "./DateSeparator";
+import { isSameCalendarDay } from "@/lib/functions/formatChatDate";
+import { Spacing } from "@/constants/spacing";
 
 type Message = Tables<"messages">;
 
 const PAGE_SIZE = 30;
+const MESSAGE_IMAGES_BUCKET = "messageImages";
+
+/** Messages further apart than this get extra breathing room between them. */
+const LARGE_GAP_THRESHOLD_MS = 60 * 60 * 1000;
 
 // Messages are kept newest-first and rendered in an *inverted* FlatList — the
 // standard chat pattern. This means the list starts pinned to the bottom for
@@ -57,6 +68,8 @@ export default function ChatScreen() {
   const [oldestLoadedCreatedAt, setOldestLoadedCreatedAt] = useState<string | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [pendingImage, setPendingImage] =
+    useState<ExpoImagePicker.ImagePickerAsset | null>(null);
   const [actionsMessage, setActionsMessage] = useState<Message | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const mountId = useRef(Date.now()).current;
@@ -70,27 +83,17 @@ export default function ChatScreen() {
 
       // Check if both users have MESSAGE contact enabled
       const checkMessaging = async () => {
-        // Check current user's MESSAGE contact
-        const { data: myMessageContact } = await supabase
-          .from("contacts")
-          .select("*")
-          .eq("author", currentMyUid)
-          .eq("type", "MESSAGE")
-          .maybeSingle();
+        const [myMessagingEnabled, otherMessagingEnabled] = await Promise.all([
+          fetchMessagingEnabled(currentMyUid),
+          fetchMessagingEnabled(currentOtherUid),
+        ]);
 
-        // Check other user's MESSAGE contact
-        const { data: otherMessageContact } = await supabase
-          .from("contacts")
-          .select("*")
-          .eq("author", currentOtherUid)
-          .eq("type", "MESSAGE")
-          .maybeSingle();
-
-        const myMessagingEnabled = !!(myMessageContact && myMessageContact.data);
-        const otherMessagingEnabled = !!(otherMessageContact && otherMessageContact.data);
-
-        dispatch(setMessagingEnabled(myMessagingEnabled));
-        setOtherHasMessagingEnabled(otherMessagingEnabled);
+        // A failed check says nothing about the account, so leave the previous
+        // answer standing rather than claiming messaging is switched off.
+        if (myMessagingEnabled !== null)
+          dispatch(setMessagingEnabled(myMessagingEnabled));
+        if (otherMessagingEnabled !== null)
+          setOtherHasMessagingEnabled(otherMessagingEnabled);
         setCheckingMessaging(false);
       };
 
@@ -261,6 +264,12 @@ export default function ChatScreen() {
     };
   }, [myUid, otherUid, hasMessagingEnabled, otherHasMessagingEnabled, loadMessages, dispatch, mountId]);
 
+  // Drafts are kept per chat in redux, the attached image is not — drop it when
+  // the screen is reused for another conversation.
+  useEffect(() => {
+    setPendingImage(null);
+  }, [otherUid]);
+
   const setDraft = useCallback(
     (text: string) => {
       if (!otherUid) return;
@@ -274,20 +283,67 @@ export default function ChatScreen() {
     dispatch(clearDraftMessage({ chatId: otherUid }));
   }, [dispatch, otherUid]);
 
+  // The image is uploaded before the row is inserted so that the recipient gets
+  // the complete message from the realtime INSERT event.
+  const uploadImage = async (
+    image: ExpoImagePicker.ImagePickerAsset,
+  ): Promise<string | null> => {
+    if (!myUid) return null;
+
+    const name = image.fileName || image.uri.split("?")[0].split("/").pop() || "";
+    const extension = name.includes(".") ? name.split(".").pop() : "jpg";
+    const path = `${myUid}/${Date.now()}.${extension}`;
+
+    const uploadData = await getUploadData(image).catch((error) => {
+      console.error("Error reading image:", error);
+      return null;
+    });
+    if (!uploadData) return null;
+
+    const { data, error } = await supabase.storage
+      .from(MESSAGE_IMAGES_BUCKET)
+      .upload(path, uploadData, {
+        contentType: image.mimeType || "image/jpeg",
+        upsert: false,
+      });
+
+    if (error) {
+      console.error("Error uploading image:", error);
+      return null;
+    }
+    return data?.path ?? null;
+  };
+
   const sendMessage = async (text: string) => {
     if (!myUid || !otherUid || sending || !hasMessagingEnabled || !otherHasMessagingEnabled) return;
+    if (!text && !pendingImage) return;
 
     setSending(true);
+
+    let imagePath: string | null = null;
+    if (pendingImage) {
+      imagePath = await uploadImage(pendingImage);
+      if (!imagePath) {
+        dispatch(addSnack({ title: "A kép feltöltése nem sikerült." }));
+        setSending(false);
+        return;
+      }
+    }
 
     const { data, error } = await supabase.from("messages").insert({
       author: myUid,
       to: otherUid,
       text,
+      image: imagePath,
       reply_to: replyingTo?.id ?? null,
     }).select().single();
 
     if (error) {
       console.error("Error sending message:", error);
+      dispatch(addSnack({ title: "Az üzenet küldése nem sikerült." }));
+      // Nothing points at the uploaded file anymore, so don't leave it behind.
+      if (imagePath)
+        await supabase.storage.from(MESSAGE_IMAGES_BUCKET).remove([imagePath]);
     } else if (data) {
       setMessages((prev) => {
         if (prev.some((m) => m.id === data.id)) return prev;
@@ -295,6 +351,7 @@ export default function ChatScreen() {
       });
       clearDraft();
       setReplyingTo(null);
+      setPendingImage(null);
     }
 
     setSending(false);
@@ -343,6 +400,8 @@ export default function ChatScreen() {
       console.error("Error deleting message:", error);
       return;
     }
+    if (message.image)
+      await supabase.storage.from(MESSAGE_IMAGES_BUCKET).remove([message.image]);
     setMessages((prev) => prev.filter((m) => m.id !== message.id));
   }, []);
 
@@ -385,28 +444,17 @@ export default function ChatScreen() {
             // Re-check both users' messaging status
             (async () => {
               if (!myUid || !otherUid) return;
-              const currentMyUid = myUid;
-              const currentOtherUid = otherUid;
 
-              const { data: myMessageContact } = await supabase
-                .from("contacts")
-                .select("*")
-                .eq("author", currentMyUid)
-                .eq("type", "MESSAGE")
-                .maybeSingle();
+              const [myMessagingEnabled, otherMessagingEnabled] =
+                await Promise.all([
+                  fetchMessagingEnabled(myUid),
+                  fetchMessagingEnabled(otherUid),
+                ]);
 
-              const { data: otherMessageContact } = await supabase
-                .from("contacts")
-                .select("*")
-                .eq("author", currentOtherUid)
-                .eq("type", "MESSAGE")
-                .maybeSingle();
-
-              const myMessagingEnabled = !!(myMessageContact && myMessageContact.data);
-              const otherMessagingEnabled = !!(otherMessageContact && otherMessageContact.data);
-
-              dispatch(setMessagingEnabled(myMessagingEnabled));
-              setOtherHasMessagingEnabled(otherMessagingEnabled);
+              if (myMessagingEnabled !== null)
+                dispatch(setMessagingEnabled(myMessagingEnabled));
+              if (otherMessagingEnabled !== null)
+                setOtherHasMessagingEnabled(otherMessagingEnabled);
 
               if (myMessagingEnabled && otherMessagingEnabled) {
                 loadMessages();
@@ -437,23 +485,47 @@ export default function ChatScreen() {
           data={displayMessages}
           inverted
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const replyToMessage = item.reply_to ? messageById.get(item.reply_to) ?? null : null;
             const replyToDeleted = !!item.reply_to && !replyToMessage;
+
+            // displayMessages is newest-first, so the message *older* than this
+            // one — the one rendered directly above it — is the next entry in
+            // the array, not the previous one. Cells in an inverted FlatList are
+            // flip-corrected individually, so within a cell anything rendered
+            // before the message still appears above it.
+            const older = displayMessages[index + 1] ?? null;
+
+            // No older message means this is the start of the conversation as
+            // far as the list knows, so it always gets a timestamp.
+            const showDateSeparator =
+              !older || !isSameCalendarDay(item.created_at, older.created_at);
+
+            // The separator already provides a visual break, so only add the
+            // extra gap when there isn't one.
+            const showLargeGap =
+              !showDateSeparator &&
+              !!older &&
+              new Date(item.created_at).getTime() - new Date(older.created_at).getTime() >
+                LARGE_GAP_THRESHOLD_MS;
+
             return (
-              <MessageItem
-                message={item}
-                selected={selectedMessageId === item.id}
-                onPress={() =>
-                  setSelectedMessageId((prev) => (prev === item.id ? null : item.id))
-                }
-                hearted={heartedTexts.has(`heart-${item.id}`)}
-                onToggleHeart={() => toggleHeart(item)}
-                onLongPress={() => setActionsMessage(item)}
-                replyToMessage={replyToMessage}
-                replyToDeleted={replyToDeleted}
-                otherUserName={otherUserLabel || undefined}
-              />
+              <View style={showLargeGap ? styles.largeGap : undefined}>
+                {showDateSeparator && <DateSeparator date={item.created_at} />}
+                <MessageItem
+                  message={item}
+                  selected={selectedMessageId === item.id}
+                  onPress={() =>
+                    setSelectedMessageId((prev) => (prev === item.id ? null : item.id))
+                  }
+                  hearted={heartedTexts.has(`heart-${item.id}`)}
+                  onToggleHeart={() => toggleHeart(item)}
+                  onLongPress={() => setActionsMessage(item)}
+                  replyToMessage={replyToMessage}
+                  replyToDeleted={replyToDeleted}
+                  otherUserName={otherUserLabel || undefined}
+                />
+              </View>
             );
           }}
           contentContainerStyle={styles.messagesList}
@@ -488,6 +560,8 @@ export default function ChatScreen() {
           value={draft}
           onChangeText={setDraft}
           onSend={sendMessage}
+          image={pendingImage}
+          onImageChange={setPendingImage}
           disabled={sending || !hasMessagingEnabled || !otherHasMessagingEnabled}
         />
       </ThemedView>
@@ -555,6 +629,9 @@ const styles = StyleSheet.create({
   messagesList: {
     flexGrow: 1,
     paddingVertical: 8,
+  },
+  largeGap: {
+    marginTop: Spacing.lg,
   },
   loadingOlder: {
     paddingVertical: 8,

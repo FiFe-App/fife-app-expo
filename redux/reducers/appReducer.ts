@@ -15,9 +15,14 @@ const appReducer = createSlice({
     dismissHomeAddBuzinessCard: (state) => {
       state.homeAddBuzinessCardDismissed = true;
     },
+    /** Applied from the server's user_settings row — see hooks/useUserSettings.ts. */
+    setHomeAddBuzinessCardDismissed: (state, { payload }: PayloadAction<boolean>) => {
+      state.homeAddBuzinessCardDismissed = payload;
+    },
   },
 });
 
-export const { dismissHomeAddBuzinessCard } = appReducer.actions;
+export const { dismissHomeAddBuzinessCard, setHomeAddBuzinessCardDismissed } =
+  appReducer.actions;
 
 export default appReducer;

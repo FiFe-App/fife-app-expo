@@ -54,9 +54,6 @@ export function getCardTarget(now: Date) {
 export function useEmotionLog() {
   const dispatch = useDispatch();
   const { uid } = useSelector((state: RootState) => state.user);
-  const emotionDailyPrompt = useSelector(
-    (state: RootState) => state.user.notificationPrefs?.emotionDailyPrompt ?? true
-  );
   const logs = useSelector((state: RootState) => state.emotionLogs.logs);
 
   const cardTarget = getCardTarget(new Date());
@@ -182,7 +179,9 @@ export function useEmotionLog() {
   }, [uid, dispatch]);
 
   return {
-    shouldShowCard: cardTarget.shouldShow && !alreadyLogged && emotionDailyPrompt,
+    // Gating on emotion_daily_prompt happens in EmotionCheckCard, not
+    // here — this hook only knows about logging state/timing.
+    shouldShowCard: cardTarget.shouldShow && !alreadyLogged,
     isYesterday: cardTarget.isYesterday,
     targetDate: cardTarget.targetDate,
     logs,

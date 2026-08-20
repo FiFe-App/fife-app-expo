@@ -5,6 +5,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Card, Text, TouchableRipple, useTheme } from "react-native-paper";
 import { formatChatDate } from "@/lib/functions/formatChatDate";
+import getMessagePreview from "@/lib/functions/getMessagePreview";
 import { BorderRadius } from "@/constants/borderRadius";
 import { Spacing } from "@/constants/spacing";
 
@@ -71,7 +72,7 @@ export function ChatListItem({
                       color: theme.colors.onSurfaceVariant,
                     }}
                   >
-                    {lastMessage.text}
+                    {getMessagePreview(lastMessage)}
                   </Text>
                 )}
                 {!lastMessage && (

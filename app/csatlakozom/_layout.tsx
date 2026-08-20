@@ -20,7 +20,6 @@ export default function RootLayout() {
   const pages = [
     "/csatlakozom/",
     "/csatlakozom/iranyelvek",
-    "/csatlakozom/ertesitesek",
     "/csatlakozom/email-regisztracio",
     "/csatlakozom/email-ellenorzes",
     "/csatlakozom/elso-lepesek",
