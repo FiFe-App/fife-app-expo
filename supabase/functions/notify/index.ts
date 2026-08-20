@@ -19,12 +19,70 @@ const smtpUser = Deno.env.get("SMTP_USER") || "";
 const smtpPass = Deno.env.get("SMTP_PASS") || "";
 const smtpFrom = Deno.env.get("SMTP_FROM") || smtpUser;
 const expoAccessToken = Deno.env.get("EXPO_ACCESS_TOKEN") || "";
+// Optional dedicated webhook secret. When set here *and* in
+// private.app_config.notify_secret, the DB trigger authenticates with it instead of
+// the service role key. Leave unset to authenticate with the service role key only.
+const notifyWebhookSecret = Deno.env.get("NOTIFY_WEBHOOK_SECRET") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-notify-secret",
 };
+
+/** Length-independent comparison so a wrong secret cannot be guessed by timing. */
+function secretsMatch(a: string, b: string): boolean {
+  if (!a || !b || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+/**
+ * Describes a presented bearer token for the logs without ever printing it.
+ * Legacy Supabase keys are JWTs, so the role they carry (anon / service_role)
+ * is what tells you which key the caller was configured with.
+ */
+function describeToken(token: string): string {
+  if (!token) return "none";
+  if (token.startsWith("sb_secret_")) return "secret API key";
+  if (token.startsWith("sb_publishable_")) return "publishable API key";
+  const parts = token.split(".");
+  if (parts.length !== 3) return "opaque token";
+  try {
+    const json = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+    const role = JSON.parse(json)?.role;
+    return role ? `JWT with role "${role}"` : "JWT without a role claim";
+  } catch {
+    return "unparseable JWT";
+  }
+}
+
+/**
+ * This function is invoked by the database (pg_net, via
+ * trigger_notify_on_record_created) rather than by a signed-in user, so the
+ * platform JWT gate is turned off for it in supabase/config.toml and the caller
+ * is authenticated here instead. That keeps notifications working no matter how
+ * the project's API keys are formatted or rotated, and makes a misconfigured
+ * caller show up as a named role in the logs instead of an opaque gateway 401.
+ *
+ * Returns null when the call is authorized, otherwise the reason to log.
+ */
+function authorizeWebhook(req: Request): string | null {
+  const presentedSecret = req.headers.get("x-notify-secret") || "";
+  if (notifyWebhookSecret) {
+    if (secretsMatch(presentedSecret, notifyWebhookSecret)) return null;
+  } else if (presentedSecret) {
+    return "x-notify-secret was sent but NOTIFY_WEBHOOK_SECRET is not set on the function";
+  }
+
+  const bearer = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  if (!bearer) return "no Authorization header and no matching x-notify-secret";
+  if (!supabaseServiceRoleKey) return "SUPABASE_SERVICE_ROLE_KEY is not available to the function";
+  if (secretsMatch(bearer, supabaseServiceRoleKey)) return null;
+
+  return `caller presented a ${describeToken(bearer)}, expected the service role key`;
+}
 
 async function sendPushNotification(pushToken: string, message: string, data?: Record<string, unknown>) {
   if (!pushToken) {
@@ -48,9 +106,9 @@ async function sendPushNotification(pushToken: string, message: string, data?: R
     },
     body: JSON.stringify(body),
   });
-  const data = await res.json();
-  console.log("Expo Push response:", data);
-  return data;
+  const result = await res.json();
+  console.log("Expo Push response:", result);
+  return result;
 }
 
 async function sendEmailNotification(email: string, subject: string, html: string) {
@@ -118,8 +176,37 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const rejection = authorizeWebhook(req);
+  if (rejection) {
+    console.error(`Rejected notify webhook: ${rejection}`);
+    return new Response(
+      JSON.stringify({
+        error: "Unauthorized",
+        detail:
+          "notify must be called with the project's service role key (or a matching x-notify-secret). " +
+          "Check private.app_config — run: select * from private.notify_config_status();",
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      },
+    );
+  }
+
   console.log("env", supabaseUrl);
-  const payload = await req.json();
+  // The body is whatever row_to_json() produced, so the record's shape depends on
+  // which table the trigger fired for.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let payload: { table?: string; record?: Record<string, any> };
+  try {
+    payload = await req.json();
+  } catch (err) {
+    console.error("Could not parse notify webhook body:", err);
+    return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
+  }
   console.log("Webhook payload:", JSON.stringify(payload));
 
   const { table, record } = payload;
