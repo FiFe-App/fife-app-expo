@@ -4,6 +4,7 @@ import ProfileImage from "@/components/ProfileImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import UsernameInput from "@/components/UsernameInput";
+import VersionFooter from "@/components/version/VersionFooter";
 import { Tables } from "@/database.types";
 import {
   AVATARS_BUCKET,
@@ -587,8 +588,8 @@ export default function Index() {
             {emotionAvailable && Platform.OS !== "web" && (
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <View style={{ flex: 1 }}>
-                  <ThemedText>Napi emlékeztető</ThemedText>
-                  <ThemedText type="label">Este 8-kor szólunk, hogy vezesd a hangulatnaplódat</ThemedText>
+                  <ThemedText>Hangulatnapló</ThemedText>
+                  <ThemedText type="label">Minden este megkérdezem, milyen napod volt és naptárban követheted a jegyzeteidet, hangulatodat.</ThemedText>
                 </View>
                 <Switch
                   value={prefs.emotionDailyPrompt}
@@ -646,6 +647,7 @@ export default function Index() {
               Profil végleges törlése
             </Button>
           </View>
+          <VersionFooter />
           <Portal>
             <Dialog visible={showDeleteDialog} onDismiss={() => setShowDeleteDialog(false)}>
               <Dialog.Title>Profil végleges törlése</Dialog.Title>

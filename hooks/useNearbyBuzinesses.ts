@@ -30,6 +30,9 @@ export function useNearbyBuzinesses(take = 5) {
   const skipRef = useRef(0);
   const loadingRef = useRef(false);
   const hasMoreRef = useRef(true);
+  // Bumped on every fetch() so a fetchNextPage() still in flight from before
+  // a reset can't append its (now stale) page onto the freshly reset list.
+  const requestIdRef = useRef(0);
 
   const getSearchLocation = useCallback(() => {
     if (myLocation)
@@ -64,22 +67,26 @@ export function useNearbyBuzinesses(take = 5) {
   );
 
   const fetch = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setLoading(true);
     loadingRef.current = true;
     setError(null);
     try {
       const buzinesses = await runSearch(0);
+      if (requestId !== requestIdRef.current) return;
       setData(buzinesses);
       const more = buzinesses.length === take;
       setHasMore(more);
       hasMoreRef.current = more;
       skipRef.current = take;
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       setError(err instanceof Error ? err.message : "Unknown error");
       setData([]);
       setHasMore(false);
       hasMoreRef.current = false;
     }
+    if (requestId !== requestIdRef.current) return;
     setLoading(false);
     loadingRef.current = false;
   }, [runSearch, take]);
@@ -88,19 +95,29 @@ export function useNearbyBuzinesses(take = 5) {
     // Guard via refs so repeated scroll events can't fire overlapping requests
     // or page past the end.
     if (loadingRef.current || !hasMoreRef.current) return;
+    const requestId = requestIdRef.current;
     setLoading(true);
     loadingRef.current = true;
     setError(null);
     try {
       const buzinesses = await runSearch(skipRef.current);
-      setData((prev) => [...prev, ...buzinesses]);
+      // A fresh fetch() may have reset the list while this page was in
+      // flight; discard this stale page instead of appending onto the reset data.
+      if (requestId !== requestIdRef.current) return;
+      setData((prev) => {
+        const seen = new Set(prev.map((b) => b.id));
+        const deduped = buzinesses.filter((b) => !seen.has(b.id));
+        return [...prev, ...deduped];
+      });
       const more = buzinesses.length === take;
       setHasMore(more);
       hasMoreRef.current = more;
       skipRef.current += take;
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       setError(err instanceof Error ? err.message : "Unknown error");
     }
+    if (requestId !== requestIdRef.current) return;
     setLoading(false);
     loadingRef.current = false;
   }, [runSearch, take]);
