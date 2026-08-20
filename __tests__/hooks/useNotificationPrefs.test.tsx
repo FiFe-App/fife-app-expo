@@ -50,13 +50,19 @@ const storeWith = (prefs?: Partial<typeof DEFAULT_NOTIFICATION_PREFS>) => {
   return store;
 };
 
-/** The columns written by the last `.update()` on `profiles`. */
-const lastProfileUpdate = () => {
-  const calls = supabase.from.mock.results
-    .map((r) => r.value)
-    .filter((b) => (b.update as jest.Mock).mock.calls.length > 0);
-  const builder = calls[calls.length - 1];
-  const updateCalls = (builder.update as jest.Mock).mock.calls;
+/**
+ * The columns written by the last `.update()`, after asserting it went to
+ * `user_settings`. Notification preferences live on the user's settings row,
+ * not on `profiles` — a write to the wrong table would still carry the right
+ * columns, so the table name is checked here rather than left implicit.
+ */
+const lastPrefsUpdate = () => {
+  const written = supabase.from.mock.results
+    .map((r, i) => ({ table: supabase.from.mock.calls[i][0], builder: r.value }))
+    .filter(({ builder }) => (builder.update as jest.Mock).mock.calls.length > 0);
+  const last = written[written.length - 1];
+  expect(last.table).toBe("user_settings");
+  const updateCalls = (last.builder.update as jest.Mock).mock.calls;
   return updateCalls[updateCalls.length - 1][0];
 };
 
@@ -184,7 +190,7 @@ describe("useNotificationPrefs / setPref", () => {
     });
 
     // Answering in settings must also silence the prompt card on /me.
-    const written = lastProfileUpdate();
+    const written = lastPrefsUpdate();
     expect(written.newsletter).toBe(true);
     expect(written.newsletter_asked_at).toEqual(expect.any(String));
   });
@@ -198,7 +204,7 @@ describe("useNotificationPrefs / setPref", () => {
       await result.current.setPref("notifyEmail", false);
     });
 
-    expect(lastProfileUpdate()).toEqual({ notify_email: false });
+    expect(lastPrefsUpdate()).toEqual({ notify_email: false });
   });
 
   it("stores false and warns when the OS denies the permission", async () => {
@@ -213,7 +219,7 @@ describe("useNotificationPrefs / setPref", () => {
       expect(await result.current.setPref("notifyPush", true)).toBe(false);
     });
 
-    expect(lastProfileUpdate().notify_push).toBe(false);
+    expect(lastPrefsUpdate().notify_push).toBe(false);
     expect(store.getState().info.dialogs).toHaveLength(1);
     expect(mockedRegisterToken).not.toHaveBeenCalled();
   });
@@ -341,7 +347,7 @@ describe("useNotificationPrefs / markAsked", () => {
       await result.current.markAsked("emotionDailyPrompt");
     });
 
-    expect(lastProfileUpdate()).toEqual({
+    expect(lastPrefsUpdate()).toEqual({
       emotion_prompt_asked_at: expect.any(String),
     });
   });
@@ -390,6 +396,6 @@ describe("useNotificationPrefs / markAsked", () => {
     });
 
     expect(store.getState().user.notificationPrefs).toBeUndefined();
-    expect(lastProfileUpdate()).toEqual({ push_asked_at: expect.any(String) });
+    expect(lastPrefsUpdate()).toEqual({ push_asked_at: expect.any(String) });
   });
 });

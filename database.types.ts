@@ -657,6 +657,66 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          author: string
+          created_at: string
+          emotion_daily_prompt: boolean
+          emotion_prompt_asked_at: string | null
+          encrypted_data: string | null
+          home_add_buziness_card_dismissed: boolean
+          invite_card_dismissed: boolean
+          is_it_safe_dismissed: boolean
+          newsletter: boolean
+          newsletter_asked_at: string | null
+          nonce: string | null
+          notify_email: boolean
+          notify_push: boolean
+          push_asked_at: string | null
+          saved_buzinesses: Json
+          theme_preference: string
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          created_at?: string
+          emotion_daily_prompt?: boolean
+          emotion_prompt_asked_at?: string | null
+          encrypted_data?: string | null
+          home_add_buziness_card_dismissed?: boolean
+          invite_card_dismissed?: boolean
+          is_it_safe_dismissed?: boolean
+          newsletter?: boolean
+          newsletter_asked_at?: string | null
+          nonce?: string | null
+          notify_email?: boolean
+          notify_push?: boolean
+          push_asked_at?: string | null
+          saved_buzinesses?: Json
+          theme_preference?: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          emotion_daily_prompt?: boolean
+          emotion_prompt_asked_at?: string | null
+          encrypted_data?: string | null
+          home_add_buziness_card_dismissed?: boolean
+          invite_card_dismissed?: boolean
+          is_it_safe_dismissed?: boolean
+          newsletter?: boolean
+          newsletter_asked_at?: string | null
+          nonce?: string | null
+          notify_email?: boolean
+          notify_push?: boolean
+          push_asked_at?: string | null
+          saved_buzinesses?: Json
+          theme_preference?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

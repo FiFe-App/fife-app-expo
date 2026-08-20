@@ -38,7 +38,7 @@ const NEEDS_PERMISSION: Record<TogglePref, boolean> = {
   newsletter: false,
 };
 
-const prefColumn = (key: TogglePref, value: boolean): TablesUpdate<"profiles"> => {
+const prefColumn = (key: TogglePref, value: boolean): TablesUpdate<"user_settings"> => {
   switch (key) {
     case "notifyPush":
       return { notify_push: value };
@@ -51,7 +51,7 @@ const prefColumn = (key: TogglePref, value: boolean): TablesUpdate<"profiles"> =
   }
 };
 
-const askedColumn = (key: AskablePref, at: string): TablesUpdate<"profiles"> => {
+const askedColumn = (key: AskablePref, at: string): TablesUpdate<"user_settings"> => {
   switch (key) {
     case "notifyPush":
       return { push_asked_at: at };
@@ -78,13 +78,17 @@ const isAskable = (key: TogglePref): key is AskablePref => key !== "notifyEmail"
 /**
  * Reads the notification preferences from Redux (hydrated from
  * get_my_notification_prefs on login) and writes them back to
- * `profiles`, running the side effects each preference implies:
+ * `user_settings`, running the side effects each preference implies:
  * requesting the OS permission, registering the push token and
  * scheduling or cancelling the daily emotion reminder.
  *
  * This is the single place those side effects live — screens should
  * never call registerForPushNotificationsAsync or the reminder
  * scheduler directly.
+ *
+ * These are the only columns of the user_settings row written here.
+ * useUserSettings owns the rest of it and never touches these, so the two
+ * hooks cannot clobber each other's writes.
  */
 export function useNotificationPrefs() {
   const dispatch = useDispatch();
@@ -127,7 +131,7 @@ export function useNotificationPrefs() {
       if (!uid) return;
       const now = new Date().toISOString();
       dispatch(patchNotificationPrefs(askedField(key, now)));
-      await supabase.from("profiles").update(askedColumn(key, now)).eq("id", uid);
+      await supabase.from("user_settings").update(askedColumn(key, now)).eq("author", uid);
     },
     [uid, dispatch],
   );
@@ -171,12 +175,12 @@ export function useNotificationPrefs() {
         }),
       );
       await supabase
-        .from("profiles")
+        .from("user_settings")
         .update({
           ...prefColumn(key, stored),
           ...(askable ? askedColumn(key, now) : {}),
         })
-        .eq("id", uid);
+        .eq("author", uid);
 
       if (key === "notifyPush" && stored) {
         const token = await registerForPushNotificationsAsync();

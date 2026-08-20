@@ -39,6 +39,7 @@ import { registerForPushNotificationsAsync } from "@/lib/notifications/registerF
 import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
 import { setStatusBarColor } from "@/redux/reducers/infoReducer";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAppVersionGate } from "@/hooks/useAppVersionGate";
 import UpdateRequiredScreen from "@/components/version/UpdateRequiredScreen";
 import UpdateAvailableCard from "@/components/version/UpdateAvailableCard";
@@ -74,6 +75,7 @@ function RootContent() {
   }, []);
 
   const { syncPendingLogs, loadFromServer } = useEmotionLog();
+  const { loadFromServer: loadSettings } = useUserSettings();
   const versionGate = useAppVersionGate();
 
   // Manage Supabase token auto-refresh and offline sync on foreground
@@ -144,6 +146,14 @@ function RootContent() {
       if (enabled !== null) dispatch(setMessagingEnabled(enabled));
     });
   }, [uid, dispatch]);
+
+  // Pull the user's settings row on login: mantra, Lusta Lista, theme, saved
+  // biznisz and previous searches. Runs on web too. The notification columns of
+  // the same row are hydrated by the effect below instead, through the RPC.
+  useEffect(() => {
+    if (!uid) return;
+    loadSettings();
+  }, [uid, loadSettings]);
 
   // Hydrate notification prefs on login, then reconcile the things that
   // live outside the database: the Expo push token (which can be

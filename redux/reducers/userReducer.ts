@@ -1,5 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { NotificationPrefs, TaskItem, UserState } from "../store.type";
+import { NotificationPrefs, TaskItem, UserSettingsPayload, UserState } from "../store.type";
 import { DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
 
 const initialState: UserState = {
@@ -115,6 +115,30 @@ const userReducer = createSlice({
       if (!state.previousSearches) return;
       state.previousSearches = state.previousSearches.filter((s) => s !== payload);
     },
+    /**
+     * Applies a user_settings row fetched from the server, replacing the local
+     * values wholesale. Sync is last-write-wins at row granularity, so this is
+     * only dispatched when the server copy is the one that should win — see
+     * hooks/useUserSettings.ts.
+     */
+    hydrateSettings: (
+      state,
+      { payload }: PayloadAction<{ settings: UserSettingsPayload; syncedAt: string }>,
+    ) => {
+      const { settings } = payload;
+      state.mantra = settings.mantra;
+      state.tasks = settings.tasks;
+      state.previousSearches = settings.previousSearches;
+      state.themePreference = settings.themePreference;
+      state.savedBuzinesses = settings.savedBuzinesses;
+      state.isItSafeDismissed = settings.isItSafeDismissed;
+      state.inviteCardDismissed = settings.inviteCardDismissed;
+      state.settingsSyncedAt = payload.syncedAt;
+    },
+    /** Records that the local state has been successfully pushed to the server. */
+    markSettingsSynced: (state, { payload }: PayloadAction<string>) => {
+      state.settingsSyncedAt = payload;
+    },
   },
 });
 
@@ -138,7 +162,9 @@ export const {
   dismissInviteCard,
   addPreviousSearch,
   removeFromPreviousSearches,
-  dismissedIsItSafe
+  dismissedIsItSafe,
+  hydrateSettings,
+  markSettingsSynced
 } = userReducer.actions;
 
 export default userReducer;
