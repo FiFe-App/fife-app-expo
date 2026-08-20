@@ -5,7 +5,7 @@ import { router } from "expo-router";
 import NotificationPrompts from "@/components/notifications/NotificationPrompts";
 import { DEFAULT_NOTIFICATION_PREFS } from "@/hooks/useNotificationPrefs";
 import { dismissHomeAddBuzinessCard } from "@/redux/reducers/appReducer";
-import { login, setNotificationPrefs } from "@/redux/reducers/userReducer";
+import { login, logout, setNotificationPrefs } from "@/redux/reducers/userReducer";
 import { __resetSupabase, __setTableRows } from "@/test-utils/mocks/supabase";
 import {
   createTestStore,
@@ -119,6 +119,18 @@ describe("the biznisz upload prompt", () => {
     await waitFor(() => expect(router.push).toHaveBeenCalledWith("/biznisz/new"));
     // Tapping through is an answer: abandoning the form must not re-ask.
     expect(store.getState().app.homeAddBuzinessCardDismissed).toBe(true);
+  });
+
+  it("comes back for the next person to sign in on the same device", async () => {
+    const store = storeWith(allNotificationsAnswered);
+    store.dispatch(dismissHomeAddBuzinessCard());
+    expect(store.getState().app.homeAddBuzinessCardDismissed).toBe(true);
+
+    // The dismissal is per-account and survives redux-persist, so signing out
+    // has to clear it — otherwise the next user inherits it and never sees the
+    // card, and a failed settings load leaves it that way.
+    store.dispatch(logout());
+    expect(store.getState().app.homeAddBuzinessCardDismissed).toBe(false);
   });
 
   it("is offered on web, unlike the push-backed asks", async () => {

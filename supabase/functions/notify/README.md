@@ -37,7 +37,7 @@ Sending a newsletter is one `INSERT`. The `AFTER INSERT` trigger on
 notification — no separate cron, queue or admin service.
 
 ```sql
--- To every subscriber (profiles.newsletter = true):
+-- To every subscriber (user_settings.newsletter = true):
 INSERT INTO public.newsletters (subject, title, body, cta_label, cta_url)
 VALUES (
   'Nyári FiFe hírlevél',
@@ -94,12 +94,15 @@ an address can only be unsubscribed by someone who actually received a mail for
 it. Clicking it:
 
 1. verifies the HMAC (constant-time),
-2. calls `newsletter_unsubscribe(email)` — sets `profiles.newsletter = false`
-   and records the address in `public.newsletter_unsubscribes`,
+2. calls `newsletter_unsubscribe(email)` — sets `newsletter = false` on the
+   user's `public.user_settings` row (and on the deprecated `profiles` column,
+   for app versions that still read it) and records the address in
+   `public.newsletter_unsubscribes`,
 3. shows a FiFe-styled confirmation page.
 
 Flipping the newsletter switch back on in the app clears the suppression entry
-(trigger `on_newsletter_resubscribe`), so resubscribing works.
+(trigger `on_newsletter_resubscribe` on `public.user_settings`, with a twin on
+`public.profiles` for older app versions), so resubscribing works.
 
 ### Delivery
 
@@ -162,11 +165,16 @@ Returns one row per user:
 
 | Column | Description |
 |---|---|
-| `notify_push` | Push enabled (default `true`) |
-| `notify_email` | Email enabled (default `false`) |
+| `notify_push` | Push enabled (default `false`) — from `user_settings` |
+| `notify_email` | Transactional email enabled (default `true`) — from `user_settings` |
 | `push_token` | Expo push token (set from app via `update_my_push_token`) |
 | `email` | From `auth.users` |
 | `full_name` | From `profiles` — used for greeting |
+
+Notification preferences live on `public.user_settings`, one row per user. The
+`profiles` columns of the same name are deprecated and kept only so app
+versions already in the wild keep working; this function reads `profiles` as a
+fallback for users without a settings row.
 
 Function is `SECURITY DEFINER` and access is revoked from `anon`/`authenticated` — only callable with the service role key.
 
@@ -213,12 +221,12 @@ supabase secrets set SMTP_HOST=smtp.rackhost.hu SMTP_PORT=465 SMTP_USER=... SMTP
 
 1. Start Supabase: `supabase start`
 2. After any `supabase db reset`, re-apply the DB settings (see above)
-3. Set `notify_email = true` on a test profile in Studio (`http://127.0.0.1:54323`)
+3. Set `notify_email = true` on a test user's `user_settings` row in Studio (`http://127.0.0.1:54323`)
 4. Insert a row into any trigger table
 5. Check Mailpit at `http://127.0.0.1:54324` for the rendered email
 6. Check push in edge runtime logs: `docker logs supabase_edge_runtime_fife-app-expo --tail 50`
 
-For the newsletter, set `newsletter = true` on a few test profiles, insert a row
+For the newsletter, set `newsletter = true` on a few `user_settings` rows, insert a row
 into `public.newsletters`, then check Mailpit — one mail per subscriber — and
 click the unsubscribe link in the footer. Locally the link resolves to
 `http://127.0.0.1:54321/functions/v1/newsletter-unsubscribe`.
