@@ -4,6 +4,7 @@ import ProfileImage from "@/components/ProfileImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import UsernameInput from "@/components/UsernameInput";
+import VersionFooter from "@/components/version/VersionFooter";
 import { Tables } from "@/database.types";
 import {
   AVATARS_BUCKET,
@@ -646,6 +647,8 @@ export default function Index() {
               Profil végleges törlése
             </Button>
           </View>
+          <Divider />
+          <VersionFooter />
           <Portal>
             <Dialog visible={showDeleteDialog} onDismiss={() => setShowDeleteDialog(false)}>
               <Dialog.Title>Profil végleges törlése</Dialog.Title>
