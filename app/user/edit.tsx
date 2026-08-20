@@ -647,7 +647,6 @@ export default function Index() {
               Profil végleges törlése
             </Button>
           </View>
-          <Divider />
           <VersionFooter />
           <Portal>
             <Dialog visible={showDeleteDialog} onDismiss={() => setShowDeleteDialog(false)}>
