@@ -292,6 +292,89 @@ REVOKE EXECUTE ON FUNCTION "public"."get_newsletter_recipients"("text"[]) FROM "
 GRANT EXECUTE ON FUNCTION "public"."get_newsletter_recipients"("text"[]) TO "service_role";
 
 -------------------------------------------------------------------
+-- The newsletter suppression list is keyed off writes to the `newsletter`
+-- flag, so both directions of that flow have to follow it to its new home.
+--
+-- 1. Resubscribing clears the tombstone. The existing trigger fires on
+--    profiles, which the app no longer writes — without a matching trigger on
+--    user_settings, a user who unsubscribed by email and then flipped the
+--    switch back on in the app would stay suppressed forever, with the app
+--    showing the newsletter as on. The profiles trigger is left in place so
+--    app versions still writing the old column keep working.
+-------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION "public"."clear_newsletter_unsubscribe_from_settings"()
+RETURNS TRIGGER
+LANGUAGE "plpgsql"
+SECURITY DEFINER
+SET "search_path" = "public"
+AS $$
+BEGIN
+  DELETE FROM public.newsletter_unsubscribes n
+  USING auth.users u
+  WHERE u.id = NEW.author
+    AND n.email = lower(u.email);
+  RETURN NEW;
+END;
+$$;
+
+ALTER FUNCTION "public"."clear_newsletter_unsubscribe_from_settings"() OWNER TO "postgres";
+
+DROP TRIGGER IF EXISTS "on_newsletter_resubscribe" ON "public"."user_settings";
+CREATE TRIGGER "on_newsletter_resubscribe"
+  AFTER UPDATE OF "newsletter" ON "public"."user_settings"
+  FOR EACH ROW
+  WHEN (NEW.newsletter = true AND OLD.newsletter IS DISTINCT FROM NEW.newsletter)
+  EXECUTE FUNCTION "public"."clear_newsletter_unsubscribe_from_settings"();
+
+-------------------------------------------------------------------
+-- 2. Unsubscribing by email must clear the flag where the app now reads it.
+--    Delivery already stops via the suppression list, but leaving
+--    user_settings.newsletter = true would show the switch still on in the
+--    app, and would silently resume sending if the tombstone were ever
+--    cleared. Body carried over from 20260811120000_add_newsletters.sql with
+--    the extra UPDATE; profiles is still written for old app versions.
+-------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION "public"."newsletter_unsubscribe"("p_email" "text")
+RETURNS boolean
+LANGUAGE "plpgsql"
+SECURITY DEFINER
+SET "search_path" = "public"
+AS $$
+DECLARE
+  normalized text := lower(trim(p_email));
+BEGIN
+  IF normalized IS NULL OR normalized = '' THEN
+    RETURN false;
+  END IF;
+
+  INSERT INTO public.newsletter_unsubscribes (email)
+  VALUES (normalized)
+  ON CONFLICT (email) DO NOTHING;
+
+  UPDATE public.user_settings s
+  SET newsletter = false
+  FROM auth.users u
+  WHERE u.id = s.author
+    AND lower(u.email) = normalized
+    AND s.newsletter = true;
+
+  UPDATE public.profiles p
+  SET newsletter = false
+  FROM auth.users u
+  WHERE u.id = p.id
+    AND lower(u.email) = normalized
+    AND p.newsletter = true;
+
+  RETURN true;
+END;
+$$;
+
+ALTER FUNCTION "public"."newsletter_unsubscribe"("text") OWNER TO "postgres";
+REVOKE EXECUTE ON FUNCTION "public"."newsletter_unsubscribe"("text") FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION "public"."newsletter_unsubscribe"("text") FROM "anon", "authenticated";
+GRANT EXECUTE ON FUNCTION "public"."newsletter_unsubscribe"("text") TO "service_role";
+
+-------------------------------------------------------------------
 -- The notification columns on profiles are now deprecated but deliberately
 -- kept. Migrations deploy on merge while the app ships separately via EAS/OTA,
 -- so app versions already in the wild would hard-error if they vanished. A

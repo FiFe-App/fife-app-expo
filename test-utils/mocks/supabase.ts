@@ -10,7 +10,7 @@
  * `single`).
  */
 
-type QueryResult = { data: unknown; error: unknown };
+type QueryResult = { data: unknown; error: unknown; count?: number | null };
 
 export const auth = {
   signUp: jest.fn(),
