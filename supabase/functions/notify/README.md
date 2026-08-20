@@ -172,21 +172,40 @@ Function is `SECURITY DEFINER` and access is revoked from `anon`/`authenticated`
 
 ### Trigger function
 
-`trigger_notify_on_record_created()` reads two `DATABASE`-level GUC settings that must be set once per environment (not in migrations — requires superuser):
+`trigger_notify_on_record_created()` reads its configuration from the
+`private.app_config` table (hosted Supabase does not allow custom `app.*` GUCs, so the
+older `ALTER DATABASE ... SET` approach was replaced in migration
+`20260417120000_app_config_table.sql`):
+
+| `key` | `value` |
+|---|---|
+| `supabase_url` | `https://<project-ref>.supabase.co` — or `http://supabase_kong_fife-app-expo:8000` locally |
+| `service_role_key` | The **service role** key. `notify` compares the bearer token against its own copy and 401s on anything else. |
+
+Local dev values are in [`../../seed.sql`](../../seed.sql) and are restored by
+`supabase db reset`. Production values must be set once, by hand:
 
 ```sql
--- Local dev (run once after supabase db reset):
-ALTER DATABASE postgres SET "app.supabase_url" = 'http://supabase_kong_fife-app-expo:8000';
-ALTER DATABASE postgres SET "app.service_role_key" = '<local-service-role-jwt>';
-
--- Production (run once after deploying):
-ALTER DATABASE postgres SET "app.supabase_url" = 'https://<project-ref>.supabase.co';
-ALTER DATABASE postgres SET "app.service_role_key" = '<production-service-role-jwt>';
+INSERT INTO private.app_config (key, value) VALUES
+  ('supabase_url',     'https://<project-ref>.supabase.co'),
+  ('service_role_key', '<service role key>')
+ON CONFLICT (key) DO UPDATE SET value = excluded.value;
 ```
 
-The local service role JWT is `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU` (standard Supabase local dev token).
+Check them at any time — the key itself is never printed, only its role and an md5 prefix:
 
-These settings are **wiped on `supabase db reset`** — run the two `ALTER DATABASE` commands again afterwards.
+```sql
+SELECT * FROM private.notify_config_status();   -- expect key_role = service_role
+```
+
+The trigger also raises a warning on every insert while the stored key carries a role
+other than `service_role`, which is what a `401` from `notify` looks like from the
+database side. `net.http_post()` is fire-and-forget, so to see what the function
+actually answered:
+
+```sql
+SELECT * FROM private.notify_recent_calls(20);
+```
 
 ## Environment variables / secrets
 
@@ -212,7 +231,7 @@ supabase secrets set SMTP_HOST=smtp.rackhost.hu SMTP_PORT=465 SMTP_USER=... SMTP
 ## Testing locally
 
 1. Start Supabase: `supabase start`
-2. After any `supabase db reset`, re-apply the DB settings (see above)
+2. Confirm the config survived: `select * from private.notify_config_status();`
 3. Set `notify_email = true` on a test profile in Studio (`http://127.0.0.1:54323`)
 4. Insert a row into any trigger table
 5. Check Mailpit at `http://127.0.0.1:54324` for the rendered email
@@ -231,4 +250,6 @@ supabase functions deploy newsletter-unsubscribe   # public, verify_jwt = false
 supabase secrets set SMTP_HOST=... SMTP_PASS=... # etc.
 ```
 
-After first-time production deploy, run the `ALTER DATABASE` commands in the Supabase SQL editor (production).
+After a first-time production deploy, insert the `private.app_config` rows in the Supabase
+SQL editor (see [Trigger function](#trigger-function)) and verify with
+`select * from private.notify_config_status();`.

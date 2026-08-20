@@ -182,6 +182,13 @@ enabled = true
 policy = "oneshot"
 inspector_port = 8083
 
+# notify is called by the database (pg_net) and by database webhooks, never by a
+# signed-in user. The platform JWT gate is disabled so that a rotated key — or a
+# project moving off legacy JWT API keys — cannot silently 401 every notification
+# at the gateway; notify/index.ts authenticates the caller itself instead.
+[functions.notify]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
