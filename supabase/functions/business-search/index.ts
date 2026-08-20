@@ -178,8 +178,9 @@ Deno.serve(async (req) => {
       .eq("author_profile.bad_boy", isBadBoy);
     if (ingyen) q = q.eq("ingyen", true);
     res = await q
-      .range(skip || 0, (skip || 0) + (take < 1 ? 20 : take) - 1)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(skip || 0, (skip || 0) + (take < 1 ? 20 : take) - 1);
   }
   if (res.error) {
     console.error("search rpc error", res.error);

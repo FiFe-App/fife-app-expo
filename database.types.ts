@@ -34,6 +34,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_versions: {
+        Row: {
+          blocked_message: string | null
+          latest_version: string
+          min_version: string
+          platform: string
+          update_message: string | null
+          update_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          blocked_message?: string | null
+          latest_version?: string
+          min_version?: string
+          platform: string
+          update_message?: string | null
+          update_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          blocked_message?: string | null
+          latest_version?: string
+          min_version?: string
+          platform?: string
+          update_message?: string | null
+          update_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       blocked_users: {
         Row: {
           blocked_id: string
@@ -692,6 +722,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_app_version_status: {
+        Args: { p_platform: string; p_version: string }
+        Returns: {
+          latest_version: string
+          message: string
+          min_version: string
+          status: string
+          update_url: string
+        }[]
+      }
       get_my_notification_prefs: {
         Args: never
         Returns: {
@@ -876,6 +916,7 @@ export type Database = {
           title: string
         }[]
       }
+      parse_app_version: { Args: { v: string }; Returns: number[] }
       update_my_profile_location: {
         Args: { lat: number; long: number; radius_m: number }
         Returns: undefined
