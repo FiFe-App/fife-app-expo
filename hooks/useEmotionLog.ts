@@ -179,9 +179,8 @@ export function useEmotionLog() {
   }, [uid, dispatch]);
 
   return {
-    // Not gated on emotion_daily_prompt: that preference controls the
-    // 20:00 push reminder only. The in-app card is not a notification,
-    // needs no OS permission, and stays available to everyone.
+    // Gating on emotion_daily_prompt happens in EmotionCheckCard, not
+    // here — this hook only knows about logging state/timing.
     shouldShowCard: cardTarget.shouldShow && !alreadyLogged,
     isYesterday: cardTarget.isYesterday,
     targetDate: cardTarget.targetDate,

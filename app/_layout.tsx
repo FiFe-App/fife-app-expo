@@ -250,15 +250,7 @@ function RootContent() {
         <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
           <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
             <InfoLayer />
-            {/* Only inside the app itself — the nudge has no business on the
-                public landing page or in the middle of signing up. */}
-            {versionGate.updateAvailable && versionGate.status && !!uid &&
-              pathname !== "/" && !pathname.includes("csatlakozom") && (
-              <UpdateAvailableCard
-                status={versionGate.status}
-                onDismiss={versionGate.dismissUpdate}
-              />
-            )}
+
             <Stack
               screenOptions={{ header: (props: NativeStackHeaderProps) => <MyAppbar title={props.options.title} /> }}
             >
@@ -343,6 +335,15 @@ function RootContent() {
                 options={{ title: "Jelszó visszaállítás" }}
               />
             </Stack>
+                        {/* Only inside the app itself — the nudge has no business on the
+                public landing page or in the middle of signing up. */}
+            {versionGate.updateAvailable && versionGate.status && !!uid &&
+              pathname !== "/" && !pathname.includes("csatlakozom") && (
+              <UpdateAvailableCard
+                status={versionGate.status}
+                onDismiss={versionGate.dismissUpdate}
+              />
+            )}
             {pathname !== "/" && !pathname.includes("projekt") &&
               !pathname.includes("login") &&
               !pathname.includes("password") &&

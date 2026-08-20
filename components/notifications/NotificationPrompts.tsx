@@ -39,8 +39,8 @@ export default function NotificationPrompts() {
     {
       key: "emotionDailyPrompt",
       icon: "calendar-heart",
-      title: "Kérsz napi emlékeztetőt?",
-      body: "Minden este megkérdezzük, milyen napod volt, hogy vezethesd a hangulatnaplódat.",
+      title: "Szeretnél hangulatnaplót vezetni?",
+      body: "Minden este megkérdezem, milyen napod volt és naptárban követheted a jegyzeteidet, hangulatodat.",
       nativeOnly: true,
       available: emotionAvailable,
     },

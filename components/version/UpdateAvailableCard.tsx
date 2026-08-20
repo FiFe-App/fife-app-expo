@@ -32,6 +32,8 @@ export default function UpdateAvailableCard({
     <Surface
       elevation={2}
       style={{
+        position:"absolute",
+        bottom:80,
         margin: Spacing.sm,
         borderRadius: BorderRadius.lg,
         paddingVertical: Spacing.md,
@@ -40,14 +42,14 @@ export default function UpdateAvailableCard({
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.md }}>
-        <Icon source="rocket-launch" size={24} color={theme.colors.primary} />
+        <Icon source="download" size={24} color={theme.colors.primary} />
         <ThemedText style={{ flex: 1 }} type="defaultSemiBold">
           Új verzió érhető el
         </ThemedText>
       </View>
       <ThemedText type="label">
         {status.message ||
-          `Elkészült a ${status.latestVersion} verzió. Frissíts, hogy megkapd a legújabb funkciókat és javításokat.`}
+          `Letölthető egy új verzió (${status.latestVersion}). Ha szeretnéd megkapni a legújabb funkciókat és javításokat, töltsd le!`}
       </ThemedText>
       <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: Spacing.xs }}>
         <Button mode="text" onPress={onDismiss}>

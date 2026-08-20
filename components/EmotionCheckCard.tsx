@@ -4,6 +4,7 @@ import { Image, View } from "react-native";
 import { Button, Card, IconButton, TextInput, TouchableRipple } from "react-native-paper";
 import { ThemedText } from "@/components/ThemedText";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
+import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 import { emotionByRate } from "@/constants/emotions";
 import EmotionPicker from "@/components/EmotionPicker";
 import { Link } from "expo-router";
@@ -17,6 +18,11 @@ interface EmotionCheckCardProps {
 }
 
 export default function EmotionCheckCard({ onNoteFocus }: EmotionCheckCardProps) {
+  const { prefs, hydrated } = useNotificationPrefs();
+  // Hidden until the user has explicitly turned the daily prompt on —
+  // `hydrated` guards against flashing the card before we know their
+  // actual preference (the default is false).
+  if (!hydrated || !prefs.emotionDailyPrompt) return null;
   return <EmotionCheckCardInner onNoteFocus={onNoteFocus} />;
 }
 

@@ -43,15 +43,15 @@ export default function UpdateRequiredScreen({
     >
       <Icon source="cellphone-arrow-down" size={96} />
       <ThemedText type="title" style={{ textAlign: "center" }}>
-        Frissítsd az appot!
+        Légyszi frissíts!
       </ThemedText>
       <ThemedText style={{ textAlign: "center" }}>
         {status?.message ||
-          "Ez a verzió már nem használható. Telepítsd a legújabb verziót, és folytathatod ott, ahol abbahagytad."}
+          "Ez a verzió már nem használható. \n Sajnos muszáj letöltened a legújabb verziót, ahhoz hogy használd az appot."}
       </ThemedText>
       <View style={{ gap: Spacing.sm, alignSelf: "stretch", alignItems: "center" }}>
         {canOpenUpdate(status) && (
-          <Button mode="contained" icon="download" onPress={() => openUpdate(status)}>
+          <Button mode="contained-tonal" icon="download" onPress={() => openUpdate(status)}>
             {isWeb ? "Újratöltés" : "Frissítés"}
           </Button>
         )}

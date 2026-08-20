@@ -587,8 +587,8 @@ export default function Index() {
             {emotionAvailable && Platform.OS !== "web" && (
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <View style={{ flex: 1 }}>
-                  <ThemedText>Napi emlékeztető</ThemedText>
-                  <ThemedText type="label">Este 8-kor szólunk, hogy vezesd a hangulatnaplódat</ThemedText>
+                  <ThemedText>Hangulatnapló</ThemedText>
+                  <ThemedText type="label">Minden este megkérdezem, milyen napod volt és naptárban követheted a jegyzeteidet, hangulatodat.</ThemedText>
                 </View>
                 <Switch
                   value={prefs.emotionDailyPrompt}
