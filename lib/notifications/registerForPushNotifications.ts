@@ -11,24 +11,30 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export async function registerForPushNotificationsAsync(): Promise<string | null> {
-  if (Platform.OS === "web") return null;
+/**
+ * Ask for the OS notification permission, if it isn't granted already.
+ *
+ * One grant covers both remote push and locally scheduled notifications
+ * (the daily emotion reminder), so this is separate from token
+ * registration: the reminder needs the permission but no Expo token.
+ */
+export async function ensureNotificationPermission(): Promise<boolean> {
+  if (Platform.OS === "web") return false;
   if (!Device.isDevice) {
-    console.log("Push notifications require a physical device");
-    return null;
+    console.log("Notifications require a physical device");
+    return false;
   }
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
+  if (existingStatus === "granted") return true;
 
-  if (existingStatus !== "granted") {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
-  }
+  const { status } = await Notifications.requestPermissionsAsync();
+  return status === "granted";
+}
 
-  if (finalStatus !== "granted") {
-    return null;
-  }
+export async function registerForPushNotificationsAsync(): Promise<string | null> {
+  const granted = await ensureNotificationPermission();
+  if (!granted) return null;
 
   const projectId = Constants.expoConfig?.extra?.eas?.projectId;
   const tokenData = await Notifications.getExpoPushTokenAsync({

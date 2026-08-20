@@ -1,5 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { TaskItem, UserSettingsPayload, UserState } from "../store.type";
+import { NotificationPrefs, TaskItem, UserSettingsPayload, UserState } from "../store.type";
 import { DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
 
 const initialState: UserState = {
@@ -75,8 +75,10 @@ const userReducer = createSlice({
     dismissedIsItSafe: (state) => {
       state.isItSafeDismissed = true;
     },
-    setLocation: (state, { payload }: PayloadAction<{ latitude: number; longitude: number; radius: number }>) => {
+    // null clears the stored location (the user deleted it in the profile editor)
+    setLocation: (state, { payload }: PayloadAction<{ latitude: number; longitude: number; radius: number } | null>) => {
       if (!state.userData) {
+        if (!payload) return;
         state.userData = {
           authorization: "",
           email: "",
@@ -86,14 +88,20 @@ const userReducer = createSlice({
           lastLoginAt: new Date(),
         };
       }
-      state.userData.location = {
-        lat: payload.latitude,
-        lng: payload.longitude,
-        radius: payload.radius,
-      };
+      state.userData.location = payload
+        ? {
+          lat: payload.latitude,
+          lng: payload.longitude,
+          radius: payload.radius,
+        }
+        : undefined;
     },
-    setNotificationPrefs: (state, { payload }: PayloadAction<{ notifyPush: boolean; notifyEmail: boolean; newsletter: boolean; emotionDailyPrompt: boolean }>) => {
+    setNotificationPrefs: (state, { payload }: PayloadAction<NotificationPrefs>) => {
       state.notificationPrefs = payload;
+    },
+    patchNotificationPrefs: (state, { payload }: PayloadAction<Partial<NotificationPrefs>>) => {
+      if (!state.notificationPrefs) return;
+      state.notificationPrefs = { ...state.notificationPrefs, ...payload };
     },
     addPreviousSearch: (state, { payload }: PayloadAction<string>) => {
       if (!payload.trim()) return;
@@ -125,7 +133,6 @@ const userReducer = createSlice({
       state.savedBuzinesses = settings.savedBuzinesses;
       state.isItSafeDismissed = settings.isItSafeDismissed;
       state.inviteCardDismissed = settings.inviteCardDismissed;
-      state.notificationPrefs = settings.notificationPrefs;
       state.settingsSyncedAt = payload.syncedAt;
     },
     /** Records that the local state has been successfully pushed to the server. */
@@ -151,6 +158,7 @@ export const {
   removeSavedBuziness,
   setLocation,
   setNotificationPrefs,
+  patchNotificationPrefs,
   dismissInviteCard,
   addPreviousSearch,
   removeFromPreviousSearches,

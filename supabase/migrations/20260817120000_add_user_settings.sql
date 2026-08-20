@@ -1,14 +1,20 @@
 -- One row per user holding every preference that used to live only in the
 -- device's redux-persist blob (mantra, Lusta Lista, previous searches, theme,
--- saved biznisz, dismiss flags) plus the notification flags that were loose
--- columns on public.profiles.
+-- saved biznisz, dismiss flags) plus the notification state that was a set of
+-- loose columns on public.profiles.
 --
 -- Privacy: the free-text personal fields (mantra, tasks, previousSearches) are
 -- encrypted client-side into encrypted_data/nonce with the account key in
 -- public.emotion_keys, so the server never sees them. This keeps the promise the
 -- app makes on the /me screen ("az itt megadott adataidat titkosítva tároljuk").
--- The remaining columns are UI flags with no personal content, and the notify_*
--- flags must stay readable because the `notify` edge function reads them.
+-- The remaining columns are UI flags with no personal content, and the
+-- notification columns must stay readable because the `notify` edge function and
+-- the newsletter recipient query read them server-side.
+--
+-- Two client owners write this row, over disjoint column sets:
+--   useUserSettings      — the encrypted blob, theme, dismiss flags, saved biznisz
+--   useNotificationPrefs — the notify_*/newsletter/emotion_daily_prompt flags
+--                          and their *_asked_at stamps
 
 CREATE TABLE IF NOT EXISTS public.user_settings (
   author                           uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -25,11 +31,19 @@ CREATE TABLE IF NOT EXISTS public.user_settings (
   home_add_buziness_card_dismissed boolean NOT NULL DEFAULT false,
   saved_buzinesses                 jsonb   NOT NULL DEFAULT '[]'::jsonb,
 
-  -- Defaults mirror the public.profiles columns these replace.
+  -- Defaults mirror the public.profiles columns these replace, as of
+  -- 20260816120001_notification_prompt_state.sql: transactional email is on by
+  -- default, marketing and the daily mood reminder are opt-in.
   notify_push                      boolean NOT NULL DEFAULT false,
-  notify_email                     boolean NOT NULL DEFAULT false,
+  notify_email                     boolean NOT NULL DEFAULT true,
   newsletter                       boolean NOT NULL DEFAULT false,
-  emotion_daily_prompt             boolean NOT NULL DEFAULT true,
+  emotion_daily_prompt             boolean NOT NULL DEFAULT false,
+
+  -- NULL = the user has never been asked this question, so /me still shows the
+  -- prompt card for it. A timestamp means asked, whatever the answer was.
+  push_asked_at                    timestamptz,
+  emotion_prompt_asked_at          timestamptz,
+  newsletter_asked_at              timestamptz,
 
   created_at                       timestamptz NOT NULL DEFAULT now(),
   updated_at                       timestamptz NOT NULL DEFAULT now()
@@ -74,18 +88,27 @@ FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 -------------------------------------------------------------------
 -- Backfill: every existing profile gets a settings row carrying its current
--- notification flags. The encrypted fields stay NULL until the user's client
--- uploads them for the first time.
+-- notification state, including which prompts it has already been shown — the
+-- *_asked_at values were themselves backfilled by
+-- 20260816120001_notification_prompt_state.sql, which runs before this. Losing
+-- them here would re-ask every existing user every question.
+--
+-- The encrypted fields stay NULL until the user's client uploads them.
 -------------------------------------------------------------------
-INSERT INTO public.user_settings (author, notify_push, notify_email, newsletter, emotion_daily_prompt)
-SELECT p.id, p.notify_push, p.notify_email, p.newsletter, p.emotion_daily_prompt
+INSERT INTO public.user_settings (
+  author, notify_push, notify_email, newsletter, emotion_daily_prompt,
+  push_asked_at, emotion_prompt_asked_at, newsletter_asked_at
+)
+SELECT p.id, p.notify_push, p.notify_email, p.newsletter, p.emotion_daily_prompt,
+       p.push_asked_at, p.emotion_prompt_asked_at, p.newsletter_asked_at
 FROM public.profiles p
 ON CONFLICT (author) DO NOTHING;
 
 -------------------------------------------------------------------
 -- handle_new_user: also create the settings row on signup.
 -- The profiles insert is carried over verbatim from
--- 20260604120100_add_emotion_daily_prompt.sql so signup behaviour is unchanged.
+-- 20260816120001_notification_prompt_state.sql so signup behaviour is
+-- unchanged. The *_asked_at columns are left NULL so the prompt cards appear.
 -------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -113,9 +136,9 @@ begin
       ELSE NULL
     END,
     COALESCE((new.raw_user_meta_data->>'notify_push')::boolean, false),
-    COALESCE((new.raw_user_meta_data->>'notify_email')::boolean, false),
+    COALESCE((new.raw_user_meta_data->>'notify_email')::boolean, true),
     COALESCE((new.raw_user_meta_data->>'newsletter')::boolean, false),
-    COALESCE((new.raw_user_meta_data->>'emotion_daily_prompt')::boolean, true)
+    COALESCE((new.raw_user_meta_data->>'emotion_daily_prompt')::boolean, false)
   );
 
   insert into public.user_settings (
@@ -124,9 +147,9 @@ begin
   values (
     new.id,
     COALESCE((new.raw_user_meta_data->>'notify_push')::boolean, false),
-    COALESCE((new.raw_user_meta_data->>'notify_email')::boolean, false),
+    COALESCE((new.raw_user_meta_data->>'notify_email')::boolean, true),
     COALESCE((new.raw_user_meta_data->>'newsletter')::boolean, false),
-    COALESCE((new.raw_user_meta_data->>'emotion_daily_prompt')::boolean, true)
+    COALESCE((new.raw_user_meta_data->>'emotion_daily_prompt')::boolean, false)
   )
   on conflict (author) do nothing;
 
@@ -144,26 +167,37 @@ CREATE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -------------------------------------------------------------------
--- Repoint the notification RPCs at public.user_settings.
+-- Repoint the notification readers at public.user_settings.
 --
--- Both keep their exact name, arguments and return columns, so
+-- All three keep their exact name, arguments and return columns, so
 -- supabase/functions/notify and the app's existing callers need no change.
 -- profiles stays the driving table and user_settings is LEFT JOINed with a
 -- COALESCE fallback, so a user without a settings row still resolves to their
--- old flags instead of vanishing from notifications.
+-- old flags instead of vanishing from notifications or the newsletter.
 -------------------------------------------------------------------
 DROP FUNCTION IF EXISTS public.get_my_notification_prefs();
 
 CREATE FUNCTION public.get_my_notification_prefs()
-RETURNS TABLE(notify_push boolean, notify_email boolean, newsletter boolean, emotion_daily_prompt boolean)
+RETURNS TABLE(
+  notify_push boolean,
+  notify_email boolean,
+  newsletter boolean,
+  emotion_daily_prompt boolean,
+  push_asked_at timestamptz,
+  emotion_prompt_asked_at timestamptz,
+  newsletter_asked_at timestamptz
+)
 LANGUAGE sql SECURITY DEFINER
 SET search_path = public
 AS $$
   SELECT
-    COALESCE(s.notify_push,          p.notify_push),
-    COALESCE(s.notify_email,         p.notify_email),
-    COALESCE(s.newsletter,           p.newsletter),
-    COALESCE(s.emotion_daily_prompt, p.emotion_daily_prompt)
+    COALESCE(s.notify_push,             p.notify_push),
+    COALESCE(s.notify_email,            p.notify_email),
+    COALESCE(s.newsletter,              p.newsletter),
+    COALESCE(s.emotion_daily_prompt,    p.emotion_daily_prompt),
+    COALESCE(s.push_asked_at,           p.push_asked_at),
+    COALESCE(s.emotion_prompt_asked_at, p.emotion_prompt_asked_at),
+    COALESCE(s.newsletter_asked_at,     p.newsletter_asked_at)
   FROM public.profiles p
   LEFT JOIN public.user_settings s ON s.author = p.id
   WHERE p.id = auth.uid();
@@ -203,16 +237,74 @@ REVOKE EXECUTE ON FUNCTION public.get_notification_prefs_for(uuid) FROM anon, au
 GRANT EXECUTE ON FUNCTION public.get_notification_prefs_for(uuid) TO service_role;
 
 -------------------------------------------------------------------
--- The profiles notification columns are now deprecated but deliberately kept.
--- Migrations deploy on merge to master while the app ships separately via
--- EAS/OTA, so app versions already in the wild would hard-error if these were
--- dropped now. A follow-up migration removes them once clients have rolled over
--- (and the COALESCE fallbacks above can be simplified at the same time).
+-- The newsletter audience is resolved from the same flag, so it has to read
+-- the new home too — otherwise unsubscribing would appear to work in the app
+-- while the next issue still went out to the stale profiles.newsletter value.
+-- Body carried over from 20260811120000_add_newsletters.sql; only the default
+-- branch's subscription test changes.
+-------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION "public"."get_newsletter_recipients"("p_emails" "text"[] DEFAULT NULL)
+RETURNS TABLE("email" "text", "full_name" "text")
+LANGUAGE "sql"
+SECURITY DEFINER
+SET "search_path" = "public"
+AS $$
+  WITH targets AS (
+    -- Explicit list: exactly the given addresses, subscription state ignored.
+    SELECT DISTINCT
+      lower(trim(e.address))::text AS email,
+      (
+        SELECT p.full_name
+        FROM public.profiles p
+        JOIN auth.users u ON u.id = p.id
+        WHERE lower(u.email) = lower(trim(e.address))
+        LIMIT 1
+      ) AS full_name
+    FROM unnest(COALESCE(p_emails, ARRAY[]::text[])) AS e(address)
+    WHERE p_emails IS NOT NULL
+      AND array_length(p_emails, 1) > 0
+      AND trim(e.address) <> ''
+
+    UNION
+
+    -- Default: everybody subscribed to the newsletter.
+    SELECT DISTINCT
+      lower(u.email)::text AS email,
+      p.full_name
+    FROM public.profiles p
+    JOIN auth.users u ON u.id = p.id
+    LEFT JOIN public.user_settings s ON s.author = p.id
+    WHERE (p_emails IS NULL OR array_length(p_emails, 1) IS NULL)
+      AND COALESCE(s.newsletter, p.newsletter) = true
+      AND u.email IS NOT NULL
+      AND u.email <> ''
+  )
+  SELECT t.email, t.full_name
+  FROM targets t
+  WHERE NOT EXISTS (
+    SELECT 1 FROM public.newsletter_unsubscribes n WHERE n.email = t.email
+  );
+$$;
+
+ALTER FUNCTION "public"."get_newsletter_recipients"("text"[]) OWNER TO "postgres";
+REVOKE EXECUTE ON FUNCTION "public"."get_newsletter_recipients"("text"[]) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION "public"."get_newsletter_recipients"("text"[]) FROM "anon", "authenticated";
+GRANT EXECUTE ON FUNCTION "public"."get_newsletter_recipients"("text"[]) TO "service_role";
+
+-------------------------------------------------------------------
+-- The notification columns on profiles are now deprecated but deliberately
+-- kept. Migrations deploy on merge while the app ships separately via EAS/OTA,
+-- so app versions already in the wild would hard-error if they vanished. A
+-- follow-up migration drops them once clients have rolled over (and the
+-- COALESCE fallbacks above can be simplified at the same time).
 --
 -- profiles.push_token is NOT a preference and stays where it is:
 -- update_my_push_token() keeps writing it.
 -------------------------------------------------------------------
-COMMENT ON COLUMN public.profiles.notify_push          IS 'deprecated: moved to public.user_settings.notify_push';
-COMMENT ON COLUMN public.profiles.notify_email         IS 'deprecated: moved to public.user_settings.notify_email';
-COMMENT ON COLUMN public.profiles.newsletter           IS 'deprecated: moved to public.user_settings.newsletter';
-COMMENT ON COLUMN public.profiles.emotion_daily_prompt IS 'deprecated: moved to public.user_settings.emotion_daily_prompt';
+COMMENT ON COLUMN public.profiles.notify_push             IS 'deprecated: moved to public.user_settings.notify_push';
+COMMENT ON COLUMN public.profiles.notify_email            IS 'deprecated: moved to public.user_settings.notify_email';
+COMMENT ON COLUMN public.profiles.newsletter              IS 'deprecated: moved to public.user_settings.newsletter';
+COMMENT ON COLUMN public.profiles.emotion_daily_prompt    IS 'deprecated: moved to public.user_settings.emotion_daily_prompt';
+COMMENT ON COLUMN public.profiles.push_asked_at           IS 'deprecated: moved to public.user_settings.push_asked_at';
+COMMENT ON COLUMN public.profiles.emotion_prompt_asked_at IS 'deprecated: moved to public.user_settings.emotion_prompt_asked_at';
+COMMENT ON COLUMN public.profiles.newsletter_asked_at     IS 'deprecated: moved to public.user_settings.newsletter_asked_at';

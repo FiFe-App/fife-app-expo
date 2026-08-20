@@ -1,4 +1,5 @@
 import { useAppTheme } from "@/assets/theme";
+import getSignedUrl from "@/lib/functions/getSignedUrl";
 import { supabase } from "@/lib/supabase/supabase";
 import { Image, ImageContentFit } from "expo-image";
 import { useEffect, useState } from "react";
@@ -13,6 +14,8 @@ interface SupabaseImageProps {
   resizeMode?: ImageContentFit | undefined;
   propLoading?: boolean;
   modal?: boolean;
+  /** Needed for private buckets, where there is no public URL to read. */
+  signed?: boolean;
 }
 
 const SupabaseImage = ({
@@ -22,6 +25,7 @@ const SupabaseImage = ({
   resizeMode,
   propLoading = false,
   modal = false,
+  signed = false,
 }: SupabaseImageProps) => {
   const theme = useAppTheme();
   const [source, setSource] = useState("");
@@ -31,20 +35,19 @@ const SupabaseImage = ({
     console.log("image loaded", path);
 
     const getImage = async () => {
-      if (!path) return { error: "No path" };
-      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-      if (!data) return { error: "No image" };
-      return { data, error: null };
+      if (!path) return null;
+      if (signed) return getSignedUrl(bucket, path);
+      return supabase.storage.from(bucket).getPublicUrl(path).data?.publicUrl;
     };
 
     getImage()
-      .then(({ data, error }) => {
-        if (!error && data) setSource(data.publicUrl);
+      .then((url) => {
+        if (url) setSource(url);
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [bucket, path]);
+  }, [bucket, path, signed]);
 
   return (
     <View>

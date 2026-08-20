@@ -1,4 +1,5 @@
 import { Route, router, useGlobalSearchParams, useSegments } from "expo-router";
+import { Image } from "expo-image";
 import { useRef, useCallback } from "react";
 import { StyleSheet, View } from "react-native";
 import { Icon, TouchableRipple } from "react-native-paper";
@@ -42,7 +43,7 @@ const BottomNavigation = () => {
   }, [segment, uid, globalParams]);
 
   const showIcon = true;
-  const showText = false;
+  const showText = true;
 
   const selectedSize = 30;
   const normalSize = 30;
@@ -78,34 +79,40 @@ const BottomNavigation = () => {
       <Measure name="briefcase">
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user",{uid})}>
           <View style={{ alignItems: "center" }}>
-              {showIcon && (uid && avatarUrl ? (<View
-                style={{
-                  width: profilActive ? selectedSize+2 : normalSize,
-                  height: profilActive ? selectedSize+2 : normalSize,
-                  borderRadius: BorderRadius.sm,
-                  overflow: "hidden",
-                  padding:1,
-                  borderWidth: profilActive ? 2 : 0,
-                  borderColor: theme.colors.primary,
-                }}
-              >
-                <ProfileImage
-                  uid={uid}
-                  avatar_url={avatarUrl}
+              {showIcon && (
+                <View
                   style={{
-                    width: profilActive ? selectedSize-4 : normalSize-2,
-                    height: profilActive ? selectedSize-4 : normalSize-2,
-                    borderRadius: 4,
+                    width: profilActive ? selectedSize + 2 : normalSize,
+                    height: profilActive ? selectedSize + 2 : normalSize,
+                    borderRadius: BorderRadius.sm,
+                    overflow: "hidden",
+                    padding: 1,
+                    borderWidth: profilActive ? 2 : 0,
+                    borderColor: theme.colors.primary,
                   }}
-                />
+                >
+                  {uid && avatarUrl ? (
+                    <ProfileImage
+                      uid={uid}
+                      avatar_url={avatarUrl}
+                      style={{
+                        width: profilActive ? selectedSize - 4 : normalSize - 2,
+                        height: profilActive ? selectedSize - 4 : normalSize - 2,
+                        borderRadius: 4,
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      source={require("@/assets/images/Slimey.png")}
+                      style={{
+                        width: profilActive ? selectedSize - 4 : normalSize - 2,
+                        height: profilActive ? selectedSize - 4 : normalSize - 2,
+                        borderRadius: 4,
+                      }}
+                    />
+                  )}
                 </View>
-              ) : (
-              <Icon
-                source={profilActive ? "account" : "account-outline"}
-                size={profilActive ? selectedSize : normalSize}
-                color={profilActive ? theme.colors.secondary : undefined}
-              />
-            ))}
+              )}
             {showText && <ThemedText type={profilActive ? "defaultSemiBold" : "default"}>
               Profilod
             </ThemedText>}

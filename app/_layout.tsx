@@ -28,8 +28,10 @@ import RedHatTextBold from "@/assets/fonts/RedHatText-Bold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
 import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import FakeSearchInput from "@/components/FakeSearchInput";
+import MessagesAppbarAction from "@/components/navigation/MessagesAppbarAction";
 import { RootState } from "@/redux/store";
-import { setLocation, logout } from "@/redux/reducers/userReducer";
+import { setLocation, logout, setNotificationPrefs, setMessagingEnabled } from "@/redux/reducers/userReducer";
+import { fetchMessagingEnabled } from "@/lib/chat/messagingContact";
 import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearDrafts } from "@/redux/reducers/chatReducer";
 import { supabase } from "@/lib/supabase/supabase";
@@ -43,10 +45,11 @@ import { emotionAvailable } from "@/constants/emotionTiming";
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
 let splashAlreadyShown = false;
 
-function HomeHeader() {
+function HomeHeader({ showMessages }: { showMessages?: boolean }) {
   return (
     <MyAppbar
       center={<FakeSearchInput />}
+      actions={showMessages ? <MessagesAppbarAction /> : undefined}
       style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }}
     />
   );
@@ -58,13 +61,6 @@ function RootContent() {
   const deviceColorScheme = useColorScheme(); // Auto-detect device theme
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
   const { uid } = useSelector((state: RootState) => state.user);
-  const settingsSyncedAt = useSelector((state: RootState) => state.user.settingsSyncedAt);
-  const notifyPush = useSelector(
-    (state: RootState) => state.user.notificationPrefs?.notifyPush ?? false,
-  );
-  const emotionDailyPrompt = useSelector(
-    (state: RootState) => state.user.notificationPrefs?.emotionDailyPrompt ?? true,
-  );
   const { statusBarColor, bottomBarColor } = useSelector((state: RootState) => state.info);
   const hasInitialized = React.useRef(false);
 
@@ -138,31 +134,54 @@ function RootContent() {
     });
   }, [uid, dispatch]);
 
-  // Pull the user's settings row on login. Unlike the old notification-prefs
-  // fetch this runs on web too, because it carries the mantra, Lusta Lista,
-  // theme and previous searches as well as the notification flags.
+  // `messagingEnabled` is persisted, so a stale value decides whether the chat
+  // link shows long before any screen re-checks it. Refresh it on every start.
+  useEffect(() => {
+    if (!uid) return;
+    fetchMessagingEnabled(uid).then((enabled) => {
+      if (enabled !== null) dispatch(setMessagingEnabled(enabled));
+    });
+  }, [uid, dispatch]);
+
+  // Pull the user's settings row on login: mantra, Lusta Lista, theme, saved
+  // biznisz and previous searches. Runs on web too. The notification columns of
+  // the same row are hydrated by the effect below instead, through the RPC.
   useEffect(() => {
     if (!uid) return;
     loadSettings();
   }, [uid, loadSettings]);
 
-  // Register push token and schedule emotion reminder (native-only). Driven by
-  // the prefs the settings sync put in Redux, so toggling a preference takes
-  // effect immediately instead of only on the next login.
+  // Hydrate notification prefs on login, then reconcile the things that
+  // live outside the database: the Expo push token (which can be
+  // invalidated by a reinstall) and the scheduled local reminder.
+  // The prefs themselves are only ever changed through
+  // useNotificationPrefs — this effect never writes them.
   useEffect(() => {
-    if (!uid || Platform.OS === "web" || !settingsSyncedAt) return;
-    (async () => {
-      if (notifyPush) {
+    if (!uid) return;
+    supabase.rpc("get_my_notification_prefs").then(async ({ data }) => {
+      const prefs = data?.[0];
+      if (!prefs) return;
+      dispatch(setNotificationPrefs({
+        notifyPush: prefs.notify_push ?? false,
+        notifyEmail: prefs.notify_email ?? true,
+        newsletter: prefs.newsletter ?? false,
+        emotionDailyPrompt: prefs.emotion_daily_prompt ?? false,
+        pushAskedAt: prefs.push_asked_at ?? null,
+        emotionPromptAskedAt: prefs.emotion_prompt_asked_at ?? null,
+        newsletterAskedAt: prefs.newsletter_asked_at ?? null,
+      }));
+      if (Platform.OS === "web") return;
+      if (prefs.notify_push) {
         const token = await registerForPushNotificationsAsync();
         if (token) await supabase.rpc("update_my_push_token", { token });
       }
-      if (emotionAvailable && emotionDailyPrompt) {
+      if (emotionAvailable && prefs.emotion_daily_prompt) {
         await scheduleDailyEmotionReminder();
       } else {
         await cancelDailyEmotionReminder();
       }
-    })();
-  }, [uid, settingsSyncedAt, notifyPush, emotionDailyPrompt]);
+    });
+  }, [uid, dispatch]);
 
   const router = useRouter();
 
@@ -229,7 +248,7 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="home"
-                  options={{ header: () => <HomeHeader /> }}
+                  options={{ header: () => <HomeHeader showMessages /> }}
                 />
                 <Stack.Screen
                   name="fifeRadar"

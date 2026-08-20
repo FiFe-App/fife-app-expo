@@ -11,13 +11,6 @@ import { useDispatch, useSelector } from "react-redux";
 /** How long to wait after the last local change before pushing to the server. */
 const PUSH_DEBOUNCE_MS = 1000;
 
-const DEFAULT_NOTIFICATION_PREFS = {
-  notifyPush: false,
-  notifyEmail: false,
-  newsletter: false,
-  emotionDailyPrompt: true,
-};
-
 function toNumberArray(value: unknown): number[] {
   if (!Array.isArray(value)) return [];
   return value.filter((v): v is number => typeof v === "number");
@@ -46,6 +39,10 @@ function serialize(settings: UserSettingsPayload): string {
  * Keeps the local preference state in sync with the user's public.user_settings
  * row, so preferences survive a reinstall and follow the user across devices.
  *
+ * The notification columns of the same row are deliberately not touched here:
+ * useNotificationPrefs owns those and writes them as the user answers each
+ * question. This hook and that one write disjoint column sets.
+ *
  * Redux stays the read path for the UI — nothing here blocks rendering, and
  * every network failure degrades to "keep using the local values". Conflicts
  * resolve last-write-wins at row granularity: two devices editing the Lusta
@@ -62,7 +59,6 @@ export function useUserSettings() {
   const savedBuzinesses = useSelector((state: RootState) => state.user.savedBuzinesses);
   const isItSafeDismissed = useSelector((state: RootState) => state.user.isItSafeDismissed);
   const inviteCardDismissed = useSelector((state: RootState) => state.user.inviteCardDismissed);
-  const notificationPrefs = useSelector((state: RootState) => state.user.notificationPrefs);
   const homeAddBuzinessCardDismissed = useSelector(
     (state: RootState) => state.app.homeAddBuzinessCardDismissed,
   );
@@ -77,7 +73,6 @@ export function useUserSettings() {
       isItSafeDismissed: isItSafeDismissed ?? false,
       inviteCardDismissed: inviteCardDismissed ?? false,
       homeAddBuzinessCardDismissed: homeAddBuzinessCardDismissed ?? false,
-      notificationPrefs: notificationPrefs ?? DEFAULT_NOTIFICATION_PREFS,
     }),
     [
       mantra,
@@ -88,7 +83,6 @@ export function useUserSettings() {
       isItSafeDismissed,
       inviteCardDismissed,
       homeAddBuzinessCardDismissed,
-      notificationPrefs,
     ],
   );
 
@@ -128,10 +122,6 @@ export function useUserSettings() {
             is_it_safe_dismissed: settings.isItSafeDismissed,
             invite_card_dismissed: settings.inviteCardDismissed,
             home_add_buziness_card_dismissed: settings.homeAddBuzinessCardDismissed,
-            notify_push: settings.notificationPrefs.notifyPush,
-            notify_email: settings.notificationPrefs.notifyEmail,
-            newsletter: settings.notificationPrefs.newsletter,
-            emotion_daily_prompt: settings.notificationPrefs.emotionDailyPrompt,
           },
           { onConflict: "author" },
         )
@@ -187,12 +177,6 @@ export function useUserSettings() {
       isItSafeDismissed: data.is_it_safe_dismissed,
       inviteCardDismissed: data.invite_card_dismissed,
       homeAddBuzinessCardDismissed: data.home_add_buziness_card_dismissed,
-      notificationPrefs: {
-        notifyPush: data.notify_push,
-        notifyEmail: data.notify_email,
-        newsletter: data.newsletter,
-        emotionDailyPrompt: data.emotion_daily_prompt,
-      },
     };
 
     syncedSnapshotRef.current = serialize(settings);

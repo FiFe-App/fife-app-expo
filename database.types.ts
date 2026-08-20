@@ -346,6 +346,7 @@ export type Database = {
           author: string
           created_at: string
           id: number
+          image: string | null
           reply_to: number | null
           text: string
           to: string | null
@@ -354,6 +355,7 @@ export type Database = {
           author: string
           created_at?: string
           id?: number
+          image?: string | null
           reply_to?: number | null
           text: string
           to?: string | null
@@ -362,6 +364,7 @@ export type Database = {
           author?: string
           created_at?: string
           id?: number
+          image?: string | null
           reply_to?: number | null
           text?: string
           to?: string | null
@@ -504,13 +507,16 @@ export type Database = {
           bad_boy: boolean
           created_at: string | null
           emotion_daily_prompt: boolean
+          emotion_prompt_asked_at: string | null
           full_name: string
           id: string
           location: unknown
           location_radius_m: number | null
           newsletter: boolean
+          newsletter_asked_at: string | null
           notify_email: boolean
           notify_push: boolean
+          push_asked_at: string | null
           push_token: string | null
           updated_at: string | null
           username: string | null
@@ -522,13 +528,16 @@ export type Database = {
           bad_boy?: boolean
           created_at?: string | null
           emotion_daily_prompt?: boolean
+          emotion_prompt_asked_at?: string | null
           full_name: string
           id: string
           location?: unknown
           location_radius_m?: number | null
           newsletter?: boolean
+          newsletter_asked_at?: string | null
           notify_email?: boolean
           notify_push?: boolean
+          push_asked_at?: string | null
           push_token?: string | null
           updated_at?: string | null
           username?: string | null
@@ -540,13 +549,16 @@ export type Database = {
           bad_boy?: boolean
           created_at?: string | null
           emotion_daily_prompt?: boolean
+          emotion_prompt_asked_at?: string | null
           full_name?: string
           id?: string
           location?: unknown
           location_radius_m?: number | null
           newsletter?: boolean
+          newsletter_asked_at?: string | null
           notify_email?: boolean
           notify_push?: boolean
+          push_asked_at?: string | null
           push_token?: string | null
           updated_at?: string | null
           username?: string | null
@@ -620,14 +632,17 @@ export type Database = {
           author: string
           created_at: string
           emotion_daily_prompt: boolean
+          emotion_prompt_asked_at: string | null
           encrypted_data: string | null
           home_add_buziness_card_dismissed: boolean
           invite_card_dismissed: boolean
           is_it_safe_dismissed: boolean
           newsletter: boolean
+          newsletter_asked_at: string | null
           nonce: string | null
           notify_email: boolean
           notify_push: boolean
+          push_asked_at: string | null
           saved_buzinesses: Json
           theme_preference: string
           updated_at: string
@@ -636,14 +651,17 @@ export type Database = {
           author: string
           created_at?: string
           emotion_daily_prompt?: boolean
+          emotion_prompt_asked_at?: string | null
           encrypted_data?: string | null
           home_add_buziness_card_dismissed?: boolean
           invite_card_dismissed?: boolean
           is_it_safe_dismissed?: boolean
           newsletter?: boolean
+          newsletter_asked_at?: string | null
           nonce?: string | null
           notify_email?: boolean
           notify_push?: boolean
+          push_asked_at?: string | null
           saved_buzinesses?: Json
           theme_preference?: string
           updated_at?: string
@@ -652,14 +670,17 @@ export type Database = {
           author?: string
           created_at?: string
           emotion_daily_prompt?: boolean
+          emotion_prompt_asked_at?: string | null
           encrypted_data?: string | null
           home_add_buziness_card_dismissed?: boolean
           invite_card_dismissed?: boolean
           is_it_safe_dismissed?: boolean
           newsletter?: boolean
+          newsletter_asked_at?: string | null
           nonce?: string | null
           notify_email?: boolean
           notify_push?: boolean
+          push_asked_at?: string | null
           saved_buzinesses?: Json
           theme_preference?: string
           updated_at?: string
@@ -675,9 +696,12 @@ export type Database = {
         Args: never
         Returns: {
           emotion_daily_prompt: boolean
+          emotion_prompt_asked_at: string
           newsletter: boolean
+          newsletter_asked_at: string
           notify_email: boolean
           notify_push: boolean
+          push_asked_at: string
         }[]
       }
       get_my_profile_location: {

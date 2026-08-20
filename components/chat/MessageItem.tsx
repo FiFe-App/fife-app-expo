@@ -1,9 +1,11 @@
 import { Tables } from "@/database.types";
+import getMessagePreview from "@/lib/functions/getMessagePreview";
 import { RootState } from "@/redux/store";
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet } from "react-native";
 import { Card, Icon, Text, useTheme } from "react-native-paper";
 import { useSelector } from "react-redux";
+import SupabaseImage from "../SupabaseImage";
 import UrlText from "../UrlText";
 
 type Message = Tables<"messages">;
@@ -115,7 +117,7 @@ export function MessageItem({
                 numberOfLines={1}
                 style={{ color: theme.colors.onSurfaceVariant }}
               >
-                {replyToMessage.text}
+                {getMessagePreview(replyToMessage)}
               </Text>
             </View>
           ) : (
@@ -141,10 +143,22 @@ export function MessageItem({
           onLongPress={handleLongPress}
         >
           <Card.Content style={styles.content}>
-            <UrlText
-              text={message.text}
-              style={{ color: colors[isMyMessage ? "my" : "their"].color }}
-            />
+            {!!message.image && (
+              <SupabaseImage
+                bucket="messageImages"
+                path={message.image}
+                signed
+                modal
+                resizeMode="cover"
+                style={[styles.image, !!message.text && styles.imageWithText]}
+              />
+            )}
+            {!!message.text && (
+              <UrlText
+                text={message.text}
+                style={{ color: colors[isMyMessage ? "my" : "their"].color }}
+              />
+            )}
           </Card.Content>
         </Card>
         {hearted && (
@@ -188,6 +202,14 @@ const styles = StyleSheet.create({
   content: {
     paddingVertical: 8,
     paddingHorizontal: 12,
+  },
+  image: {
+    width: 220,
+    height: 220,
+    borderRadius: 8,
+  },
+  imageWithText: {
+    marginBottom: 8,
   },
   time: {
     marginLeft: 4,

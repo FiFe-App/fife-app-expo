@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { Button, Card, Text } from "react-native-paper";
-import { supabase } from "@/lib/supabase/supabase";
+import { enableMessaging } from "@/lib/chat/messagingContact";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { addSnack } from "@/redux/reducers/infoReducer";
@@ -24,42 +24,20 @@ export function MessagingDisabledCard({
   const dispatch = useDispatch();
   const [enabling, setEnabling] = useState(false);
 
-  const enableMessaging = async () => {
+  const handleEnable = async () => {
     if (!uid) return;
 
     setEnabling(true);
 
     try {
-      const { data: existing } = await supabase
-        .from("contacts")
-        .select("*")
-        .eq("author", uid)
-        .eq("type", "MESSAGE")
-        .maybeSingle();
-
-      if (existing) {
-        const { error } = await supabase
-          .from("contacts")
-          .update({ data: "enabled", public: true })
-          .eq("id", existing.id);
-
-        if (error) {
-          console.error("Error updating MESSAGE contact:", error);
-          return;
-        }
-      } else {
-        const { error } = await supabase.from("contacts").insert({
-          author: uid,
-          type: "MESSAGE",
-          data: "true",
-          public: true,
-          title: null,
-        });
-
-        if (error) {
-          console.error("Error creating MESSAGE contact:", error);
-          return;
-        }
+      const { error } = await enableMessaging(uid);
+      if (error) {
+        dispatch(
+          addSnack({
+            title: `Az üzenetküldés bekapcsolása nem sikerült: ${error}`,
+          }),
+        );
+        return;
       }
 
       dispatch(setMessagingEnabled(true));
@@ -67,6 +45,9 @@ export function MessagingDisabledCard({
       onEnabled?.();
     } catch (error) {
       console.error("Error enabling messaging:", error);
+      dispatch(
+        addSnack({ title: "Az üzenetküldés bekapcsolása nem sikerült." }),
+      );
     } finally {
       setEnabling(false);
     }
@@ -93,7 +74,7 @@ export function MessagingDisabledCard({
           {showEnableButton && (
             <Button
               mode="contained"
-              onPress={enableMessaging}
+              onPress={handleEnable}
               loading={enabling}
               disabled={enabling}
               style={styles.button}

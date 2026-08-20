@@ -10,7 +10,7 @@ import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
 import FakeSearchInput from "./FakeSearchInput";
 
-export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?: string, style?: ViewStyle }) => {
+export const MyAppbar = ({ center, title, style, actions }: { center?: ReactNode, title?: string, style?: ViewStyle, actions?: ReactNode }) => {
   const navigation = useNavigation();
   const theme = useAppTheme();
   const { options } = useSelector((state: RootState) => state.info);
@@ -41,6 +41,7 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
           : title ?
             <Appbar.Content titleStyle={{ fontFamily: "Piazzolla-ExtraBold", fontSize: 20 }} title={title} style={{ flex: 1 }} />
             : <FakeSearchInput /> }
+        {actions}
         {options.length > 0 ? (
           <>
             {options?.length === 1 && <Appbar.Action {...options[0]} />}
@@ -51,7 +52,7 @@ export const MyAppbar = ({ center, title, style }: { center?: ReactNode, title?:
               />
             )}
           </>
-        ) : <View style={{ width: 48 }} />}
+        ) : actions ? null : <View style={{ width: 48 }} />}
       </Appbar.Header>
 
       {showMenu && (

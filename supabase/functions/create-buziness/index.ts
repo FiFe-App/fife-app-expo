@@ -43,8 +43,7 @@ Deno.serve(async (req)=>{
   }
 
   const buziness = await req.json();
-  console.log(buziness);
-  
+
   // Validate that user has title and it is a non-empty string
   if (!buziness.title || typeof buziness.title !== "string") {
     return new Response(JSON.stringify({
@@ -77,15 +76,46 @@ Deno.serve(async (req)=>{
   }
   
   const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
-  
+
+  // The row is written with the service role client, which bypasses RLS, so
+  // ownership has to be enforced here. Never trust buziness.author from the body.
+  const author = user.id;
+
+  // An id in the body means "update". Verify the caller owns that row, otherwise
+  // any authenticated user could overwrite anyone else's buziness by guessing an id.
+  const requestedId = buziness.id;
+  if (requestedId !== undefined && requestedId !== null) {
+    const { data: existing, error: existingError } = await supabase
+      .from("buziness")
+      .select("author")
+      .eq("id", requestedId)
+      .maybeSingle();
+
+    if (existingError) {
+      console.error("Error loading buziness for update:", existingError);
+      return new Response(JSON.stringify({ error: "Failed to load buziness" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
+    if (!existing || existing.author !== author) {
+      // Same response whether it is missing or owned by someone else, so this
+      // cannot be used to probe which ids exist.
+      return new Response(JSON.stringify({ error: "Not found" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404,
+      });
+    }
+  }
+
   // Check if user has at least one contact with non-empty data
   const { data: contacts, error: contactsError } = await supabase
     .from("contacts")
     .select("id")
-    .eq("author", buziness.author)
+    .eq("author", author)
     .not("data", "is", null)
     .neq("data", "");
-  
+
   if (contactsError) {
     console.error("Error checking contacts:", contactsError);
     return new Response(JSON.stringify({ 
@@ -130,14 +160,31 @@ Deno.serve(async (req)=>{
   });
   console.log(embeddingResponse);
   
-  const res = await supabase.from("buziness").upsert({
-    ...buziness,
+  // Explicit allowlist. Spreading the request body would let a caller set
+  // author, created_at, or the embedding columns that drive search ranking.
+  const row: Record<string, unknown> = {
+    author,
+    title: buziness.title,
+    description: buziness.description,
+    ingyen: buziness.ingyen,
+    location: buziness.location,
+    defaultContact: buziness.defaultContact,
+    radius: buziness.radius,
+    images: buziness.images,
     embedding: embeddingResponse.data[0].embedding,
     embedding_text,
-  }, {
+  };
+  // Keep nulls (they clear a column) but drop keys the client never sent.
+  for (const key of Object.keys(row)) {
+    if (row[key] === undefined) delete row[key];
+  }
+  // Only set after the ownership check above; absent on create so the identity
+  // sequence assigns the id.
+  if (requestedId !== undefined && requestedId !== null) row.id = requestedId;
+
+  const res = await supabase.from("buziness").upsert(row, {
     onConflict: "id"
   }).select().single();
-  console.log(res);
   if (!res.error) return new Response(JSON.stringify(res.data), {
     headers: {
       ...corsHeaders,

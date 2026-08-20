@@ -5,14 +5,22 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import UsernameInput from "@/components/UsernameInput";
 import { Tables } from "@/database.types";
+import {
+  AVATARS_BUCKET,
+  getAvatarPath,
+  getAvatarThumbnailFileName,
+  getAvatarThumbnailPath,
+} from "@/lib/functions/avatarPaths";
+import createThumbnail from "@/lib/functions/createThumbnail";
+import getUploadData from "@/lib/functions/getUploadData";
 import { supabase } from "@/lib/supabase/supabase";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { clearDrafts } from "@/redux/reducers/chatReducer";
 import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
-import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
+import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 import { setOptions, clearOptions, addSnack, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
-import { setName, setThemePreference, logout, setUserData, setNotificationPrefs } from "@/redux/reducers/userReducer";
+import { setName, setThemePreference, logout, setUserData, setLocation } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
@@ -57,13 +65,10 @@ export default function Index() {
   const [themeMenuVisible, setThemeMenuVisible] = useState(false);
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [userLocation, setUserLocation] = useState<CircleType | undefined>();
-  const [notifyPush, setNotifyPush] = useState(false);
-  const [notifyEmail, setNotifyEmail] = useState(false);
-  const [newsletter, setNewsletter] = useState(false);
-  const [emotionDailyPrompt, setEmotionDailyPrompt] = useState(true);
-  const storedNotificationPrefs = useSelector(
-    (state: RootState) => state.user.notificationPrefs,
-  ) ?? { notifyPush: false, notifyEmail: false, newsletter: false, emotionDailyPrompt: true };
+  // Notification toggles persist immediately rather than on save: enabling
+  // one can trigger an OS permission dialog, and a toggle that silently
+  // bounces back later (permission denied) would be baffling.
+  const { prefs, setPref } = useNotificationPrefs();
   const dispatch = useDispatch();
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -92,6 +97,7 @@ export default function Index() {
         }
         if (data) {
           setProfile(data[0]);
+          if (data[0]?.avatar_url) backfillThumbnail(data[0].avatar_url);
           // Fetch own location via secure function
           const { data: loc } = await supabase.rpc("get_my_profile_location");
           const myLoc = loc?.[0];
@@ -107,12 +113,6 @@ export default function Index() {
               });
             }
           }
-          // Notification preferences come from the user_settings row that the
-          // root layout already synced into Redux — no extra round-trip needed.
-          setNotifyPush(storedNotificationPrefs.notifyPush);
-          setNotifyEmail(storedNotificationPrefs.notifyEmail);
-          setNewsletter(storedNotificationPrefs.newsletter);
-          setEmotionDailyPrompt(storedNotificationPrefs.emotionDailyPrompt);
           console.log(data);
           setLoading(false);
           dispatch(hideLoading());
@@ -164,30 +164,21 @@ export default function Index() {
               },
             );
             if (locError) console.log("location update error", locError);
-            // Save notification preferences straight to user_settings so they
-            // are durable the moment the button is pressed, then mirror them
-            // into Redux to keep the settings sync in step. upsert rather than
-            // update: an update would silently affect zero rows if the settings
-            // row were ever missing.
-            await supabase
-              .from("user_settings")
-              .upsert(
-                { author: myUid, notify_push: notifyPush, notify_email: notifyEmail, newsletter, emotion_daily_prompt: emotionDailyPrompt },
-                { onConflict: "author" },
+            // Redux only reads the location back on login/app start, so without
+            // this the FiFe Radar keeps claiming no location is set until the
+            // app is restarted.
+            else
+              dispatch(
+                setLocation(
+                  userLocation
+                    ? {
+                      latitude: userLocation.location.latitude,
+                      longitude: userLocation.location.longitude,
+                      radius: userLocation.radius,
+                    }
+                    : null,
+                ),
               );
-            dispatch(setNotificationPrefs({
-              notifyPush,
-              notifyEmail,
-              newsletter,
-              emotionDailyPrompt,
-            }));
-            // If push enabled, ensure we have a token registered
-            if (notifyPush) {
-              const token = await registerForPushNotificationsAsync();
-              if (token) {
-                await supabase.rpc("update_my_push_token", { token });
-              }
-            }
             setProfile({ ...profile, location: userLocation?.location || null });
             dispatch(setName(profile?.full_name));
             console.log(res);
@@ -210,7 +201,7 @@ export default function Index() {
       return () => {
         dispatch(clearOptions());
       };
-    }, [dispatch, myUid, profile, userLocation, usernameAvailable, notifyPush, notifyEmail, newsletter, emotionDailyPrompt]),
+    }, [dispatch, myUid, profile, userLocation, usernameAvailable]),
   );
   useFocusEffect(
     useCallback(() => {
@@ -222,7 +213,12 @@ export default function Index() {
   const deleteImage = async () => {
     if (!myUid || !profile?.avatar_url) return;
     setImageLoading(true);
-    await supabase.storage.from("avatars").remove([myUid + "/" + profile.avatar_url]);
+    await supabase.storage
+      .from(AVATARS_BUCKET)
+      .remove([
+        getAvatarPath(myUid, profile.avatar_url),
+        getAvatarThumbnailPath(myUid, profile.avatar_url),
+      ]);
     await supabase.from("profiles").update({ avatar_url: null }).eq("id", myUid);
     setProfile({ ...profile, avatar_url: null });
     dispatch(setUserData({ avatar_url: null }));
@@ -264,6 +260,43 @@ export default function Index() {
       }
     } else console.log("cancelled");
   };
+  // Avatars uploaded before thumbnails existed only have the original. The
+  // owner is the only one who may write into their folder, so the missing
+  // thumbnail is generated here, the next time they open their profile.
+  const backfillThumbnail = async (fileName: string) => {
+    if (!myUid) return;
+    const thumbnailName = getAvatarThumbnailFileName(fileName);
+    const { data } = await supabase.storage
+      .from(AVATARS_BUCKET)
+      .list(myUid, { search: thumbnailName });
+    if (data?.some((file) => file.name === thumbnailName)) return;
+
+    const { data: original } = supabase.storage
+      .from(AVATARS_BUCKET)
+      .getPublicUrl(getAvatarPath(myUid, fileName));
+    await uploadThumbnail(original.publicUrl, fileName);
+  };
+
+  // Every avatar is shown small (28–100pt) almost everywhere, so a downscaled
+  // copy is uploaded next to the original and used for those. A failure here is
+  // not fatal: ProfileImage falls back to the original.
+  const uploadThumbnail = async (uri: string, fileName: string) => {
+    if (!myUid) return;
+    try {
+      const thumbnail = await createThumbnail(uri);
+      const { error } = await supabase.storage
+        .from(AVATARS_BUCKET)
+        .upload(
+          getAvatarThumbnailPath(myUid, fileName),
+          await getUploadData(thumbnail),
+          { contentType: "image/jpeg", upsert: true },
+        );
+      if (error) console.log("avatar thumbnail upload error", error);
+    } catch (error) {
+      console.log("avatar thumbnail error", error);
+    }
+  };
+
   const uploadImage = async (image: ExpoImagePicker.ImagePickerAsset) => {
     if (!image || !myUid) return;
 
@@ -275,28 +308,14 @@ export default function Index() {
       `avatar_${Date.now()}.jpg`;
     const mimeType = image.mimeType || "image/jpeg";
 
-    let uploadData: Uint8Array | Blob;
-    if (image.base64) {
-      // Use the base64 payload directly. fetch(uri).blob() is unreliable on
-      // Android content:// URIs (and iOS temp file URIs) — it can throw or hang,
-      // which previously left the avatar spinner stuck forever. Pass a
-      // Uint8Array (ArrayBufferView), not .buffer, which can detach on the JSI
-      // bridge.
-      const b64 = image.base64.replace(/\s/g, ""); // strip any line breaks
-      const binaryString = atob(b64);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      uploadData = bytes;
-    } else {
-      const response = await fetch(image.uri);
-      uploadData = await response.blob();
-    }
+    // fetch(uri).blob() is unreliable on Android content:// URIs (and iOS temp
+    // file URIs) — it can throw or hang, which previously left the avatar
+    // spinner stuck forever, so the base64 payload is used where available.
+    const uploadData = await getUploadData(image);
 
     const { data, error } = await supabase.storage
-      .from("avatars")
-      .upload(myUid + "/" + fileName, uploadData, {
+      .from(AVATARS_BUCKET)
+      .upload(getAvatarPath(myUid, fileName), uploadData, {
         contentType: mimeType,
         upsert: true,
       });
@@ -305,6 +324,8 @@ export default function Index() {
       console.log("avatar upload error", error);
       throw error;
     }
+
+    await uploadThumbnail(image.uri, fileName);
 
     if (data?.path) {
       const { error: profileError } = await supabase
@@ -522,11 +543,6 @@ export default function Index() {
             <ThemedText type="label" style={{ marginBottom: Spacing.sm }}>
               Add meg a lakhelyedet, hogy lásd a fiféket a környékeden.
             </ThemedText>
-            {!userLocation && (
-              <ThemedText type="label" style={{ marginBottom: Spacing.md }}>
-                Nincs lakhely beállítva
-              </ThemedText>
-            )}
             <View style={{ flexDirection: "row", gap: Spacing.xs, flexWrap: "wrap" }}>
               <Button
                 mode="outlined"
@@ -536,6 +552,11 @@ export default function Index() {
               >
                 {userLocation ? "Környék módosítása" : "Megadom a környékemet"}
               </Button>
+            {!userLocation && (
+              <ThemedText type="label" style={{ marginBottom: Spacing.md }}>
+                Nincs lakhely beállítva
+              </ThemedText>
+            )}
               {userLocation && (
                 <Button
                   mode="text"
@@ -555,18 +576,24 @@ export default function Index() {
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <View style={{ flex: 1 }}>
                   <ThemedText>Push értesítések</ThemedText>
-                  <ThemedText type="label">Értesítések a telefonodon</ThemedText>
+                  <ThemedText type="label">Ajánlások, kommentek és üzenetek a telefonodon</ThemedText>
                 </View>
-                <Switch value={notifyPush} onValueChange={setNotifyPush} />
+                <Switch
+                  value={prefs.notifyPush}
+                  onValueChange={(v) => { setPref("notifyPush", v); }}
+                />
               </View>
             )}
-            {emotionAvailable && (
+            {emotionAvailable && Platform.OS !== "web" && (
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <View style={{ flex: 1 }}>
-                  <ThemedText>Napi hangulatnapló</ThemedText>
-                  <ThemedText type="label">Kérdezzem meg minden nap, hogy milyen napod volt?</ThemedText>
+                  <ThemedText>Napi emlékeztető</ThemedText>
+                  <ThemedText type="label">Este 8-kor szólunk, hogy vezesd a hangulatnaplódat</ThemedText>
                 </View>
-                <Switch value={emotionDailyPrompt} onValueChange={setEmotionDailyPrompt} />
+                <Switch
+                  value={prefs.emotionDailyPrompt}
+                  onValueChange={(v) => { setPref("emotionDailyPrompt", v); }}
+                />
               </View>
             )}
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -574,14 +601,20 @@ export default function Index() {
                 <ThemedText>Email értesítések</ThemedText>
                 <ThemedText type="label">Értesítések a(z) {userData?.email} címedre</ThemedText>
               </View>
-              <Switch value={notifyEmail} onValueChange={setNotifyEmail} />
+              <Switch
+                value={prefs.notifyEmail}
+                onValueChange={(v) => { setPref("notifyEmail", v); }}
+              />
             </View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
               <View style={{ flex: 1 }}>
                 <ThemedText>Kérek hírlevelet</ThemedText>
                 <ThemedText type="label">Újdonságok és tippek emailben</ThemedText>
               </View>
-              <Switch value={newsletter} onValueChange={setNewsletter} />
+              <Switch
+                value={prefs.newsletter}
+                onValueChange={(v) => { setPref("newsletter", v); }}
+              />
             </View>
           </View>
           <Divider />
