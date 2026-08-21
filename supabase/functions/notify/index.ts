@@ -5,6 +5,7 @@ import nodemailer from "npm:nodemailer@6";
 import {
   buzinessRecommendationHtml,
   commentHtml,
+  htmlToText,
   messageHtml,
   newsletterHtml,
   profileRecommendationHtml,

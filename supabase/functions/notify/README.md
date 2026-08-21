@@ -23,8 +23,13 @@ DB INSERT
                  ├─ authorizeWebhook()      — the caller check, see "Authentication"
                  ├─ getNotificationPrefs()  — calls get_notification_prefs_for() RPC
                  ├─ sendPushNotification()  — Expo Push API
-                 └─ sendEmailNotification() — nodemailer → Rackhost SMTP
-                      └─ html from _shared/email.ts templates
+                 ├─ sendEmailNotification() — nodemailer → Rackhost SMTP
+                 │    └─ html from _shared/email.ts templates
+                 └─ sendNewsletter()        — newsletters table only
+                      ├─ get_newsletter_recipients() RPC → who + their name
+                      └─ batched sends, each with its own unsubscribe link
+                           └─ /functions/v1/newsletter-unsubscribe (verify_jwt = false)
+                                └─ newsletter_unsubscribe() RPC
 ```
 
 ## Authentication
@@ -191,10 +196,16 @@ supabase secrets set SMTP_HOST=smtp.rackhost.hu SMTP_PORT=465 SMTP_USER=... SMTP
 5. Check Mailpit at `http://127.0.0.1:54324` for the rendered email
 6. Check push in edge runtime logs: `docker logs supabase_edge_runtime_fife-app-expo --tail 50`
 
+For the newsletter, set `newsletter = true` on a few test profiles, insert a row
+into `public.newsletters`, then check Mailpit — one mail per subscriber — and
+click the unsubscribe link in the footer. Locally the link resolves to
+`http://127.0.0.1:54321/functions/v1/newsletter-unsubscribe`.
+
 ## Deployment
 
 ```bash
 supabase functions deploy notify
+supabase functions deploy newsletter-unsubscribe   # public, verify_jwt = false
 supabase secrets set SMTP_HOST=... SMTP_PASS=... # etc.
 ```
 
