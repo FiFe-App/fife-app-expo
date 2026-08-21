@@ -11,7 +11,7 @@ import ContactsCard from "@/components/buziness/ContactsCard";
 import { setOptions, clearOptions } from "@/redux/reducers/infoReducer";
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { TutorialState, UserState } from "@/redux/store.type";
+import { BuzinessSearchItemInterface, TutorialState, UserState } from "@/redux/store.type";
 import { RecommendProfileButton } from "@/lib/supabase/RecommendProfileButton";
 import { supabase } from "@/lib/supabase/supabase";
 import {
@@ -42,11 +42,17 @@ import globStyles from "@/constants/Styles";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import {
-  viewFunction
+  viewFunction,
+  clearTutorialState
 } from "@/redux/reducers/tutorialReducer";
+import { logout } from "@/redux/reducers/userReducer";
+import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
+import { clearDrafts } from "@/redux/reducers/chatReducer";
 import Measure from "@/components/tutorial/Measure";
 import SectionLabel from "@/components/buziness/SectionLabel";
 import { useAppTheme } from "@/assets/theme";
+import { ThemedText } from "../ThemedText";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
@@ -70,6 +76,8 @@ export default function UserPage() {
   >([]);
   const [contacts, setContacts] = useState<Tables<"contacts">[]>([]);
   const [connectionsCount, setConnectionsCount] = useState(0);
+  const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>([]);
+  const [buzinessesLoading, setBuzinessesLoading] = useState(true);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showBlockModal, setShowBlockModal] = useState(false);
@@ -135,6 +143,26 @@ export default function UserPage() {
           .then((res) => {
             setConnectionsCount(res.count ?? 0);
           });
+
+        setBuzinessesLoading(true);
+        supabase
+          .from("buziness")
+          .select("*, profiles ( full_name ), buzinessRecommendations ( count )")
+          .eq("author", uid)
+          .order("created_at", { ascending: false })
+          .then((res) => {
+            if (res.data) {
+              setBuzinesses(
+                res.data.map((b) => ({
+                  ...b,
+                  authorName: b.profiles?.full_name || "???",
+                  recommendations: b.buzinessRecommendations[0].count,
+                })),
+              );
+              setBuzinessesLoading(false);
+            }
+            dispatch(viewFunction({ key: "buzinessProfile", uid }));
+          });
       };
       load();
       if (myProfile)
@@ -144,6 +172,20 @@ export default function UserPage() {
               icon: "archive",
               onPress: () => router.push("/user/saved-buzinesses"),
               title: "Mentett bizniszek",
+            },
+            {
+              icon: "exit-run",
+              onPress: async () => {
+                await supabase.auth.signOut();
+                dispatch(logout());
+                dispatch(clearBuziness());
+                dispatch(clearTutorialState());
+                dispatch(clearBuzinessSearchParams());
+                dispatch(clearEmotionLogs());
+                dispatch(clearDrafts());
+                router.navigate("/");
+              },
+              title: "Kijelentkezés",
             },
           ]),
         );
@@ -218,7 +260,7 @@ export default function UserPage() {
                     modal
                     uid={uid}
                     avatar_url={data.avatar_url}
-                    style={{ width: 100, height: 100, borderRadius: BorderRadius.md }}
+                    style={{ width: 100, height: 100, borderRadius: BorderRadius.lg }}
                   />
                 </View>
                 <Text variant="headlineMedium" style={{ textAlign: "center" }}>
@@ -256,7 +298,7 @@ export default function UserPage() {
                 }}
                 elevation={1}
               >
-                <TouchableRipple
+                {recommendations.length != 0 && <TouchableRipple
                   onPress={() => {
                     if (uid)
                       dispatch(viewFunction({ key: "friendsProfile", uid }));
@@ -267,6 +309,7 @@ export default function UserPage() {
                   <View style={{ alignItems: "center", paddingVertical: Spacing.xs }}>
                     <View style={{ flexDirection: "row", alignItems: "center", minHeight: 32 }}>
                       <View style={{ flexDirection: "row" }}>
+                        
                         {recommendations.slice(0, 3).map((rec, i) => (
                           <View
                             key={rec.author}
@@ -294,7 +337,7 @@ export default function UserPage() {
                       Megbíznak benne
                     </Text>
                   </View>
-                </TouchableRipple>
+                </TouchableRipple>}
 
                 {false&&<><View style={{ width: 1, backgroundColor: theme.colors.outlineVariant, marginVertical: Spacing.xs }} />
 
@@ -312,14 +355,14 @@ export default function UserPage() {
                   </View>
                 </TouchableRipple></>}
 
-                <View style={{ width: 1, backgroundColor: theme.colors.outlineVariant, marginVertical: Spacing.xs }} />
+                {recommendations.length != 0 && <View style={{ width: 1, backgroundColor: theme.colors.outlineVariant, marginVertical: Spacing.xs }} />}
 
                 {data?.created_at && (
                   <View style={{ flex: 1, alignItems: "center", paddingVertical: Spacing.xs }}>
                     <View style={{height:28,justifyContent:"center"}}>
-                      <Text variant="headlineSmall" style={{ fontWeight: "700", color: theme.colors.primary }}>
+                      <ThemedText variant="headlineSmall" style={{ fontWeight: "700", color: theme.colors.primary }}>
                         {elapsedTime(Date.parse(data.created_at.toString()))}
-                      </Text>
+                      </ThemedText>
                     </View>
                     <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
                       Fife
@@ -335,17 +378,7 @@ export default function UserPage() {
                   <ContactsCard contacts={contacts} isOwnProfile={myProfile} />
                 </View>
               )}
-              {myProfile && contacts.length === 0 && (
-                <TouchableRipple
-                  onPress={() => router.push("/user/edit")}
-                  style={{ borderRadius: BorderRadius.sm }}
-                >
-                  <Text variant="labelMedium" style={{ color: theme.colors.primary, padding: Spacing.xs }}>
-                    Elérhetőségek hozzáadása
-                  </Text>
-                </TouchableRipple>
-              )}
-
+              
               {/* Action button */}
               <View style={{ width: "100%" }}>
                 {myProfile ? (
@@ -385,11 +418,16 @@ export default function UserPage() {
 
             {/* Businesses */}
             <Measure name="user-biznisz-tabs">
-              <MyBuzinesses uid={uid} myProfile={myProfile} name={data.full_name ?? undefined} />
+              <MyBuzinesses
+                buzinesses={buzinesses}
+                loading={buzinessesLoading}
+                myProfile={myProfile}
+                name={data.full_name ?? undefined}
+              />
             </Measure>
           </ScrollView>
         )}
-        {myProfile && (
+        {myProfile && !!buzinesses.length && (
           <FAB
             icon="plus"
             label="Új biznisz"

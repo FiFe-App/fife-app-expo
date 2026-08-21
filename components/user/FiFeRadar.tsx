@@ -9,7 +9,7 @@ import { ThemedView } from "../ThemedView";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
-import { NO_LOCATION_ERROR } from "@/hooks/useFifeSearch";
+import { NO_LOCATION_ERROR, NO_NEARBY_USERS, NO_NEARBY_USERS_HINT } from "@/hooks/useFifeSearch";
 import { Button } from "../Button";
 
 interface FiFeRadarProps {
@@ -108,7 +108,9 @@ export const FiFeRadar: React.FC<FiFeRadarProps> = ({
         }}
         showsHorizontalScrollIndicator={false}
         onEndReached={() => {
-          if (canLoadMore && !loading) load?.();
+          // An empty horizontal list is "at the end" on mount, which would
+          // request page 2 before page 1 has even arrived.
+          if (canLoadMore && !loading && users.length > 0) load?.();
         }}
         onEndReachedThreshold={0.7}
         ListFooterComponent={
@@ -117,7 +119,18 @@ export const FiFeRadar: React.FC<FiFeRadarProps> = ({
           ) : null
         }
         ListEmptyComponent={
-          loading ? <ActivityIndicator style={{ padding: Spacing.lg }} /> : null
+          loading ? (
+            <ActivityIndicator style={{ padding: Spacing.lg }} />
+          ) : error ? null : (
+            // Search ran and found nobody — say so instead of rendering a
+            // blank strip that looks like a failed load.
+            <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, gap: Spacing.xs }}>
+              <ThemedText type="label">{NO_NEARBY_USERS}</ThemedText>
+              <ThemedText variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                {NO_NEARBY_USERS_HINT}
+              </ThemedText>
+            </View>
+          )
         }
       />
     </View>

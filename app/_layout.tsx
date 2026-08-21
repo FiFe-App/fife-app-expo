@@ -28,8 +28,10 @@ import RedHatTextBold from "@/assets/fonts/RedHatText-Bold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
 import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import FakeSearchInput from "@/components/FakeSearchInput";
+import MessagesAppbarAction from "@/components/navigation/MessagesAppbarAction";
 import { RootState } from "@/redux/store";
-import { setLocation, logout, setNotificationPrefs } from "@/redux/reducers/userReducer";
+import { setLocation, logout, setNotificationPrefs, setMessagingEnabled } from "@/redux/reducers/userReducer";
+import { fetchMessagingEnabled } from "@/lib/chat/messagingContact";
 import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearDrafts } from "@/redux/reducers/chatReducer";
 import { supabase } from "@/lib/supabase/supabase";
@@ -37,15 +39,20 @@ import { registerForPushNotificationsAsync } from "@/lib/notifications/registerF
 import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
 import { setStatusBarColor } from "@/redux/reducers/infoReducer";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { useAppVersionGate } from "@/hooks/useAppVersionGate";
+import UpdateRequiredScreen from "@/components/version/UpdateRequiredScreen";
+import UpdateAvailableCard from "@/components/version/UpdateAvailableCard";
 import { emotionAvailable } from "@/constants/emotionTiming";
 
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
 let splashAlreadyShown = false;
 
-function HomeHeader() {
+function HomeHeader({ showMessages }: { showMessages?: boolean }) {
   return (
     <MyAppbar
       center={<FakeSearchInput />}
+      actions={showMessages ? <MessagesAppbarAction /> : undefined}
       style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }}
     />
   );
@@ -68,6 +75,8 @@ function RootContent() {
   }, []);
 
   const { syncPendingLogs, loadFromServer } = useEmotionLog();
+  const { loadFromServer: loadSettings } = useUserSettings();
+  const versionGate = useAppVersionGate();
 
   // Manage Supabase token auto-refresh and offline sync on foreground
   useEffect(() => {
@@ -129,23 +138,48 @@ function RootContent() {
     });
   }, [uid, dispatch]);
 
-  // Register push token and schedule emotion reminder on login (native-only)
+  // `messagingEnabled` is persisted, so a stale value decides whether the chat
+  // link shows long before any screen re-checks it. Refresh it on every start.
   useEffect(() => {
-    if (!uid || Platform.OS === "web") return;
+    if (!uid) return;
+    fetchMessagingEnabled(uid).then((enabled) => {
+      if (enabled !== null) dispatch(setMessagingEnabled(enabled));
+    });
+  }, [uid, dispatch]);
+
+  // Pull the user's settings row on login: mantra, Lusta Lista, theme, saved
+  // biznisz and previous searches. Runs on web too. The notification columns of
+  // the same row are hydrated by the effect below instead, through the RPC.
+  useEffect(() => {
+    if (!uid) return;
+    loadSettings();
+  }, [uid, loadSettings]);
+
+  // Hydrate notification prefs on login, then reconcile the things that
+  // live outside the database: the Expo push token (which can be
+  // invalidated by a reinstall) and the scheduled local reminder.
+  // The prefs themselves are only ever changed through
+  // useNotificationPrefs — this effect never writes them.
+  useEffect(() => {
+    if (!uid) return;
     supabase.rpc("get_my_notification_prefs").then(async ({ data }) => {
       const prefs = data?.[0];
       if (!prefs) return;
       dispatch(setNotificationPrefs({
         notifyPush: prefs.notify_push ?? false,
-        notifyEmail: prefs.notify_email ?? false,
+        notifyEmail: prefs.notify_email ?? true,
         newsletter: prefs.newsletter ?? false,
-        emotionDailyPrompt: prefs.emotion_daily_prompt ?? true,
+        emotionDailyPrompt: prefs.emotion_daily_prompt ?? false,
+        pushAskedAt: prefs.push_asked_at ?? null,
+        emotionPromptAskedAt: prefs.emotion_prompt_asked_at ?? null,
+        newsletterAskedAt: prefs.newsletter_asked_at ?? null,
       }));
+      if (Platform.OS === "web") return;
       if (prefs.notify_push) {
         const token = await registerForPushNotificationsAsync();
         if (token) await supabase.rpc("update_my_push_token", { token });
       }
-      if (emotionAvailable && (prefs.emotion_daily_prompt ?? true)) {
+      if (emotionAvailable && prefs.emotion_daily_prompt) {
         await scheduleDailyEmotionReminder();
       } else {
         await cancelDailyEmotionReminder();
@@ -199,6 +233,24 @@ function RootContent() {
       dispatch(setStatusBarColor(theme.colors.surface));
   }, [isDarkMode, theme.colors.background, bottomBarColor, dispatch, pathname]);
 
+  // A blocked build never reaches the router: an old client talking to a
+  // backend it no longer matches is exactly what the gate exists to stop.
+  if (versionGate.blocked) {
+    return (
+      <PaperProvider theme={theme}>
+        <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+          <UpdateRequiredScreen
+            status={versionGate.status}
+            currentVersion={versionGate.currentVersion}
+            checking={versionGate.checking}
+            onRetry={versionGate.recheck}
+          />
+        </SafeAreaView>
+      </PaperProvider>
+    );
+  }
+
   return (
     <PaperProvider theme={theme}>
       <StatusBar
@@ -208,6 +260,7 @@ function RootContent() {
         <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
           <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
             <InfoLayer />
+
             <Stack
               screenOptions={{ header: (props: NativeStackHeaderProps) => <MyAppbar title={props.options.title} /> }}
             >
@@ -218,7 +271,7 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="home"
-                  options={{ header: () => <HomeHeader /> }}
+                  options={{ header: () => <HomeHeader showMessages /> }}
                 />
                 <Stack.Screen
                   name="fifeRadar"
@@ -292,6 +345,15 @@ function RootContent() {
                 options={{ title: "Jelszó visszaállítás" }}
               />
             </Stack>
+                        {/* Only inside the app itself — the nudge has no business on the
+                public landing page or in the middle of signing up. */}
+            {versionGate.updateAvailable && versionGate.status && !!uid &&
+              pathname !== "/" && !pathname.includes("csatlakozom") && (
+              <UpdateAvailableCard
+                status={versionGate.status}
+                onDismiss={versionGate.dismissUpdate}
+              />
+            )}
             {pathname !== "/" && !pathname.includes("projekt") &&
               !pathname.includes("login") &&
               !pathname.includes("password") &&

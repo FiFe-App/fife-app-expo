@@ -34,6 +34,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_versions: {
+        Row: {
+          blocked_message: string | null
+          latest_version: string
+          min_version: string
+          platform: string
+          update_message: string | null
+          update_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          blocked_message?: string | null
+          latest_version?: string
+          min_version?: string
+          platform: string
+          update_message?: string | null
+          update_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          blocked_message?: string | null
+          latest_version?: string
+          min_version?: string
+          platform?: string
+          update_message?: string | null
+          update_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       blocked_users: {
         Row: {
           blocked_id: string
@@ -346,6 +376,7 @@ export type Database = {
           author: string
           created_at: string
           id: number
+          image: string | null
           reply_to: number | null
           text: string
           to: string | null
@@ -354,6 +385,7 @@ export type Database = {
           author: string
           created_at?: string
           id?: number
+          image?: string | null
           reply_to?: number | null
           text: string
           to?: string | null
@@ -362,6 +394,7 @@ export type Database = {
           author?: string
           created_at?: string
           id?: number
+          image?: string | null
           reply_to?: number | null
           text?: string
           to?: string | null
@@ -504,13 +537,16 @@ export type Database = {
           bad_boy: boolean
           created_at: string | null
           emotion_daily_prompt: boolean
+          emotion_prompt_asked_at: string | null
           full_name: string
           id: string
           location: unknown
           location_radius_m: number | null
           newsletter: boolean
+          newsletter_asked_at: string | null
           notify_email: boolean
           notify_push: boolean
+          push_asked_at: string | null
           push_token: string | null
           updated_at: string | null
           username: string | null
@@ -522,13 +558,16 @@ export type Database = {
           bad_boy?: boolean
           created_at?: string | null
           emotion_daily_prompt?: boolean
+          emotion_prompt_asked_at?: string | null
           full_name: string
           id: string
           location?: unknown
           location_radius_m?: number | null
           newsletter?: boolean
+          newsletter_asked_at?: string | null
           notify_email?: boolean
           notify_push?: boolean
+          push_asked_at?: string | null
           push_token?: string | null
           updated_at?: string | null
           username?: string | null
@@ -540,13 +579,16 @@ export type Database = {
           bad_boy?: boolean
           created_at?: string | null
           emotion_daily_prompt?: boolean
+          emotion_prompt_asked_at?: string | null
           full_name?: string
           id?: string
           location?: unknown
           location_radius_m?: number | null
           newsletter?: boolean
+          newsletter_asked_at?: string | null
           notify_email?: boolean
           notify_push?: boolean
+          push_asked_at?: string | null
           push_token?: string | null
           updated_at?: string | null
           username?: string | null
@@ -615,18 +657,91 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          author: string
+          created_at: string
+          emotion_daily_prompt: boolean
+          emotion_prompt_asked_at: string | null
+          encrypted_data: string | null
+          home_add_buziness_card_dismissed: boolean
+          invite_card_dismissed: boolean
+          is_it_safe_dismissed: boolean
+          newsletter: boolean
+          newsletter_asked_at: string | null
+          nonce: string | null
+          notify_email: boolean
+          notify_push: boolean
+          push_asked_at: string | null
+          saved_buzinesses: Json
+          theme_preference: string
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          created_at?: string
+          emotion_daily_prompt?: boolean
+          emotion_prompt_asked_at?: string | null
+          encrypted_data?: string | null
+          home_add_buziness_card_dismissed?: boolean
+          invite_card_dismissed?: boolean
+          is_it_safe_dismissed?: boolean
+          newsletter?: boolean
+          newsletter_asked_at?: string | null
+          nonce?: string | null
+          notify_email?: boolean
+          notify_push?: boolean
+          push_asked_at?: string | null
+          saved_buzinesses?: Json
+          theme_preference?: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          emotion_daily_prompt?: boolean
+          emotion_prompt_asked_at?: string | null
+          encrypted_data?: string | null
+          home_add_buziness_card_dismissed?: boolean
+          invite_card_dismissed?: boolean
+          is_it_safe_dismissed?: boolean
+          newsletter?: boolean
+          newsletter_asked_at?: string | null
+          nonce?: string | null
+          notify_email?: boolean
+          notify_push?: boolean
+          push_asked_at?: string | null
+          saved_buzinesses?: Json
+          theme_preference?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_app_version_status: {
+        Args: { p_platform: string; p_version: string }
+        Returns: {
+          latest_version: string
+          message: string
+          min_version: string
+          status: string
+          update_url: string
+        }[]
+      }
       get_my_notification_prefs: {
         Args: never
         Returns: {
           emotion_daily_prompt: boolean
+          emotion_prompt_asked_at: string
           newsletter: boolean
+          newsletter_asked_at: string
           notify_email: boolean
           notify_push: boolean
+          push_asked_at: string
         }[]
       }
       get_my_profile_location: {
@@ -801,6 +916,7 @@ export type Database = {
           title: string
         }[]
       }
+      parse_app_version: { Args: { v: string }; Returns: number[] }
       update_my_profile_location: {
         Args: { lat: number; long: number; radius_m: number }
         Returns: undefined

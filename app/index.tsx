@@ -19,7 +19,7 @@ import { Logo } from "@/components/Logo";
 export const Header = () => {
   const theme = useAppTheme();
   return (
-    <ThemedView style={[styles.headerRow, { borderBottomColor: theme.colors.outlineVariant }]} type="default">
+    <ThemedView style={[styles.headerRow, {opacity:0, borderBottomColor: theme.colors.outlineVariant }]} type="default">
       <View style={styles.flex1} />
 
       <View style={styles.centerRow}>
@@ -55,9 +55,9 @@ const Hero = () => {
           <Text variant="headlineMedium">
             Fedezd fel a segítői hálózatot a zsebedben
           </Text>
-          <Link asChild href="/csatlakozom">
+          <Link asChild href="https://play.google.com/store/apps/details?id=com.fife.app">
             <Button style={styles.loginButton} type="secondary">
-              Regisztrálok
+              Letöltöm Androidra
             </Button>
           </Link>
           <Link asChild href="/login">
@@ -184,8 +184,10 @@ const Banner = () => {
       style={{
         alignItems: "center",
         justifyContent: "center",
-        margin: Spacing.xl,
-        padding: Spacing.xl,
+        alignSelf: "stretch",
+        width: "100%",
+        margin: 0,
+        padding: 0,
         gap: Spacing.lg,
       }}
       type="card"
@@ -212,8 +214,8 @@ const Banner = () => {
           Csatlakozz egy innovatív közösséghez!
         </Text>
       </View>
-      <Link href="/csatlakozom" asChild>
-        <Button mode="contained">Regisztrálok</Button>
+      <Link href="https://play.google.com/store/apps/details?id=com.fife.app" asChild>
+        <Button mode="contained" big>Letöltöm Androidra</Button>
       </Link>
     </ThemedView>
   );
@@ -242,12 +244,12 @@ const AboutMe = () => {
           </Text>
           <ThemedView responsive={1000} style={{ gap: Spacing.lg, zIndex: 10 }}>
             <Link href="/projekt" asChild>
-              <Button type="secondary" big>
+              <Button type="secondary">
                 Beszállnál a projektbe?
               </Button>
             </Link>
             <Link href="https://www.patreon.com/c/fifeapp" asChild>
-              <Button mode="contained" big>
+              <Button mode="contained">
                 Patreon
               </Button>
             </Link>
@@ -280,8 +282,7 @@ export const Footer = () => {
   return (
     <ThemedView
       responsive={600}
-      type="card"
-      style={{ flexDirection: "row", padding: Spacing.xxxl }}
+      style={{ flexDirection: "row", padding: 100 }}
     >
       <View style={[styles.flex1, { flexDirection: "row", alignItems: "center", justifyContent: "center" }]}>
         <Smiley style={{ width: 40, height: 40, borderRadius: BorderRadius.sm, zIndex: 100000 }} />

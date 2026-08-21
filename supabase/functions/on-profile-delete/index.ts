@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { isServiceRoleRequest } from "../_shared/auth.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || Deno.env.get("URL") || "http://127.0.0.1:54321";
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY") || "";
@@ -15,6 +16,16 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: "Server configuration error" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
+    });
+  }
+
+  // The user id comes from the request body and drives a storage delete, so only
+  // the database webhook (which posts with the service role key) may call this.
+  // The anon key is public; without this check anyone could wipe any user's avatars.
+  if (!isServiceRoleRequest(req, supabaseServiceRoleKey)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 401,
     });
   }
 
