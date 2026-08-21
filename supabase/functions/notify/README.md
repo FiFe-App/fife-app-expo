@@ -9,8 +9,7 @@ Handles all transactional notifications for FiFe. Triggered by database webhooks
 | `buzinessRecommendations` | Buziness owner |
 | `profileRecommendations` | Recommended profile |
 | `comments` (key `buziness/{id}`) | Buziness owner |
-| `messages` | Message recipient |
-| `newsletters` | Every newsletter subscriber, or an explicit address list — see [Newsletter](#newsletter) |
+| `messages` | Message recipient (rate-limited) |
 
 ## Architecture
 
@@ -18,7 +17,10 @@ Handles all transactional notifications for FiFe. Triggered by database webhooks
 DB INSERT
   └─ Postgres trigger (trigger_notify_on_record_created)
        └─ pg_net HTTP POST → /functions/v1/notify
+            │    Authorization: Bearer <service role key>   (private.app_config)
+            │    x-notify-secret: <secret>                  (optional, preferred)
             └─ notify/index.ts
+                 ├─ authorizeWebhook()      — the caller check, see "Authentication"
                  ├─ getNotificationPrefs()  — calls get_notification_prefs_for() RPC
                  ├─ sendPushNotification()  — Expo Push API
                  ├─ sendEmailNotification() — nodemailer → Rackhost SMTP
@@ -30,121 +32,22 @@ DB INSERT
                                 └─ newsletter_unsubscribe() RPC
 ```
 
-## Newsletter
+## Authentication
 
-Sending a newsletter is one `INSERT`. The `AFTER INSERT` trigger on
-`public.newsletters` posts to this function, exactly like every other
-notification — no separate cron, queue or admin service.
+`notify` is never called by a signed-in user, only by the database. It runs with
+`verify_jwt = false` (set in [`supabase/config.toml`](../../config.toml)) and checks the
+caller itself, accepting either of:
 
-```sql
--- To every subscriber (profiles.newsletter = true):
-INSERT INTO public.newsletters (subject, title, body, cta_label, cta_url)
-VALUES (
-  'Nyári FiFe hírlevél',
-  'Mi történt a nyáron?',
-  '<p>Új funkciók érkeztek a FiFe Appba!</p>',
-  'Irány a FiFe App',
-  'https://fifeapp.hu'
-);
+- `x-notify-secret` matching the function's `NOTIFY_WEBHOOK_SECRET` secret, or
+- `Authorization: Bearer <key>` matching the function's injected `SUPABASE_SERVICE_ROLE_KEY`.
 
--- To specific addresses only (test send, targeted mail):
-INSERT INTO public.newsletters (subject, body, recipients)
-VALUES ('Teszt', '<p>Csak nekem.</p>', ARRAY['kristofakos1229@gmail.com']);
-```
+Anything else gets a 401 and a log line naming what was presented (e.g. `caller
+presented a JWT with role "anon", expected the service role key`).
 
-| Column | Meaning |
-|---|---|
-| `subject` | Email subject (required) |
-| `title` | Headline above the body. Falls back to `subject` |
-| `body` | HTML fragment (required). Inline styles only — Gmail strips `<style>` |
-| `cta_label` + `cta_url` | Optional red CTA button. Both or neither |
-| `recipients` | `NULL`/empty → **all subscribers**. Otherwise exactly these addresses |
-| `status` | `pending` → `sending` → `sent` \| `failed`, written back by this function |
-| `sent_count`, `failed_count`, `sent_at`, `error` | Run result, written back by this function |
-
-Check how a send went:
-
-```sql
-SELECT id, subject, status, sent_count, failed_count, sent_at, error
-FROM public.newsletters ORDER BY id DESC;
-```
-
-The table has RLS on with **no policies**, so only the SQL editor / service role
-can read or write it — the app can't send newsletters or read past ones.
-
-### Who receives it
-
-`get_newsletter_recipients(p_emails)` resolves the audience and returns
-`email` + `full_name`, so every mail is greeted with the recipient's own name
-(`Szia Anna!`). Addresses on the suppression list are dropped in both modes —
-an unsubscribed person is not mailed even if listed explicitly. Explicit
-addresses do not have to belong to a user; unknown ones simply get `Szia!`.
-
-### Unsubscribe
-
-Every newsletter mail ends with a personal unsubscribe link and carries
-`List-Unsubscribe` / `List-Unsubscribe-Post` headers, so Gmail and Outlook show
-their own native unsubscribe button. Transactional mails are unaffected — they
-have no unsubscribe link.
-
-The link points at the [`newsletter-unsubscribe`](../newsletter-unsubscribe/index.ts)
-function and carries `?email=…&token=…`, where the token is
-`HMAC-SHA256(email, NEWSLETTER_SECRET)`. Nothing per-recipient is stored, and
-an address can only be unsubscribed by someone who actually received a mail for
-it. Clicking it:
-
-1. verifies the HMAC (constant-time),
-2. calls `newsletter_unsubscribe(email)` — sets `profiles.newsletter = false`
-   and records the address in `public.newsletter_unsubscribes`,
-3. shows a FiFe-styled confirmation page.
-
-Flipping the newsletter switch back on in the app clears the suppression entry
-(trigger `on_newsletter_resubscribe`), so resubscribing works.
-
-### Delivery
-
-The function answers the webhook immediately and finishes the run in
-`EdgeRuntime.waitUntil`, so a large send can't time out `pg_net`. Mails go out
-in batches (default 10, 1s apart) over one pooled SMTP connection, and a single
-bad address only increments `failed_count`. Re-delivery of the same webhook is
-a no-op: only a row still in `pending` is claimed.
-
-Tuning (optional secrets): `NEWSLETTER_BATCH_SIZE`, `NEWSLETTER_BATCH_DELAY_MS`.
-
-Each mail goes out as multipart/alternative — the HTML template plus a text part
-derived from it by `htmlToText()`. HTML-only bulk mail filters badly.
-
-### "Status is sent but nothing arrived"
-
-`sent_count` counts mails the SMTP server **accepted**, which is not the same as
-delivered. Start from the function logs, which carry the server's own answer:
-
-```
-SMTP config: host=smtp.rackhost.hu port=465 secure=true from=info@fifeapp.hu (from SMTP_FROM)
-Email sent to someone@example.com from info@fifeapp.hu — 250 2.0.0 Ok: queued as 4b1f… messageId=<…@fifeapp.hu>
-```
-
-- **No `Email sent to …` line at all**, but the row still says `sent` → nothing was
-  handed to SMTP. The likely cause is missing credentials; look for
-  `Missing SMTP credentials`, and check `newsletters.error`, which now carries the
-  reason for every failed recipient.
-- **A `250` queue id and still nothing in the inbox** → the mail was accepted and
-  then dropped or filtered downstream. In order: search the whole mailbox, not just
-  the inbox (in Gmail, `in:anywhere from:fifeapp.hu`); check the `SMTP_FROM` mailbox
-  for an asynchronous bounce, which is where the receiving side's real reason ends
-  up; then check that the `from=` address in the log is one the SMTP host is
-  authorised to send for:
-
-  ```bash
-  dig +short TXT fifeapp.hu          # SPF must cover the Rackhost sending host
-  dig +short TXT _dmarc.fifeapp.hu   # p=reject/quarantine punishes any misalignment
-  ```
-
-  Quote the queue id to the mail provider — that is what they trace on.
-
-  `from=` falling back to `SMTP_USER` is worth ruling out early: `supabase secrets
-  list` shows only digests, so the log line above is the only place the effective
-  From address is visible.
+The platform's JWT gate is deliberately not used here. It accepts *any* valid project
+key, so calling with the anon key looks fine right up until it isn't — and it rejects
+keys it does not recognise with a bare gateway 401 that never reaches this function's
+logs. Checking the key here means a wrong or rotated credential says so out loud.
 
 ## Email templates
 
@@ -223,7 +126,8 @@ older `ALTER DATABASE ... SET` approach was replaced in migration
 | `key` | `value` |
 |---|---|
 | `supabase_url` | `https://<project-ref>.supabase.co` — or `http://supabase_kong_fife-app-expo:8000` locally |
-| `service_role_key` | The **service role** key. `notify` compares the bearer token against its own copy and 401s on anything else. |
+| `service_role_key` | The **service role** key. Not the anon key — see [Troubleshooting](#troubleshooting-401-from-notify). |
+| `notify_secret` | Optional. When set, must equal the function's `NOTIFY_WEBHOOK_SECRET`. |
 
 Local dev values are in [`../../seed.sql`](../../seed.sql) and are restored by
 `supabase db reset`. Production values must be set once, by hand:
@@ -238,17 +142,39 @@ ON CONFLICT (key) DO UPDATE SET value = excluded.value;
 Check them at any time — the key itself is never printed, only its role and an md5 prefix:
 
 ```sql
+SELECT * FROM private.notify_config_status();
+```
+
+`looks_correct = true` means the URL is set and the stored key is a service role key.
+
+## Troubleshooting: 401 from notify
+
+The edge function logs show `POST | 401 | .../functions/v1/notify` with
+`user_agent: pg_net/0.14.0`, and no notifications arrive.
+
+`request.sb.jwt.authorization.payload.role` in the log entry says which key the database
+sent. If it is `anon`, `private.app_config.service_role_key` holds the anon key rather
+than the service role key. Fix it with:
+
+```sql
+UPDATE private.app_config SET value = '<service role key>' WHERE key = 'service_role_key';
 SELECT * FROM private.notify_config_status();   -- expect key_role = service_role
 ```
 
 The trigger also raises a warning on every insert while the stored key carries a role
-other than `service_role`, which is what a `401` from `notify` looks like from the
-database side. `net.http_post()` is fire-and-forget, so to see what the function
-actually answered:
+other than `service_role`, so this shows up in the Postgres logs as it happens.
+
+To see what the function actually answered — `net.http_post()` is fire-and-forget, so
+failures are otherwise silent:
 
 ```sql
 SELECT * FROM private.notify_recent_calls(20);
 ```
+
+A 401 whose stored key *is* the service role key means the key is stale: the project's
+API keys were rotated, or it has moved off legacy JWT keys. Copy the current service role
+key from the dashboard into `private.app_config` and redeploy nothing — the function reads
+its own copy from the environment.
 
 ## Environment variables / secrets
 
@@ -261,10 +187,8 @@ SELECT * FROM private.notify_recent_calls(20);
 | `SMTP_USER` | `supabase secrets set` | SMTP username/email |
 | `SMTP_PASS` | `supabase secrets set` | SMTP password |
 | `SMTP_FROM` | `supabase secrets set` | From address (e.g. `info@fifeapp.hu`) |
-| `NEWSLETTER_SECRET` | `supabase secrets set` (optional) | HMAC key for unsubscribe links. Defaults to the service role key. Changing it invalidates links in already-sent mails |
-| `FUNCTIONS_BASE_URL` | `supabase secrets set` (optional) | Base URL used to build unsubscribe links. Defaults to `$SUPABASE_URL/functions/v1` |
-| `NEWSLETTER_BATCH_SIZE` | `supabase secrets set` (optional) | Mails per batch, default `10` |
-| `NEWSLETTER_BATCH_DELAY_MS` | `supabase secrets set` (optional) | Pause between batches, default `1000` |
+| `EXPO_ACCESS_TOKEN` | `supabase secrets set` | Expo Push API access token |
+| `NOTIFY_WEBHOOK_SECRET` | `supabase secrets set` | Optional. Must match `private.app_config.notify_secret` |
 
 Set secrets for production:
 ```bash
