@@ -5,11 +5,17 @@
 // Assets
 // ---------------------------------------------------------------------------
 
-const SMILEY_URL =
-  "https://fifeapp.hu/assets/assets/smiley.ec294625349fa120ceb0817a5315f76b.gif";
-const LOGO_URL =
-  "https://fifeapp.hu/assets/assets/Logo.ea4a6ed5a7dfa3155fffdbfc5a6f1cae.png";
 const HOME_URL = "https://fifeapp.hu";
+
+// Served from public/, which the web export copies to the site root verbatim.
+//
+// These must NOT point at /assets/assets/<name>.<hash>.<ext>: those filenames are
+// build output, hashed from the file's contents, so they change the moment the
+// image does and every mail already sent starts 404ing. That is exactly what
+// happened to the previous URLs — they pinned Logo.png as it was in Sep 2025 and
+// smiley.gif as it was in Oct 2025, both replaced since.
+const SMILEY_URL = `${HOME_URL}/email/smiley.gif`;
+const LOGO_URL = `${HOME_URL}/email/logo.png`;
 
 // ---------------------------------------------------------------------------
 // Colors

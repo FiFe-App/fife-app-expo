@@ -150,6 +150,14 @@ Email sent to someone@example.com from info@fifeapp.hu — 250 2.0.0 Ok: queued 
 
 All templates live in [`../_shared/email.ts`](../_shared/email.ts).
 
+Images are served from [`public/email/`](../../../public/email), which the web
+export copies to the site root unchanged — `https://fifeapp.hu/email/logo.png`.
+Never point a mail at `/assets/assets/<name>.<hash>.<ext>`: those names are build
+output hashed from the file's contents, so replacing an image silently 404s every
+mail already sent. Add a new image by dropping it in `public/email/` (sized for the
+slot it renders in — mail clients download the file at full size whatever the
+`width` attribute says).
+
 Every email includes:
 - **Header**: FiFe logo + smiley, linked to `https://fifeapp.hu`
 - **Greeting**: `Szia {recipientName}!` (falls back to `Szia!` if no name)
