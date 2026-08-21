@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase/supabase";
 import { login, setUserData } from "@/redux/reducers/userReducer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import { makeRedirectUri } from "expo-auth-session";
 import { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, View } from "react-native";
 import { Button, TextInput } from "react-native-paper";
@@ -13,6 +14,9 @@ import { BorderRadius } from "@/constants/borderRadius";
 
 export default function Index() {
   const dispatch = useDispatch();
+  // Must match the sign-up step's redirect: a hardcoded localhost URL here sent
+  // every re-sent confirmation link to a host the user's device cannot reach.
+  const redirectTo = makeRedirectUri({ path: "/csatlakozom/elso-lepesek" });
   const [loading, setLoading] = useState(false);
   const [edit, setEdit] = useState(false);
   const [res, setRes] = useState<null | string>(null);
@@ -39,7 +43,7 @@ export default function Index() {
             type: "signup",
             email,
             options: {
-              emailRedirectTo: "http://localhost:8081/csatlakozom/elso-lepesek",
+              emailRedirectTo: redirectTo,
             },
           })
           .then((res) => {

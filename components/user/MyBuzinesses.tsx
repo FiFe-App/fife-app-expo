@@ -1,60 +1,24 @@
-import { supabase } from "@/lib/supabase/supabase";
-import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { BuzinessSearchItemInterface } from "@/redux/store.type";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { ActivityIndicator, Button, Text } from "react-native-paper";
-import { useDispatch } from "react-redux";
+import { ActivityIndicator, Text } from "react-native-paper";
 import BuzinessItem from "../buziness/BuzinessItem";
 import SectionLabel from "../buziness/SectionLabel";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
-import { useAppTheme } from "@/assets/theme";
+import { Button } from "../Button";
 
 interface MyBuzinessesProps {
-  uid: string;
+  buzinesses: BuzinessSearchItemInterface[];
+  loading: boolean;
   myProfile: boolean;
   name?: string;
 }
 
-const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
-  const dispatch = useDispatch();
-  const theme = useAppTheme();
-  const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>(
-    [],
-  );
-
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    console.log("UID", uid);
-
-    if (uid === undefined) return;
-    setLoading(true);
-    supabase
-      .from("buziness")
-      .select("*, profiles ( full_name ), buzinessRecommendations ( count )")
-      .eq("author", uid)
-      .order("created_at",{ascending:false})
-      .then((res) => {
-        if (res.data) {
-          setBuzinesses(
-            res.data.map((b) => {
-              return {
-                ...b,
-                authorName: b.profiles?.full_name || "???",
-                recommendations: b.buzinessRecommendations[0].count,
-              };
-            }),
-          );
-          setLoading(false);
-        }
-        if (uid) dispatch(viewFunction({ key: "buzinessProfile", uid }));
-      });
-  }, [dispatch, uid]);
+const MyBuzinesses = ({ buzinesses, loading, myProfile, name }: MyBuzinessesProps) => {
   return (
     <View style={{ paddingHorizontal: Spacing.md, paddingBottom: Spacing.lg, gap: Spacing.md }}>
       {loading ? (
@@ -77,12 +41,12 @@ const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
           <ThemedView responsive={400} style={{ flexDirection: "row", padding: Spacing.sm, alignItems: "center" }}>
             <Image
               source={require("@/assets/images/img-prof.png")}
-              style={{ height: 200, width: 200 }}
+              style={{ height: 150, width: 150 }}
             />
             <View style={{ alignItems: "center", justifyContent: "center", flex: 1, gap: Spacing.lg }}>
               <ThemedText type="subtitle">
                 {myProfile
-                  ? "Itt fognak megjelenni a saját bizniszeid."
+                  ? "Hirdesd magad vagy vállalkozásodat ingyen a bizniszeddel!"
                   : `${name} még nem adott meg bizniszt.`}
               </ThemedText>
               {myProfile && (
@@ -97,11 +61,10 @@ const MyBuzinesses = ({ uid, myProfile, name }: MyBuzinessesProps) => {
               )}
             </View>
           </ThemedView>
-          <Text>
+          <Text variant="bodyMedium">
             A te bizniszeid azon hobbijaid, képességeid vagy szakmáid listája,
-            amelyeket meg szeretnél osztani másokkal is. {"\n"}Ha, mondjuk,
-            futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid
-            közé, mások által megtalálható leszel a süti kulcsszóval.
+            amelyeket meg szeretnél osztani másokkal is. {"\n"} 
+            Példák: Kutyát sétáltatok, Zenét csinálok, Elviszem az 50 Ft-os palackokat
           </Text>
         </View>
       )}

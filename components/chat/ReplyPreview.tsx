@@ -1,4 +1,5 @@
 import { Tables } from "@/database.types";
+import getMessagePreview from "@/lib/functions/getMessagePreview";
 import { Spacing } from "@/constants/spacing";
 import React from "react";
 import { View, StyleSheet } from "react-native";
@@ -36,7 +37,7 @@ export function ReplyPreview({ message, authorLabel, onCancel }: ReplyPreviewPro
           numberOfLines={1}
           style={{ color: theme.colors.onSurfaceVariant }}
         >
-          {message.text}
+          {getMessagePreview(message)}
         </Text>
       </View>
       <IconButton icon="close" size={18} onPress={onCancel} />

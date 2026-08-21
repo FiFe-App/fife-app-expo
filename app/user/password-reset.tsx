@@ -1,10 +1,15 @@
 import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
 import { supabase } from "@/lib/supabase/supabase";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useAuthRedirectParams } from "@/hooks/useAuthRedirectParams";
+import {
+  describeAuthRedirectError,
+  getAuthRedirectTokens,
+} from "@/lib/auth/authRedirectParams";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { TextInput, Text, Card } from "react-native-paper";
-import { Link, useLocalSearchParams } from "expo-router";
+import { Link } from "expo-router";
 import { theme } from "@/assets/theme";
 import { Image } from "expo-image";
 import { Spacing } from "@/constants/spacing";
@@ -16,10 +21,15 @@ import { Spacing } from "@/constants/spacing";
 // 4. Submit new password -> supabase.auth.updateUser({ password })
 
 export default function PasswordResetScreen() {
-  const { "#": hash } = useLocalSearchParams<{ "#"?: string }>();
-  const tokenParams = hash
-    ? Object.fromEntries(hash.split("&").map((p) => p.split("=")))
-    : null;
+  // Not `useLocalSearchParams()["#"]`: expo-router strips the fragment from
+  // native deep links, so on a phone the recovery tokens never arrived and the
+  // screen stayed stuck on the "request a link" stage.
+  const redirectParams = useAuthRedirectParams();
+  const tokens = useMemo(() => getAuthRedirectTokens(redirectParams), [redirectParams]);
+  const linkError = useMemo(
+    () => describeAuthRedirectError(redirectParams),
+    [redirectParams],
+  );
 
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
@@ -34,18 +44,24 @@ export default function PasswordResetScreen() {
 
   // If link opened with tokens, establish session then move to reset stage
   useEffect(() => {
-    if (tokenParams?.access_token && tokenParams.refresh_token) {
-      supabase.auth
-        .setSession({
-          access_token: tokenParams.access_token,
-          refresh_token: tokenParams.refresh_token,
-        })
-        .then(({ error }) => {
-          if (error) setError(error.message);
-          else setStage("reset");
-        });
-    }
-  }, [tokenParams]);
+    if (!tokens) return;
+
+    let cancelled = false;
+    supabase.auth.setSession(tokens).then(({ error }) => {
+      if (cancelled) return;
+      if (error) setError(error.message);
+      else setStage("reset");
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tokens]);
+
+  // A refused link carries the reason instead of tokens.
+  useEffect(() => {
+    if (linkError) setError(linkError);
+  }, [linkError]);
 
   const sendEmail = async () => {
     setLoading(true);

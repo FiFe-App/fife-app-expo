@@ -8,6 +8,11 @@ import { NearestProfile } from "@/redux/store.type";
 
 export const NO_LOCATION_ERROR = "Add meg a környéked, hogy lásd kik laknak ott";
 
+/** Shown when the search succeeded but nobody matched — not an error state. */
+export const NO_NEARBY_USERS = "Nincs még FiFe a környékeden";
+export const NO_NEARBY_USERS_HINT =
+  "Csak azok jelennek meg, akik megadták a környéküket a profiljukban.";
+
 export function useFifeSearch() {
   const PAGE_SIZE = Math.floor(Dimensions.get("window").height / 100);
 

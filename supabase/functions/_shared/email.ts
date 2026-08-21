@@ -67,6 +67,11 @@ const COPY = {
     cta:      "Válasz",
     ctaUrl:   (senderUid: string) => `${HOME_URL}/user/${senderUid}`,
   },
+
+  newsletter: {
+    unsubscribeIntro: "Ezt a levelet azért kaptad, mert feliratkoztál a FiFe hírlevélre.",
+    unsubscribe:      "Leiratkozás",
+  },
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -95,14 +100,22 @@ function header(): string {
     </table>`;
 }
 
-function footer(): string {
+function footer(unsubscribeUrl?: string): string {
+  const unsubscribe = unsubscribeUrl
+    ? `
+          <br/>
+          <span style="font-size:12px;">
+            ${COPY.newsletter.unsubscribeIntro}<br/>
+            <a href="${unsubscribeUrl}" style="color:${COLOR.textFooter};text-decoration:underline;">${COPY.newsletter.unsubscribe}</a>
+          </span>`
+    : "";
   return `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td align="center" style="padding:24px 0 32px;color:${COLOR.textFooter};font-family:Arial,sans-serif;font-size:14px;line-height:1.6;">
           ${COPY.goodbye}<br/>
           ${COPY.sender}<br/>
-          <img src="${SMILEY_URL}" alt="FiFe" width="32" height="32" style="display:inline-block;margin-top:8px;" />
+          <img src="${SMILEY_URL}" alt="FiFe" width="32" height="32" style="display:inline-block;margin-top:8px;" />${unsubscribe}
         </td>
       </tr>
     </table>`;
@@ -126,14 +139,18 @@ export function ctaButton(label: string, url: string): string {
 // Layout wrapper
 // ---------------------------------------------------------------------------
 
-export function layout(recipientName: string | null, bodyHtml: string): string {
+export function layout(
+  recipientName: string | null,
+  bodyHtml: string,
+  options: { unsubscribeUrl?: string; pageTitle?: string } = {},
+): string {
   const greeting = COPY.greeting(recipientName);
   return `<!DOCTYPE html>
 <html lang="hu">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>${COPY.pageTitle}</title>
+  <title>${options.pageTitle ?? COPY.pageTitle}</title>
 </head>
 <body style="margin:0;padding:0;background:${COLOR.outerBg};font-family:Arial,sans-serif;color:${COLOR.text};">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLOR.outerBg};">
@@ -147,7 +164,7 @@ export function layout(recipientName: string | null, bodyHtml: string): string {
               ${bodyHtml}
             </td>
           </tr>
-          <tr><td>${footer()}</td></tr>
+          <tr><td>${footer(options.unsubscribeUrl)}</td></tr>
         </table>
       </td>
     </tr>
@@ -208,6 +225,33 @@ export function commentHtml(
     </p>
     ${ctaButton(COPY.comment.cta, COPY.comment.ctaUrl(buzinessId))}`;
   return layout(recipientName, body);
+}
+
+export function newsletterHtml(
+  recipientName: string | null,
+  newsletter: {
+    subject: string;
+    title?: string | null;
+    body: string;
+    cta_label?: string | null;
+    cta_url?: string | null;
+  },
+  unsubscribeUrl: string,
+): string {
+  const heading = newsletter.title || newsletter.subject;
+  const cta = newsletter.cta_label && newsletter.cta_url
+    ? ctaButton(newsletter.cta_label, newsletter.cta_url)
+    : "";
+  const body = `
+    ${heading ? `<p style="font-size:18px;font-weight:bold;color:${COLOR.text};margin:0 0 12px 0;">${heading}</p>` : ""}
+    <div style="font-size:16px;line-height:1.6;color:${COLOR.text};">
+      ${newsletter.body}
+    </div>
+    ${cta}`;
+  return layout(recipientName, body, {
+    unsubscribeUrl,
+    pageTitle: newsletter.subject,
+  });
 }
 
 export function messageHtml(

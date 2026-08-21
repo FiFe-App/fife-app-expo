@@ -64,7 +64,7 @@ const InfoLayer = () => {
             dismissable={dialog.dismissable}
             style={{maxWidth:400}}
           >
-            <Dialog.Title>{dialog?.title}</Dialog.Title>
+            <Dialog.Title style={{fontWeight:"400",fontFamily:"Piazzolla-ExtraBold"}}>{dialog?.title}</Dialog.Title>
             <Dialog.Content>
               <Text variant="bodyMedium">{dialog?.text}</Text>
             </Dialog.Content>
@@ -110,7 +110,7 @@ const InfoLayer = () => {
           >
             <Dialog.Content style={{ alignItems: "center", gap: Spacing.lg }}>
               <ActivityIndicator size="large" />
-              <ThemedText style={{textAlign:"center"}}>{loading?.title || "Kérlek várj..."}</ThemedText>
+              <ThemedText  style={{textAlign:"center"}}>{loading?.title || "Kérlek várj..."}</ThemedText>
             </Dialog.Content>
           </Dialog>
         )}

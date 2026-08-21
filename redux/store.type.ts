@@ -21,6 +21,17 @@ export interface TaskItem {
   checked: boolean;
 }
 
+export interface NotificationPrefs {
+  notifyPush: boolean;
+  notifyEmail: boolean;
+  newsletter: boolean;
+  emotionDailyPrompt: boolean;
+  /** null = the user has never been asked this question. */
+  pushAskedAt: string | null;
+  emotionPromptAskedAt: string | null;
+  newsletterAskedAt: string | null;
+}
+
 export interface UserState {
   uid?: string;
   name?: string;
@@ -29,12 +40,7 @@ export interface UserState {
   tasks?: TaskItem[];
   isItSafeDismissed?: boolean;
   inviteCardDismissed?: boolean;
-  notificationPrefs?: {
-    notifyPush: boolean;
-    notifyEmail: boolean;
-    newsletter: boolean;
-    emotionDailyPrompt: boolean;
-  };
+  notificationPrefs?: NotificationPrefs;
   userData?: {
     authorization: string;
     email: string;
@@ -53,6 +59,31 @@ export interface UserState {
   themePreference: "light" | "dark" | "auto";
   savedBuzinesses: number[];
   previousSearches: string[];
+  /**
+   * `updated_at` of the user_settings row this state was last hydrated from or
+   * pushed to. Undefined means "never synced with the server on this device".
+   */
+  settingsSyncedAt?: string;
+}
+
+/**
+ * The preference set that useUserSettings mirrors to public.user_settings.
+ * `mantra`, `tasks` and `previousSearches` travel inside the row's encrypted
+ * blob; the rest are plain columns. See lib/crypto/settingsEncryption.ts.
+ *
+ * The notification columns of that same row are deliberately absent here:
+ * useNotificationPrefs owns them, writing each one as the user answers it. The
+ * two hooks touch disjoint columns, so neither can clobber the other.
+ */
+export interface UserSettingsPayload {
+  mantra?: string;
+  tasks: TaskItem[];
+  previousSearches: string[];
+  themePreference: "light" | "dark" | "auto";
+  savedBuzinesses: number[];
+  isItSafeDismissed: boolean;
+  inviteCardDismissed: boolean;
+  homeAddBuzinessCardDismissed: boolean;
 }
 
 export type User = Tables<"profiles"> & {
@@ -111,7 +142,7 @@ export interface BuzinessItemInterface {
   author: string;
   authorName?: string;
   avatarUrl?: string | null;
-  images?: ImageDataType[];
+  images?: MediaDataType[];
   recommendations: number | { count: number }[];
   created_at?: string;
   ingyen?: boolean;
@@ -201,9 +232,16 @@ export interface ChatState {
   unreadCounts: Record<string, number>;
 }
 
-export interface ImageDataType extends ImagePickerAsset {
+export type MediaKindType = "image" | "video" | "audio";
+
+export interface MediaDataType extends ImagePickerAsset {
   description?: string;
   path: string;
   url: string;
   status: "toUpload" | "uploaded" | "toDelete";
+  /**
+   * Only images were supported at first, so this can be missing on older
+   * records — use `getMediaKind` instead of reading it directly.
+   */
+  mediaType?: MediaKindType;
 }

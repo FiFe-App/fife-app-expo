@@ -11,7 +11,7 @@ import {
   Text,
   TouchableRipple,
 } from "react-native-paper";
-import SupabaseImage from "../SupabaseImage";
+import ProfileImage from "../ProfileImage";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 import { Spacing } from "@/constants/spacing";
@@ -81,9 +81,9 @@ const BuzinessRecommendationsModal = ({ show, setShow, id, name }: RMP) => {
                     alignItems: "center",
                   }}
                 >
-                  <SupabaseImage
-                    bucket="avatars"
-                    path={rec.author + "/" + rec.profiles?.avatar_url}
+                  <ProfileImage
+                    uid={rec.author}
+                    avatar_url={rec.profiles?.avatar_url}
                     style={{ width: 40, height: 40, marginRight: Spacing.lg }}
                   />
                   <View style={{ flex: 1, justifyContent: "center" }}>
