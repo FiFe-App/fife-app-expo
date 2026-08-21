@@ -10,6 +10,7 @@ import {
   newsletterHtml,
   profileRecommendationHtml,
 } from "../_shared/email.ts";
+import { isServiceRoleRequest } from "../_shared/auth.ts";
 import { unsubscribeUrl } from "../_shared/unsubscribe.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || Deno.env.get("EXPO_PUBLIC_SUPABASE_URL") || "";
@@ -22,70 +23,12 @@ const smtpUser = Deno.env.get("SMTP_USER") || "";
 const smtpPass = Deno.env.get("SMTP_PASS") || "";
 const smtpFrom = Deno.env.get("SMTP_FROM") || smtpUser;
 const expoAccessToken = Deno.env.get("EXPO_ACCESS_TOKEN") || "";
-// Optional dedicated webhook secret. When set here *and* in
-// private.app_config.notify_secret, the DB trigger authenticates with it instead of
-// the service role key. Leave unset to authenticate with the service role key only.
-const notifyWebhookSecret = Deno.env.get("NOTIFY_WEBHOOK_SECRET") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-notify-secret",
+    "authorization, x-client-info, apikey, content-type",
 };
-
-/** Length-independent comparison so a wrong secret cannot be guessed by timing. */
-function secretsMatch(a: string, b: string): boolean {
-  if (!a || !b || a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
-
-/**
- * Describes a presented bearer token for the logs without ever printing it.
- * Legacy Supabase keys are JWTs, so the role they carry (anon / service_role)
- * is what tells you which key the caller was configured with.
- */
-function describeToken(token: string): string {
-  if (!token) return "none";
-  if (token.startsWith("sb_secret_")) return "secret API key";
-  if (token.startsWith("sb_publishable_")) return "publishable API key";
-  const parts = token.split(".");
-  if (parts.length !== 3) return "opaque token";
-  try {
-    const json = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
-    const role = JSON.parse(json)?.role;
-    return role ? `JWT with role "${role}"` : "JWT without a role claim";
-  } catch {
-    return "unparseable JWT";
-  }
-}
-
-/**
- * This function is invoked by the database (pg_net, via
- * trigger_notify_on_record_created) rather than by a signed-in user, so the
- * platform JWT gate is turned off for it in supabase/config.toml and the caller
- * is authenticated here instead. That keeps notifications working no matter how
- * the project's API keys are formatted or rotated, and makes a misconfigured
- * caller show up as a named role in the logs instead of an opaque gateway 401.
- *
- * Returns null when the call is authorized, otherwise the reason to log.
- */
-function authorizeWebhook(req: Request): string | null {
-  const presentedSecret = req.headers.get("x-notify-secret") || "";
-  if (notifyWebhookSecret) {
-    if (secretsMatch(presentedSecret, notifyWebhookSecret)) return null;
-  } else if (presentedSecret) {
-    return "x-notify-secret was sent but NOTIFY_WEBHOOK_SECRET is not set on the function";
-  }
-
-  const bearer = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
-  if (!bearer) return "no Authorization header and no matching x-notify-secret";
-  if (!supabaseServiceRoleKey) return "SUPABASE_SERVICE_ROLE_KEY is not available to the function";
-  if (secretsMatch(bearer, supabaseServiceRoleKey)) return null;
-
-  return `caller presented a ${describeToken(bearer)}, expected the service role key`;
-}
 
 async function sendPushNotification(pushToken: string, message: string, data?: Record<string, unknown>) {
   if (!pushToken) {
@@ -133,24 +76,69 @@ function getTransporter() {
   return transporter;
 }
 
+let smtpConfigLogged = false;
+
+/**
+ * Logged once per worker, before the first send.
+ *
+ * The From address rides on every outgoing mail, so it is not a secret — and it
+ * is the first thing to check when SMTP accepts a message that then never
+ * arrives, since a From that the sending host is not authorised for fails
+ * SPF/DKIM alignment at the receiver. Note especially whether it came from
+ * SMTP_FROM or fell back to SMTP_USER.
+ */
+function logSmtpConfigOnce() {
+  if (smtpConfigLogged) return;
+  smtpConfigLogged = true;
+  console.log(
+    `SMTP config: host=${smtpHost || "(unset)"} port=${smtpPort} secure=${smtpPort === 465} ` +
+      `from=${smtpFrom || "(unset)"} ` +
+      (Deno.env.get("SMTP_FROM") ? "(from SMTP_FROM)" : "(SMTP_FROM unset — fell back to SMTP_USER)"),
+  );
+}
+
 async function sendEmailNotification(
   email: string,
   subject: string,
   html: string,
   headers?: Record<string, string>,
 ) {
+  // Throws rather than returns: a newsletter run counts every settled send as
+  // delivered, so returning quietly here would mark the whole issue "sent"
+  // without a single mail having left the function.
   if (!smtpHost || !smtpUser || !smtpPass) {
-    console.error("Missing SMTP credentials, skipping email");
-    return;
+    throw new Error("Missing SMTP credentials — set SMTP_HOST, SMTP_USER and SMTP_PASS");
   }
-  await getTransporter().sendMail({
+  if (!smtpFrom.includes("@")) {
+    throw new Error(`SMTP_FROM is not an email address: "${smtpFrom}"`);
+  }
+  logSmtpConfigOnce();
+
+  const info = await getTransporter().sendMail({
     from: smtpFrom,
     to: email,
     subject,
     html,
+    // multipart/alternative: an HTML-only bulk mail filters badly.
+    text: htmlToText(html),
     ...(headers ? { headers } : {}),
   });
-  console.log("Email sent to", email);
+
+  // sendMail only rejects when *every* recipient was refused, so a partial
+  // refusal has to be turned into an error by hand.
+  if (info.rejected?.length) {
+    throw new Error(
+      `SMTP rejected ${info.rejected.join(", ")}: ${info.response || "no response"}`,
+    );
+  }
+
+  // Log the server's own answer. "Email sent" on its own says only that nothing
+  // threw; the queue id below is what identifies the message to the mail
+  // provider when it was accepted here but never arrived.
+  console.log(
+    `Email sent to ${email} from ${info.envelope?.from ?? smtpFrom} — ` +
+      `${info.response || "(no response)"} messageId=${info.messageId || "?"}`,
+  );
 }
 
 /** Transactional notifications must never fail the whole webhook on an SMTP error. */
@@ -251,6 +239,7 @@ async function sendNewsletter(
 
     let sent = 0;
     let failed = 0;
+    const failures: string[] = [];
 
     for (let i = 0; i < list.length; i += NEWSLETTER_BATCH_SIZE) {
       const batch = list.slice(i, i + NEWSLETTER_BATCH_SIZE);
@@ -275,6 +264,7 @@ async function sendNewsletter(
           sent++;
         } else {
           failed++;
+          failures.push(String(result.reason));
           console.error("Newsletter send failed:", result.reason);
         }
       }
@@ -290,6 +280,11 @@ async function sendNewsletter(
         status: "sent",
         sent_count: sent,
         failed_count: failed,
+        // Without this, why a send failed lives only in the edge logs, which
+        // roll off long before anyone asks why an issue underdelivered.
+        error: failures.length > 0
+          ? [...new Set(failures)].join("\n").slice(0, 2000)
+          : null,
         sent_at: new Date().toISOString(),
       })
       .eq("id", record.id);
@@ -309,38 +304,25 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const rejection = authorizeWebhook(req);
-  if (rejection) {
-    console.error(`Rejected notify webhook: ${rejection}`);
-    return new Response(
-      JSON.stringify({
-        error: "Unauthorized",
-        detail:
-          "notify must be called with the project's service role key (or a matching x-notify-secret). " +
-          "Check private.app_config — run: select * from private.notify_config_status();",
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 401,
-      },
-    );
-  }
-
-  console.log("env", supabaseUrl);
-  // The body is whatever row_to_json() produced, so the record's shape depends on
-  // which table the trigger fired for.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let payload: { table?: string; record?: Record<string, any> };
-  try {
-    payload = await req.json();
-  } catch (err) {
-    console.error("Could not parse notify webhook body:", err);
-    return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+  // This function sends push notifications and emails to arbitrary users, so it
+  // must only be reachable by the database trigger, which posts with the service
+  // role key. Without this check the public anon key is enough to spoof any
+  // notification to any user.
+  if (!supabaseServiceRoleKey) {
+    console.error("Missing SUPABASE_SERVICE_ROLE_KEY");
+    return new Response(JSON.stringify({ error: "Server configuration error" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
+      status: 500,
     });
   }
-  console.log("Webhook payload:", JSON.stringify(payload));
+  if (!isServiceRoleRequest(req, supabaseServiceRoleKey)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 401,
+    });
+  }
+
+  const payload = await req.json();
 
   const { table, record } = payload;
 
