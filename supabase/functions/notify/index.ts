@@ -76,6 +76,27 @@ function getTransporter() {
   return transporter;
 }
 
+let smtpConfigLogged = false;
+
+/**
+ * Logged once per worker, before the first send.
+ *
+ * The From address rides on every outgoing mail, so it is not a secret — and it
+ * is the first thing to check when SMTP accepts a message that then never
+ * arrives, since a From that the sending host is not authorised for fails
+ * SPF/DKIM alignment at the receiver. Note especially whether it came from
+ * SMTP_FROM or fell back to SMTP_USER.
+ */
+function logSmtpConfigOnce() {
+  if (smtpConfigLogged) return;
+  smtpConfigLogged = true;
+  console.log(
+    `SMTP config: host=${smtpHost || "(unset)"} port=${smtpPort} secure=${smtpPort === 465} ` +
+      `from=${smtpFrom || "(unset)"} ` +
+      (Deno.env.get("SMTP_FROM") ? "(from SMTP_FROM)" : "(SMTP_FROM unset — fell back to SMTP_USER)"),
+  );
+}
+
 async function sendEmailNotification(
   email: string,
   subject: string,
@@ -91,6 +112,7 @@ async function sendEmailNotification(
   if (!smtpFrom.includes("@")) {
     throw new Error(`SMTP_FROM is not an email address: "${smtpFrom}"`);
   }
+  logSmtpConfigOnce();
 
   const info = await getTransporter().sendMail({
     from: smtpFrom,
@@ -114,7 +136,8 @@ async function sendEmailNotification(
   // threw; the queue id below is what identifies the message to the mail
   // provider when it was accepted here but never arrived.
   console.log(
-    `Email sent to ${email} — ${info.response || "(no response)"} messageId=${info.messageId || "?"}`,
+    `Email sent to ${email} from ${info.envelope?.from ?? smtpFrom} — ` +
+      `${info.response || "(no response)"} messageId=${info.messageId || "?"}`,
   );
 }
 

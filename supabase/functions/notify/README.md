@@ -120,7 +120,8 @@ derived from it by `htmlToText()`. HTML-only bulk mail filters badly.
 delivered. Start from the function logs, which carry the server's own answer:
 
 ```
-Email sent to someone@example.com — 250 2.0.0 Ok: queued as 4b1f… messageId=<…@fifeapp.hu>
+SMTP config: host=smtp.rackhost.hu port=465 secure=true from=info@fifeapp.hu (from SMTP_FROM)
+Email sent to someone@example.com from info@fifeapp.hu — 250 2.0.0 Ok: queued as 4b1f… messageId=<…@fifeapp.hu>
 ```
 
 - **No `Email sent to …` line at all**, but the row still says `sent` → nothing was
@@ -128,10 +129,22 @@ Email sent to someone@example.com — 250 2.0.0 Ok: queued as 4b1f… messageId=
   `Missing SMTP credentials`, and check `newsletters.error`, which now carries the
   reason for every failed recipient.
 - **A `250` queue id and still nothing in the inbox** → the mail was accepted and
-  then dropped or filtered downstream. Check the spam/promotions folder first, then
-  the `SMTP_FROM` mailbox for an asynchronous bounce, then that SPF/DKIM/DMARC for
-  the `SMTP_FROM` domain authorise the SMTP host. Quote the queue id to the mail
-  provider — that is what they trace on.
+  then dropped or filtered downstream. In order: search the whole mailbox, not just
+  the inbox (in Gmail, `in:anywhere from:fifeapp.hu`); check the `SMTP_FROM` mailbox
+  for an asynchronous bounce, which is where the receiving side's real reason ends
+  up; then check that the `from=` address in the log is one the SMTP host is
+  authorised to send for:
+
+  ```bash
+  dig +short TXT fifeapp.hu          # SPF must cover the Rackhost sending host
+  dig +short TXT _dmarc.fifeapp.hu   # p=reject/quarantine punishes any misalignment
+  ```
+
+  Quote the queue id to the mail provider — that is what they trace on.
+
+  `from=` falling back to `SMTP_USER` is worth ruling out early: `supabase secrets
+  list` shows only digests, so the log line above is the only place the effective
+  From address is visible.
 
 ## Email templates
 
