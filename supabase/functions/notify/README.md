@@ -111,6 +111,28 @@ a no-op: only a row still in `pending` is claimed.
 
 Tuning (optional secrets): `NEWSLETTER_BATCH_SIZE`, `NEWSLETTER_BATCH_DELAY_MS`.
 
+Each mail goes out as multipart/alternative — the HTML template plus a text part
+derived from it by `htmlToText()`. HTML-only bulk mail filters badly.
+
+### "Status is sent but nothing arrived"
+
+`sent_count` counts mails the SMTP server **accepted**, which is not the same as
+delivered. Start from the function logs, which carry the server's own answer:
+
+```
+Email sent to someone@example.com — 250 2.0.0 Ok: queued as 4b1f… messageId=<…@fifeapp.hu>
+```
+
+- **No `Email sent to …` line at all**, but the row still says `sent` → nothing was
+  handed to SMTP. The likely cause is missing credentials; look for
+  `Missing SMTP credentials`, and check `newsletters.error`, which now carries the
+  reason for every failed recipient.
+- **A `250` queue id and still nothing in the inbox** → the mail was accepted and
+  then dropped or filtered downstream. Check the spam/promotions folder first, then
+  the `SMTP_FROM` mailbox for an asynchronous bounce, then that SPF/DKIM/DMARC for
+  the `SMTP_FROM` domain authorise the SMTP host. Quote the queue id to the mail
+  provider — that is what they trace on.
+
 ## Email templates
 
 All templates live in [`../_shared/email.ts`](../_shared/email.ts).
