@@ -182,12 +182,30 @@ enabled = true
 policy = "oneshot"
 inspector_port = 8083
 
+# Per-function settings belong here, in the root config. A config.toml inside a
+# function's own directory is not read by the CLI — newsletter-unsubscribe had
+# one and its verify_jwt = false never reached the deployed function, so every
+# click on an unsubscribe link was rejected by the gateway with
+# UNAUTHORIZED_NO_AUTH_HEADER before the function ran.
+
 # notify is called by the database (pg_net) and by database webhooks, never by a
 # signed-in user. The platform JWT gate is disabled so that a rotated key — or a
 # project moving off legacy JWT API keys — cannot silently 401 every notification
 # at the gateway; notify/index.ts authenticates the caller itself instead.
 [functions.notify]
 verify_jwt = false
+
+# Clicked straight from an email, where there is no session and no JWT to send.
+# The HMAC token in the query string is what authorises the unsubscribe, and
+# newsletter-unsubscribe/index.ts refuses every request without a valid one.
+[functions.newsletter-unsubscribe]
+verify_jwt = false
+
+# on-profile-delete (a database webhook on DELETE from public.profiles)
+# deliberately has no entry: it authenticates no one itself, so the gateway's JWT
+# check is the only thing standing in front of a handler that deletes a user's
+# stored avatars by id. Give it isServiceRoleRequest (as notify has) before
+# turning verify_jwt off for it.
 
 [analytics]
 enabled = true

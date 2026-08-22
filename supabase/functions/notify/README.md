@@ -98,6 +98,14 @@ it. Clicking it:
    and records the address in `public.newsletter_unsubscribes`,
 3. shows a FiFe-styled confirmation page.
 
+The link is clicked from a mail client, with no session and no JWT, so the
+function needs `verify_jwt = false` — and that lives in the root
+[`supabase/config.toml`](../../config.toml) under `[functions.newsletter-unsubscribe]`.
+A `config.toml` inside a function's own directory is **not** read by the CLI:
+having one there leaves the default in place and every click comes back
+`{"code":"UNAUTHORIZED_NO_AUTH_HEADER"}` from the gateway. `verify_jwt` is applied
+when the function is deployed, so changing it needs a redeploy to take effect.
+
 Flipping the newsletter switch back on in the app clears the suppression entry
 (trigger `on_newsletter_resubscribe`), so resubscribing works.
 
