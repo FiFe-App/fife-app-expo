@@ -201,11 +201,11 @@ verify_jwt = false
 [functions.newsletter-unsubscribe]
 verify_jwt = false
 
-# on-profile-delete (a database webhook on DELETE from public.profiles)
-# deliberately has no entry: it authenticates no one itself, so the gateway's JWT
-# check is the only thing standing in front of a handler that deletes a user's
-# stored avatars by id. Give it isServiceRoleRequest (as notify has) before
-# turning verify_jwt off for it.
+# A database webhook on DELETE from public.profiles. Like notify it checks the
+# caller itself with isServiceRoleRequest, so the gateway gate adds nothing here
+# either — it is satisfied by the anon key, which ships inside the published app.
+[functions.on-profile-delete]
+verify_jwt = false
 
 [analytics]
 enabled = true
