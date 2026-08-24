@@ -3,8 +3,10 @@ import { Platform } from "react-native";
 import { router } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import NotificationPromptCard from "@/components/notifications/NotificationPromptCard";
+import { MessagingUnreachableCard } from "@/components/notifications/MessagingUnreachableCard";
 import { emotionAvailable } from "@/constants/emotionTiming";
 import { useHasBuziness } from "@/hooks/useHasBuziness";
+import { useMessagingReachability } from "@/hooks/useMessagingReachability";
 import {
   AskablePref,
   TogglePref,
@@ -48,6 +50,7 @@ type Prompt = PrefPrompt | ActionPrompt;
  */
 export default function NotificationPrompts() {
   const { prefs, hydrated, setPref, markAsked } = useNotificationPrefs();
+  const { unreachable, ensureReachable } = useMessagingReachability();
   const dispatch = useDispatch();
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -123,7 +126,15 @@ export default function NotificationPrompts() {
       !prompt.answered,
   );
 
-  if (!hydrated || !next) return null;
+  if (!hydrated) return null;
+
+  // Jumps the queue and outranks every opt-in ask: the others offer something
+  // extra, this one says the app is already failing to pass on messages the
+  // user has agreed to receive. It is not dismissible — switching a channel
+  // back on is what makes it go away.
+  if (unreachable) return <MessagingUnreachableCard onFix={ensureReachable} />;
+
+  if (!next) return null;
 
   const answer = async (accepted: boolean) => {
     setBusy(next.key);

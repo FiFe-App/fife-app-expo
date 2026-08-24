@@ -1,4 +1,5 @@
 import { ThemedText } from "@/components/ThemedText";
+import { MessagingUnreachableNotice } from "@/components/notifications/MessagingUnreachableCard";
 import { Enums, Tables } from "@/database.types";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import typeToIcon from "@/lib/functions/typeToIcon";
@@ -6,6 +7,7 @@ import typeToPlaceholder from "@/lib/functions/typeToPlaceholder";
 import typeToPrefix from "@/lib/functions/typeToPrefix";
 import typeToValueLabel from "@/lib/functions/typeToValueLabel";
 import { supabase } from "@/lib/supabase/supabase";
+import { useMessagingReachability } from "@/hooks/useMessagingReachability";
 import { RootState } from "@/redux/store";
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { setMessagingEnabled } from "@/redux/reducers/userReducer";
@@ -61,8 +63,9 @@ const ContactEditScreen = forwardRef<{
     type: Enums<"contact_type">;
     text: string;
   } | null>(null);
-  const { uid } = useSelector((state: RootState) => state.user);
+  const { uid, messagingEnabled } = useSelector((state: RootState) => state.user);
   const theme = useAppTheme();
+  const { unreachable, ensureReachable } = useMessagingReachability();
 
   const dispatch = useDispatch();
   const [contacts, setContacts] = useState<IContact[]>([]);
@@ -182,7 +185,15 @@ const ContactEditScreen = forwardRef<{
       }
 
       const messagingContact = noNullContacts.find((contact) => contact.type === "MESSAGE");
-      dispatch(setMessagingEnabled(!!messagingContact?.data && messagingContact.data !== ""));
+      const messagingNowEnabled = !!messagingContact?.data && messagingContact.data !== "";
+      dispatch(setMessagingEnabled(messagingNowEnabled));
+
+      // Accepting direct messages is only half of it: with both notification
+      // channels off nothing announces them, so the sender waits for an answer
+      // the recipient never knows to give. Only on the transition — re-running
+      // it on every save would undo a channel the user has since switched off
+      // on purpose, which the warning below the switch is there to argue about.
+      if (messagingNowEnabled && !messagingEnabled) await ensureReachable();
 
       return response;
     }
@@ -330,6 +341,11 @@ const ContactEditScreen = forwardRef<{
                   onChangeText={(t) => saveContact(typeIndex, { title: t })}
                 />
               )}
+              {type.value === "MESSAGE" &&
+                current?.data === "true" &&
+                unreachable && (
+                  <MessagingUnreachableNotice onFix={ensureReachable} />
+                )}
               {error?.type === type.value && (
                 <ThemedText type="error" style={{ marginLeft: Spacing.xs }}>
                   {error?.text}

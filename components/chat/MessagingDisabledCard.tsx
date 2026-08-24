@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { Button, Card, Text } from "react-native-paper";
 import { enableMessaging } from "@/lib/chat/messagingContact";
+import { useMessagingReachability } from "@/hooks/useMessagingReachability";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { addSnack } from "@/redux/reducers/infoReducer";
@@ -22,6 +23,7 @@ export function MessagingDisabledCard({
 }: MessagingDisabledCardProps) {
   const { uid } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
+  const { ensureReachable } = useMessagingReachability();
   const [enabling, setEnabling] = useState(false);
 
   const handleEnable = async () => {
@@ -42,6 +44,9 @@ export function MessagingDisabledCard({
 
       dispatch(setMessagingEnabled(true));
       dispatch(addSnack({ title: "Üzenetküldés bekapcsolva" }));
+      // Accepting messages is only half of it: without a channel to deliver
+      // them, the sender waits for an answer the recipient never knows to give.
+      await ensureReachable();
       onEnabled?.();
     } catch (error) {
       console.error("Error enabling messaging:", error);
