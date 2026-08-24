@@ -5,11 +5,27 @@ import Constants from "expo-constants";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    // shouldShowAlert is deprecated and split in two; together they are what it
+    // used to mean — a heads-up banner plus an entry in the notification list.
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
 });
+
+/**
+ * Whether the OS grant is already in place, without prompting for it.
+ *
+ * Asking belongs to the moment the user turns a preference on, not to every app
+ * start — so anything that only needs to know (scheduling the daily reminder)
+ * asks this rather than ensureNotificationPermission.
+ */
+export async function hasNotificationPermission(): Promise<boolean> {
+  if (Platform.OS === "web") return false;
+  const { status } = await Notifications.getPermissionsAsync();
+  return status === "granted";
+}
 
 /**
  * Ask for the OS notification permission, if it isn't granted already.
@@ -25,8 +41,7 @@ export async function ensureNotificationPermission(): Promise<boolean> {
     return false;
   }
 
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  if (existingStatus === "granted") return true;
+  if (await hasNotificationPermission()) return true;
 
   const { status } = await Notifications.requestPermissionsAsync();
   return status === "granted";
