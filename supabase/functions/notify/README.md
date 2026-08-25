@@ -98,6 +98,14 @@ it. Clicking it:
    and records the address in `public.newsletter_unsubscribes`,
 3. shows a FiFe-styled confirmation page.
 
+The link is clicked from a mail client, with no session and no JWT, so the
+function needs `verify_jwt = false` — and that lives in the root
+[`supabase/config.toml`](../../config.toml) under `[functions.newsletter-unsubscribe]`.
+A `config.toml` inside a function's own directory is **not** read by the CLI:
+having one there leaves the default in place and every click comes back
+`{"code":"UNAUTHORIZED_NO_AUTH_HEADER"}` from the gateway. `verify_jwt` is applied
+when the function is deployed, so changing it needs a redeploy to take effect.
+
 Flipping the newsletter switch back on in the app clears the suppression entry
 (trigger `on_newsletter_resubscribe`), so resubscribing works.
 
@@ -111,9 +119,52 @@ a no-op: only a row still in `pending` is claimed.
 
 Tuning (optional secrets): `NEWSLETTER_BATCH_SIZE`, `NEWSLETTER_BATCH_DELAY_MS`.
 
+Each mail goes out as multipart/alternative — the HTML template plus a text part
+derived from it by `htmlToText()`. HTML-only bulk mail filters badly.
+
+### "Status is sent but nothing arrived"
+
+`sent_count` counts mails the SMTP server **accepted**, which is not the same as
+delivered. Start from the function logs, which carry the server's own answer:
+
+```
+SMTP config: host=smtp.rackhost.hu port=465 secure=true from=info@fifeapp.hu (from SMTP_FROM)
+Email sent to someone@example.com from info@fifeapp.hu — 250 2.0.0 Ok: queued as 4b1f… messageId=<…@fifeapp.hu>
+```
+
+- **No `Email sent to …` line at all**, but the row still says `sent` → nothing was
+  handed to SMTP. The likely cause is missing credentials; look for
+  `Missing SMTP credentials`, and check `newsletters.error`, which now carries the
+  reason for every failed recipient.
+- **A `250` queue id and still nothing in the inbox** → the mail was accepted and
+  then dropped or filtered downstream. In order: search the whole mailbox, not just
+  the inbox (in Gmail, `in:anywhere from:fifeapp.hu`); check the `SMTP_FROM` mailbox
+  for an asynchronous bounce, which is where the receiving side's real reason ends
+  up; then check that the `from=` address in the log is one the SMTP host is
+  authorised to send for:
+
+  ```bash
+  dig +short TXT fifeapp.hu          # SPF must cover the Rackhost sending host
+  dig +short TXT _dmarc.fifeapp.hu   # p=reject/quarantine punishes any misalignment
+  ```
+
+  Quote the queue id to the mail provider — that is what they trace on.
+
+  `from=` falling back to `SMTP_USER` is worth ruling out early: `supabase secrets
+  list` shows only digests, so the log line above is the only place the effective
+  From address is visible.
+
 ## Email templates
 
 All templates live in [`../_shared/email.ts`](../_shared/email.ts).
+
+Images are served from [`public/email/`](../../../public/email), which the web
+export copies to the site root unchanged — `https://fifeapp.hu/email/logo.png`.
+Never point a mail at `/assets/assets/<name>.<hash>.<ext>`: those names are build
+output hashed from the file's contents, so replacing an image silently 404s every
+mail already sent. Add a new image by dropping it in `public/email/` (sized for the
+slot it renders in — mail clients download the file at full size whatever the
+`width` attribute says).
 
 Every email includes:
 - **Header**: FiFe logo + smiley, linked to `https://fifeapp.hu`
@@ -172,21 +223,40 @@ Function is `SECURITY DEFINER` and access is revoked from `anon`/`authenticated`
 
 ### Trigger function
 
-`trigger_notify_on_record_created()` reads two `DATABASE`-level GUC settings that must be set once per environment (not in migrations — requires superuser):
+`trigger_notify_on_record_created()` reads its configuration from the
+`private.app_config` table (hosted Supabase does not allow custom `app.*` GUCs, so the
+older `ALTER DATABASE ... SET` approach was replaced in migration
+`20260417120000_app_config_table.sql`):
+
+| `key` | `value` |
+|---|---|
+| `supabase_url` | `https://<project-ref>.supabase.co` — or `http://supabase_kong_fife-app-expo:8000` locally |
+| `service_role_key` | The **service role** key. `notify` compares the bearer token against its own copy and 401s on anything else. |
+
+Local dev values are in [`../../seed.sql`](../../seed.sql) and are restored by
+`supabase db reset`. Production values must be set once, by hand:
 
 ```sql
--- Local dev (run once after supabase db reset):
-ALTER DATABASE postgres SET "app.supabase_url" = 'http://supabase_kong_fife-app-expo:8000';
-ALTER DATABASE postgres SET "app.service_role_key" = '<local-service-role-jwt>';
-
--- Production (run once after deploying):
-ALTER DATABASE postgres SET "app.supabase_url" = 'https://<project-ref>.supabase.co';
-ALTER DATABASE postgres SET "app.service_role_key" = '<production-service-role-jwt>';
+INSERT INTO private.app_config (key, value) VALUES
+  ('supabase_url',     'https://<project-ref>.supabase.co'),
+  ('service_role_key', '<service role key>')
+ON CONFLICT (key) DO UPDATE SET value = excluded.value;
 ```
 
-The local service role JWT is `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU` (standard Supabase local dev token).
+Check them at any time — the key itself is never printed, only its role and an md5 prefix:
 
-These settings are **wiped on `supabase db reset`** — run the two `ALTER DATABASE` commands again afterwards.
+```sql
+SELECT * FROM private.notify_config_status();   -- expect key_role = service_role
+```
+
+The trigger also raises a warning on every insert while the stored key carries a role
+other than `service_role`, which is what a `401` from `notify` looks like from the
+database side. `net.http_post()` is fire-and-forget, so to see what the function
+actually answered:
+
+```sql
+SELECT * FROM private.notify_recent_calls(20);
+```
 
 ## Environment variables / secrets
 
@@ -212,7 +282,7 @@ supabase secrets set SMTP_HOST=smtp.rackhost.hu SMTP_PORT=465 SMTP_USER=... SMTP
 ## Testing locally
 
 1. Start Supabase: `supabase start`
-2. After any `supabase db reset`, re-apply the DB settings (see above)
+2. Confirm the config survived: `select * from private.notify_config_status();`
 3. Set `notify_email = true` on a test profile in Studio (`http://127.0.0.1:54323`)
 4. Insert a row into any trigger table
 5. Check Mailpit at `http://127.0.0.1:54324` for the rendered email
@@ -231,4 +301,6 @@ supabase functions deploy newsletter-unsubscribe   # public, verify_jwt = false
 supabase secrets set SMTP_HOST=... SMTP_PASS=... # etc.
 ```
 
-After first-time production deploy, run the `ALTER DATABASE` commands in the Supabase SQL editor (production).
+After a first-time production deploy, insert the `private.app_config` rows in the Supabase
+SQL editor (see [Trigger function](#trigger-function)) and verify with
+`select * from private.notify_config_status();`.

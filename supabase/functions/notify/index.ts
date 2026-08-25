@@ -5,6 +5,7 @@ import nodemailer from "npm:nodemailer@6";
 import {
   buzinessRecommendationHtml,
   commentHtml,
+  htmlToText,
   messageHtml,
   newsletterHtml,
   profileRecommendationHtml,
@@ -75,24 +76,69 @@ function getTransporter() {
   return transporter;
 }
 
+let smtpConfigLogged = false;
+
+/**
+ * Logged once per worker, before the first send.
+ *
+ * The From address rides on every outgoing mail, so it is not a secret — and it
+ * is the first thing to check when SMTP accepts a message that then never
+ * arrives, since a From that the sending host is not authorised for fails
+ * SPF/DKIM alignment at the receiver. Note especially whether it came from
+ * SMTP_FROM or fell back to SMTP_USER.
+ */
+function logSmtpConfigOnce() {
+  if (smtpConfigLogged) return;
+  smtpConfigLogged = true;
+  console.log(
+    `SMTP config: host=${smtpHost || "(unset)"} port=${smtpPort} secure=${smtpPort === 465} ` +
+      `from=${smtpFrom || "(unset)"} ` +
+      (Deno.env.get("SMTP_FROM") ? "(from SMTP_FROM)" : "(SMTP_FROM unset — fell back to SMTP_USER)"),
+  );
+}
+
 async function sendEmailNotification(
   email: string,
   subject: string,
   html: string,
   headers?: Record<string, string>,
 ) {
+  // Throws rather than returns: a newsletter run counts every settled send as
+  // delivered, so returning quietly here would mark the whole issue "sent"
+  // without a single mail having left the function.
   if (!smtpHost || !smtpUser || !smtpPass) {
-    console.error("Missing SMTP credentials, skipping email");
-    return;
+    throw new Error("Missing SMTP credentials — set SMTP_HOST, SMTP_USER and SMTP_PASS");
   }
-  await getTransporter().sendMail({
+  if (!smtpFrom.includes("@")) {
+    throw new Error(`SMTP_FROM is not an email address: "${smtpFrom}"`);
+  }
+  logSmtpConfigOnce();
+
+  const info = await getTransporter().sendMail({
     from: smtpFrom,
     to: email,
     subject,
     html,
+    // multipart/alternative: an HTML-only bulk mail filters badly.
+    text: htmlToText(html),
     ...(headers ? { headers } : {}),
   });
-  console.log("Email sent to", email);
+
+  // sendMail only rejects when *every* recipient was refused, so a partial
+  // refusal has to be turned into an error by hand.
+  if (info.rejected?.length) {
+    throw new Error(
+      `SMTP rejected ${info.rejected.join(", ")}: ${info.response || "no response"}`,
+    );
+  }
+
+  // Log the server's own answer. "Email sent" on its own says only that nothing
+  // threw; the queue id below is what identifies the message to the mail
+  // provider when it was accepted here but never arrived.
+  console.log(
+    `Email sent to ${email} from ${info.envelope?.from ?? smtpFrom} — ` +
+      `${info.response || "(no response)"} messageId=${info.messageId || "?"}`,
+  );
 }
 
 /** Transactional notifications must never fail the whole webhook on an SMTP error. */
@@ -193,6 +239,7 @@ async function sendNewsletter(
 
     let sent = 0;
     let failed = 0;
+    const failures: string[] = [];
 
     for (let i = 0; i < list.length; i += NEWSLETTER_BATCH_SIZE) {
       const batch = list.slice(i, i + NEWSLETTER_BATCH_SIZE);
@@ -217,6 +264,7 @@ async function sendNewsletter(
           sent++;
         } else {
           failed++;
+          failures.push(String(result.reason));
           console.error("Newsletter send failed:", result.reason);
         }
       }
@@ -232,6 +280,11 @@ async function sendNewsletter(
         status: "sent",
         sent_count: sent,
         failed_count: failed,
+        // Without this, why a send failed lives only in the edge logs, which
+        // roll off long before anyone asks why an issue underdelivered.
+        error: failures.length > 0
+          ? [...new Set(failures)].join("\n").slice(0, 2000)
+          : null,
         sent_at: new Date().toISOString(),
       })
       .eq("id", record.id);

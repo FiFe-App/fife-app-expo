@@ -5,11 +5,17 @@
 // Assets
 // ---------------------------------------------------------------------------
 
-const SMILEY_URL =
-  "https://fifeapp.hu/assets/assets/smiley.ec294625349fa120ceb0817a5315f76b.gif";
-const LOGO_URL =
-  "https://fifeapp.hu/assets/assets/Logo.ea4a6ed5a7dfa3155fffdbfc5a6f1cae.png";
 const HOME_URL = "https://fifeapp.hu";
+
+// Served from public/, which the web export copies to the site root verbatim.
+//
+// These must NOT point at /assets/assets/<name>.<hash>.<ext>: those filenames are
+// build output, hashed from the file's contents, so they change the moment the
+// image does and every mail already sent starts 404ing. That is exactly what
+// happened to the previous URLs — they pinned Logo.png as it was in Sep 2025 and
+// smiley.gif as it was in Oct 2025, both replaced since.
+const SMILEY_URL = `${HOME_URL}/email/smiley.gif`;
+const LOGO_URL = `${HOME_URL}/email/logo.png`;
 
 // ---------------------------------------------------------------------------
 // Colors
@@ -269,4 +275,41 @@ export function messageHtml(
     </p>
     ${ctaButton(COPY.message.cta, COPY.message.ctaUrl(senderUid))}`;
   return layout(recipientName, body);
+}
+
+// ---------------------------------------------------------------------------
+// Plain-text alternative
+// ---------------------------------------------------------------------------
+
+/**
+ * Best-effort text/plain rendering of one of the templates above.
+ *
+ * Every mail here is built as HTML, and an HTML-only bulk mail with no
+ * multipart/alternative part is a well-known spam signal — worth avoiding for
+ * something posted to a whole subscriber list at once. Links are kept as
+ * "label (url)" so an unsubscribe link survives into the text part.
+ */
+export function htmlToText(html: string): string {
+  return html
+    .replace(/<head[\s\S]*?<\/head>/gi, "")
+    .replace(/<(style|script)[\s\S]*?<\/\1>/gi, "")
+    .replace(/<a\b[^>]*href=["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi, (_m, url, label) => {
+      const text = label.replace(/<[^>]+>/g, "").trim();
+      if (!url) return text;
+      return text && text !== url ? `${text} (${url})` : url;
+    })
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|tr|li|h[1-6]|table)>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .split("\n")
+    .map((line) => line.replace(/[ \t]+/g, " ").trim())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }

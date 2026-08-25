@@ -176,13 +176,25 @@ function RootContent() {
       }));
       if (Platform.OS === "web") return;
       if (prefs.notify_push) {
-        const token = await registerForPushNotificationsAsync();
-        if (token) await supabase.rpc("update_my_push_token", { token });
+        // Isolated: getting a push token talks to FCM and fails on its own —
+        // no network, credentials the build doesn't have. Letting that reject
+        // here used to take the daily reminder below down with it, silently,
+        // since nothing catches this chain.
+        try {
+          const token = await registerForPushNotificationsAsync();
+          if (token) await supabase.rpc("update_my_push_token", { token });
+        } catch (err) {
+          console.warn("Push token registration failed:", err);
+        }
       }
-      if (emotionAvailable && prefs.emotion_daily_prompt) {
-        await scheduleDailyEmotionReminder();
-      } else {
-        await cancelDailyEmotionReminder();
+      try {
+        if (emotionAvailable && prefs.emotion_daily_prompt) {
+          await scheduleDailyEmotionReminder();
+        } else {
+          await cancelDailyEmotionReminder();
+        }
+      } catch (err) {
+        console.warn("Could not apply the daily emotion reminder:", err);
       }
     });
   }, [uid, dispatch]);

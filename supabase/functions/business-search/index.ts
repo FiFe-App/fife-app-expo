@@ -65,12 +65,18 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
   // Fetch the caller's bad_boy status — used to restrict results to the same "world"
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("bad_boy")
     .eq("id", user.id)
     .single();
-  const isBadBoy: boolean = profile?.bad_boy ?? true;
+  if (profileError) {
+    console.error("Could not read the caller's bad_boy flag:", profileError.message);
+  }
+  // Defaults to the normal world. Defaulting the other way puts a caller whose
+  // profile row simply failed to load into the ghost world, where every query
+  // joins against nothing and comes back empty with no error to show for it.
+  const isBadBoy: boolean = profile?.bad_boy ?? false;
 
   const { query, skip, take, lat, long, maxdistance, ingyen, match_threshold, fts_weight, semantic_weight, score_sort, distance_sort, recommendation_sort } = await req.json();
 
@@ -157,7 +163,11 @@ Deno.serve(async (req) => {
       lat: lat || 0,
       long: long || 0,
       max_distance: maxdistance || 0,
-      query_embedding: embedding || Array.from({ length: 512 }, (_, i) => i),
+      // A zero vector scores 0 against everything under inner product, which
+      // leaves the ranking to full-text search. The previous fallback was
+      // [0,1,2,…,511], whose huge arbitrary dot product either swamps the
+      // threshold or buries every row beneath it.
+      query_embedding: embedding || Array.from({ length: 512 }, () => 0),
       query_text: query,
       filter_ingyen: ingyen || false,
       match_threshold: match_threshold ?? 0.6,
@@ -187,6 +197,28 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: res.error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
+    });
+  }
+
+  // An empty result is a 200 with [] — indistinguishable from a broken filter
+  // unless the filters that produced it are on the record. Every one of these
+  // can empty the result set on its own.
+  const rows = res.data?.length ?? 0;
+  console.log(`search returned ${rows} row(s)`);
+  if (rows === 0) {
+    console.log("empty result, filters were", {
+      query_text: query,
+      embedding: embedding ? "present" : "MISSING (zero vector, FTS only)",
+      filter_bad_boy: isBadBoy,
+      match_threshold: match_threshold ?? 0.6,
+      fts_weight: fts_weight ?? 1,
+      semantic_weight: semantic_weight ?? 1.0,
+      max_distance: maxdistance,
+      lat,
+      long,
+      filter_ingyen: ingyen || false,
+      skip: skip || 0,
+      take: take || 20,
     });
   }
 
