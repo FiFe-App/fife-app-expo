@@ -120,8 +120,8 @@ function footer(unsubscribeUrl?: string): string {
       <tr>
         <td align="center" style="padding:24px 0 32px;color:${COLOR.textFooter};font-family:Arial,sans-serif;font-size:14px;line-height:1.6;">
           ${COPY.goodbye}<br/>
-          ${COPY.sender}<br/>
-          <img src="${SMILEY_URL}" alt="FiFe" width="32" height="32" style="display:inline-block;margin-top:8px;" />${unsubscribe}
+          ${COPY.sender}<br/><br/>
+          ${unsubscribe}
         </td>
       </tr>
     </table>`;
@@ -305,7 +305,7 @@ export function htmlToText(html: string): string {
     .replace(/&amp;/gi, "&")
     .replace(/&lt;/gi, "<")
     .replace(/&gt;/gi, ">")
-    .replace(/&quot;/gi, '"')
+    .replace(/&quot;/gi, "\"")
     .replace(/&#39;/gi, "'")
     .split("\n")
     .map((line) => line.replace(/[ \t]+/g, " ").trim())

@@ -356,6 +356,10 @@ function RootContent() {
                 name="user/password-reset"
                 options={{ title: "Jelszó visszaállítás" }}
               />
+              <Stack.Screen
+                name="leiratkozas"
+                options={{ headerShown: false }}
+              />
             </Stack>
                         {/* Only inside the app itself — the nudge has no business on the
                 public landing page or in the middle of signing up. */}
@@ -371,6 +375,7 @@ function RootContent() {
               !pathname.includes("password") &&
               !pathname.includes("user/deleted-account") &&
               !pathname.includes("csatlakozom") &&
+              !pathname.includes("leiratkozas") &&
               pathname !== "/biznisz/new" &&
               !pathname.startsWith("/biznisz/edit") && <BottomNavigation />}
           </View>
