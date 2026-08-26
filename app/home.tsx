@@ -138,6 +138,7 @@ export default function Index() {
           )}
         </View>
       </ScrollView>
+      <InviteCard />
     </ThemedView>
   );
 }

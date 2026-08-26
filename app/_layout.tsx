@@ -388,7 +388,13 @@ function RootContent() {
 
 export default function RootLayout() {
   const [splashDone, setSplashDone] = React.useState(splashAlreadyShown);
-  const colorScheme = useColorScheme(); 
+  // Only the app's own launch screen ("/") gets the splash — a deep link
+  // straight into some other route shouldn't get stuck behind it. Captured
+  // once so navigating away from "/" afterwards doesn't hide an in-progress
+  // splash, and navigating back to "/" later doesn't bring it back.
+  const pathname = usePathname();
+  const [initialPathname] = React.useState(pathname);
+  const colorScheme = useColorScheme();
   const bgColor = colorScheme == "dark" ? "#1e1b16" : colorScheme == "light" ? "#fff5e0" : "transparent";
   const [loaded] = useFonts({
     Piazzolla,
@@ -410,7 +416,7 @@ export default function RootLayout() {
           <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
               <RootContent />
-              {!splashDone && (
+              {!splashDone && initialPathname === "/" && (
                 <SplashAnimation onFinished={() => {
                   splashAlreadyShown = true;
                   setSplashDone(true);

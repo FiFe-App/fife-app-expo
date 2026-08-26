@@ -1,6 +1,6 @@
 import { useMyLocation } from "@/hooks/useMyLocation";
 import React, { useMemo, useRef, useState } from "react";
-import { Platform, FlatList, Text, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
 import {
   Button,
   Card,
@@ -53,7 +53,6 @@ const MapSelector = ({
   interface GeoResult {
     formatted_address: string;
     geometry: { location: { lat: () => number; lng: () => number } };
-    place_id?: string;
   }
   const [search, setSearch] = useState("");
   const [addressList, setAddressList] = useState<GeoResult[]>([]);
@@ -93,88 +92,24 @@ const MapSelector = ({
     }
   };
 
-  const getPlaceDetails = async (placeId: string) => {
-    if (!placeId) return null;
-
-    if (Platform.OS === "web" && typeof google !== "undefined" && google.maps?.places?.PlacesService) {
-      const service = new google.maps.places.PlacesService(document.createElement("div"));
-      return await new Promise<{ latitude: number; longitude: number } | null>((resolve) => {
-        service.getDetails({ placeId, fields: ["geometry"] }, (place, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
-            resolve({
-              latitude: place.geometry.location.lat(),
-              longitude: place.geometry.location.lng(),
-            });
-            return;
-          }
-          resolve(null);
-        });
-      });
-    }
-
-    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=geometry&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
-    const response = await fetch(url);
-    const json = await response.json();
-    if (json.status !== "OK" || !json.result?.geometry?.location) return null;
-
-    return {
-      latitude: json.result.geometry.location.lat,
-      longitude: json.result.geometry.location.lng,
-    };
-  };
-
+  // LocationIQ, not Google Places: a prior Google key leaked and its billing
+  // spiked, so address search goes through LocationIQ's free tier over plain
+  // fetch (works the same on every platform, no separate place-details call
+  // needed since search results already carry coordinates).
   const turnToAddress = async (address: string) => {
     const trimmedAddress = address.trim();
     if (trimmedAddress.length < 4) return { results: [] };
 
-    if (Platform.OS === "web" && typeof google !== "undefined" && google.maps?.places?.AutocompleteService) {
-      const service = new google.maps.places.AutocompleteService();
-      const predictions = await new Promise<google.maps.places.AutocompletePrediction[]>((resolve) => {
-        service.getPlacePredictions(
-          {
-            input: trimmedAddress,
-            componentRestrictions: { country: "HU" },
-            types: ["address", "establishment", "geocode"],
-          },
-          (predictions, status) => {
-            if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
-              resolve([]);
-              return;
-            }
-            resolve(predictions);
-          },
-        );
-      });
-
-      return {
-        results: predictions.map((prediction) => ({
-          formatted_address: prediction.description,
-          place_id: prediction.place_id,
-          geometry: {
-            location: {
-              lat: () => 0,
-              lng: () => 0,
-            },
-          },
-        })),
-      };
-    }
-
-    const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(trimmedAddress)}&components=country:HU&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+    const url = `https://us1.locationiq.com/v1/search?key=${process.env.EXPO_PUBLIC_LOCATIONIQ_API_KEY}&q=${encodeURIComponent(trimmedAddress)}&countrycodes=hu&format=json&limit=5`;
     const response = await fetch(url);
+    if (!response.ok) return { results: [] };
     const json = await response.json();
-    if (json.status !== "OK") return { results: [] };
+    if (!Array.isArray(json)) return { results: [] };
 
     return {
-      results: (json.predictions ?? []).map((prediction: { description: string; place_id: string }) => ({
-        formatted_address: prediction.description,
-        place_id: prediction.place_id,
-        geometry: {
-          location: {
-            lat: () => 0,
-            lng: () => 0,
-          },
-        },
+      results: (json as Array<{ display_name: string; lat: string; lon: string }>).map((r) => ({
+        formatted_address: r.display_name,
+        geometry: { location: { lat: () => parseFloat(r.lat), lng: () => parseFloat(r.lon) } },
       })),
     };
   };
@@ -240,7 +175,7 @@ const MapSelector = ({
                 <List.Item
                   style={{ zIndex: 1000 }}
                   title={props.item.formatted_address}
-                  onPress={async () => {
+                  onPress={() => {
                     const address = props.item;
                     if (!address || !mapRef.current) return;
 
@@ -248,20 +183,12 @@ const MapSelector = ({
                     setSearch(address.formatted_address);
                     setAddressList([]);
 
-                    const details = await getPlaceDetails(address.place_id ?? "");
-                    const region = details
-                      ? {
-                          latitude: details.latitude,
-                          longitude: details.longitude,
-                          latitudeDelta: 0.0043,
-                          longitudeDelta: 0.0034,
-                        }
-                      : {
-                          latitude: address.geometry.location.lat(),
-                          longitude: address.geometry.location.lng(),
-                          latitudeDelta: 0.0043,
-                          longitudeDelta: 0.0034,
-                        };
+                    const region = {
+                      latitude: address.geometry.location.lat(),
+                      longitude: address.geometry.location.lng(),
+                      latitudeDelta: 0.0043,
+                      longitudeDelta: 0.0034,
+                    };
 
                     setCircle({ location: region, radius: 20 });
                     mapRef.current.animateToRegion(region, 1000);

@@ -108,6 +108,7 @@ export default function Index() {
                   dispatch(storeBuzinessSearchParams({ searchCircle: newCircle, ingyen: ingyenLocal }));
                   search(searchParams?.text, { ingyen: ingyenLocal, searchCircle: newCircle });
                 }}
+                markerOnly
                 searchEnabled
                 setOpen={setLocationMenuVisible}
               >
