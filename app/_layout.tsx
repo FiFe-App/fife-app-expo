@@ -28,7 +28,6 @@ import RedHatTextBold from "@/assets/fonts/RedHatText-Bold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
 import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import FakeSearchInput from "@/components/FakeSearchInput";
-import MessagesAppbarAction from "@/components/navigation/MessagesAppbarAction";
 import { RootState } from "@/redux/store";
 import { setLocation, logout, setNotificationPrefs, setMessagingEnabled } from "@/redux/reducers/userReducer";
 import { fetchMessagingEnabled } from "@/lib/chat/messagingContact";
@@ -48,11 +47,10 @@ import { emotionAvailable } from "@/constants/emotionTiming";
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
 let splashAlreadyShown = false;
 
-function HomeHeader({ showMessages }: { showMessages?: boolean }) {
+function HomeHeader() {
   return (
     <MyAppbar
       center={<FakeSearchInput />}
-      actions={showMessages ? <MessagesAppbarAction /> : undefined}
       style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }}
     />
   );
@@ -283,7 +281,7 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="home"
-                  options={{ header: () => <HomeHeader showMessages /> }}
+                  options={{ header: () => <HomeHeader /> }}
                 />
                 <Stack.Screen
                   name="fifeRadar"

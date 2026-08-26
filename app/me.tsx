@@ -48,7 +48,7 @@ export default function MeScreen() {
       dispatch(
         setOptions([
           {
-            icon: "comment-text-outline",
+            icon: "message-draw",
             onPress: () => setFeedbackDialogVisible(true),
             title: "Visszajelzés",
           },
@@ -130,10 +130,14 @@ export default function MeScreen() {
       </ScrollView>
       <Portal>
         <Dialog visible={feedbackDialogVisible} onDismiss={() => setFeedbackDialogVisible(false)}>
-          <Dialog.Title>Mondd el a véleményed!</Dialog.Title>
+          <Dialog.Icon icon="message-draw" />
+          <Dialog.Title style={{ textAlign: "center" }}>Mondd el a véleményed!</Dialog.Title>
           <Dialog.Content>
             <ThemedText>
               Írj nekem személyes üzenetet az appon belül, vagy küldj egy emailt! Ígérem visszaírok!
+            </ThemedText>
+            <ThemedText type="defaultSemiBold" style={{ marginTop: Spacing.sm, textAlign: "right" }}>
+              – Kristóf Ákos
             </ThemedText>
           </Dialog.Content>
           {/* Dialog.Actions force-injects compact={true} onto its children;
