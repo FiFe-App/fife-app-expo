@@ -20,7 +20,8 @@ import { clearDrafts } from "@/redux/reducers/chatReducer";
 import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
-import { setOptions, clearOptions, addSnack, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
+import { canReceiveMessageNotifications } from "@/lib/notifications/messagingReachability";
+import { setOptions, clearOptions, addSnack, showLoading, hideLoading, showDialog } from "@/redux/reducers/infoReducer";
 import { setName, setThemePreference, logout, setUserData, setLocation } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
@@ -53,7 +54,7 @@ type UserInfo = Partial<Tables<"profiles">>;
 
 export default function Index() {
   const theme = useAppTheme();
-  const { uid: myUid, userData, themePreference }: UserState = useSelector(
+  const { uid: myUid, userData, themePreference, messagingEnabled }: UserState = useSelector(
     (state: RootState) => state.user,
   );
   const [loading, setLoading] = useState(false);
@@ -71,6 +72,35 @@ export default function Index() {
   // bounces back later (permission denied) would be baffling.
   const { prefs, setPref } = useNotificationPrefs();
   const dispatch = useDispatch();
+
+  /**
+   * Switching off the last channel while direct messaging is on makes the
+   * account unreachable: messages keep arriving and nothing announces them.
+   * That is almost never what the user means by turning one switch off, so it
+   * takes a confirmation — and stays their decision if they confirm.
+   */
+  const setNotificationPref = (key: "notifyPush" | "notifyEmail", value: boolean) => {
+    const silences =
+      !value &&
+      messagingEnabled &&
+      !canReceiveMessageNotifications({ ...prefs, [key]: value });
+
+    if (!silences) {
+      setPref(key, value);
+      return;
+    }
+    dispatch(
+      showDialog({
+        title: "Így nem tudod meg, ha üzenetet kapsz",
+        text: "A profilodban be van kapcsolva a közvetlen üzenet. Ha ezt is kikapcsolod, semmi nem szól az új üzenetekről, és aki ír neked, hiába várja a válaszod.",
+        submitText: "Mégis kikapcsolom",
+        onSubmit: () => {
+          setPref(key, value);
+        },
+        onCancel: () => {},
+      }),
+    );
+  };
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
       | PostgrestSingleResponse<unknown>
@@ -581,7 +611,7 @@ export default function Index() {
                 </View>
                 <Switch
                   value={prefs.notifyPush}
-                  onValueChange={(v) => { setPref("notifyPush", v); }}
+                  onValueChange={(v) => { setNotificationPref("notifyPush", v); }}
                 />
               </View>
             )}
@@ -604,7 +634,7 @@ export default function Index() {
               </View>
               <Switch
                 value={prefs.notifyEmail}
-                onValueChange={(v) => { setPref("notifyEmail", v); }}
+                onValueChange={(v) => { setNotificationPref("notifyEmail", v); }}
               />
             </View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>

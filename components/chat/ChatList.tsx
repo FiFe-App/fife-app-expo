@@ -11,6 +11,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { ChatListItem } from "./ChatListItem";
 import { useFocusEffect } from "expo-router";
 import { MessagingDisabledCard } from "./MessagingDisabledCard";
+import { MessagingUnreachableCard } from "@/components/notifications/MessagingUnreachableCard";
+import { useMessagingReachability } from "@/hooks/useMessagingReachability";
 
 type Message = Tables<"messages">;
 type Profile = Tables<"profiles">;
@@ -23,6 +25,7 @@ interface ChatInfo {
 export default function ChatList() {
   const dispatch = useDispatch();
   const { uid: myUid, messagingEnabled } = useSelector((state: RootState) => state.user);
+  const { unreachable, ensureReachable } = useMessagingReachability();
   const { lastReadAt, unreadCounts } = useSelector((state: RootState) => state.chat);
   const [chats, setChats] = useState<ChatInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,6 +141,11 @@ export default function ChatList() {
 
   return (
     <ThemedView style={styles.container}>
+      {unreachable && (
+        <View style={styles.unreachableContainer}>
+          <MessagingUnreachableCard onFix={ensureReachable} />
+        </View>
+      )}
       <FlatList
         data={chats}
         keyExtractor={(item) => item.otherUser.id}
@@ -171,6 +179,9 @@ export default function ChatList() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  unreachableContainer: {
+    padding: 16,
   },
   centerContainer: {
     flex: 1,
