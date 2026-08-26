@@ -6,17 +6,22 @@ import ToDoList from "@/components/ToDoList";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { RootState } from "@/redux/store";
-import { Image, ScrollView, StyleSheet, View } from "react-native";
-import { Card, Icon, Surface, TouchableRipple } from "react-native-paper";
+import { Image, Linking, ScrollView, StyleSheet, View } from "react-native";
+import { Button as PaperButton, Card, Dialog, Icon, Portal, Surface, TouchableRipple } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "@/components/ThemedText";
 import { emotionAvailable } from "@/constants/emotionTiming";
-import { showDialog } from "@/redux/reducers/infoReducer";
+import { clearOptions, setOptions, showDialog } from "@/redux/reducers/infoReducer";
 import { dismissedIsItSafe } from "@/redux/reducers/userReducer";
-import { Link } from "expo-router";
+import { Link, router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/Button";
 import { useAppTheme } from "@/assets/theme";
 import { useKeyboardScrollIntoView } from "@/hooks/useKeyboardScrollIntoView";
+
+// Hardcoded until there's a real "contact the developer" profile to look up.
+const FEEDBACK_CHAT_UID = "e53e948e-debe-44c1-852b-e94c29ffcb9b";
+const FEEDBACK_EMAIL = "akos@fifeapp.hu";
 
 export default function MeScreen() {
   const { uid, isItSafeDismissed } = useSelector((state: RootState) => state.user);
@@ -24,6 +29,7 @@ export default function MeScreen() {
   const { scrollRef, keyboardHeight, handleScroll, registerFocusedInput } = useKeyboardScrollIntoView();
   const theme = useAppTheme();
   const isItSafeButtonText = `Ez a hely biztonságos${isItSafeDismissed ? "." : "?"}`;
+  const [feedbackDialogVisible, setFeedbackDialogVisible] = useState(false);
 
   const showIsItSafeDialog = ()=>{
     dispatch(showDialog({
@@ -37,6 +43,22 @@ export default function MeScreen() {
     }));
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(
+        setOptions([
+          {
+            icon: "comment-text-outline",
+            onPress: () => setFeedbackDialogVisible(true),
+            title: "Visszajelzés",
+          },
+        ]),
+      );
+      return () => {
+        dispatch(clearOptions());
+      };
+    }, [dispatch]),
+  );
 
   if (!uid) return null;
   return (
@@ -106,6 +128,42 @@ export default function MeScreen() {
           </View>}
         </View>
       </ScrollView>
+      <Portal>
+        <Dialog visible={feedbackDialogVisible} onDismiss={() => setFeedbackDialogVisible(false)}>
+          <Dialog.Title>Mondd el a véleményed!</Dialog.Title>
+          <Dialog.Content>
+            <ThemedText>
+              Írj nekem személyes üzenetet az appon belül, vagy küldj egy emailt! Ígérem visszaírok!
+            </ThemedText>
+          </Dialog.Content>
+          {/* Dialog.Actions force-injects compact={true} onto its children;
+              @/components/Button's compact styling caps height at 12px
+              (never exercised elsewhere in the app, since nothing else
+              passes compact manually), which clipped these to nothing.
+              Plain react-native-paper Button, as every other Dialog here
+              already uses, doesn't have that problem. */}
+          <Dialog.Actions style={{ flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <PaperButton
+              onPress={() => {
+                setFeedbackDialogVisible(false);
+                router.push({ pathname: "/chat/[uid]", params: { uid: FEEDBACK_CHAT_UID } });
+              }}
+              mode="contained"
+            >
+              Üzenetet írok
+            </PaperButton>
+            <PaperButton
+              mode="contained-tonal"
+              onPress={() => {
+                setFeedbackDialogVisible(false);
+                Linking.openURL(`mailto:${FEEDBACK_EMAIL}`);
+              }}
+            >
+              Emailt írok
+            </PaperButton>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </ThemedView>
   );
 }

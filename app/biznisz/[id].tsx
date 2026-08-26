@@ -459,7 +459,7 @@ export default function Index() {
                         labelStyle={{ fontSize: 16 }}
                         style={{ borderRadius: BorderRadius.pill, width: "100%" }}
                       >
-                        {defaultContact.title || defaultContact?.data}
+                        {defaultContact.title || (defaultContact.type=="MESSAGE" ? "Üzenet" : defaultContact?.data)}
                       </Button>
                     </Link>
                   ) : (

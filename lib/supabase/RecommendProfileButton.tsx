@@ -11,6 +11,7 @@ import wrapper from "../functions/wrapper";
 interface RecommendProfileButtonProps {
   profileId: string;
   recommended?: boolean;
+  disabled?: boolean;
   setRecommended: React.Dispatch<React.SetStateAction<boolean>>;
   style?: any;
 }
@@ -18,6 +19,7 @@ interface RecommendProfileButtonProps {
 export const RecommendProfileButton = ({
   profileId,
   recommended,
+  disabled,
   setRecommended,
   style,
 }: RecommendProfileButtonProps) => {
@@ -89,6 +91,7 @@ export const RecommendProfileButton = ({
       style={style}
       mode={!recommended ? "contained" : "contained-tonal"}
       loading={loading}
+      disabled={disabled}
     >
       {recommended ? "Megbízom benne." : "Megbízhatónak jelölöm!"}
     </Button>

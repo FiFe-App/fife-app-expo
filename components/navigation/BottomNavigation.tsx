@@ -1,4 +1,4 @@
-import { Route, router, useGlobalSearchParams, useSegments } from "expo-router";
+import { Route, router, usePathname, useSegments } from "expo-router";
 import { Image } from "expo-image";
 import { useRef, useCallback } from "react";
 import { StyleSheet, View } from "react-native";
@@ -15,7 +15,7 @@ import ProfileImage from "../ProfileImage";
 
 const BottomNavigation = () => {
   const segment = useSegments();
-  const globalParams = useGlobalSearchParams();
+  const pathname = usePathname();
   const theme = useAppTheme();
   const { uid, userData } = useSelector((state: RootState) => state.user);
   const avatarUrl = userData?.avatar_url;
@@ -25,22 +25,15 @@ const BottomNavigation = () => {
   const usActive = segment[0]?.includes("home") || segment[0]?.includes("fifeRadar");
   const lastNavTime = useRef(0);
 
-  const navigateTo = useCallback((path: Route, params?: Record<string,string>) => {
+  const navigateTo = useCallback((path: Route) => {
     const now = Date.now();
     if (now - lastNavTime.current < 300) return;
-
-    if (params?.uid) {
-      // Profile tab: skip only if already viewing own profile
-      const alreadyOnMyProfile = segment[0] === "user" && globalParams.uid === uid;
-      if (alreadyOnMyProfile) return;
-    } else {
-      // Other tabs: skip if already on the same segment
-      if (segment[0] && path == segment[0]) return;
-    }
+    // Skip if already on the exact same route
+    if (pathname === path) return;
 
     lastNavTime.current = now;
-    router.navigate(path, params);
-  }, [segment, uid, globalParams]);
+    router.navigate(path);
+  }, [pathname]);
 
   const showIcon = true;
   const showText = true;
@@ -77,7 +70,7 @@ const BottomNavigation = () => {
           </View>
         </TouchableRipple>
       <Measure name="briefcase">
-        <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user",{uid})}>
+        <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user/edit")}>
           <View style={{ alignItems: "center" }}>
               {showIcon && (
                 <View

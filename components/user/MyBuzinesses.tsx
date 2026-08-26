@@ -10,7 +10,6 @@ import { ThemedView } from "../ThemedView";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { Button } from "../Button";
-import { useAppTheme } from "@/assets/theme";
 
 interface MyBuzinessesProps {
   buzinesses: BuzinessSearchItemInterface[];
@@ -20,21 +19,20 @@ interface MyBuzinessesProps {
 }
 
 const MyBuzinesses = ({ buzinesses, loading, myProfile, name }: MyBuzinessesProps) => {
-  const theme = useAppTheme();
   return (
-    <View style={{ paddingHorizontal: Spacing.md, paddingBottom: Spacing.lg, gap: Spacing.md }}>
+    <View style={{ paddingHorizontal: Spacing.md, paddingVertical: Spacing.md, gap: Spacing.md }}>
       {loading ? (
         <View style={{ padding: Spacing.xxxl, alignItems: "center" }}>
           <ActivityIndicator />
         </View>
       ) : buzinesses.length ? (
         <>
-          <SectionLabel label={myProfile ? "Mihez értek? (Bizniszeid)" : `${name} bizniszei`} />
+          {!myProfile && <SectionLabel label={myProfile ? "Mihez értek?" : `${name} bizniszei`} />}
           {buzinesses.map((buzinessItem) => (
             <BuzinessItem
               data={buzinessItem}
               key={buzinessItem.id}
-              showOptions
+              showOptions={myProfile}
             />
           ))}
         </>

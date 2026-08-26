@@ -10,7 +10,7 @@ import {
   TogglePref,
   useNotificationPrefs,
 } from "@/hooks/useNotificationPrefs";
-import { dismissHomeAddBuzinessCard } from "@/redux/reducers/appReducer";
+import { dismissHomeAddBuzinessCard, dismissHomeMessagingCard } from "@/redux/reducers/appReducer";
 import { RootState } from "@/redux/store";
 
 interface BasePrompt {
@@ -54,6 +54,12 @@ export default function NotificationPrompts() {
   const { hasBuziness, loading: buzinessLoading } = useHasBuziness();
   const addBuzinessDismissed = useSelector(
     (state: RootState) => state.app.homeAddBuzinessCardDismissed,
+  );
+  const messagingEnabled = useSelector(
+    (state: RootState) => state.user.messagingEnabled,
+  );
+  const messagingCardDismissed = useSelector(
+    (state: RootState) => state.app.homeMessagingCardDismissed,
   );
 
   const askedAt = {
@@ -113,6 +119,29 @@ export default function NotificationPrompts() {
         router.push("/biznisz/new");
       },
       onDismiss: () => dispatch(dismissHomeAddBuzinessCard()),
+    },
+    {
+      kind: "action",
+      key: "enableMessaging",
+      icon: "chat-outline",
+      title: "Szeretnél az appon belül chatelni?",
+      body: "Kapcsold be az appon belüli üzenetküldést, hogy közvetlenül írhassanak neked mások.",
+      nativeOnly: true,
+      // Already on: nothing to ask. messagingEnabled starts undefined until
+      // fetched, so this only shows once we actually know it's off.
+      available: messagingEnabled === false,
+      answered: messagingCardDismissed,
+      acceptText: "Bekapcsolom",
+      onAccept: () => {
+        // Same reasoning as addBuziness: tapping through is an answer, so it
+        // shouldn't come back if they leave the form without finishing.
+        // Turning it on hides it via `available` anyway.
+        dispatch(dismissHomeMessagingCard());
+        // Adatok (contacts) is the default tab on /user/edit, so this lands
+        // right on the "Közvetlen üzenet" switch with no deep link needed.
+        router.push("/user/edit");
+      },
+      onDismiss: () => dispatch(dismissHomeMessagingCard()),
     },
   ];
 

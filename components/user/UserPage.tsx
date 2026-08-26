@@ -8,12 +8,12 @@ import BlockUserModal from "@/components/user/BlockUserModal";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
 import ContactsCard from "@/components/buziness/ContactsCard";
-import { setOptions, clearOptions } from "@/redux/reducers/infoReducer";
-import { addSnack } from "@/redux/reducers/infoReducer";
+import { clearOptions, addSnack } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { BuzinessSearchItemInterface, TutorialState, UserState } from "@/redux/store.type";
+import { TutorialState, UserState } from "@/redux/store.type";
 import { RecommendProfileButton } from "@/lib/supabase/RecommendProfileButton";
 import { supabase } from "@/lib/supabase/supabase";
+import { useMyBuzinesses } from "@/hooks/useMyBuzinesses";
 import {
   Link,
   router,
@@ -41,14 +41,7 @@ import { useDispatch, useSelector } from "react-redux";
 import globStyles from "@/constants/Styles";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
-import {
-  viewFunction,
-  clearTutorialState
-} from "@/redux/reducers/tutorialReducer";
-import { logout } from "@/redux/reducers/userReducer";
-import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
-import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
-import { clearDrafts } from "@/redux/reducers/chatReducer";
+import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import Measure from "@/components/tutorial/Measure";
 import SectionLabel from "@/components/buziness/SectionLabel";
 import { useAppTheme } from "@/assets/theme";
@@ -76,8 +69,7 @@ export default function UserPage() {
   >([]);
   const [contacts, setContacts] = useState<Tables<"contacts">[]>([]);
   const [connectionsCount, setConnectionsCount] = useState(0);
-  const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>([]);
-  const [buzinessesLoading, setBuzinessesLoading] = useState(true);
+  const { buzinesses, loading: buzinessesLoading } = useMyBuzinesses(uid);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showBlockModal, setShowBlockModal] = useState(false);
@@ -143,52 +135,8 @@ export default function UserPage() {
           .then((res) => {
             setConnectionsCount(res.count ?? 0);
           });
-
-        setBuzinessesLoading(true);
-        supabase
-          .from("buziness")
-          .select("*, profiles ( full_name ), buzinessRecommendations ( count )")
-          .eq("author", uid)
-          .order("created_at", { ascending: false })
-          .then((res) => {
-            if (res.data) {
-              setBuzinesses(
-                res.data.map((b) => ({
-                  ...b,
-                  authorName: b.profiles?.full_name || "???",
-                  recommendations: b.buzinessRecommendations[0].count,
-                })),
-              );
-              setBuzinessesLoading(false);
-            }
-            dispatch(viewFunction({ key: "buzinessProfile", uid }));
-          });
       };
       load();
-      if (myProfile)
-        dispatch(
-          setOptions([
-            {
-              icon: "archive",
-              onPress: () => router.push("/user/saved-buzinesses"),
-              title: "Mentett bizniszek",
-            },
-            {
-              icon: "exit-run",
-              onPress: async () => {
-                await supabase.auth.signOut();
-                dispatch(logout());
-                dispatch(clearBuziness());
-                dispatch(clearTutorialState());
-                dispatch(clearBuzinessSearchParams());
-                dispatch(clearEmotionLogs());
-                dispatch(clearDrafts());
-                router.navigate("/");
-              },
-              title: "Kijelentkezés",
-            },
-          ]),
-        );
       setData(null);
       setNotFound(false);
       return () => {
@@ -215,7 +163,7 @@ export default function UserPage() {
 
   return (
     <>
-      {<Stack.Screen options={{ title:myProfile ? "Profilod" : "" }} />}
+      {<Stack.Screen options={{ title:myProfile ? "Így látnak mások" : "" }} />}
       <ThemedView style={{ flex: 1 }}>
         {data && uid && (
           <ScrollView contentContainerStyle={{ paddingBottom: myProfile ? 96 : 0 }}>
@@ -372,7 +320,7 @@ export default function UserPage() {
               </Surface>
 
               {/* Contacts */}
-              {!myProfile && contacts.length > 0 && (
+              {contacts.length > 0 && (
                 <View style={{ width: "100%", gap: Spacing.sm }}>
                   <SectionLabel label="Elérhetőségek" />
                   <ContactsCard contacts={contacts} isOwnProfile={myProfile} />
@@ -381,38 +329,25 @@ export default function UserPage() {
               
               {/* Action button */}
               <View style={{ width: "100%" }}>
-                {myProfile ? (
-                  <Measure name="edit-profile">
-                    <Link
-                      asChild
-                      style={{ width: "100%" }}
-                      href={{ pathname: "/user/edit" }}
-                    >
-                      <Button mode="contained-tonal" style={{ borderRadius: BorderRadius.pill }}>
-                        Profilom szerkesztése
-                      </Button>
-                    </Link>
-                  </Measure>
-                ) : (
-                  <RecommendProfileButton
-                    profileId={uid}
-                    style={{ width: "100%" }}
-                    recommended={iRecommended}
-                    setRecommended={(recommendedByMe) => {
-                      if (myUid) {
-                        if (recommendedByMe)
-                          setRecommendations([
-                            ...recommendations,
-                            { author: myUid, avatar_url: myAvatarUrl },
-                          ]);
-                        else
-                          setRecommendations(
-                            recommendations.filter((r) => r.author !== myUid),
-                          );
-                      }
-                    }}
-                  />
-                )}
+                <RecommendProfileButton
+                  profileId={uid}
+                  disabled={myProfile}
+                  style={{ width: "100%" }}
+                  recommended={iRecommended}
+                  setRecommended={(recommendedByMe) => {
+                    if (myUid) {
+                      if (recommendedByMe)
+                        setRecommendations([
+                          ...recommendations,
+                          { author: myUid, avatar_url: myAvatarUrl },
+                        ]);
+                      else
+                        setRecommendations(
+                          recommendations.filter((r) => r.author !== myUid),
+                        );
+                    }
+                  }}
+                />
               </View>
             </ThemedView>
 
@@ -421,24 +356,11 @@ export default function UserPage() {
               <MyBuzinesses
                 buzinesses={buzinesses}
                 loading={buzinessesLoading}
-                myProfile={myProfile}
+                myProfile={false}
                 name={data.full_name ?? undefined}
               />
             </Measure>
           </ScrollView>
-        )}
-        {myProfile && !!buzinesses.length && (
-          <FAB
-            icon="plus"
-            label="Új biznisz"
-            onPress={() => router.push("/biznisz/new")}
-            style={{
-              position: "absolute",
-              right: Spacing.md,
-              bottom: Spacing.md,
-              borderRadius: BorderRadius.pill,
-            }}
-          />
         )}
       </ThemedView>
       {!!data?.full_name && (

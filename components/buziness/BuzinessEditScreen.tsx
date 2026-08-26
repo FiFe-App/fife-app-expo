@@ -514,7 +514,7 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
           </View>
 
           <View style={{ gap: Spacing.sm }}>
-            <SectionLabel label="Így fog megjelenni" />
+            <SectionLabel label="Így látják majd mások a bizniszed" />
             <BuzinessItem
               preview
               data={{

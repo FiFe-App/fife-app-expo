@@ -141,7 +141,17 @@ const ContactEditScreen = forwardRef<{
       setError({ type: invalid.type, text: "Nem maradhat üresen." });
       return { error: "Invalid field" };
     }
-    const noNullContacts = contacts.filter((c) => !!c && c.data.length);
+    // Never send `id` back: a brand-new contact never has one, so upserting
+    // on it can't dedupe by type anyway, and it's the row's real identity
+    // key. Worse, if the id sequence ever falls behind (e.g. after a data
+    // import that inserted explicit ids), a freshly generated id can collide
+    // with an existing row owned by someone else — RLS hides that row from
+    // the ON CONFLICT (id) DO UPDATE branch, and Postgres reports a plain
+    // duplicate-key 409 instead of upserting. Conflict-target (author, type)
+    // instead, which is what "one row per contact type per user" actually is.
+    const noNullContacts = contacts
+      .filter((c) => !!c && c.data.length)
+      .map((c) => ({ data: c.data, title: c.title, type: c.type, author: c.author, public: c.public, created_at: c.created_at }));
 
     // Prevent deletion if it would leave user with no contacts
     if (noNullContacts.length === 0 && buzinessCount > 0) {
@@ -173,7 +183,7 @@ const ContactEditScreen = forwardRef<{
       }
 
       const response = await supabase.from("contacts").upsert(noNullContacts, {
-        onConflict: "id",
+        onConflict: "author,type",
         defaultToNull: false,
       });
 

@@ -84,6 +84,7 @@ export interface UserSettingsPayload {
   isItSafeDismissed: boolean;
   inviteCardDismissed: boolean;
   homeAddBuzinessCardDismissed: boolean;
+  homeMessagingCardDismissed: boolean;
 }
 
 export type User = Tables<"profiles"> & {

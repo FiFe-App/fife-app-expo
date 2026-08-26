@@ -317,7 +317,7 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="user/edit"
-                  options={{ title: "Profil szerkesztése" }}
+                  options={{ title: "Profilom" }}
                 />
                 <Stack.Screen
                   name="chats"

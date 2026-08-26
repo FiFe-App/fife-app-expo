@@ -261,6 +261,57 @@ export type Database = {
         }
         Relationships: []
       }
+      emotion_keys: {
+        Row: {
+          author: string
+          created_at: string
+          key: string
+        }
+        Insert: {
+          author: string
+          created_at?: string
+          key: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          key?: string
+        }
+        Relationships: []
+      }
+      emotion_logs: {
+        Row: {
+          author: string
+          created_at: string
+          encrypted_data: string | null
+          id: string
+          log_date: string
+          nonce: string | null
+          note: string | null
+          rate: number | null
+        }
+        Insert: {
+          author: string
+          created_at?: string
+          encrypted_data?: string | null
+          id?: string
+          log_date: string
+          nonce?: string | null
+          note?: string | null
+          rate?: number | null
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          encrypted_data?: string | null
+          id?: string
+          log_date?: string
+          nonce?: string | null
+          note?: string | null
+          rate?: number | null
+        }
+        Relationships: []
+      }
       eventResponses: {
         Row: {
           created_at: string
@@ -409,6 +460,69 @@ export type Database = {
           },
         ]
       }
+      newsletter_unsubscribes: {
+        Row: {
+          created_at: string
+          email: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+        }
+        Relationships: []
+      }
+      newsletters: {
+        Row: {
+          body: string
+          created_at: string
+          cta_label: string | null
+          cta_url: string | null
+          error: string | null
+          failed_count: number
+          id: number
+          recipients: string[] | null
+          sent_at: string | null
+          sent_count: number
+          status: string
+          subject: string
+          title: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          error?: string | null
+          failed_count?: number
+          id?: number
+          recipients?: string[] | null
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject: string
+          title?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          error?: string | null
+          failed_count?: number
+          id?: number
+          recipients?: string[] | null
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject?: string
+          title?: string | null
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           author: string
@@ -479,57 +593,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      emotion_keys: {
-        Row: {
-          author: string
-          key: string
-          created_at: string
-        }
-        Insert: {
-          author: string
-          key: string
-          created_at?: string
-        }
-        Update: {
-          author?: string
-          key?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      emotion_logs: {
-        Row: {
-          id: string
-          author: string
-          encrypted_data: string | null
-          nonce: string | null
-          rate: number | null
-          note: string | null
-          log_date: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          author: string
-          encrypted_data?: string | null
-          nonce?: string | null
-          rate?: number | null
-          note?: string | null
-          log_date: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          author?: string
-          encrypted_data?: string | null
-          nonce?: string | null
-          rate?: number | null
-          note?: string | null
-          log_date?: string
-          created_at?: string
-        }
-        Relationships: []
       }
       profiles: {
         Row: {
@@ -665,6 +728,7 @@ export type Database = {
           emotion_prompt_asked_at: string | null
           encrypted_data: string | null
           home_add_buziness_card_dismissed: boolean
+          home_messaging_card_dismissed: boolean
           invite_card_dismissed: boolean
           is_it_safe_dismissed: boolean
           newsletter: boolean
@@ -684,6 +748,7 @@ export type Database = {
           emotion_prompt_asked_at?: string | null
           encrypted_data?: string | null
           home_add_buziness_card_dismissed?: boolean
+          home_messaging_card_dismissed?: boolean
           invite_card_dismissed?: boolean
           is_it_safe_dismissed?: boolean
           newsletter?: boolean
@@ -703,6 +768,7 @@ export type Database = {
           emotion_prompt_asked_at?: string | null
           encrypted_data?: string | null
           home_add_buziness_card_dismissed?: boolean
+          home_messaging_card_dismissed?: boolean
           invite_card_dismissed?: boolean
           is_it_safe_dismissed?: boolean
           newsletter?: boolean
@@ -722,6 +788,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      count_user_contacts: { Args: { user_id: string }; Returns: number }
       get_app_version_status: {
         Args: { p_platform: string; p_version: string }
         Returns: {
@@ -749,6 +816,13 @@ export type Database = {
         Returns: {
           location_radius_m: number
           location_wkt: string
+        }[]
+      }
+      get_newsletter_recipients: {
+        Args: { p_emails?: string[] }
+        Returns: {
+          email: string
+          full_name: string
         }[]
       }
       get_notification_prefs_for: {
@@ -916,12 +990,14 @@ export type Database = {
           title: string
         }[]
       }
+      newsletter_unsubscribe: { Args: { p_email: string }; Returns: boolean }
       parse_app_version: { Args: { v: string }; Returns: number[] }
       update_my_profile_location: {
         Args: { lat: number; long: number; radius_m: number }
         Returns: undefined
       }
       update_my_push_token: { Args: { token: string }; Returns: undefined }
+      user_has_buziness: { Args: { user_id: string }; Returns: boolean }
     }
     Enums: {
       contact_type:

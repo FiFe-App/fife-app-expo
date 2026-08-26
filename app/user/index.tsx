@@ -14,7 +14,7 @@ export default function Page() {
     <ThemedView style={{ flex: 1 }}>
       {!name && <Redirect href={{ pathname: "/user/edit" }} />}
       {uid && !!name && (
-        <Redirect href={{ pathname: "/user/[uid]", params: { uid } }} />
+        <Redirect href={{ pathname: "/user/edit" }} />
       )}
     </ThemedView>
   );

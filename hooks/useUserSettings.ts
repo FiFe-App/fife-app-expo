@@ -1,6 +1,9 @@
 import { decryptSettings, encryptSettings } from "@/lib/crypto/settingsEncryption";
 import { supabase } from "@/lib/supabase/supabase";
-import { setHomeAddBuzinessCardDismissed } from "@/redux/reducers/appReducer";
+import {
+  setHomeAddBuzinessCardDismissed,
+  setHomeMessagingCardDismissed,
+} from "@/redux/reducers/appReducer";
 import { hydrateSettings, markSettingsSynced } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserSettingsPayload } from "@/redux/store.type";
@@ -62,6 +65,9 @@ export function useUserSettings() {
   const homeAddBuzinessCardDismissed = useSelector(
     (state: RootState) => state.app.homeAddBuzinessCardDismissed,
   );
+  const homeMessagingCardDismissed = useSelector(
+    (state: RootState) => state.app.homeMessagingCardDismissed,
+  );
 
   const local: UserSettingsPayload = useMemo(
     () => ({
@@ -73,6 +79,7 @@ export function useUserSettings() {
       isItSafeDismissed: isItSafeDismissed ?? false,
       inviteCardDismissed: inviteCardDismissed ?? false,
       homeAddBuzinessCardDismissed: homeAddBuzinessCardDismissed ?? false,
+      homeMessagingCardDismissed: homeMessagingCardDismissed ?? false,
     }),
     [
       mantra,
@@ -83,6 +90,7 @@ export function useUserSettings() {
       isItSafeDismissed,
       inviteCardDismissed,
       homeAddBuzinessCardDismissed,
+      homeMessagingCardDismissed,
     ],
   );
 
@@ -122,6 +130,7 @@ export function useUserSettings() {
             is_it_safe_dismissed: settings.isItSafeDismissed,
             invite_card_dismissed: settings.inviteCardDismissed,
             home_add_buziness_card_dismissed: settings.homeAddBuzinessCardDismissed,
+            home_messaging_card_dismissed: settings.homeMessagingCardDismissed,
           },
           { onConflict: "author" },
         )
@@ -177,12 +186,14 @@ export function useUserSettings() {
       isItSafeDismissed: data.is_it_safe_dismissed,
       inviteCardDismissed: data.invite_card_dismissed,
       homeAddBuzinessCardDismissed: data.home_add_buziness_card_dismissed,
+      homeMessagingCardDismissed: data.home_messaging_card_dismissed,
     };
 
     syncedSnapshotRef.current = serialize(settings);
     hasLoadedRef.current = true;
     dispatch(hydrateSettings({ settings, syncedAt: data.updated_at }));
     dispatch(setHomeAddBuzinessCardDismissed(settings.homeAddBuzinessCardDismissed));
+    dispatch(setHomeMessagingCardDismissed(settings.homeMessagingCardDismissed));
   }, [uid, dispatch, pushToServer]);
 
   // A fresh account needs its own load before anything may be pushed, otherwise

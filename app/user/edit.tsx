@@ -1,9 +1,8 @@
-import ContactEditScreen from "@/components/buziness/ContactEditScreen";
-import MapSelector from "@/components/MapSelector/MapSelector";
+import AdatokTab from "@/components/user/edit/AdatokTab";
+import BeallitasokTab from "@/components/user/edit/BeallitasokTab";
+import MyBuzinesses from "@/components/user/MyBuzinesses";
 import ProfileImage from "@/components/ProfileImage";
-import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import UsernameInput from "@/components/UsernameInput";
 import VersionFooter from "@/components/version/VersionFooter";
 import { Tables } from "@/database.types";
 import {
@@ -15,62 +14,43 @@ import {
 import createThumbnail from "@/lib/functions/createThumbnail";
 import getUploadData from "@/lib/functions/getUploadData";
 import { supabase } from "@/lib/supabase/supabase";
+import { useMyBuzinesses } from "@/hooks/useMyBuzinesses";
+import { addSnack, showLoading, hideLoading, setOptions, clearOptions } from "@/redux/reducers/infoReducer";
+import { setName, setUserData, setLocation, logout } from "@/redux/reducers/userReducer";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
-import { clearDrafts } from "@/redux/reducers/chatReducer";
-import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
-import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
-import { setOptions, clearOptions, addSnack, showLoading, hideLoading } from "@/redux/reducers/infoReducer";
-import { setName, setThemePreference, logout, setUserData, setLocation } from "@/redux/reducers/userReducer";
+import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
+import { clearDrafts } from "@/redux/reducers/chatReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { KeyboardAvoidingView, ScrollView, View, TouchableWithoutFeedback, Platform, Text } from "react-native";
-import {
-  Button,
-  Divider,
-  HelperText,
-  Icon,
-  IconButton,
-  Dialog,
-  Menu,
-  Modal,
-  Portal,
-  Switch,
-  TextInput,
-   
-} from "react-native-paper";
+import { KeyboardAvoidingView, ScrollView, View, Platform } from "react-native";
+import { Button, IconButton, Surface } from "react-native-paper";
+import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
-import { useAppTheme } from "@/assets/theme";
-import { emotionAvailable } from "@/constants/emotionTiming";
 
 type UserInfo = Partial<Tables<"profiles">>;
+type Tab = "bizniszeim" | "adatok" | "beallitasok";
+const TAB_ORDER: Tab[] = ["adatok", "bizniszeim", "beallitasok"];
 
 export default function Index() {
-  const theme = useAppTheme();
-  const { uid: myUid, userData, themePreference }: UserState = useSelector(
+  const { uid: myUid, userData }: UserState = useSelector(
     (state: RootState) => state.user,
   );
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [profile, setProfile] = useState<UserInfo>({});
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | undefined>(undefined);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [confirmEmail, setConfirmEmail] = useState("");
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [themeMenuVisible, setThemeMenuVisible] = useState(false);
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [userLocation, setUserLocation] = useState<CircleType | undefined>();
-  // Notification toggles persist immediately rather than on save: enabling
-  // one can trigger an OS permission dialog, and a toggle that silently
-  // bounces back later (permission denied) would be baffling.
-  const { prefs, setPref } = useNotificationPrefs();
+  const [activeTab, setActiveTab] = useState<Tab>(TAB_ORDER[0]);
   const dispatch = useDispatch();
+  const { buzinesses, loading: buzinessesLoading } = useMyBuzinesses(myUid);
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
       | PostgrestSingleResponse<unknown>
@@ -122,95 +102,116 @@ export default function Index() {
   };
   useFocusEffect(
     useCallback(() => {
-      const save = async () => {
-        setLoading(true);
-        dispatch(showLoading({ title: "Mentés...", dismissable: false }));
-        if (!myUid) return;
+      load();
+      return () => { };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [myUid]),
+  );
 
-        const response = await contactEditRef.current?.saveContacts();
-        console.log(response);
-
-        if (response?.error) {
-          console.log(response.error);
-          setLoading(false);
-          dispatch(hideLoading());
-          return;
-        }
-        supabase
-          .from("profiles")
-          .upsert(
-            {
-              ...profile,
-              id: myUid,
-            },
-            { onConflict: "id" },
-          )
-          .then(async (res) => {
-            setLoading(false);
-            console.log("res", res);
-
-            if (res.error) {
-              console.log(res.error);
-              dispatch(hideLoading());
-              return;
-            }
-            // location/location_radius_m are not in the authenticated SELECT
-            // grant, so they must be written via a SECURITY DEFINER function
-            const { error: locError } = await supabase.rpc(
-              "update_my_profile_location",
-              {
-                lat: userLocation?.location.latitude ?? null,
-                long: userLocation?.location.longitude ?? null,
-                radius_m: userLocation?.radius ?? null,
-              },
-            );
-            if (locError) console.log("location update error", locError);
-            // Redux only reads the location back on login/app start, so without
-            // this the FiFe Radar keeps claiming no location is set until the
-            // app is restarted.
-            else
-              dispatch(
-                setLocation(
-                  userLocation
-                    ? {
-                      latitude: userLocation.location.latitude,
-                      longitude: userLocation.location.longitude,
-                      radius: userLocation.radius,
-                    }
-                    : null,
-                ),
-              );
-            setProfile({ ...profile, location: userLocation?.location || null });
-            dispatch(setName(profile?.full_name));
-            console.log(res);
-            dispatch(hideLoading());
-            router.navigate("/user");
-          });
-      };
+  useFocusEffect(
+    useCallback(() => {
       dispatch(
         setOptions([
           {
-            title: "Mentés",
-            icon: "check",
-            onPress: save,
-            disabled:
-              !profile?.full_name ||
-              (!!profile?.username && usernameAvailable === false),
+            icon: "eye-outline",
+            onPress: () => {
+              if (myUid) router.push({ pathname: "/user/[uid]", params: { uid: myUid } });
+            },
+            title: "Hogy látják a profilom mások",
+          },
+          {
+            icon: "archive",
+            onPress: () => router.push("/user/saved-buzinesses"),
+            title: "Mentett bizniszek",
+          },
+          {
+            icon: "exit-run",
+            onPress: async () => {
+              await supabase.auth.signOut();
+              dispatch(logout());
+              dispatch(clearBuziness());
+              dispatch(clearTutorialState());
+              dispatch(clearBuzinessSearchParams());
+              dispatch(clearEmotionLogs());
+              dispatch(clearDrafts());
+              router.navigate("/");
+            },
+            title: "Kijelentkezés",
           },
         ]),
       );
       return () => {
         dispatch(clearOptions());
       };
-    }, [dispatch, myUid, profile, userLocation, usernameAvailable]),
+    }, [dispatch, myUid]),
   );
-  useFocusEffect(
-    useCallback(() => {
-      load();
-      return () => { };
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [myUid]),
-  );
+
+  const save = useCallback(async () => {
+    setLoading(true);
+    dispatch(showLoading({ title: "Mentés...", dismissable: false }));
+    if (!myUid) return;
+
+    const response = await contactEditRef.current?.saveContacts();
+    console.log(response);
+
+    if (response?.error) {
+      console.log(response.error);
+      setLoading(false);
+      dispatch(hideLoading());
+      return;
+    }
+    supabase
+      .from("profiles")
+      .upsert(
+        {
+          ...profile,
+          id: myUid,
+        },
+        { onConflict: "id" },
+      )
+      .then(async (res) => {
+        setLoading(false);
+        console.log("res", res);
+
+        if (res.error) {
+          console.log(res.error);
+          dispatch(hideLoading());
+          return;
+        }
+        // location/location_radius_m are not in the authenticated SELECT
+        // grant, so they must be written via a SECURITY DEFINER function
+        const { error: locError } = await supabase.rpc(
+          "update_my_profile_location",
+          {
+            lat: userLocation?.location.latitude ?? null,
+            long: userLocation?.location.longitude ?? null,
+            radius_m: userLocation?.radius ?? null,
+          },
+        );
+        if (locError) console.log("location update error", locError);
+        // Redux only reads the location back on login/app start, so without
+        // this the FiFe Radar keeps claiming no location is set until the
+        // app is restarted.
+        else
+          dispatch(
+            setLocation(
+              userLocation
+                ? {
+                  latitude: userLocation.location.latitude,
+                  longitude: userLocation.location.longitude,
+                  radius: userLocation.radius,
+                }
+                : null,
+            ),
+          );
+        setProfile({ ...profile, location: userLocation?.location || null });
+        dispatch(setName(profile?.full_name));
+        console.log(res);
+        dispatch(hideLoading());
+        dispatch(addSnack({ title: "Mentve!" }));
+      });
+  }, [dispatch, myUid, profile, userLocation]);
+
   const deleteImage = async () => {
     if (!myUid || !profile?.avatar_url) return;
     setImageLoading(true);
@@ -337,75 +338,10 @@ export default function Index() {
 
     return fileName;
   };
-  
-  const handleDeleteProfile = () => {
-    setConfirmEmail("");
-    setShowDeleteDialog(true);
-  };
 
-  const confirmDelete = async () => {
-    try {
-      setDeleteLoading(true);
-
-      const expected = (userData?.email || "").trim().toLowerCase();
-      const entered = confirmEmail.trim().toLowerCase();
-      if (!expected || entered !== expected) {
-        setDeleteLoading(false);
-        return;
-      }
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        console.error("No active session");
-        setDeleteLoading(false);
-        dispatch(
-          addSnack({ title: "Nincs aktív bejelentkezés. Kérlek jelentkezz be újra." })
-        );
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke("delete-user", {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) {
-        console.error("Error deleting user:", error);
-        setDeleteLoading(false);
-        dispatch(
-          addSnack({ title: "Hiba történt a profil törlése során. Kérlek próbáld újra később." })
-        );
-        return;
-      }
-
-      console.log("User deleted successfully", data);
-      setShowDeleteDialog(false);
-
-      await supabase.auth.signOut();
-      dispatch(logout());
-      dispatch(clearBuziness());
-      dispatch(clearTutorialState());
-      dispatch(clearBuzinessSearchParams());
-      dispatch(clearEmotionLogs());
-      dispatch(clearDrafts());
-      router.navigate("/user/deleted-account");
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      dispatch(addSnack({ title: "Váratlan hiba történt. Kérlek próbáld újra később." }));
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-  
-  const containerStyle = {
-    flex: 1,
-    height: "100%",
-    borderRadius: BorderRadius.md,
-  };
+  const saveDisabled =
+    !profile?.full_name ||
+    (!!profile?.username && usernameAvailable === false);
 
   if (myUid)
     return (
@@ -419,313 +355,114 @@ export default function Index() {
           behavior="height"
           enabled={Platform.OS === "android"}
         >
-        <ScrollView
-          style={{ flex: 1, padding: Spacing.sm }}
-          keyboardShouldPersistTaps="handled"
-          automaticallyAdjustKeyboardInsets
-        >
-          <View style={{ alignItems: "center", marginBottom: Spacing.lg }}>
-            <View style={{ width: 200 }}>
-              <ProfileImage
-                key={profile?.avatar_url}
-                uid={myUid}
-                avatar_url={profile?.avatar_url}
-                propLoading={imageLoading}
-                style={{
-                  width: 200,
-                  height: 200,
-                  borderRadius: 8
-                }}
-              />
-              <IconButton
-                icon="upload"
-                onPress={pickImage}
-                mode="contained-tonal"
-                style={{ position: "absolute", right: 0, bottom: 0 }}
-              />
-              {!!profile?.avatar_url && (
-                <IconButton
-                  icon="close"
-                  onPress={deleteImage}
-                  mode="contained-tonal"
-                  style={{ position: "absolute", right: 0, top: 0 }}
-                />
-              )}
-            </View>
-          </View>
 
-          <ThemedText variant="bodyLarge" type="bold" style={{ marginBottom: 8 }}>
-            Általános infóid
-          </ThemedText>
-          <TextInput
-            label="Név* (kötelező)"
-            value={profile?.full_name || ""}
-            disabled={loading}
-            autoComplete="name"
-            textContentType="name"
-            autoCapitalize="words"
-            autoCorrect={false}
-            onChangeText={(t) => setProfile({ ...profile, full_name: t })}
-          />
-          <UsernameInput
-            label="Felhasználónév"
-            value={profile?.username || ""}
-            disabled={loading}
-            excludeUid={myUid}
-            onAvailabilityChange={setUsernameAvailable}
-            onChangeText={(t) => setProfile({ ...profile, username: t })}
-            style={{ marginTop: Spacing.sm }}
-          />
-          <View style={{ padding: Spacing.sm }}>
-            <ThemedText type="label">Email, amivel regisztráltál:</ThemedText>
-            <ThemedText>{userData?.email}</ThemedText>
-          </View>
-          <Divider />
-          <View style={{ padding: Spacing.sm }}>
-            <Menu
-              visible={themeMenuVisible}
-              onDismiss={() => setThemeMenuVisible(false)}
-              anchor={
-                <TouchableWithoutFeedback
-                  onPress={() => setThemeMenuVisible(true)}
-                  accessible={true}
-                  accessibilityLabel="Téma kiválasztása"
-                >
-                  <View>
-                    <TextInput
-                      mode="outlined"
-                      label="Téma"
-                      value={
-                        themePreference === "auto"
-                          ? "Automatikus"
-                          : themePreference === "dark"
-                            ? "Sötét"
-                            : "Világos"
-                      }
-                      right={<TextInput.Icon icon="chevron-down" />}
-                      editable={false}
-                      pointerEvents="none"
+
+          {/* react-native-paper-tabs' Swiper renders the tab header and the
+              pager as flattened siblings (no wrapping View of its own), so
+              this needs an explicit bounded box to lay out inside — without
+              it, and without style={{flex:1}} on each page's ScrollView, the
+              tab bar has nothing to size against and never shows up. */}
+          <View style={{ flex: 1 }}>
+            <TabsProvider
+              defaultIndex={0}
+              onChangeIndex={(index) => setActiveTab(TAB_ORDER[index])}
+            >
+              <Tabs style={{}}>
+                <TabScreen label="Adatok">
+                  <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ padding: Spacing.sm }}
+                    keyboardShouldPersistTaps="handled"
+                  >
+                    <View style={{ alignItems: "center", padding: Spacing.sm }}>
+                      <View style={{ width: 150 }}>
+                        <ProfileImage
+                          key={profile?.avatar_url}
+                          uid={myUid}
+                          avatar_url={profile?.avatar_url}
+                          propLoading={imageLoading}
+                          style={{
+                            width: 150,
+                            height: 150,
+                            borderRadius: 8
+                          }}
+                        />
+                        <IconButton
+                          icon="upload"
+                          size={32}
+                          onPress={pickImage}
+                          mode="contained-tonal"
+                          style={{ position: "absolute", right: -8, bottom: -8, margin: 0 }}
+                        />
+                        {!!profile?.avatar_url && (
+                          <IconButton
+                            icon="close"
+                            size={32}
+                            onPress={deleteImage}
+                            mode="contained-tonal"
+                            style={{ position: "absolute", right: -8, top: -8, margin: 0 }}
+                          />
+                        )}
+                      </View>
+                    </View>
+                    <AdatokTab
+                      profile={profile}
+                      setProfile={setProfile}
+                      myUid={myUid}
+                      email={userData?.email}
+                      loading={loading}
+                      onAvailabilityChange={setUsernameAvailable}
+                      userLocation={userLocation}
+                      setUserLocation={setUserLocation}
+                      locationMenuVisible={locationMenuVisible}
+                      setLocationMenuVisible={setLocationMenuVisible}
+                      contactEditRef={contactEditRef}
                     />
-                  </View>
-                </TouchableWithoutFeedback>
-              }
-            >
-              <Menu.Item
-                onPress={() => {
-                  dispatch(setThemePreference("auto"));
-                  setThemeMenuVisible(false);
-                }}
-                title="Automatikus"
-                leadingIcon={themePreference === "auto" ? "check" : undefined}
-              />
-              <Menu.Item
-                onPress={() => {
-                  dispatch(setThemePreference("light"));
-                  setThemeMenuVisible(false);
-                }}
-                title="Világos"
-                leadingIcon={themePreference === "light" ? "check" : undefined}
-              />
-              <Menu.Item
-                onPress={() => {
-                  dispatch(setThemePreference("dark"));
-                  setThemeMenuVisible(false);
-                }}
-                title="Sötét"
-                leadingIcon={themePreference === "dark" ? "check" : undefined}
-              />
-            </Menu>
-          </View>
-          <Divider />
-          <View style={{ paddingVertical: Spacing.lg }}>
-            <ThemedText variant="bodyLarge" type="bold" style={{ marginBottom: Spacing.sm }}>
-              Lakhelyed környéke
-            </ThemedText>
-            <ThemedText type="label" style={{ marginBottom: Spacing.sm }}>
-              Add meg a lakhelyedet, hogy lásd a fiféket a környékeden.
-            </ThemedText>
-            <View style={{ flexDirection: "row", gap: Spacing.xs, flexWrap: "wrap" }}>
-              <Button
-                mode="outlined"
-                onPress={() => setLocationMenuVisible(true)}
-                icon="map-marker"
-                style={{ marginBottom: Spacing.sm }}
-              >
-                {userLocation ? "Környék módosítása" : "Megadom a környékemet"}
-              </Button>
-            {!userLocation && (
-              <ThemedText type="label" style={{ marginBottom: Spacing.md }}>
-                Nincs lakhely beállítva
-              </ThemedText>
-            )}
-              {userLocation && (
-                <Button
-                  mode="text"
-                  onPress={() => setUserLocation(undefined)}
-                  icon="delete"
-                  textColor={theme.colors.error}
-                >
-                  Helyzet törlése
-                </Button>
-              )}
-            </View>
-          </View>
-          <Divider />
-          <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
-            <ThemedText variant="bodyLarge" type="bold">Értesítések</ThemedText>
-            {Platform.OS !== "web" && (
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <View style={{ flex: 1 }}>
-                  <ThemedText>Push értesítések</ThemedText>
-                  <ThemedText type="label">Ajánlások, kommentek és üzenetek a telefonodon</ThemedText>
-                </View>
-                <Switch
-                  value={prefs.notifyPush}
-                  onValueChange={(v) => { setPref("notifyPush", v); }}
-                />
-              </View>
-            )}
-            {emotionAvailable && Platform.OS !== "web" && (
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <View style={{ flex: 1 }}>
-                  <ThemedText>Hangulatnapló</ThemedText>
-                  <ThemedText type="label">Minden este megkérdezem, milyen napod volt és naptárban követheted a jegyzeteidet, hangulatodat.</ThemedText>
-                </View>
-                <Switch
-                  value={prefs.emotionDailyPrompt}
-                  onValueChange={(v) => { setPref("emotionDailyPrompt", v); }}
-                />
-              </View>
-            )}
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <View style={{ flex: 1 }}>
-                <ThemedText>Email értesítések</ThemedText>
-                <ThemedText type="label">Értesítések a(z) {userData?.email} címedre</ThemedText>
-              </View>
-              <Switch
-                value={prefs.notifyEmail}
-                onValueChange={(v) => { setPref("notifyEmail", v); }}
-              />
-            </View>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <View style={{ flex: 1 }}>
-                <ThemedText>Kérek hírlevelet</ThemedText>
-                <ThemedText type="label">Újdonságok és tippek emailben</ThemedText>
-              </View>
-              <Switch
-                value={prefs.newsletter}
-                onValueChange={(v) => { setPref("newsletter", v); }}
-              />
-            </View>
-          </View>
-          <Divider />
-          <View style={{ gap: Spacing.sm, paddingTop: Spacing.sm, paddingBottom: 48 }}>
-            <ThemedText variant="bodyLarge" type="bold">Elérhetőségeid</ThemedText>
-            <View style={{ alignItems: "center" }}>
-              <Icon source="alert" size={24} color={theme.colors.error} />
-              <HelperText type="error" style={{ textAlign: "center" }}>
-                Figyelem! Az alább megadott adatok láthatóak minden
-                felhasználónak.
-              </HelperText>
-            </View>
-            <ContactEditScreen ref={contactEditRef} />
-          </View>
-          <Divider style={{ marginTop: 16, marginBottom: 16 }} />
-          <View style={{ gap: 8, paddingBottom: 32 }}>
+                  </ScrollView>
+                </TabScreen>
 
-            <ThemedText variant="bodyLarge" type="bold">Veszélyes szekció</ThemedText>
-            <HelperText type="error">
-              A profil törlése végleges és nem visszavonható.
-            </HelperText>
-            <Button
-              mode="outlined"
-              icon="delete"
-              textColor={theme.colors.error}
-              style={{ borderColor: theme.colors.error }}
-              onPress={handleDeleteProfile}
-            >
-              Profil végleges törlése
-            </Button>
+                <TabScreen label="Bizniszeim">
+                  <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: Spacing.sm }}>
+                    <MyBuzinesses
+                      buzinesses={buzinesses}
+                      loading={buzinessesLoading}
+                      myProfile
+                      name={profile.full_name ?? undefined}
+                    />
+                  </ScrollView>
+                </TabScreen>
+                <TabScreen label="Beállítások">
+                  <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: Spacing.sm }}>
+                    <BeallitasokTab />
+                    <VersionFooter />
+                  </ScrollView>
+                </TabScreen>
+              </Tabs>
+            </TabsProvider>
           </View>
-          <VersionFooter />
-          <Portal>
-            <Dialog visible={showDeleteDialog} onDismiss={() => setShowDeleteDialog(false)}>
-              <Dialog.Title>Profil végleges törlése</Dialog.Title>
-              <Dialog.Content>
-                <ThemedText>
-                  Biztosan törölni szeretnéd a profilodat? Ez a művelet nem visszavonható.
-                </ThemedText>
-                <View style={{ height: 8 }} />
-                <ThemedText>
-                  A megerősítéshez írd be az alábbi email címet: <Text style={{fontWeight:"bold"}}>{userData?.email}</Text>
-                </ThemedText>
-                <View style={{ height: 8 }} />
-                <TextInput
-                  label="Email"
-                  value={confirmEmail}
-                  onChangeText={setConfirmEmail}
-                  autoCapitalize="none"
-                  mode="outlined"
-                  autoCorrect={false}
-                  keyboardType="email-address"
-                  disabled={deleteLoading}
-                />
-                {confirmEmail.length > 0 &&
-                  confirmEmail.trim().toLowerCase() !== (userData?.email || "").trim().toLowerCase() && (
-                  <HelperText type="error">Nem egyezik az email címmel.</HelperText>
-                )}
-              </Dialog.Content>
-              <Dialog.Actions>
-                <Button onPress={() => setShowDeleteDialog(false)} disabled={deleteLoading}>
-                  Mégse
-                </Button>
-                <Button
-                  mode="contained"
-                  style={{paddingHorizontal: Spacing.sm}}
-                  buttonColor={theme.colors.error}
-                  textColor={theme.colors.onError}
-                  onPress={confirmDelete}
-                  disabled={
-                    deleteLoading ||
-                    !userData?.email ||
-                    confirmEmail.trim().toLowerCase() !== (userData?.email || "").trim().toLowerCase()
-                  }
-                  icon="delete"
-                  loading={deleteLoading}
-                >
-                  Törlés
-                </Button>
-              </Dialog.Actions>
-            </Dialog>
-          </Portal>
-        </ScrollView>
+          {activeTab === "adatok" && (
+            <Surface
+              elevation={0}
+              style={{
+                paddingHorizontal: Spacing.lg,
+                paddingVertical: Spacing.md,
+                flexDirection: "row",
+              }}
+            >
+              <Button
+                mode="contained"
+                icon="check-bold"
+                disabled={saveDisabled || loading}
+                onPress={save}
+                style={{ flex: 1, borderRadius: BorderRadius.lg }}
+                contentStyle={{ height: 56 }}
+                labelStyle={{ fontFamily: "RedHatText-Bold" }}
+              >
+                Mentés
+              </Button>
+            </Surface>
+          )}
         </KeyboardAvoidingView>
-        <Portal>
-          <Modal
-            visible={locationMenuVisible}
-            onDismiss={() => setLocationMenuVisible(false)}
-            style={{alignItems:"center"}}
-              contentContainerStyle={[
-                {
-                  width: "90%",
-                  height: "90%",
-                },
-              ]}
-          >
-            <ThemedView style={containerStyle}>
-              <MapSelector
-                data={userLocation}
-                setData={(location) => {
-                  console.log("Selected location:", location);
-                  setUserLocation(location);
-                }}
-                searchEnabled
-                markerOnly
-                setOpen={setLocationMenuVisible}
-              />
-            </ThemedView>
-          </Modal>
-        </Portal>
       </ThemedView>
     );
 }

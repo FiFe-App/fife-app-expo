@@ -3,9 +3,64 @@ codebase_path: /Users/akoskristof/Projects/fife-app-expo
 created: '2026-08-21T01:13:12+00:00'
 id: f5eb
 priority: unset
+questions:
+- answer: Mindkettőt
+  id: '1626'
+  question: A cím "hírlevelet küldeni egy formmal"-t mond, a jegyzet viszont "követni"
+    szeretné a hírleveleket — a küldés (form, ami beír egy sort a `newsletters` táblába)
+    és a puszta nyomon követés (elküldött hírlevelek listázása) között melyiket szeretnéd
+    elsőként? Vagy mindkettőt?
+- answer: Csak én
+  id: 509f
+  question: Ki fog belépni erre az admin oldalra, és hogyan azonosítod be — csak te
+    leszel, egyetlen fix fiókkal, vagy több adminra/jogosultsági szintre is számítani
+    kell később? (A kódbázisban jelenleg semmilyen admin-szerepkör vagy admin-bejelentkezés
+    nincs.)
+- answer: Egy külön appot szeretnék, valamilyen egyszerűen használható ui-library-val.
+  id: 0d91
+  question: Az admin site önálló weboldal/appként induljon (pl. külön Next.js/React
+    admin), vagy a meglévő Expo appon belül, egy elrejtett/védett útvonalként jelenjen
+    meg?
+- answer: 'Lehetne egy Rich text editor, igen
+
+    '
+  id: c917
+  question: A hírlevél `body` mezője HTML-t vár — a küldő formon egyszerű szövegmezőt
+    képzelsz el, vagy kelljen valamilyen formázás/szerkesztő (pl. rich text) is hozzá?
+- answer: 'legyen Netlify, és egy jelszóval lépnék be
+
+    '
+  id: '1807'
+  question: Mivel a `newsletters` táblán az RLS mindent letilt anon/authenticated
+    szerepkörnek (csak a service_role tud beleírni/olvasni), az admin appnak szüksége
+    lesz egy saját backendre/API-ra, ami a service role kulcsot biztonságosan, szerveroldalon
+    tárolja — hol fusson ez (pl. Vercel/Next.js API route, saját szerver), és hogyan
+    lépnél be te magad (jelszó, Supabase Auth egyetlen engedélyezett email-lel, vagy
+    más)?
+- answer: legyen teszt küldés
+  id: 4f60
+  question: A küldő formon a `subject` és `body` mellett szeretnéd megadni a `title`,
+    `cta_label`/`cta_url` mezőket is, és legyen benne teszt-küldés opció (megadható
+    `recipients` lista, hogy csak magadnak küldd ki előbb), vagy induljon egy egyszerűbb,
+    csak subject+body formmal?
+- answer: Legyenek jelölve "TESZT" jellel.
+  id: '5416'
+  question: A teszt-küldés is egy sort ír a `newsletters` táblába (`recipients` =
+    csak a te címed) — a küldött hírlevelek listájában ezek külön jelölve/kiszűrve
+    legyenek, vagy simán ugyanúgy jelenjenek meg, mint egy éles küldés?
+- answer: ''
+  id: 49bb
+  question: Mivel egy `INSERT` azonnal kiküldi a hírlevelet (nincs "piszkozat" állapot),
+    legyen egy megerősítő lépés/gomb az éles küldés előtt, vagy elég, ha a form elküldése
+    azonnal küldi is a hírlevelet?
+- answer: ''
+  id: 9c7a
+  question: A lista nézetben a múltbeli hírlevelekhez szeretnéd látni a `status`/`sent_count`/`failed_count`/`error`
+    adatokat is (pl. hogy egy küldés hibásan futott-e le), vagy elég csak a dátum,
+    tárgy és hogy TESZT volt-e?
 status: raw
 title: Kéne egy admin site, ahol tudok hírlevelet küldeni egy formmal.
-updated: '2026-08-21T01:20:46+00:00'
+updated: '2026-08-25T14:53:25+00:00'
 ---
 
 ## Notes

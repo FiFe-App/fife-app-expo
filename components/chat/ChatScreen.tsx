@@ -1,3 +1,4 @@
+import ErrorScreen from "@/components/ErrorScreen";
 import { ThemedView } from "@/components/ThemedView";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
@@ -60,6 +61,7 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [otherUser, setOtherUser] = useState<Tables<"profiles"> | null>(null);
+  const [otherUserNotFound, setOtherUserNotFound] = useState(false);
   const hasMessagingEnabled = myMessagingEnabledFromRedux ?? false;
   const [otherHasMessagingEnabled, setOtherHasMessagingEnabled] = useState(false);
   const [checkingMessaging, setCheckingMessaging] = useState(true);
@@ -99,6 +101,7 @@ export default function ChatScreen() {
 
       checkMessaging();
 
+      setOtherUserNotFound(false);
       supabase
         .from("profiles")
         .select("*")
@@ -106,7 +109,12 @@ export default function ChatScreen() {
         .single()
         .then(({ data, error }) => {
           if (error) {
+            // .single() errors (PGRST116) when the id matches no row — a
+            // stale link or a deleted account — which otherwise fell through
+            // to the generic "messaging disabled" card below, since a
+            // nonexistent uid also reads as "no MESSAGE contact enabled".
             console.error("Error loading profile:", error);
+            setOtherUserNotFound(true);
             return;
           }
           setOtherUser(data);
@@ -425,6 +433,16 @@ export default function ChatScreen() {
   }, [messages]);
 
   const otherUserLabel = otherUser?.full_name || otherUser?.username || "";
+
+  if (otherUserNotFound) {
+    return (
+      <ErrorScreen
+        icon="account-off"
+        title="Nem található"
+        text="Ez a felhasználó nem létezik vagy törölte fiókját."
+      />
+    );
+  }
 
   if (checkingMessaging) {
     return (
