@@ -34,6 +34,8 @@
     {
       "files": [
         "jest.setup.js",
+        "jest.edge.setup.js",
+        "jest.edge.teardown.js",
         "test-utils/**/*.[jt]s?(x)",
         "**/__tests__/**/*.[jt]s?(x)",
         "**/*.test.[jt]s?(x)"
