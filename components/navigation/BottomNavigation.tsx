@@ -40,48 +40,23 @@ const BottomNavigation = () => {
   const showIcon = true;
   const showText = true;
 
-  const selectedSize = 30;
-  const normalSize = 30;
+  const selectedSize = 28;
+  const normalSize = 28;
+  const textVariant = "labelMedium";
 
   const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
 
   return (
-    <ThemedView type="card" style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level1, zIndex:1 }}>
-      <Measure name="home">
-        <TouchableRipple style={{ ...styles.button, }} onPress={() => navigateTo("/home")}>
-          <View style={{ alignItems: "center" }}>
-            {showIcon && <Icon
-              source={usActive ? "account-group" : "account-group-outline"}
-              size={usActive ? selectedSize : normalSize}
-              color={usActive ? theme.colors.tertiary : theme.colors.tertiary}
-            />}
-            {showText && <ThemedText numberOfLines={1} type={usActive ? "defaultSemiBold" : "default"}>
-              Közösség
-            </ThemedText>}
-          </View>
-        </TouchableRipple>
-      </Measure>
-        <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/me")}>
-          <View style={{ alignItems: "center" }}>
-            {showIcon && <Icon
-              source={meActive ? "home" : "home-outline"}
-              size={meActive ? selectedSize : normalSize}
-              color={meActive ? theme.colors.secondary : undefined}
-            />}
-            {showText && <ThemedText numberOfLines={1} type={meActive ? "defaultSemiBold" : "default"}>
-              Otthon
-            </ThemedText>}
-          </View>
-        </TouchableRipple>
+    <ThemedView type="card" style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level1, zIndex:1, padding: Spacing.sm }}>
       {/* Messaging is opt-in, so the entry point only exists once it's on. */}
       {messagingEnabled && (
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/chats")}>
           <View style={{ alignItems: "center" }}>
             {showIcon && (
-              <View>
+              <View style={{height:selectedSize}}>
                 <Icon
                   source={chatActive ? "message" : "message-outline"}
-                  size={chatActive ? selectedSize : normalSize}
+                  size={chatActive ? selectedSize-4 : normalSize-4}
                   color={chatActive ? theme.colors.primary : undefined}
                 />
                 {totalUnread > 0 && (
@@ -94,12 +69,38 @@ const BottomNavigation = () => {
                 )}
               </View>
             )}
-            {showText && <ThemedText numberOfLines={1} type={chatActive ? "defaultSemiBold" : "default"}>
+            {showText && <ThemedText variant={textVariant} numberOfLines={1} type={chatActive ? "defaultSemiBold" : "default"}>
               Üzenetek
             </ThemedText>}
           </View>
         </TouchableRipple>
       )}
+      <Measure name="home">
+        <TouchableRipple style={{ ...styles.button, }} onPress={() => navigateTo("/home")}>
+          <View style={{ alignItems: "center" }}>
+            {showIcon && <Icon
+              source={usActive ? "account-group" : "account-group-outline"}
+              size={usActive ? selectedSize : normalSize}
+              color={usActive ? theme.colors.tertiary : theme.colors.tertiary}
+            />}
+            {showText && <ThemedText variant={textVariant} numberOfLines={1} type={usActive ? "defaultSemiBold" : "default"}>
+              Közösség
+            </ThemedText>}
+          </View>
+        </TouchableRipple>
+      </Measure>
+        <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/me")}>
+          <View style={{ alignItems: "center" }}>
+            {showIcon && <Icon
+              source={meActive ? "home" : "home-outline"}
+              size={meActive ? selectedSize : normalSize}
+              color={meActive ? theme.colors.secondary : undefined}
+            />}
+            {showText && <ThemedText variant={textVariant} numberOfLines={1} type={meActive ? "defaultSemiBold" : "default"}>
+              Otthon
+            </ThemedText>}
+          </View>
+        </TouchableRipple>
       <Measure name="briefcase">
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/user/edit")}>
           <View style={{ alignItems: "center" }}>
@@ -108,34 +109,34 @@ const BottomNavigation = () => {
                 // selection ring is drawn on top of it, so selecting this tab
                 // can't make the whole bar taller than the other icons.
                 <View
-                  style={{
-                    width: normalSize,
-                    height: normalSize,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
+                  style={[{
+                    borderWidth:2,
+                    borderRadius: 5, 
+                    padding: 2,
+                    borderColor: profilActive ? theme.colors.primary : "transparent"
+                  }]}
                 >
                   {uid && avatarUrl ? (
                     <ProfileImage
                       uid={uid}
                       avatar_url={avatarUrl}
-                      style={styles.avatar}
+                      style={{
+                    borderRadius: 2,
+                    width: normalSize-4,
+                    height: normalSize-4,}}
                     />
                   ) : (
                     <Image
                       source={require("@/assets/images/Slimey.png")}
-                      style={styles.avatar}
-                    />
-                  )}
-                  {profilActive && (
-                    <View
-                      pointerEvents="none"
-                      style={[styles.selectionRing, { borderColor: theme.colors.primary }]}
+                      style={{
+                    borderRadius: 2,
+                    width: normalSize-4,
+                    height: normalSize-4,}}
                     />
                   )}
                 </View>
               )}
-            {showText && <ThemedText numberOfLines={1} type={profilActive ? "defaultSemiBold" : "default"}>
+            {showText && <ThemedText variant={textVariant} numberOfLines={1} type={profilActive ? "defaultSemiBold" : "default"}>
               Profilod
             </ThemedText>}
           </View>
@@ -158,8 +159,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   selectionRing: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: BorderRadius.sm,
     borderWidth: 2,
   },
 });

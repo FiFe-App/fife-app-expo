@@ -72,7 +72,7 @@ export function ChatListItem({
                       color: theme.colors.onSurfaceVariant,
                     }}
                   >
-                    {getMessagePreview(lastMessage)}
+                    {getMessagePreview({ ...lastMessage, otherUser })}
                   </Text>
                 )}
                 {!lastMessage && (

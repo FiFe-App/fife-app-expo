@@ -15,6 +15,7 @@ import * as WebBrowser from "expo-web-browser";
 import { Button } from "@/components/Button";
 import { ThemedText } from "@/components/ThemedText";
 import Smiley from "@/components/Smiley";
+import { Logo } from "@/components/Logo";
 
 export default function Index() {
   const navigation = useNavigation();
@@ -113,8 +114,14 @@ export default function Index() {
           showsVerticalScrollIndicator={false}
         >
           <View style={{ maxWidth: 300, width: "100%", gap: Spacing.sm, alignSelf: "center" }}>
-            <View style={{ width: "100%", alignItems: "center" }}>
-              <Smiley style={{ width: 100, height: 100 }} />
+            <View style={{ width: "100%", alignItems: "center", gap: Spacing.sm }}>
+              <Smiley style={{ width: 100, height: 100, marginBottom:Spacing.md }} />
+              <Logo style={{ width: 200, height: 35 }} />
+            </View>
+            <View style={{ }}>
+              {!!error && <ThemedView style={{ margin: 6, alignItems: "center" }} type="error">
+                <ThemedText type="error">{error}</ThemedText>
+              </ThemedView>}
             </View>
             <TextInput
               mode="outlined"
@@ -162,18 +169,13 @@ export default function Index() {
             <Button
               onPress={signInWithEmail}
               loading={loading}
-              style={[{ marginTop: Spacing.md }, focusedField ? { opacity: 1 } : undefined]}
+              style={[{ marginTop: Spacing.md }]}
               mode="contained"
               disabled={!password || !email}
               type="secondary"
             >
               Bejelentkezés
             </Button>
-            <View style={{ minHeight: 60 }}>
-              {!!error && <ThemedView style={{ margin: 6, alignItems: "center" }} type="error">
-                <ThemedText type="error">{error}</ThemedText>
-              </ThemedView>}
-            </View>
             <View style={{ flexDirection: "row", justifyContent: "center", flexWrap: "wrap", gap: Spacing.xs }}>
               <Link href="/csatlakozom" asChild>
                 <Button>Még nincs fiókom</Button>

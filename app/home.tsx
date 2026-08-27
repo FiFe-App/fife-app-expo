@@ -4,8 +4,7 @@ import { FiFeRadar } from "@/components/user/FiFeRadar";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Spacing } from "@/constants/spacing";
-import { computeUnreadCounts } from "@/lib/functions/computeUnreadCounts";
-import { supabase } from "@/lib/supabase/supabase";
+import { fetchUnreadCounts } from "@/lib/chat/fetchUnreadCounts";
 import { setUnreadCounts } from "@/redux/reducers/chatReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { clearOptions } from "@/redux/reducers/infoReducer";
@@ -61,17 +60,9 @@ export default function Index() {
       if (uid) dispatch(viewFunction({ key: "homePage", uid }));
 
       if (uid && messagingEnabled) {
-        supabase
-          .from("messages")
-          .select("*")
-          .eq("to", uid)
-          .then(({ data: incoming, error }) => {
-            if (error) {
-              console.error("Error loading unread messages:", error);
-              return;
-            }
-            dispatch(setUnreadCounts(computeUnreadCounts(incoming || [], uid, lastReadAt)));
-          });
+        fetchUnreadCounts(uid, lastReadAt).then((counts) => {
+          if (counts) dispatch(setUnreadCounts(counts));
+        });
       }
     }, [data.length, nearbyBuzinesses.length, uid, messagingEnabled, lastReadAt, dispatch, fetch, fetchNearby]),
   );

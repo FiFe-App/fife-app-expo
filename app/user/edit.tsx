@@ -1,4 +1,5 @@
 import AdatokTab from "@/components/user/edit/AdatokTab";
+import ProfileStatsCard from "@/components/user/ProfileStatsCard";
 import BeallitasokTab from "@/components/user/edit/BeallitasokTab";
 import MyBuzinesses from "@/components/user/MyBuzinesses";
 import ProfileImage from "@/components/ProfileImage";
@@ -20,7 +21,7 @@ import { setName, setUserData, setLocation, logout } from "@/redux/reducers/user
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
-import { clearDrafts } from "@/redux/reducers/chatReducer";
+import { clearChatReadState, clearDrafts } from "@/redux/reducers/chatReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
@@ -134,6 +135,7 @@ export default function Index() {
               dispatch(clearBuzinessSearchParams());
               dispatch(clearEmotionLogs());
               dispatch(clearDrafts());
+              dispatch(clearChatReadState());
               router.navigate("/");
             },
             title: "Kijelentkezés",
@@ -405,6 +407,15 @@ export default function Index() {
                         )}
                       </View>
                     </View>
+                    {!!myUid && (
+                      <View style={{ paddingHorizontal: Spacing.sm, paddingBottom: Spacing.md }}>
+                        <ProfileStatsCard
+                          uid={myUid}
+                          fullName={profile.full_name}
+                          createdAt={profile.created_at}
+                        />
+                      </View>
+                    )}
                     <AdatokTab
                       profile={profile}
                       setProfile={setProfile}

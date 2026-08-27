@@ -18,9 +18,11 @@ import { useCallback, useState } from "react";
 import { Button } from "@/components/Button";
 import { useAppTheme } from "@/assets/theme";
 import { useKeyboardScrollIntoView } from "@/hooks/useKeyboardScrollIntoView";
+import ProfileImage from "@/components/ProfileImage";
 
 // Hardcoded until there's a real "contact the developer" profile to look up.
 const FEEDBACK_CHAT_UID = "e53e948e-debe-44c1-852b-e94c29ffcb9b";
+const FEEDBACK_IMAGE_URL = "https://pdzuvfkkrhtrrrcckwzj.supabase.co/storage/v1/object/public/avatars/e53e948e-debe-44c1-852b-e94c29ffcb9b/thumb_72741788-5d7d-42fd-a6f9-8eef7d1f20bb.jpg";
 const FEEDBACK_EMAIL = "akos@fifeapp.hu";
 
 export default function MeScreen() {
@@ -130,14 +132,11 @@ export default function MeScreen() {
       </ScrollView>
       <Portal>
         <Dialog visible={feedbackDialogVisible} onDismiss={() => setFeedbackDialogVisible(false)}>
-          <Dialog.Icon icon="message-draw" />
           <Dialog.Title style={{ textAlign: "center" }}>Mondd el a véleményed!</Dialog.Title>
-          <Dialog.Content>
+          <Dialog.Content style={{gap:Spacing.md}}>
+            <ProfileImage avatar_url={FEEDBACK_IMAGE_URL} uid={FEEDBACK_CHAT_UID} size={100} style={{height:100,width:100,borderRadius:BorderRadius.lg}} />
             <ThemedText>
-              Írj nekem személyes üzenetet az appon belül, vagy küldj egy emailt! Ígérem visszaírok!
-            </ThemedText>
-            <ThemedText type="defaultSemiBold" style={{ marginTop: Spacing.sm, textAlign: "right" }}>
-              – Kristóf Ákos
+              Szia, Kristóf Ákos vagyok, a FiFe App fejlesztője. Írj nekem nyugodtan személyes üzenetet, vagy küldj egy emailt:) Visszaírok!
             </ThemedText>
           </Dialog.Content>
           {/* Dialog.Actions force-injects compact={true} onto its children;

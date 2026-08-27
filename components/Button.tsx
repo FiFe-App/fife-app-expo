@@ -83,7 +83,7 @@ export function Button({
           borderRadius: BorderRadius.md,
         },
         otherProps.disabled && {
-          backdropFilter: "",
+          opacity: 0.5
         },
         style,
       ]}

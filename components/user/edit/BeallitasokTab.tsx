@@ -2,7 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
-import { clearDrafts } from "@/redux/reducers/chatReducer";
+import { clearChatReadState, clearDrafts } from "@/redux/reducers/chatReducer";
 import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
 import { logout, setThemePreference } from "@/redux/reducers/userReducer";
@@ -94,6 +94,7 @@ export default function BeallitasokTab() {
       dispatch(clearBuzinessSearchParams());
       dispatch(clearEmotionLogs());
       dispatch(clearDrafts());
+      dispatch(clearChatReadState());
       router.navigate("/user/deleted-account");
     } catch (error) {
       console.error("Unexpected error:", error);

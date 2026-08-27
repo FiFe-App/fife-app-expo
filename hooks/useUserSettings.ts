@@ -4,6 +4,7 @@ import {
   setHomeAddBuzinessCardDismissed,
   setHomeMessagingCardDismissed,
 } from "@/redux/reducers/appReducer";
+import { hydrateLastReadAt } from "@/redux/reducers/chatReducer";
 import { hydrateSettings, markSettingsSynced } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserSettingsPayload } from "@/redux/store.type";
@@ -17,6 +18,15 @@ const PUSH_DEBOUNCE_MS = 1000;
 function toNumberArray(value: unknown): number[] {
   if (!Array.isArray(value)) return [];
   return value.filter((v): v is number => typeof v === "number");
+}
+
+function toStringRecord(value: unknown): Record<string, string> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const result: Record<string, string> = {};
+  for (const [key, v] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof v === "string") result[key] = v;
+  }
+  return result;
 }
 
 /**
@@ -68,6 +78,7 @@ export function useUserSettings() {
   const homeMessagingCardDismissed = useSelector(
     (state: RootState) => state.app.homeMessagingCardDismissed,
   );
+  const chatLastRead = useSelector((state: RootState) => state.chat.lastReadAt);
 
   const local: UserSettingsPayload = useMemo(
     () => ({
@@ -80,6 +91,7 @@ export function useUserSettings() {
       inviteCardDismissed: inviteCardDismissed ?? false,
       homeAddBuzinessCardDismissed: homeAddBuzinessCardDismissed ?? false,
       homeMessagingCardDismissed: homeMessagingCardDismissed ?? false,
+      chatLastRead: chatLastRead ?? {},
     }),
     [
       mantra,
@@ -91,6 +103,7 @@ export function useUserSettings() {
       inviteCardDismissed,
       homeAddBuzinessCardDismissed,
       homeMessagingCardDismissed,
+      chatLastRead,
     ],
   );
 
@@ -131,6 +144,7 @@ export function useUserSettings() {
             invite_card_dismissed: settings.inviteCardDismissed,
             home_add_buziness_card_dismissed: settings.homeAddBuzinessCardDismissed,
             home_messaging_card_dismissed: settings.homeMessagingCardDismissed,
+            chat_last_read: settings.chatLastRead,
           },
           { onConflict: "author" },
         )
@@ -187,6 +201,7 @@ export function useUserSettings() {
       inviteCardDismissed: data.invite_card_dismissed,
       homeAddBuzinessCardDismissed: data.home_add_buziness_card_dismissed,
       homeMessagingCardDismissed: data.home_messaging_card_dismissed,
+      chatLastRead: toStringRecord(data.chat_last_read),
     };
 
     syncedSnapshotRef.current = serialize(settings);
@@ -194,6 +209,7 @@ export function useUserSettings() {
     dispatch(hydrateSettings({ settings, syncedAt: data.updated_at }));
     dispatch(setHomeAddBuzinessCardDismissed(settings.homeAddBuzinessCardDismissed));
     dispatch(setHomeMessagingCardDismissed(settings.homeMessagingCardDismissed));
+    dispatch(hydrateLastReadAt(settings.chatLastRead));
   }, [uid, dispatch, pushToServer]);
 
   // A fresh account needs its own load before anything may be pushed, otherwise
