@@ -22,13 +22,15 @@ const signedIn = () => {
 };
 
 describe("invitation / invite card", () => {
-  it("offers the member's own link, so the invite can be credited to them", async () => {
+  it("opens a dialog whose action is copying the link", async () => {
     const store = signedIn();
 
     await renderWithProviders(<InviteCard />, { store });
     await fireEvent.press(screen.getByText("Hívd meg a barátaidat!"));
 
-    expect(store.getState().info.dialogs[0].text).toContain(MY_LINK);
+    // The link itself is not spelled out in the body — the copy action below
+    // is what hands it over.
+    expect(store.getState().info.dialogs[0].submitText).toBe("Link másolása");
   });
 
   it("copies that link, not the bare site address", async () => {

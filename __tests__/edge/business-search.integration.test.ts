@@ -3,7 +3,9 @@
  *
  * The no-query branch (a plain listing) needs no OpenAI key, so the world
  * filter, the ingyen filter and paging are all covered for free. The hybrid
- * search branch generates an embedding, so it sits behind OPENAI_API_KEY.
+ * search branch generates an embedding, so it sits behind OPENAI_API_KEY —
+ * except for a caller who opted out of the AI, whose text query is answered by
+ * full-text search with no key involved.
  */
 import { createHash } from "node:crypto";
 
@@ -116,7 +118,9 @@ describeWithOpenAI("business-search: hybrid search", () => {
   let searcher: { id: string; accessToken: string };
 
   beforeAll(async () => {
-    searcher = await data.createUser();
+    // Opted in: with the setting off the function never reaches OpenAI, which
+    // is what the "the AI setting" suite below covers.
+    searcher = await data.createUser({ aiEnhance: true });
     await data.seedBuziness(searcher.id, {
       title: `${TEST_MARKER}vízvezeték-szerelő`,
       description: "Csaptelep és vízvezeték javítás",
@@ -156,4 +160,51 @@ describeWithOpenAI("business-search: hybrid search", () => {
       .maybeSingle();
     expect(afterHit?.hit_count).toBeGreaterThan(cached?.hit_count ?? 0);
   }, 90_000);
+});
+
+/**
+ * Not gated on OPENAI_API_KEY: a caller who opted out must get results without
+ * the function calling OpenAI at all, so this runs with no key configured.
+ */
+describe("business-search: the AI setting", () => {
+  const query = `${TEST_MARKER}kulcsszavas keresés`;
+  let searcher: { id: string; accessToken: string };
+
+  beforeAll(async () => {
+    searcher = await data.createUser({ aiEnhance: false });
+    await data.seedBuziness(searcher.id, {
+      title: query,
+      description: "Kulcsszavakra is megtalálható",
+      embedding_text: query,
+    });
+    data.trackCachedQuery(query);
+  });
+
+  it("still answers a text query, by full text alone", async () => {
+    const res = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: { query, take: 20, match_threshold: 0 },
+    });
+
+    expect(res.status).toBe(200);
+    // The title matches the query word for word, so FTS alone has to find it.
+    const rows = (await readBody(res)) as { title: string }[];
+    expect(rows.some((row) => row.title === query)).toBe(true);
+  });
+
+  it("leaves the query out of the embedding cache", async () => {
+    await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: { query, take: 20, match_threshold: 0 },
+    });
+
+    // Same wait the cached path needs, so a write would have landed by now.
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const { data: cached } = await admin
+      .from("query_embedding_cache")
+      .select("query_text")
+      .eq("query_hash", queryHash(query))
+      .maybeSingle();
+    expect(cached).toBeNull();
+  });
 });

@@ -4,7 +4,8 @@
  * Everything up to the OpenAI call — auth, title normalisation, ownership and
  * the contact requirement — is exercised without a key. The two tests that
  * write a row need OPENAI_API_KEY, because the embedding is generated before
- * the insert.
+ * the insert. The opt-out suite needs no key either: with the AI setting off
+ * there is no call to make.
  */
 import { adminClient, edgeStack, invokeFunction, readBody } from "@/test-utils/edge/clients";
 import { TestData, TEST_MARKER } from "@/test-utils/edge/fixtures";
@@ -102,7 +103,9 @@ describe("create-buziness: authorisation", () => {
 
 describeWithOpenAI("create-buziness: writing rows", () => {
   it("creates the row for the caller, normalising the title", async () => {
-    const user = await data.createUser();
+    // Opted in: without this the function skips OpenAI entirely and there is no
+    // embedding to assert on. See "the AI setting" below for that case.
+    const user = await data.createUser({ aiEnhance: true });
     await data.createContact(user.id);
     const other = await data.createUser();
 
@@ -141,7 +144,7 @@ describeWithOpenAI("create-buziness: writing rows", () => {
   }, 60_000);
 
   it("updates the caller's own row in place", async () => {
-    const user = await data.createUser();
+    const user = await data.createUser({ aiEnhance: true });
     await data.createContact(user.id);
     const existing = await data.seedBuziness(user.id);
 
@@ -159,4 +162,63 @@ describeWithOpenAI("create-buziness: writing rows", () => {
     expect(updated.id).toBe(existing.id);
     expect(updated.title).toBe(`${TEST_MARKER}updated`);
   }, 60_000);
+});
+
+/**
+ * No OPENAI_API_KEY gate here on purpose: with the setting off the function
+ * must not call OpenAI at all, so these pass with no key configured — which is
+ * itself part of what they prove.
+ */
+describe("create-buziness: the AI setting", () => {
+  it("saves the row without an embedding when the author opted out", async () => {
+    const user = await data.createUser({ aiEnhance: false });
+    await data.createContact(user.id);
+
+    const res = await invokeFunction("create-buziness", {
+      token: user.accessToken,
+      body: {
+        title: `${TEST_MARKER}festő`,
+        description: "Szobafestés, mázolás",
+      },
+    });
+
+    expect(res.status).toBe(200);
+    const created = (await readBody(res)) as Record<string, unknown>;
+    data.trackBuziness(created.id as number);
+
+    const { data: row } = await admin
+      .from("buziness")
+      .select("embedding, embedding_text")
+      .eq("id", created.id as number)
+      .single();
+    expect(row?.embedding).toBeNull();
+    expect(row?.embedding_text).toBeNull();
+  });
+
+  it("clears an existing embedding when the author saves after opting out", async () => {
+    const user = await data.createUser({ aiEnhance: false });
+    await data.createContact(user.id);
+    // Seeded with embedding text, as a row created back when the setting was on.
+    const existing = await data.seedBuziness(user.id, {
+      embedding_text: "korábbi kulcsszavak",
+    });
+
+    const res = await invokeFunction("create-buziness", {
+      token: user.accessToken,
+      body: {
+        id: existing.id,
+        title: `${TEST_MARKER}festő`,
+        description: "Szobafestés, mázolás",
+      },
+    });
+
+    expect(res.status).toBe(200);
+    const { data: row } = await admin
+      .from("buziness")
+      .select("embedding, embedding_text")
+      .eq("id", existing.id)
+      .single();
+    expect(row?.embedding).toBeNull();
+    expect(row?.embedding_text).toBeNull();
+  });
 });
