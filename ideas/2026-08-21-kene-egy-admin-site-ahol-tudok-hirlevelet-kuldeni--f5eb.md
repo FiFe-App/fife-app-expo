@@ -60,7 +60,7 @@ questions:
     tárgy és hogy TESZT volt-e?
 status: raw
 title: Kéne egy admin site, ahol tudok hírlevelet küldeni egy formmal.
-updated: '2026-08-25T14:53:25+00:00'
+updated: '2026-08-27T12:40:59+00:00'
 ---
 
 ## Notes
@@ -135,3 +135,32 @@ No visual style, brand, or layout details were given, so this is a generic guess
 ```
 
 Left sidebar with "Newsletters" as the active item and empty space reserved for future modules; main panel a simple table of past newsletters.
+
+## Build Log
+
+_Last built: 2026-08-27 12:36 UTC (codebase: /Users/akoskristof/Projects/fife-app-expo)_
+
+I've hit a hard permission limit: this session's permission mode ("don't ask") auto-denies any tool call that creates a new file — both `Write` and `Edit`-to-a-nonexistent-path fail, while `Bash` is denied for anything beyond trivial read-only commands (mkdir, npm install, etc. are also blocked). Only editing content of files that already exist is permitted.
+
+Building the admin app (a new `admin/` directory with a Vite+React frontend and Netlify Functions backend — roughly 15-20 new files) requires creating new files, which I cannot do in this session regardless of approach.
+
+**What I need from you:** please switch the permission mode (e.g. to the default "ask" mode, or otherwise allow `Write`/`Bash`) so I can create the new files, then re-run this. Once that's unblocked, here's exactly what I'll build, based on the codebase and your answered questions:
+
+- A standalone `admin/` app (Vite + React + Mantine, deployed as its own Netlify site) with password login (session via signed HTTP-only cookie).
+- Netlify Functions backend using `SUPABASE_SERVICE_ROLE_KEY` (server-side only) to read/insert into the existing `newsletters` table (which already sends via the `notify` edge function trigger — no new sending logic needed).
+- A compose form: subject, title, rich-text body (Mantine Tiptap editor), CTA label/URL, and a test-send option (recipients = one address you type in).
+- A history list showing past newsletters with status/sent_count/failed_count/error, marking test sends with a "TESZT" badge (any row with `recipients` set, since that only happens via the test-send button here).
+- A confirmation step before real (non-test) sends, since an `INSERT` sends immediately with no draft state.
+
+Let me know once permissions are adjusted and I'll implement it.
+
+---
+
+_Follow-up: 2026-08-27._ The app got fully scaffolded (all files present: login/session/newsletters functions, compose form, history list). Found and fixed two bugs that were blocking it end-to-end:
+
+1. **Routing mismatch**: the frontend called `/api/newsletters` for both listing and creating, but the backend was split into `newsletters-list.ts` and `newsletters-create.ts` — Netlify's filename-based routing meant neither one was ever actually reachable at that URL (both 404'd). Merged them into a single `netlify/functions/newsletters.ts` handling GET (list) and POST (create).
+2. **Supabase client crash on Node 20**: `createClient` eagerly initializes the realtime/WebSocket client, which throws on Netlify's Node 20 function runtime (no native WebSocket) — every list/create call 500'd. Added `ws` as a dependency and passed it as the `realtime.transport` per Supabase's documented workaround.
+
+Verified end-to-end against the real Supabase project: login, session check, list, and a test-send create all return 200 with correct data (test row cleaned up afterward). Type-checks clean (`tsc -b --noEmit`).
+
+Not yet done: no real Netlify site created/deployed, so `netlify dev`'s local behavior is confirmed but production hasn't been exercised. Also note `admin/.env` holds live production credentials (service role key, admin password) in plaintext — correctly gitignored, but worth being deliberate about who has filesystem access to this machine.

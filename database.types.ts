@@ -723,6 +723,7 @@ export type Database = {
       user_settings: {
         Row: {
           author: string
+          chat_last_read: Json
           created_at: string
           emotion_daily_prompt: boolean
           emotion_prompt_asked_at: string | null
@@ -743,6 +744,7 @@ export type Database = {
         }
         Insert: {
           author: string
+          chat_last_read?: Json
           created_at?: string
           emotion_daily_prompt?: boolean
           emotion_prompt_asked_at?: string | null
@@ -763,6 +765,7 @@ export type Database = {
         }
         Update: {
           author?: string
+          chat_last_read?: Json
           created_at?: string
           emotion_daily_prompt?: boolean
           emotion_prompt_asked_at?: string | null

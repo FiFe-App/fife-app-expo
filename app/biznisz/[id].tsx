@@ -76,11 +76,13 @@ const StatItem = ({
   label,
   onPress,
   avatar,
+  avatars,
 }: {
   value?: string | number | null;
   label: string;
   onPress?: () => void;
   avatar?: { uid: string; url?: string | null };
+  avatars?: { uid: string; url?: string | null }[];
 }) => {
   const theme = useAppTheme();
   const inner = (
@@ -91,6 +93,29 @@ const StatItem = ({
           avatar_url={avatar.url}
           style={{ width: 28, height: 28, borderRadius: BorderRadius.full, marginBottom: 2 }}
         />
+      ) : avatars?.length ? (
+        // Overlapping stack of the first few faces, same as the profile page's
+        // "Megbíznak benne" stat.
+        <View style={{ flexDirection: "row", height: 30, alignItems: "center" }}>
+          {avatars.slice(0, 3).map((rec, i) => (
+            <View
+              key={rec.uid}
+              style={{
+                marginLeft: i === 0 ? 0 : -Spacing.sm,
+                borderRadius: BorderRadius.full,
+                borderWidth: 2,
+                borderColor: theme.colors.surface,
+                zIndex: 3 - i,
+              }}
+            >
+              <ProfileImage
+                uid={rec.uid}
+                avatar_url={rec.url}
+                style={{ width: 26, height: 26, borderRadius: BorderRadius.full }}
+              />
+            </View>
+          ))}
+        </View>
       ) : (
         <View style={{height:28,justifyContent:"center"}}>
           <Text variant="headlineSmall" style={{ fontWeight: "700", color: theme.colors.primary }}>
@@ -120,9 +145,10 @@ export default function Index() {
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const { id: paramId } = useGlobalSearchParams();
   const dispatch = useDispatch();
-  const { uid: myUid }: UserState = useSelector(
+  const { uid: myUid, userData }: UserState = useSelector(
     (state: RootState) => state.user
   );
+  const myAvatarUrl = userData?.avatar_url ?? null;
   const id: number = Number(paramId);
   const [data, setData] = useState<BuzinessItemInterface | undefined>();
   const [defaultContact, setDefaultContact] =
@@ -130,9 +156,11 @@ export default function Index() {
   const [contacts, setContacts] = useState<Tables<"contacts">[]>([]);
 
   const [error, setError] = useState<null | Partial<PostgrestError>>(null);
-  const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [recommendations, setRecommendations] = useState<
+    { author: string; avatar_url: string | null }[]
+  >([]);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
-  const iRecommended = recommendations?.includes(myUid || "");
+  const iRecommended = recommendations.some((r) => r.author === myUid);
   const location: LatLng | null =
     data?.lat && data?.long
       ? { latitude: data.lat, longitude: data.long }
@@ -216,7 +244,7 @@ export default function Index() {
         supabase
           .from("buziness")
           .select(
-            "*, profiles ( full_name, avatar_url ), buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(author)"
+            "*, profiles ( full_name, avatar_url ), buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(author, profiles!buzinessRecommendations_author_fkey(avatar_url))"
           )
           .eq("id", id)
           .maybeSingle()
@@ -245,7 +273,10 @@ export default function Index() {
 
 
               setRecommendations(
-                data?.buzinessRecommendations?.map((pr) => pr.author)
+                data?.buzinessRecommendations?.map((pr) => ({
+                  author: pr.author,
+                  avatar_url: pr.profiles?.avatar_url ?? null,
+                })) ?? []
               );
 
               if (data.author){
@@ -409,10 +440,14 @@ export default function Index() {
                   )}
 
                   <StatItem
-                    value={recommendations?.length ?? 0}
+                    value={recommendations.length}
+                    avatars={recommendations.map((rec) => ({
+                      uid: rec.author,
+                      url: rec.avatar_url,
+                    }))}
                     label="Ajánlás"
                     onPress={
-                      recommendations?.length
+                      recommendations.length
                         ? () => setShowRecommendsModal(true)
                         : undefined
                     }
@@ -486,10 +521,13 @@ export default function Index() {
                         setRecommended={(recommendedByMe) => {
                           if (myUid) {
                             if (recommendedByMe)
-                              setRecommendations([...recommendations, myUid]);
+                              setRecommendations([
+                                ...recommendations,
+                                { author: myUid, avatar_url: myAvatarUrl },
+                              ]);
                             else
                               setRecommendations(
-                                recommendations.filter((uid) => uid !== myUid)
+                                recommendations.filter((r) => r.author !== myUid)
                               );
                           }
                         }}
