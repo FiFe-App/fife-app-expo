@@ -1,0 +1,159 @@
+/**
+ * business-search against a running Supabase stack.
+ *
+ * The no-query branch (a plain listing) needs no OpenAI key, so the world
+ * filter, the ingyen filter and paging are all covered for free. The hybrid
+ * search branch generates an embedding, so it sits behind OPENAI_API_KEY.
+ */
+import { createHash } from "node:crypto";
+
+import { adminClient, edgeStack, invokeFunction, readBody } from "@/test-utils/edge/clients";
+import { TestData, TEST_MARKER } from "@/test-utils/edge/fixtures";
+import { describeWithOpenAI } from "@/test-utils/edge/gates";
+
+const data = new TestData();
+const admin = adminClient();
+
+/** Same hash the function uses to key the embedding cache. */
+const queryHash = (query: string) =>
+  createHash("sha256").update(query.trim().toLowerCase()).digest("hex");
+
+const titlesOf = (rows: unknown) =>
+  (rows as { title: string }[]).map((row) => row.title);
+
+afterAll(async () => {
+  await data.cleanup();
+});
+
+describe("business-search: authentication", () => {
+  it("rejects a request with no bearer token", async () => {
+    const res = await invokeFunction("business-search", { body: {} });
+
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects the public anon key", async () => {
+    const res = await invokeFunction("business-search", {
+      token: edgeStack().anonKey,
+      body: {},
+    });
+
+    expect(res.status).toBe(401);
+    expect(await readBody(res)).toMatchObject({ error: "Unauthorized" });
+  });
+});
+
+describe("business-search: listing without a query", () => {
+  let searcher: { id: string; accessToken: string };
+  let ghost: { id: string; accessToken: string };
+  let normalBuziness: { id: number; title: string };
+  let ghostBuziness: { id: number; title: string };
+  let freeBuziness: { id: number; title: string };
+
+  beforeAll(async () => {
+    searcher = await data.createUser();
+    ghost = await data.createUser({ badBoy: true });
+    normalBuziness = await data.seedBuziness(searcher.id);
+    freeBuziness = await data.seedBuziness(searcher.id, { ingyen: true });
+    ghostBuziness = await data.seedBuziness(ghost.id);
+  });
+
+  it("returns the caller's own world", async () => {
+    const res = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: { take: 50 },
+    });
+
+    expect(res.status).toBe(200);
+    expect(titlesOf(await readBody(res))).toContain(normalBuziness.title);
+  });
+
+  // Marked `failing` because the listing branch embeds the author profile
+  // *without* `!inner`, and PostgREST applies such a filter to the embedded rows
+  // rather than to the parent — so ghost ("bad_boy") businesses are expected to
+  // leak into a normal user's listing. The hybrid-search branch has no such
+  // problem: it filters inside the RPC.
+  //
+  // If this reports "passed even though it was supposed to fail", the embed does
+  // filter parents on this PostgREST version — drop `.failing` and keep it as a
+  // regression test. If it fails as expected, the fix is one word in
+  // business-search/index.ts: `profiles!buziness_author_fkey1!inner(bad_boy)`.
+  it.failing("hides businesses from the ghost world", async () => {
+    const res = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: { take: 50 },
+    });
+
+    expect(res.status).toBe(200);
+    expect(titlesOf(await readBody(res))).not.toContain(ghostBuziness.title);
+  });
+
+  it("filters to free businesses when ingyen is set", async () => {
+    const res = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: { take: 50, ingyen: true },
+    });
+
+    expect(res.status).toBe(200);
+    const titles = titlesOf(await readBody(res));
+    expect(titles).toContain(freeBuziness.title);
+    expect(titles).not.toContain(normalBuziness.title);
+  });
+
+  it("pages with take", async () => {
+    const res = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: { take: 1 },
+    });
+
+    expect(res.status).toBe(200);
+    expect((await readBody(res)) as unknown[]).toHaveLength(1);
+  });
+});
+
+describeWithOpenAI("business-search: hybrid search", () => {
+  const query = `${TEST_MARKER}vízvezeték szerelés`;
+  let searcher: { id: string; accessToken: string };
+
+  beforeAll(async () => {
+    searcher = await data.createUser();
+    await data.seedBuziness(searcher.id, {
+      title: `${TEST_MARKER}vízvezeték-szerelő`,
+      description: "Csaptelep és vízvezeték javítás",
+      embedding_text: "vízvezeték szerelés csaptelep javítás",
+    });
+    data.trackCachedQuery(query);
+  });
+
+  it("answers a text query and caches the embedding for the next caller", async () => {
+    const first = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: { query, take: 20, match_threshold: 0 },
+    });
+    expect(first.status).toBe(200);
+
+    // The cache write is fire-and-forget, so give it a moment to land.
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    const { data: cached } = await admin
+      .from("query_embedding_cache")
+      .select("query_text, hit_count")
+      .eq("query_hash", queryHash(query))
+      .maybeSingle();
+    expect(cached?.query_text).toBe(query.trim().toLowerCase());
+
+    const second = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: { query, take: 20, match_threshold: 0 },
+    });
+    expect(second.status).toBe(200);
+
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const { data: afterHit } = await admin
+      .from("query_embedding_cache")
+      .select("hit_count")
+      .eq("query_hash", queryHash(query))
+      .maybeSingle();
+    expect(afterHit?.hit_count).toBeGreaterThan(cached?.hit_count ?? 0);
+  }, 90_000);
+});

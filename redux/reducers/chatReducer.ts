@@ -55,6 +55,25 @@ const chatReducer = createSlice({
       state.unreadCounts[action.payload.chatId] =
         (state.unreadCounts[action.payload.chatId] || 0) + delta;
     },
+    /**
+     * Merges a lastReadAt map pulled from public.user_settings into the local
+     * one, keeping the later timestamp per chat. A plain overwrite could
+     * regress a chat that was read locally after the last successful push
+     * (e.g. read while offline) back to "unread" — the one failure mode this
+     * sync is meant to fix, not reintroduce.
+     */
+    hydrateLastReadAt: (state, action: PayloadAction<Record<string, string>>) => {
+      for (const [chatId, readAt] of Object.entries(action.payload)) {
+        if (!state.lastReadAt[chatId] || readAt > state.lastReadAt[chatId]) {
+          state.lastReadAt[chatId] = readAt;
+        }
+      }
+    },
+    /** Drops local read state on logout so it can't leak into another account on the same device. */
+    clearChatReadState: (state) => {
+      state.lastReadAt = {};
+      state.unreadCounts = {};
+    },
   },
 });
 
@@ -66,6 +85,8 @@ export const {
   setUnreadCount,
   setUnreadCounts,
   incrementUnreadCount,
+  hydrateLastReadAt,
+  clearChatReadState,
 } = chatReducer.actions;
 
 export default chatReducer.reducer;

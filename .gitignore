@@ -32,5 +32,8 @@ expo-env.d.ts
 # @end expo-cli
 # Local Netlify folder
 .netlify
+
+# native build files:
 *.aab
+*.apk
 *.ipa

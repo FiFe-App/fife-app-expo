@@ -28,12 +28,12 @@ import RedHatTextBold from "@/assets/fonts/RedHatText-Bold.ttf";
 import { MyAppbar } from "@/components/MyAppBar";
 import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import FakeSearchInput from "@/components/FakeSearchInput";
-import MessagesAppbarAction from "@/components/navigation/MessagesAppbarAction";
 import { RootState } from "@/redux/store";
 import { setLocation, logout, setNotificationPrefs, setMessagingEnabled } from "@/redux/reducers/userReducer";
 import { fetchMessagingEnabled } from "@/lib/chat/messagingContact";
 import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
-import { clearDrafts } from "@/redux/reducers/chatReducer";
+import { clearChatReadState, clearDrafts, setUnreadCounts } from "@/redux/reducers/chatReducer";
+import { fetchUnreadCounts } from "@/lib/chat/fetchUnreadCounts";
 import { supabase } from "@/lib/supabase/supabase";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
@@ -48,11 +48,10 @@ import { emotionAvailable } from "@/constants/emotionTiming";
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
 let splashAlreadyShown = false;
 
-function HomeHeader({ showMessages }: { showMessages?: boolean }) {
+function HomeHeader() {
   return (
     <MyAppbar
       center={<FakeSearchInput />}
-      actions={showMessages ? <MessagesAppbarAction /> : undefined}
       style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }}
     />
   );
@@ -63,7 +62,8 @@ function RootContent() {
   const dispatch = useDispatch();
   const deviceColorScheme = useColorScheme(); // Auto-detect device theme
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
-  const { uid } = useSelector((state: RootState) => state.user);
+  const { uid, messagingEnabled } = useSelector((state: RootState) => state.user);
+  const lastReadAt = useSelector((state: RootState) => state.chat.lastReadAt);
   const { statusBarColor, bottomBarColor } = useSelector((state: RootState) => state.info);
   const hasInitialized = React.useRef(false);
 
@@ -101,6 +101,7 @@ function RootContent() {
         dispatch(logout());
         dispatch(clearEmotionLogs());
         dispatch(clearDrafts());
+        dispatch(clearChatReadState());
       }
     });
 
@@ -110,11 +111,13 @@ function RootContent() {
         dispatch(logout());
         dispatch(clearEmotionLogs());
         dispatch(clearDrafts());
+        dispatch(clearChatReadState());
       } else if (uid && session && session.user.id !== uid) {
         // Session belongs to a different account than Redux thinks — resync
         dispatch(logout());
         dispatch(clearEmotionLogs());
         dispatch(clearDrafts());
+        dispatch(clearChatReadState());
       }
     });
     return () => subscription.unsubscribe();
@@ -146,6 +149,16 @@ function RootContent() {
       if (enabled !== null) dispatch(setMessagingEnabled(enabled));
     });
   }, [uid, dispatch]);
+
+  // Bottom nav shows the unread badge on every tab, not just once the user
+  // opens Üzenetek — so it has to be loaded here rather than left to that
+  // screen's own focus effect.
+  useEffect(() => {
+    if (!uid || !messagingEnabled) return;
+    fetchUnreadCounts(uid, lastReadAt).then((counts) => {
+      if (counts) dispatch(setUnreadCounts(counts));
+    });
+  }, [uid, messagingEnabled, lastReadAt, dispatch]);
 
   // Pull the user's settings row on login: mantra, Lusta Lista, theme, saved
   // biznisz and previous searches. Runs on web too. The notification columns of
@@ -283,7 +296,7 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="home"
-                  options={{ header: () => <HomeHeader showMessages /> }}
+                  options={{ header: () => <HomeHeader /> }}
                 />
                 <Stack.Screen
                   name="fifeRadar"
