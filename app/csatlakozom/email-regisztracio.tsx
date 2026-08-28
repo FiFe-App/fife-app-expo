@@ -25,6 +25,8 @@ interface SignupMetadata {
   location?: string; // PostGIS POINT string format
   location_radius_m?: number;
   bad_boy?: boolean;
+  /** uid of the member whose invite link started this registration. */
+  invited_by?: string;
 }
 
 export default function Index() {
@@ -55,6 +57,7 @@ export default function Index() {
 
   const { uid, userData }: UserState = useSelector((state: RootState) => state.user);
   const policiesAccepted = useSelector((state: RootState) => state.info.policiesAccepted);
+  const invitedBy = useSelector((state: RootState) => state.app.invitedBy);
   const userLocation = userData?.location;
   WebBrowser.maybeCompleteAuthSession(); // required for web only
   const redirectTo = makeRedirectUri({ path: "/csatlakozom/elso-lepesek" });
@@ -96,6 +99,12 @@ export default function Index() {
       // Notification preferences are no longer collected during signup —
       // each one is asked contextually on /me once the user is in the app.
       metadata.bad_boy = !policiesAccepted;
+
+      // Set by app/meghivo/[uid].tsx when the user arrived through somebody's
+      // invite link. handle_new_user turns it into the invitation row in the
+      // same transaction as the profile, so the invite is recorded even if the
+      // user confirms their e-mail on another device.
+      if (invitedBy) metadata.invited_by = invitedBy;
 
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),

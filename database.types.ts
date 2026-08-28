@@ -422,6 +422,42 @@ export type Database = {
         }
         Relationships: []
       }
+      invitations: {
+        Row: {
+          author: string
+          created_at: string
+          guest: string
+          id: number
+        }
+        Insert: {
+          author: string
+          created_at?: string
+          guest: string
+          id?: never
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          guest?: string
+          id?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_guest_fkey"
+            columns: ["guest"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           author: string

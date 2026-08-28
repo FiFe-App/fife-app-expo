@@ -5,6 +5,8 @@ import { setTutorialActive, startTutorial } from "@/redux/reducers/tutorialReduc
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { fetchUserProfile } from "@/lib/auth/fetchUserProfile";
+import { recordInvitation } from "@/lib/invitations/recordInvitation";
+import { clearInvitedBy } from "@/redux/reducers/appReducer";
 import {
   describeAuthRedirectError,
   getAuthRedirectTokens,
@@ -23,6 +25,7 @@ const PROFILE_FAILED = "Nem sikerült betölteni a profilodat. Próbáld újra!"
 export default function Index() {
   const dispatch = useDispatch();
   const { uid }: UserState = useSelector((state: RootState) => state.user);
+  const invitedBy = useSelector((state: RootState) => state.app.invitedBy);
   const params = useAuthRedirectParams();
 
   // Both are keyed on the parsed params, which are themselves memoised on the
@@ -67,6 +70,26 @@ export default function Index() {
       cancelled = true;
     };
   }, [dispatch, tokens, uid]);
+
+  // `uid` is set once the profile has been loaded, which is also the earliest
+  // moment an invitation can reference it — so this is where the invite the
+  // visitor arrived with (app/meghivo/[uid].tsx) is finally written. Sign-up
+  // metadata usually got there first and this is a no-op; the guest is unique
+  // in the table, so the two can never both land. The inviter is dropped
+  // either way: a leftover invite must not attach itself to the next
+  // registration on this device.
+  useEffect(() => {
+    if (!uid || !invitedBy) return;
+
+    let cancelled = false;
+    recordInvitation(uid, invitedBy).then(() => {
+      if (!cancelled) dispatch(clearInvitedBy());
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch, invitedBy, uid]);
 
   // Derived rather than held in state: both the route params and the restored
   // session can land after the first render, and an error latched on that first
