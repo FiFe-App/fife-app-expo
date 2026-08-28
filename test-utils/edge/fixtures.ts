@@ -121,6 +121,9 @@ export class TestData {
    * Writes a buziness row directly, bypassing create-buziness — the tests that
    * need an existing row (ownership checks, search results) shouldn't have to
    * spend an OpenAI call to get one.
+   *
+   * `location` is WKT, the same shape the editor sends ("POINT(long lat)").
+   * Left out, the row has no location at all — a "Bárhol" biznisz.
    */
   async seedBuziness(
     author: string,
@@ -129,6 +132,7 @@ export class TestData {
       description: string;
       ingyen: boolean;
       embedding_text: string;
+      location: string;
     }> = {},
   ): Promise<{ id: number; title: string }> {
     const title = overrides.title ?? `${TEST_MARKER}${crypto.randomUUID().slice(0, 8)}`;
@@ -140,6 +144,7 @@ export class TestData {
         description: overrides.description ?? `${TEST_MARKER}description`,
         ingyen: overrides.ingyen ?? false,
         embedding_text: overrides.embedding_text ?? title,
+        ...(overrides.location ? { location: overrides.location } : {}),
       })
       .select("id, title")
       .single();

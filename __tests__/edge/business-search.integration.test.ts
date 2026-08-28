@@ -163,6 +163,83 @@ describeWithOpenAI("business-search: hybrid search", () => {
 });
 
 /**
+ * The radius filter, and what it must not do to a "Bárhol" biznisz.
+ *
+ * These send lat/long/maxdistance the way the app does — the parameters the
+ * suites above leave out, which is exactly why the bug survived them. No
+ * OpenAI key needed: the searcher has the AI off, so ranking is full text.
+ */
+describe("business-search: listings with no location", () => {
+  const query = `${TEST_MARKER}kertkapu`;
+  // Budapest, and a point far enough away that a 10 km radius excludes it.
+  const BUDAPEST = { lat: 47.4979, long: 19.0402 };
+  const FAR_AWAY = "POINT(21.6273 47.5316)"; // Debrecen, ~200 km east
+
+  let searcher: { id: string; accessToken: string };
+  let anywhere: { id: number; title: string };
+  let faraway: { id: number; title: string };
+
+  beforeAll(async () => {
+    searcher = await data.createUser({ aiEnhance: false });
+    anywhere = await data.seedBuziness(searcher.id, { title: query });
+    faraway = await data.seedBuziness(searcher.id, {
+      title: `${query} messze`,
+      location: FAR_AWAY,
+    });
+  });
+
+  it("finds a biznisz saved without a location, whatever the radius", async () => {
+    const res = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: {
+        query,
+        take: 20,
+        match_threshold: 0,
+        ...BUDAPEST,
+        maxdistance: 10_000,
+      },
+    });
+
+    expect(res.status).toBe(200);
+    expect(titlesOf(await readBody(res))).toContain(anywhere.title);
+  });
+
+  it("still keeps a located biznisz outside the radius out", async () => {
+    // The escape hatch is for a missing location, not for every location.
+    const res = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: {
+        query,
+        take: 20,
+        match_threshold: 0,
+        ...BUDAPEST,
+        maxdistance: 10_000,
+      },
+    });
+
+    expect(titlesOf(await readBody(res))).not.toContain(faraway.title);
+  });
+
+  it("reports no distance for it, rather than claiming it is next to you", async () => {
+    const res = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: {
+        query,
+        take: 20,
+        match_threshold: 0,
+        ...BUDAPEST,
+        maxdistance: 100_000,
+      },
+    });
+
+    const rows = (await readBody(res)) as { title: string; distance: number | null }[];
+    const row = rows.find((r) => r.title === anywhere.title);
+    // The client shows "Bárhol elérhető" off the back of this being absent.
+    expect(row?.distance ?? null).toBeNull();
+  });
+});
+
+/**
  * Not gated on OPENAI_API_KEY: a caller who opted out must get results without
  * the function calling OpenAI at all, so this runs with no key configured.
  */

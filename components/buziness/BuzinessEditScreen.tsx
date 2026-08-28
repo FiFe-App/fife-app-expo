@@ -156,8 +156,12 @@ export default function BuzinessEditScreen({
           title,
           ingyen,
           author: uid,
-          location: selectedLocation
-            ? `POINT(${selectedLocation?.longitude} ${selectedLocation?.latitude})`
+          // The chosen circle alone, never `selectedLocation`: that one falls
+          // back to the device's GPS so the map preview has something to
+          // centre on, and saving through it pinned every "Bárhol" biznisz to
+          // wherever its author happened to be standing.
+          location: circle?.location
+            ? `POINT(${circle.location.longitude} ${circle.location.latitude})`
             : null,
           defaultContact,
         },
@@ -203,7 +207,7 @@ export default function BuzinessEditScreen({
     media.length,
     ingyen,
     newBuziness,
-    selectedLocation,
+    circle,
     title,
     uid,
   ]);
