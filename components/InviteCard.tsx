@@ -34,7 +34,7 @@ export default function InviteCard() {
   const handleOpen = () => {
     dispatch(showDialog({
         title: "Hívd meg a barátaidat.",
-        text: `Ha úgy érzed van egy barátod, akinek jól jönne a FiFe App, másold le a saját meghívó linkedet és küldd el neki bátran! A link megmutatja neki a profilodat, és megjegyzi, hogy te hívtad meg.\n\n${inviteUrl}`,
+        text: "Ha úgy érzed van egy barátod, akinek jól jönne a FiFe App, másold le a saját meghívó linkedet és küldd el neki bátran! A link megmutatja neki a profilodat.",
         submitText:"Link másolása",
         onSubmit: handleCopy
     }));

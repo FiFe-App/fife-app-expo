@@ -5,7 +5,11 @@ import { DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
 const initialState: UserState = {
   uid: undefined,
   name: undefined,
-  messagingEnabled: false,
+  // Left unset (not false) until the real value is fetched — the "does the
+  // other side have messaging on" checks elsewhere treat unset the same as
+  // off, but NotificationPrompts specifically needs to tell "off" from
+  // "not checked yet" so it doesn't nudge someone who already has it on.
+  messagingEnabled: undefined,
   userData: null,
   locationError: null,
   themePreference: DEFAULT_THEME_PREFERENCE,

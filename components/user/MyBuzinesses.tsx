@@ -27,6 +27,18 @@ const MyBuzinesses = ({ buzinesses, loading, myProfile, name }: MyBuzinessesProp
         </View>
       ) : buzinesses.length ? (
         <>
+          {myProfile && (
+            <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
+              <Button
+                mode="outlined"
+                icon="plus"
+                style={{ borderRadius: BorderRadius.pill }}
+                onPress={() => router.push("/biznisz/new")}
+              >
+                Új biznisz
+              </Button>
+            </View>
+          )}
           {!myProfile && <SectionLabel label={myProfile ? "Mihez értek?" : `${name} bizniszei`} />}
           {buzinesses.map((buzinessItem) => (
             <BuzinessItem

@@ -15,6 +15,9 @@ module.exports = {
     "/dist/",
     "/.expo/",
     "/.claude/",
+    // Edge-function integration tests need a running Supabase stack; they have
+    // their own runner (`npm run test:edge`, jest.edge.config.js).
+    "/__tests__/edge/",
   ],
   // jest-expo's default list, plus `react-redux`, which resolves to an ESM
   // build under the "react-native" export condition and has to be transformed.

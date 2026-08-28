@@ -179,6 +179,23 @@ export function layout(
 </html>`;
 }
 
+/**
+ * Newsletter bodies come from the admin's Tiptap editor, whose Link mark
+ * emits plain `<a href="...">` with no styling. Mail clients then fall back
+ * to their own default link color (blue, underlined) — there's no <style>
+ * block to catch it with, since Gmail strips those, so the brand color has
+ * to be inlined onto each <a> tag directly.
+ */
+function styleLinks(html: string): string {
+  return html.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
+    if (/\sstyle\s*=/i.test(attrs)) {
+      return match.replace(/style\s*=\s*(["'])(.*?)\1/i, (_m, q: string, style: string) =>
+        `style=${q}color:${COLOR.cta};text-decoration:underline;${style}${q}`);
+    }
+    return `<a${attrs} style="color:${COLOR.cta};text-decoration:underline;">`;
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Per-event templates
 // ---------------------------------------------------------------------------
@@ -251,7 +268,7 @@ export function newsletterHtml(
   const body = `
     ${heading ? `<p style="font-size:18px;font-weight:bold;color:${COLOR.text};margin:0 0 12px 0;">${heading}</p>` : ""}
     <div style="font-size:16px;line-height:1.6;color:${COLOR.text};">
-      ${newsletter.body}
+      ${styleLinks(newsletter.body)}
     </div>
     ${cta}`;
   return layout(recipientName, body, {

@@ -1,6 +1,9 @@
 marketing
 dist
+admin
 ios
 android
 node_modules
 *.aab
+*.ipa
+*.apk

@@ -761,6 +761,7 @@ export type Database = {
           ai_asked_at: string | null
           ai_enhance: boolean
           author: string
+          chat_last_read: Json
           created_at: string
           emotion_daily_prompt: boolean
           emotion_prompt_asked_at: string | null
@@ -783,6 +784,7 @@ export type Database = {
           ai_asked_at?: string | null
           ai_enhance?: boolean
           author: string
+          chat_last_read?: Json
           created_at?: string
           emotion_daily_prompt?: boolean
           emotion_prompt_asked_at?: string | null
@@ -805,6 +807,7 @@ export type Database = {
           ai_asked_at?: string | null
           ai_enhance?: boolean
           author?: string
+          chat_last_read?: Json
           created_at?: string
           emotion_daily_prompt?: boolean
           emotion_prompt_asked_at?: string | null

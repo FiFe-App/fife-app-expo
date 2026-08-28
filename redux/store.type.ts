@@ -82,6 +82,10 @@ export interface UserState {
  * The notification columns of that same row are deliberately absent here:
  * useNotificationPrefs owns them, writing each one as the user answers it. The
  * two hooks touch disjoint columns, so neither can clobber the other.
+ *
+ * `chatLastRead` mirrors redux's `chat.lastReadAt` (not `user` state) and is
+ * applied on hydrate via chatReducer's `hydrateLastReadAt`, not `hydrateSettings`
+ * — same disjoint-slice pattern as `homeAddBuzinessCardDismissed` below.
  */
 export interface UserSettingsPayload {
   mantra?: string;
@@ -93,6 +97,7 @@ export interface UserSettingsPayload {
   inviteCardDismissed: boolean;
   homeAddBuzinessCardDismissed: boolean;
   homeMessagingCardDismissed: boolean;
+  chatLastRead: Record<string, string>;
 }
 
 export type User = Tables<"profiles"> & {

@@ -49,6 +49,12 @@ const LARGE_GAP_THRESHOLD_MS = 60 * 60 * 1000;
 // resizes the viewport, and "load more" naturally becomes onEndReached
 // (which fires when scrolling toward the array's end, i.e. the oldest
 // messages, since the list is flipped).
+//
+// VirtualizedList flips the whole list and then un-flips every cell *and* the
+// header/footer/empty components itself, so none of them need a manual
+// correction. Adding one overrides RN's own inversion style, which on Android
+// is `scale: -1` (both axes) rather than `scaleY: -1` — the mismatch leaves the
+// content horizontally mirrored.
 export default function ChatScreen() {
   const dispatch = useDispatch();
   const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null);
@@ -551,12 +557,10 @@ export default function ChatScreen() {
           onEndReached={loadOlderMessages}
           onEndReachedThreshold={0.5}
           ListFooterComponent={
-            loadingOlder ? (
-              <ActivityIndicator style={[styles.loadingOlder, styles.invertedFix]} />
-            ) : null
+            loadingOlder ? <ActivityIndicator style={styles.loadingOlder} /> : null
           }
           ListEmptyComponent={
-            <View style={[styles.emptyContainer, styles.invertedFix]}>
+            <View style={styles.emptyContainer}>
               <Text variant="bodyLarge" style={{textAlign:"center"}}>
                 {otherUser
                   ? `Te és ${otherUser.full_name} még nem beszélgettetek az appon belül!`
@@ -662,11 +666,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
-  },
-  // ListEmptyComponent/ListHeaderComponent/ListFooterComponent aren't routed
-  // through the same per-cell flip correction as renderItem, so an inverted
-  // FlatList renders them upside down unless corrected manually.
-  invertedFix: {
-    transform: [{ scaleY: -1 }],
   },
 });
