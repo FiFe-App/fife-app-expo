@@ -21,13 +21,18 @@ export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   notifyEmail: true,
   newsletter: false,
   emotionDailyPrompt: false,
+  // Opt-in: a new account sends nothing to the AI service until it says yes.
+  // Accounts that predate the setting were grandfathered to true by the
+  // migration, so this default only ever applies to a genuinely new user.
+  aiEnhance: false,
   pushAskedAt: null,
   emotionPromptAskedAt: null,
   newsletterAskedAt: null,
+  aiAskedAt: null,
 };
 
 /** Preferences the user is asked about by a prompt card on /me. */
-export type AskablePref = "notifyPush" | "emotionDailyPrompt" | "newsletter";
+export type AskablePref = "notifyPush" | "emotionDailyPrompt" | "newsletter" | "aiEnhance";
 export type TogglePref = AskablePref | "notifyEmail";
 
 /** Preferences whose delivery depends on the OS notification grant. */
@@ -36,6 +41,7 @@ const NEEDS_PERMISSION: Record<TogglePref, boolean> = {
   emotionDailyPrompt: true,
   notifyEmail: false,
   newsletter: false,
+  aiEnhance: false,
 };
 
 const prefColumn = (key: TogglePref, value: boolean): TablesUpdate<"user_settings"> => {
@@ -48,6 +54,8 @@ const prefColumn = (key: TogglePref, value: boolean): TablesUpdate<"user_setting
       return { newsletter: value };
     case "emotionDailyPrompt":
       return { emotion_daily_prompt: value };
+    case "aiEnhance":
+      return { ai_enhance: value };
   }
 };
 
@@ -59,6 +67,8 @@ const askedColumn = (key: AskablePref, at: string): TablesUpdate<"user_settings"
       return { emotion_prompt_asked_at: at };
     case "newsletter":
       return { newsletter_asked_at: at };
+    case "aiEnhance":
+      return { ai_asked_at: at };
   }
 };
 
@@ -70,13 +80,15 @@ const askedField = (key: AskablePref, at: string): Partial<NotificationPrefs> =>
       return { emotionPromptAskedAt: at };
     case "newsletter":
       return { newsletterAskedAt: at };
+    case "aiEnhance":
+      return { aiAskedAt: at };
   }
 };
 
 const isAskable = (key: TogglePref): key is AskablePref => key !== "notifyEmail";
 
 /**
- * Reads the notification preferences from Redux (hydrated from
+ * Reads the prompted preferences from Redux (hydrated from
  * get_my_notification_prefs on login) and writes them back to
  * `user_settings`, running the side effects each preference implies:
  * requesting the OS permission, registering the push token and
@@ -85,6 +97,11 @@ const isAskable = (key: TogglePref): key is AskablePref => key !== "notifyEmail"
  * This is the single place those side effects live — screens should
  * never call registerForPushNotificationsAsync or the reminder
  * scheduler directly.
+ *
+ * Most of these are notification preferences; `aiEnhance` is not, but it
+ * belongs to the same family — asked by a prompt card, answered by a switch,
+ * and written immediately rather than through useUserSettings' debounce,
+ * because the edge functions read the column on the very next save or search.
  *
  * These are the only columns of the user_settings row written here.
  * useUserSettings owns the rest of it and never touches these, so the two
@@ -114,9 +131,11 @@ export function useNotificationPrefs() {
       notifyEmail: row.notify_email ?? true,
       newsletter: row.newsletter ?? false,
       emotionDailyPrompt: row.emotion_daily_prompt ?? false,
+      aiEnhance: row.ai_enhance ?? false,
       pushAskedAt: row.push_asked_at ?? null,
       emotionPromptAskedAt: row.emotion_prompt_asked_at ?? null,
       newsletterAskedAt: row.newsletter_asked_at ?? null,
+      aiAskedAt: row.ai_asked_at ?? null,
     };
     dispatch(setNotificationPrefs(fresh));
     return fresh;

@@ -758,6 +758,8 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          ai_asked_at: string | null
+          ai_enhance: boolean
           author: string
           created_at: string
           emotion_daily_prompt: boolean
@@ -778,6 +780,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_asked_at?: string | null
+          ai_enhance?: boolean
           author: string
           created_at?: string
           emotion_daily_prompt?: boolean
@@ -798,6 +802,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_asked_at?: string | null
+          ai_enhance?: boolean
           author?: string
           created_at?: string
           emotion_daily_prompt?: boolean
@@ -838,6 +844,8 @@ export type Database = {
       get_my_notification_prefs: {
         Args: never
         Returns: {
+          ai_asked_at: string
+          ai_enhance: boolean
           emotion_daily_prompt: boolean
           emotion_prompt_asked_at: string
           newsletter: boolean

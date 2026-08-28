@@ -78,14 +78,29 @@ Deno.serve(async (req) => {
   // joins against nothing and comes back empty with no error to show for it.
   const isBadBoy: boolean = profile?.bad_boy ?? false;
 
+  // "AI-s megtalálhatóság": with it off, the search text never leaves for
+  // OpenAI. Read server-side, like the flag in create-buziness — a privacy
+  // choice the client could set for itself is not a choice. A missing or
+  // unreadable settings row means the query stays put.
+  const { data: settings, error: settingsError } = await supabase
+    .from("user_settings")
+    .select("ai_enhance")
+    .eq("author", user.id)
+    .maybeSingle();
+  if (settingsError) {
+    console.error("Could not read the caller's ai_enhance flag:", settingsError.message);
+  }
+  const aiEnhance: boolean = settings?.ai_enhance ?? false;
+
   const { query, skip, take, lat, long, maxdistance, ingyen, match_threshold, fts_weight, semantic_weight, score_sort, distance_sort, recommendation_sort } = await req.json();
 
-  // Instantiate OpenAI client
-  const openai = new OpenAI({ apiKey: openaiApiKey });
-
-  // Generate (or retrieve cached) embedding for the user's query
+  // Generate (or retrieve cached) embedding for the user's query.
+  //
+  // The cache is skipped as well, not just the OpenAI call: a caller with the
+  // AI off gets keyword-only ranking every time, rather than semantic results
+  // for the queries somebody else happened to have embedded already.
   let embedding = null;
-  if (query && query.length > 0) {
+  if (query && query.length > 0 && aiEnhance) {
     const normalized = query.trim().toLowerCase();
     const queryHash = await hashQuery(normalized);
 
@@ -113,6 +128,7 @@ Deno.serve(async (req) => {
         .then(() => {});
     } else {
       console.log("embedding cache miss", query);
+      const openai = new OpenAI({ apiKey: openaiApiKey });
       const completion = await openai.responses.create({
         model: "gpt-4.1-mini",
         temperature: 0,
@@ -208,7 +224,11 @@ Deno.serve(async (req) => {
   if (rows === 0) {
     console.log("empty result, filters were", {
       query_text: query,
-      embedding: embedding ? "present" : "MISSING (zero vector, FTS only)",
+      embedding: embedding
+        ? "present"
+        : aiEnhance
+          ? "MISSING (zero vector, FTS only)"
+          : "off by ai_enhance (zero vector, FTS only)",
       filter_bad_boy: isBadBoy,
       match_threshold: match_threshold ?? 0.6,
       fts_weight: fts_weight ?? 1,

@@ -40,8 +40,34 @@ Deno.serve(async (req) => {
 
     if (!businesses) return new Response("no data", { status: 500 });
 
+    // Authors who turned "AI-s megtalálhatóság" off. A maintenance run must not
+    // be the back door that sends their listing text to OpenAI anyway. Their
+    // rows are left exactly as they are — create-buziness clears the embedding
+    // columns the next time the owner saves the listing.
+    const { data: optedOut, error: optedOutError } = await supabase
+      .from("user_settings")
+      .select("author")
+      .eq("ai_enhance", false);
+    if (optedOutError) {
+      // Without the list every skip decision would be a guess, and guessing
+      // wrong here means sending text the user asked us not to send.
+      console.error("Could not read the opt-out list:", optedOutError.message);
+      return new Response(JSON.stringify({ error: "Could not read the opt-out list" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
+    const skipAuthors = new Set(
+      (optedOut ?? []).map((row: { author: string }) => row.author),
+    );
+
     for (const business of businesses) {
       console.log("id", business.id, business.title);
+
+      if (skipAuthors.has(business.author)) {
+        console.log("skipping", business.id, "— its author opted out of the AI");
+        continue;
+      }
 
       if (business.title) {
         const input =

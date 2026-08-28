@@ -26,10 +26,18 @@ export interface NotificationPrefs {
   notifyEmail: boolean;
   newsletter: boolean;
   emotionDailyPrompt: boolean;
+  /**
+   * "AI-s megtalálhatóság": may the user's biznisz text and search queries be
+   * sent to OpenAI. Not a notification, but it lives here because it is asked
+   * by the same prompt card queue and written the same way — immediately,
+   * column by column. See hooks/useNotificationPrefs.ts.
+   */
+  aiEnhance: boolean;
   /** null = the user has never been asked this question. */
   pushAskedAt: string | null;
   emotionPromptAskedAt: string | null;
   newsletterAskedAt: string | null;
+  aiAskedAt: string | null;
 }
 
 export interface UserState {

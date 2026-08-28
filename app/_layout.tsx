@@ -170,9 +170,11 @@ function RootContent() {
         notifyEmail: prefs.notify_email ?? true,
         newsletter: prefs.newsletter ?? false,
         emotionDailyPrompt: prefs.emotion_daily_prompt ?? false,
+        aiEnhance: prefs.ai_enhance ?? false,
         pushAskedAt: prefs.push_asked_at ?? null,
         emotionPromptAskedAt: prefs.emotion_prompt_asked_at ?? null,
         newsletterAskedAt: prefs.newsletter_asked_at ?? null,
+        aiAskedAt: prefs.ai_asked_at ?? null,
       }));
       if (Platform.OS === "web") return;
       if (prefs.notify_push) {

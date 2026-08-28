@@ -23,6 +23,13 @@ import { useDispatch, useSelector } from "react-redux";
 import FakeSearchInput from "@/components/FakeSearchInput";
 import { Button } from "@/components/Button";
 import { useBuzinessSearch } from "@/hooks/useBuzinessSearch";
+import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
+import {
+  AI_ENHANCE_DESCRIPTION,
+  AI_ENHANCE_GLOBAL_NOTE,
+  AI_ENHANCE_ICON,
+  AI_ENHANCE_LABEL,
+} from "@/constants/aiEnhance";
 import Measure from "@/components/tutorial/Measure";
 import { MyAppbar } from "@/components/MyAppBar";
 import { Spacing } from "@/constants/spacing";
@@ -42,6 +49,7 @@ export default function Index() {
   const [ingyenLocal,setIngyenLocal] = useState(ingyen);
 
   const { canLoadMore, search, loadNext, error } = useBuzinessSearch();
+  const { prefs, setPref, hydrated: prefsHydrated } = useNotificationPrefs();
   
   const listTitle = useMemo(() => searchParams?.text ? "Találatok: " + searchParams?.text : "Közeli bizniszek", [searchParams?.loading]);
   const dispatch = useDispatch();
@@ -112,21 +120,44 @@ export default function Index() {
                 searchEnabled
                 setOpen={setLocationMenuVisible}
               >
-                <List.Item
-                  title="Csak ingyenes bizniszek"
-                  description="Ingyenes vagy önkéntes bizniszeket mutass"
-                  titleStyle={{fontFamily:"Piazzolla-ExtraBold"}}
-                  left={(props) => <List.Icon {...props} color={theme.colors.primary} icon="charity" />}
-                  right={() => (
-                    <Switch
-                    color={theme.colors.nature}
-                      value={ingyenLocal}
-                      onValueChange={(v) => {
-                        setIngyenLocal(v);
-                      }}
-                    />
-                  )}
-                />
+                {/* MapSelector renders a single child, so both rows live
+                    in one wrapper. */}
+                <View>
+                  <List.Item
+                    title="Csak ingyenes bizniszek"
+                    description="Ingyenes vagy önkéntes bizniszeket mutass"
+                    titleStyle={{ fontFamily: "Piazzolla-ExtraBold" }}
+                    left={(props) => <List.Icon {...props} color={theme.colors.primary} icon="charity" />}
+                    right={() => (
+                      <Switch
+                        color={theme.colors.nature}
+                        value={ingyenLocal}
+                        onValueChange={(v) => {
+                          setIngyenLocal(v);
+                        }}
+                      />
+                    )}
+                  />
+                  {/* Unlike the filter above, this one is not part of the
+                      search parameters: it is the global
+                      user_settings.ai_enhance flag, written straight away and
+                      read server-side by the search function. It takes effect
+                      on the next search. */}
+                  <List.Item
+                    title={AI_ENHANCE_LABEL}
+                    description={`${AI_ENHANCE_DESCRIPTION} ${AI_ENHANCE_GLOBAL_NOTE}`}
+                    descriptionNumberOfLines={4}
+                    titleStyle={{ fontFamily: "Piazzolla-ExtraBold" }}
+                    left={(props) => <List.Icon {...props} color={theme.colors.primary} icon={AI_ENHANCE_ICON} />}
+                    right={() => (
+                      <Switch
+                        value={prefs.aiEnhance}
+                        disabled={!prefsHydrated}
+                        onValueChange={(v) => { setPref("aiEnhance", v); }}
+                      />
+                    )}
+                  />
+                </View>
               </MapSelector>
 
             </ThemedView>

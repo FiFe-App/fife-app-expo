@@ -1,4 +1,8 @@
 import { ThemedText } from "@/components/ThemedText";
+import {
+  AI_ENHANCE_DESCRIPTION,
+  AI_ENHANCE_LABEL,
+} from "@/constants/aiEnhance";
 import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
@@ -33,7 +37,7 @@ export default function BeallitasokTab() {
   const { userData, themePreference }: UserState = useSelector(
     (state: RootState) => state.user,
   );
-  const { prefs, setPref } = useNotificationPrefs();
+  const { prefs, setPref, hydrated: prefsHydrated } = useNotificationPrefs();
 
   const [themeMenuVisible, setThemeMenuVisible] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -207,6 +211,21 @@ export default function BeallitasokTab() {
           <Switch
             value={prefs.newsletter}
             onValueChange={(v) => { setPref("newsletter", v); }}
+          />
+        </View>
+      </View>
+      <Divider />
+      <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
+        <ThemedText variant="bodyLarge" type="bold">Mesterséges intelligencia</ThemedText>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <View style={{ flex: 1 }}>
+            <ThemedText>{AI_ENHANCE_LABEL}</ThemedText>
+            <ThemedText type="label">{AI_ENHANCE_DESCRIPTION}</ThemedText>
+          </View>
+          <Switch
+            value={prefs.aiEnhance}
+            disabled={!prefsHydrated}
+            onValueChange={(v) => { setPref("aiEnhance", v); }}
           />
         </View>
       </View>
