@@ -1,7 +1,7 @@
 export default {
   name: "Fife App",
   slug: "fife-app-blodqy3cwbfgnkjv24has",
-  version: "1.2.6",
+  version: "1.2.7",
   orientation: "portrait",
   icon: "./assets/images/Slimey.png",
   scheme: "com.fife.app",
@@ -45,7 +45,7 @@ export default {
   web: {
     bundler: "metro",
     output: "static",
-    favicon: "./assets/images/favicon.png"
+    favicon: "./assets/images/Slimey.png"
   },
   plugins: [
     [

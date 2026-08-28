@@ -114,7 +114,7 @@ export default function Invitation() {
               style={{
                 width: AVATAR_SIZE,
                 height: AVATAR_SIZE,
-                borderRadius: BorderRadius.full,
+                borderRadius: BorderRadius.lg,
               }}
             />
             <ThemedText type="title" style={{ textAlign: "center" }}>

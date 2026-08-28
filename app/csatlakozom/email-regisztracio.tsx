@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { supabase } from "@/lib/supabase/supabase";
+import { clearSignupDraft, setSignupDraft } from "@/redux/reducers/appReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -12,7 +13,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
 import { makeRedirectUri } from "expo-auth-session";
 import { Button, Checkbox, HelperText, Icon, TextInput as PaperTextInput } from "react-native-paper";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import UsernameInput from "@/components/UsernameInput";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
@@ -31,14 +32,20 @@ interface SignupMetadata {
 
 export default function Index() {
   const theme = useAppTheme();
+  const dispatch = useDispatch();
+  // Seeded from the redux draft so "Vissza" and back through the join wizard
+  // (which remounts this screen rather than restoring the previous one)
+  // doesn't make the visitor retype everything. Password is deliberately
+  // excluded — see the signupDraft comment in redux/reducers/appReducer.ts.
+  const signupDraft = useSelector((state: RootState) => state.app.signupDraft);
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState(signupDraft?.name||"");
+  const [email, setEmail] = useState(signupDraft?.email||"");
+  const [username, setUsername] = useState(signupDraft?.username||"");
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | undefined>(undefined);
   const [password, setPassword] = useState("");
   const [passwordAgain, setPasswordAgain] = useState("");
-  const [acceptConditions, setAcceptConditions] = useState(false);
+  const [acceptConditions, setAcceptConditions] = useState(signupDraft?.acceptConditions||false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [existingAccount, setExistingAccount] = useState(false);
@@ -64,6 +71,12 @@ export default function Index() {
 
   const focusNextInput = (nextRef: React.RefObject<{ focus: () => void } | null>) => {
     requestAnimationFrame(() => nextRef.current?.focus?.());
+  };
+
+  const toggleAcceptConditions = () => {
+    const next = !acceptConditions;
+    setAcceptConditions(next);
+    dispatch(setSignupDraft({ acceptConditions: next }));
   };
 
   const createUser = async () => {
@@ -128,6 +141,7 @@ export default function Index() {
         if (data?.user.identities && data.user.identities.length > 0) {
           console.log("Sign-up successful!");
           AsyncStorage.setItem("email", email);
+          dispatch(clearSignupDraft());
           router.navigate("/csatlakozom/email-ellenorzes");
         } else {
           // Supabase hides that an address is taken by returning a user with no
@@ -163,7 +177,7 @@ export default function Index() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
     >
-      <ThemedView style={{ flex: 1, minHeight: 0, padding: Spacing.lg, paddingTop: Spacing.xxxl }}>
+      <ThemedView style={{ flex: 1, minHeight: 0, padding: Spacing.lg, paddingTop: Spacing.xxxl, paddingBottom: 60 }}>
         <ScrollView
           ref={scrollViewRef}
           style={{ flex: 1 }}
@@ -189,7 +203,10 @@ export default function Index() {
               <PaperTextInput
                 ref={nameRef as never}
                 mode="outlined"
-                onChangeText={setName}
+                onChangeText={(text) => {
+                  setName(text);
+                  dispatch(setSignupDraft({ name: text }));
+                }}
                 value={name}
                 label="Neved*"
                 autoComplete="name"
@@ -206,7 +223,10 @@ export default function Index() {
             <UsernameInput
               inputRef={usernameRef}
               value={username}
-              onChangeText={setUsername}
+              onChangeText={(text) => {
+                setUsername(text);
+                dispatch(setSignupDraft({ username: text }));
+              }}
               onAvailabilityChange={setUsernameAvailable}
               label="Felhasználónév"
               style={{ marginTop: Spacing.sm }}
@@ -219,6 +239,7 @@ export default function Index() {
               mode="outlined"
               onChangeText={(text) => {
                 setEmail(text);
+                dispatch(setSignupDraft({ email: text }));
                 // The "you already have an account" prompt is about the address
                 // that was submitted, so a new one makes it stale.
                 setExistingAccount(false);
@@ -293,10 +314,10 @@ export default function Index() {
             />
             <View style={{ flexDirection: "row", alignItems: "center", marginTop: Spacing.lg }}>
               <Checkbox
-                onPress={() => setAcceptConditions(!acceptConditions)}
+                onPress={() => toggleAcceptConditions()}
                 status={acceptConditions ? "checked" : "unchecked"}
               />
-              <ThemedText variant="labelLarge" style={{ flex: 1, flexWrap: "wrap" }} onPress={() => setAcceptConditions(!acceptConditions)}>
+              <ThemedText variant="labelLarge" style={{ flex: 1, flexWrap: "wrap" }} onPress={() => toggleAcceptConditions()}>
                 {"Elolvastam és elfogadom a "}
                 <ThemedText
                   variant="labelLarge"
@@ -316,39 +337,41 @@ export default function Index() {
                 {"."}          
               </ThemedText>
             </View>
-            <Button
-              mode="contained"
-              style={{marginTop:Spacing.lg}}
-              loading={loading}
-              onPress={createUser}
-              disabled={!canSubmit}
-            >
-              Regisztrálok
-            </Button>
-            {!!error && <ThemedView style={{margin:6, alignItems:"center"}} type="error">
-              <ThemedText type="error">{error}</ThemedText>
-            </ThemedView>}
-            {existingAccount && (
-              <ThemedView
-                type="card"
-                style={{
-                  margin: 6,
-                  padding: Spacing.md,
-                  gap: Spacing.sm,
-                  alignItems: "center",
-                  borderRadius: BorderRadius.md,
-                }}
-              >
-                <ThemedText style={{ textAlign: "center" }}>
-                  Ezzel az e-mail-címmel már van fiókod.
-                </ThemedText>
-                <Link href="/login" asChild>
-                  <Button mode="contained">Bejelentkezés</Button>
-                </Link>
-              </ThemedView>
-            )}
           </View>
         </ScrollView>
+        <View style={{ maxWidth: 400, width: "100%" }}>
+          <Button
+            mode="contained"
+            style={{ marginTop: Spacing.lg }}
+            loading={loading}
+            onPress={createUser}
+            disabled={!canSubmit}
+          >
+            Regisztrálok
+          </Button>
+          {!!error && <ThemedView style={{margin:6, alignItems:"center"}} type="error">
+            <ThemedText type="error">{error}</ThemedText>
+          </ThemedView>}
+          {existingAccount && (
+            <ThemedView
+              type="card"
+              style={{
+                margin: 6,
+                padding: Spacing.md,
+                gap: Spacing.sm,
+                alignItems: "center",
+                borderRadius: BorderRadius.md,
+              }}
+            >
+              <ThemedText style={{ textAlign: "center" }}>
+                Ezzel az e-mail-címmel már van fiókod.
+              </ThemedText>
+              <Link href="/login" asChild>
+                <Button mode="contained">Bejelentkezés</Button>
+              </Link>
+            </ThemedView>
+          )}
+        </View>
       </ThemedView>
     </KeyboardAvoidingView>
   );
