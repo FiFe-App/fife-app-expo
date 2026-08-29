@@ -3,6 +3,7 @@ import {
   AI_ENHANCE_DESCRIPTION,
   AI_ENHANCE_LABEL,
 } from "@/constants/aiEnhance";
+import { useInviteLink } from "@/hooks/useInviteLink";
 import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
@@ -38,6 +39,7 @@ export default function BeallitasokTab() {
     (state: RootState) => state.user,
   );
   const { prefs, setPref, hydrated: prefsHydrated } = useNotificationPrefs();
+  const { copyInviteLink } = useInviteLink();
 
   const [themeMenuVisible, setThemeMenuVisible] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -164,6 +166,24 @@ export default function BeallitasokTab() {
             leadingIcon={themePreference === "dark" ? "check" : undefined}
           />
         </Menu>
+      </View>
+      <Divider />
+      {/* The home screen's invite card can be dismissed for good, and it used
+          to be the only way to reach this link. Here it always is. */}
+      <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
+        <ThemedText variant="bodyLarge" type="bold">Hívd meg a barátaidat</ThemedText>
+        <ThemedText type="label">
+          Ha úgy érzed van egy barátod, akinek jól jönne a FiFe App, másold le a
+          saját meghívó linkedet és küldd el neki bátran! A link megmutatja neki
+          a profilodat, és megjegyzi, hogy te hívtad meg.
+        </ThemedText>
+        <Button
+          mode="contained-tonal"
+          icon="content-copy"
+          onPress={copyInviteLink}
+        >
+          Link másolása
+        </Button>
       </View>
       <Divider />
       <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
