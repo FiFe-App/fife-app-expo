@@ -97,6 +97,29 @@ export type User = Tables<"profiles"> & {
     profileRecommendations?: { count: number }[];
   };
 
+/** Which of the two searches the search screen is currently driving. */
+export type SearchMode = "biznisz" | "fife";
+
+/**
+ * A profile row as returned by the name/username search.
+ *
+ * Deliberately not `Tables<"profiles">`: `authenticated` holds column-level
+ * SELECT on only these columns (migration 20260304120000), so the row really
+ * does lack `location`, `bad_boy` and the rest.
+ */
+export interface ProfileSearchResult {
+  id: string;
+  full_name: string;
+  username: string | null;
+  avatar_url: string | null;
+  website: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  viewed_functions: string[] | null;
+  profileRecommendations: { count: number }[];
+  buzinesses: { title: string }[];
+}
+
 /** Return type of the nearest_profiles RPC */
 export interface NearestProfile {
   id: string;

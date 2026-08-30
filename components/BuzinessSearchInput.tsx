@@ -3,7 +3,9 @@ import { BorderRadius } from "@/constants/borderRadius";
 import {
   storeBuzinessSearchParams
 } from "@/redux/reducers/buzinessReducer";
+import { storeUserSearchParams } from "@/redux/reducers/usersReducer";
 import { RootState } from "@/redux/store";
+import { SearchMode } from "@/redux/store.type";
 import { Icon, TouchableRipple } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { useAppTheme } from "@/assets/theme";
@@ -13,24 +15,32 @@ import { TextInput, View, FlatList, Pressable, Text, StyleSheet } from "react-na
 import { useCallback, useRef, useState } from "react";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 
-const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropdown = true }: { onSearch: (query: string) => void; autoFocus?: boolean; showSuggestionsDropdown?: boolean }) => {
+const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropdown = true, mode = "biznisz" }: { onSearch: (query: string) => void; autoFocus?: boolean; showSuggestionsDropdown?: boolean; mode?: SearchMode }) => {
   const dispatch = useDispatch();
   const theme = useAppTheme();
 
   const canSearch = true;
-  const searchText = useSelector((state: RootState) => state.buziness.searchParams?.text ?? "");
+  // The two searches are distinct: a name typed here must never land in the
+  // buziness query behind /biznisz's "Találatok: …" header, and vice versa.
+  const buzinessText = useSelector((state: RootState) => state.buziness.searchParams?.text ?? "");
+  const fifeText = useSelector((state: RootState) => state.users.userSearchParams?.text ?? "");
+  const searchText = mode === "fife" ? fifeText : buzinessText;
   const [inputText, setInputText] = useState(searchText);
   const [focused, setFocused] = useState(autoFocus);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const greetingRef = useRef<string | null>(null);
-  if (!greetingRef.current) {
-    const greetings = ["Keress bizniszekre..."];
-    greetingRef.current = greetings[Math.floor(Math.random() * greetings.length)];
-  }
-  const greeting = greetingRef.current;
+  const greeting = mode === "fife"
+    ? "Keress fifékre (név vagy @felhasználónév)..."
+    : "Keress bizniszekre...";
 
-  const showSuggestions = focused && showSuggestionsDropdown;
+  const storeText = useCallback((text: string) => {
+    dispatch(mode === "fife"
+      ? storeUserSearchParams({ text })
+      : storeBuzinessSearchParams({ text }));
+  }, [dispatch, mode]);
+
+  // get_popular_search_queries is fed by buziness searches only.
+  const showSuggestions = focused && showSuggestionsDropdown && mode === "biznisz";
   const suggestions = useSearchSuggestions(inputText, showSuggestions);
 
   const handleChangeText = useCallback((text: string) => {
@@ -38,16 +48,16 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
     setInputText(text);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      dispatch(storeBuzinessSearchParams({ text }));
+      storeText(text);
     }, 400);
-  }, [dispatch]);
+  }, [storeText]);
 
   const handleSelectSuggestion = useCallback((query: string) => {
     setInputText(query);
-    dispatch(storeBuzinessSearchParams({ text: query }));
+    storeText(query);
     setFocused(false);
     onSearch(query);
-  }, [dispatch, onSearch]);
+  }, [storeText, onSearch]);
 
   const handleSubmit = useCallback(() => {
     setFocused(false);

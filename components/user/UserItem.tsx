@@ -4,18 +4,21 @@ import { Surface, Text } from "react-native-paper";
 import CategoryChip from "../CategoryChip";
 import MetaStat from "../MetaStat";
 import ProfileImage from "../ProfileImage";
-import { NearestProfile, User } from "@/redux/store.type";
+import { NearestProfile, ProfileSearchResult, User } from "@/redux/store.type";
 import toDistanceText from "@/lib/functions/distanceText";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
+import { useAppTheme } from "@/assets/theme";
 
 interface UserItemProps {
-  data: NearestProfile | User;
+  data: NearestProfile | ProfileSearchResult | User;
   showOptions?: boolean;
 }
 
 const UserItem = ({ data, showOptions }: UserItemProps) => {
-  const { id, full_name, avatar_url, created_at, distance } = data as NearestProfile;
+  const theme = useAppTheme();
+  const { id, full_name, username, avatar_url, created_at, distance } =
+    data as NearestProfile;
   const recommendations = "profileRecommendations" in data
     ? (data.profileRecommendations?.[0]?.count || 0)
     : ("recommendations" in data ? (data as NearestProfile).recommendations : 0);
@@ -35,6 +38,15 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
           />
           <View style={{ flex: 1, gap: Spacing.xs }}>
             <Text variant="titleLarge" style={{ fontSize: 18, lineHeight: 24 }}>{full_name || "Nincs név"}</Text>
+            {!!username && (
+              <Text
+                variant="labelMedium"
+                numberOfLines={1}
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                @{username}
+              </Text>
+            )}
             <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.xs }}>
               {buzinesses?.map((buziness, i) => (
                 <CategoryChip key={"buziness" + i}>{buziness}</CategoryChip>
