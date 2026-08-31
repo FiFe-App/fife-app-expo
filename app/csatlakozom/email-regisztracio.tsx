@@ -16,6 +16,7 @@ import { Button, Checkbox, HelperText, Icon, TextInput as PaperTextInput } from 
 import { useDispatch, useSelector } from "react-redux";
 import UsernameInput from "@/components/UsernameInput";
 import { Spacing } from "@/constants/spacing";
+import { PRIVACY_URL, TERMS_URL } from "@/constants/legal";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
 
@@ -322,7 +323,7 @@ export default function Index() {
                 <ThemedText
                   variant="labelLarge"
                   type="link"
-                  onPress={(e) => { e.stopPropagation?.(); openBrowserAsync("https://fifeapp.hu/terms.html"); }}
+                  onPress={(e) => { e.stopPropagation?.(); openBrowserAsync(TERMS_URL); }}
                 >
                   Felhasználási feltételeket
                 </ThemedText>
@@ -330,7 +331,7 @@ export default function Index() {
                 <ThemedText
                   variant="labelLarge"
                   type="link"
-                  onPress={(e) => { e.stopPropagation?.(); openBrowserAsync("https://fifeapp.hu/privacy.html"); }}
+                  onPress={(e) => { e.stopPropagation?.(); openBrowserAsync(PRIVACY_URL); }}
                 >
                   Adatkezelési tájékoztatót
                 </ThemedText>

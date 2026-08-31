@@ -16,6 +16,7 @@ import {
 import { Checkbox, Text } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
+import { CSAE_URL } from "@/constants/legal";
 import { useAppTheme } from "@/assets/theme";
 
 const Register = () => {
@@ -95,7 +96,7 @@ const Register = () => {
           </Text>
         </Pressable>
         <Pressable
-          onPress={() => Linking.openURL("https://fifeapp.hu/CSAE.html")}
+          onPress={() => Linking.openURL(CSAE_URL)}
           style={{ marginTop: Spacing.sm }}
         >
           <Text style={[styles.csaeLink,{color: theme.colors.tertiary}]}>

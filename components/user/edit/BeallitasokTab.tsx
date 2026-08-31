@@ -3,6 +3,7 @@ import {
   AI_ENHANCE_DESCRIPTION,
   AI_ENHANCE_LABEL,
 } from "@/constants/aiEnhance";
+import { LEGAL_DOCUMENTS } from "@/constants/legal";
 import { useInviteLink } from "@/hooks/useInviteLink";
 import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 import { addSnack } from "@/redux/reducers/infoReducer";
@@ -15,6 +16,7 @@ import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { router } from "expo-router";
+import { openBrowserAsync } from "expo-web-browser";
 import { useState } from "react";
 import { Platform, TouchableWithoutFeedback, View, Text } from "react-native";
 import {
@@ -22,10 +24,12 @@ import {
   Dialog,
   Divider,
   HelperText,
+  Icon,
   Menu,
   Portal,
   Switch,
   TextInput,
+  TouchableRipple,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
@@ -249,6 +253,30 @@ export default function BeallitasokTab() {
             onValueChange={(v) => { setPref("aiEnhance", v); }}
           />
         </View>
+      </View>
+      <Divider />
+      {/* Until now these were only reachable from the registration flow, so a
+          member who had already signed up could not read them again. */}
+      <View style={{ paddingVertical: Spacing.lg, gap: Spacing.xs }}>
+        <ThemedText variant="bodyLarge" type="bold">Jogi dokumentumok</ThemedText>
+        {LEGAL_DOCUMENTS.map((document) => (
+          <TouchableRipple
+            key={document.url}
+            onPress={() => openBrowserAsync(document.url)}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: Spacing.sm,
+                paddingVertical: Spacing.sm,
+              }}
+            >
+              <ThemedText style={{ flex: 1 }}>{document.label}</ThemedText>
+              <Icon source="open-in-new" size={16} color={theme.colors.onSurfaceVariant} />
+            </View>
+          </TouchableRipple>
+        ))}
       </View>
       <Divider style={{ marginTop: 16, marginBottom: 16 }} />
       <View style={{ gap: 8, paddingBottom: 32 }}>
