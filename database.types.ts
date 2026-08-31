@@ -397,26 +397,32 @@ export type Database = {
       }
       help_contacts: {
         Row: {
+          author: string | null
           created_at: string
           data: string
           description: string | null
           id: number
+          public: boolean
           title: string
           type: Database["public"]["Enums"]["contact_type"]
         }
         Insert: {
+          author?: string | null
           created_at?: string
           data: string
           description?: string | null
           id?: number
+          public?: boolean
           title: string
           type: Database["public"]["Enums"]["contact_type"]
         }
         Update: {
+          author?: string | null
           created_at?: string
           data?: string
           description?: string | null
           id?: number
+          public?: boolean
           title?: string
           type?: Database["public"]["Enums"]["contact_type"]
         }

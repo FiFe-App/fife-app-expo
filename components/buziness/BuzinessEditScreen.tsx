@@ -54,6 +54,7 @@ import { useAppTheme } from "@/assets/theme";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import SectionLabel from "./SectionLabel";
+import { ThemedText } from "../ThemedText";
 
 interface NewBuzinessInterface {
   title: string;
@@ -508,7 +509,7 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
                   color={theme.colors.primary}
                 />
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Text variant="bodyMedium">Ingyenes / önkéntes biznisz</Text>
+                  <ThemedText variant="bodyMedium">Ingyenes / önkéntes biznisz</ThemedText>
                   <Text
                     variant="bodyMedium"
                     style={{ color: theme.colors.onSurfaceVariant }}
@@ -539,7 +540,7 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
                   color={theme.colors.primary}
                 />
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Text variant="bodyMedium">{AI_ENHANCE_LABEL}</Text>
+                  <ThemedText variant="bodyMedium">{AI_ENHANCE_LABEL}</ThemedText>
                   <Text
                     variant="bodyMedium"
                     style={{ color: theme.colors.onSurfaceVariant }}

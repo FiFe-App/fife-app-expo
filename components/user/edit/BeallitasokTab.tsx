@@ -112,62 +112,6 @@ export default function BeallitasokTab() {
 
   return (
     <View>
-      <View style={{ padding: Spacing.sm }}>
-        <Menu
-          visible={themeMenuVisible}
-          onDismiss={() => setThemeMenuVisible(false)}
-          anchor={
-            <TouchableWithoutFeedback
-              onPress={() => setThemeMenuVisible(true)}
-              accessible={true}
-              accessibilityLabel="Téma kiválasztása"
-            >
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="Téma"
-                  value={
-                    themePreference === "auto"
-                      ? "Automatikus"
-                      : themePreference === "dark"
-                        ? "Sötét"
-                        : "Világos"
-                  }
-                  right={<TextInput.Icon icon="chevron-down" />}
-                  editable={false}
-                  pointerEvents="none"
-                />
-              </View>
-            </TouchableWithoutFeedback>
-          }
-        >
-          <Menu.Item
-            onPress={() => {
-              dispatch(setThemePreference("auto"));
-              setThemeMenuVisible(false);
-            }}
-            title="Automatikus"
-            leadingIcon={themePreference === "auto" ? "check" : undefined}
-          />
-          <Menu.Item
-            onPress={() => {
-              dispatch(setThemePreference("light"));
-              setThemeMenuVisible(false);
-            }}
-            title="Világos"
-            leadingIcon={themePreference === "light" ? "check" : undefined}
-          />
-          <Menu.Item
-            onPress={() => {
-              dispatch(setThemePreference("dark"));
-              setThemeMenuVisible(false);
-            }}
-            title="Sötét"
-            leadingIcon={themePreference === "dark" ? "check" : undefined}
-          />
-        </Menu>
-      </View>
-      <Divider />
       {/* The home screen's invite card can be dismissed for good, and it used
           to be the only way to reach this link. Here it always is. */}
       <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
@@ -179,7 +123,7 @@ export default function BeallitasokTab() {
         </ThemedText>
         <Button
           mode="contained-tonal"
-          icon="content-copy"
+          icon="account-plus"
           onPress={copyInviteLink}
         >
           Link másolása
@@ -237,7 +181,60 @@ export default function BeallitasokTab() {
       </View>
       <Divider />
       <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
-        <ThemedText variant="bodyLarge" type="bold">Mesterséges intelligencia</ThemedText>
+        <ThemedText variant="bodyLarge" type="bold">Egyéb</ThemedText>
+        <Menu
+          visible={themeMenuVisible}
+          onDismiss={() => setThemeMenuVisible(false)}
+          anchor={
+            <TouchableWithoutFeedback
+              onPress={() => setThemeMenuVisible(true)}
+              accessible={true}
+              accessibilityLabel="Téma kiválasztása"
+            >
+              <View>
+                <TextInput
+                  mode="outlined"
+                  label="Téma"
+                  value={
+                    themePreference === "auto"
+                      ? "Automatikus"
+                      : themePreference === "dark"
+                        ? "Sötét"
+                        : "Világos"
+                  }
+                  right={<TextInput.Icon icon="chevron-down" />}
+                  editable={false}
+                  pointerEvents="none"
+                />
+              </View>
+            </TouchableWithoutFeedback>
+          }
+        >
+          <Menu.Item
+            onPress={() => {
+              dispatch(setThemePreference("auto"));
+              setThemeMenuVisible(false);
+            }}
+            title="Automatikus"
+            leadingIcon={themePreference === "auto" ? "check" : undefined}
+          />
+          <Menu.Item
+            onPress={() => {
+              dispatch(setThemePreference("light"));
+              setThemeMenuVisible(false);
+            }}
+            title="Világos"
+            leadingIcon={themePreference === "light" ? "check" : undefined}
+          />
+          <Menu.Item
+            onPress={() => {
+              dispatch(setThemePreference("dark"));
+              setThemeMenuVisible(false);
+            }}
+            title="Sötét"
+            leadingIcon={themePreference === "dark" ? "check" : undefined}
+          />
+        </Menu>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <View style={{ flex: 1 }}>
             <ThemedText>{AI_ENHANCE_LABEL}</ThemedText>
