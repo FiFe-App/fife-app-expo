@@ -23,8 +23,8 @@ type ListItem =
   | { kind: "suggestion"; query: string };
 
 const MODES: { key: SearchMode; label: string; icon: string }[] = [
-  { key: "biznisz", label: "bizniszek", icon: "briefcase-outline" },
-  { key: "fife", label: "fifék", icon: "wifi" },
+  { key: "biznisz", label: "Bizniszek", icon: "briefcase-outline" },
+  { key: "fife", label: "Fifék", icon: "account" },
 ];
 
 export default function SearchScreen() {
@@ -37,14 +37,20 @@ export default function SearchScreen() {
   const buzinessText = useSelector((state: RootState) => state.buziness.searchParams?.text ?? "");
   const fifeText = useSelector((state: RootState) => state.users.userSearchParams?.text ?? "");
   const searchText = mode === "fife" ? fifeText : buzinessText;
-  const previousSearches = useSelector((state: RootState) => state.user.previousSearches ?? []);
+  // Each mode keeps its own history: a name you looked up is not a biznisz query.
+  const previousBuzinessSearches = useSelector((state: RootState) => state.user.previousSearches);
+  const previousProfileSearches = useSelector(
+    (state: RootState) => state.user.previousProfileSearches,
+  );
+  const previousSearches =
+    mode === "fife" ? previousProfileSearches : previousBuzinessSearches;
 
   const suggestions = useSearchSuggestions(searchText, mode === "biznisz");
 
   const handleSearch = useCallback((query: string) => {
     const trimmed = query.trim();
     if (!trimmed) return;
-    dispatch(addPreviousSearch(trimmed));
+    dispatch(addPreviousSearch({ query: trimmed, mode }));
     if (mode === "fife") {
       dispatch(storeUserSearchParams({ text: trimmed, skip: 0 }));
       router.replace("/fifeRadar");
@@ -68,7 +74,7 @@ export default function SearchScreen() {
   }, [navigation, handleSearch, mode]);
 
   const listData = useMemo<ListItem[]>(() => {
-    const prev = previousSearches.filter((q) =>
+    const prev = (previousSearches ?? []).filter((q) =>
       !searchText || q.toLowerCase().includes(searchText.toLowerCase())
     );
     const suggestionTexts = new Set(prev.map((q) => q.toLowerCase()));
@@ -171,7 +177,8 @@ export default function SearchScreen() {
               </ThemedText>
               {item.kind === "previous" && (
                 <Pressable
-                  onPress={() => dispatch(removeFromPreviousSearches(item.query))}
+                  testID={`remove-previous-${item.query}`}
+                  onPress={() => dispatch(removeFromPreviousSearches({ query: item.query, mode }))}
                   hitSlop={8}
                 >
                   <Icon source="close" size={18} color={theme.colors.onSurfaceVariant} />
