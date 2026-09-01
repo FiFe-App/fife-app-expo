@@ -73,7 +73,7 @@ export const UsersList: React.FC<UsersListProps> = ({
               {!!data.length && canLoadMore ? (
                 <ActivityIndicator />
               ) : data.length ? (
-                <ThemedText style={{ alignSelf: "center" }}>
+                <ThemedText style={{ alignSelf: "center", textAlign:"center" }}>
                   {endOfListText}
                 </ThemedText>
               ) : (

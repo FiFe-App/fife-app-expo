@@ -72,7 +72,7 @@ export default function FifeRadarScreen() {
       load: profile.loadNext,
       emptyTitle: NO_PROFILE_RESULTS,
       emptyHint: NO_PROFILE_RESULTS_HINT,
-      endOfListText: "Nem található több profil",
+      endOfListText: "Nem található több fife\n\nKis és nagybetű, illetve ékezetek számítanak!",
     }
     : {
       data: fife.data,
@@ -93,15 +93,7 @@ export default function FifeRadarScreen() {
               </ThemedText>
               {!isSearching && <Icon size={18} color={theme.colors.secondary} source="wifi" />}
             </View>
-            {isSearching ? (
-              <Button
-                icon="close"
-                mode="text"
-                labelStyle={{ marginVertical: Spacing.xs }}
-                // Not clearUserSearchParams: that resets the slice to {} and
-                // would drop searchCircle along with the query.
-                onPress={() => dispatch(storeUserSearchParams({ text: "" }))}
-              >Törlés</Button>
+            {isSearching ? (<></>
             ) : (
               <Button
                 icon={searchCircle ? "map-marker" : "map-marker-outline"}

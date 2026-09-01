@@ -23,7 +23,7 @@ const BottomNavigation = () => {
 
   const profilActive = segment[0]?.includes("user");
   const meActive = segment[0] === "me";
-  const usActive = segment[0]?.includes("home") || segment[0]?.includes("fifeRadar");
+  const usActive = segment[0]?.includes("home") || segment[0]?.includes("fifeRadar") || segment[0]?.includes("search");
   const chatActive = segment[0]?.includes("chat");
   const lastNavTime = useRef(0);
 

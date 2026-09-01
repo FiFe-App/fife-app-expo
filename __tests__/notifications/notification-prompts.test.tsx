@@ -145,7 +145,7 @@ describe("the biznisz upload prompt", () => {
 });
 
 describe("the AI prompt", () => {
-  const AI_TITLE = "Segítsen az AI, hogy többen rád találjanak?";
+  const AI_TITLE = "Egyszerűbb keresés és megtalálhatóság";
 
   it("asks before the biznisz nudge, once the notification questions are done", async () => {
     await renderWithProviders(<NotificationPrompts />, {

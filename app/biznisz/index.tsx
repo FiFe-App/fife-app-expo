@@ -144,8 +144,8 @@ export default function Index() {
                       read server-side by the search function. It takes effect
                       on the next search. */}
                   <List.Item
-                    title={AI_ENHANCE_LABEL}
-                    description={`${AI_ENHANCE_DESCRIPTION} ${AI_ENHANCE_GLOBAL_NOTE}`}
+                    title={"AI Keresés"}
+                    description={`${AI_ENHANCE_DESCRIPTION}`}
                     descriptionNumberOfLines={4}
                     titleStyle={{ fontFamily: "Piazzolla-ExtraBold" }}
                     left={(props) => <List.Icon {...props} color={theme.colors.primary} icon={AI_ENHANCE_ICON} />}

@@ -1,4 +1,4 @@
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import BuzinessItem from "@/components/buziness/BuzinessItem";
 import { FiFeRadar } from "@/components/user/FiFeRadar";
 import { ThemedText } from "@/components/ThemedText";
@@ -10,7 +10,7 @@ import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { clearOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { useCallback, useEffect } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Icon } from "react-native-paper";
 import { ScrollView } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
@@ -108,6 +108,12 @@ export default function Index() {
               {searchCircle ? "Közeli" : "Budapesti"} Bizniszek
             </ThemedText>
             <Icon size={18} color={theme.colors.secondary} source="map-marker" />
+            <Pressable onPress={()=>router.push("/search")} style={{ flex:1, flexDirection: "row", alignItems: "center", justifyContent:"flex-end", gap: Spacing.xs }}>
+              <ThemedText variant="labelMedium" type="bold" style={{ color: theme.colors.primary }}>
+                Keresés
+              </ThemedText>
+              <Icon size={18} color={theme.colors.primary} source="chevron-right" />
+            </Pressable>
           </View>
         </ThemedView>
         {!!buzinessError && (

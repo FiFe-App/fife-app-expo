@@ -57,7 +57,7 @@ const UserItem = ({ data, showOptions }: UserItemProps) => {
                 <MetaStat icon="map-marker">{toDistanceText(distance / 1000)} távolságra</MetaStat>
               )}
               {recommendations > 0 && (
-                <MetaStat icon="account-group">{recommendations} ember ajánlja</MetaStat>
+                <MetaStat icon="account-group">{recommendations} ember tartja megbízhatónak</MetaStat>
               )}
             </View>
           </View>
