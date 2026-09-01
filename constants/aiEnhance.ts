@@ -10,7 +10,7 @@ export const AI_ENHANCE_LABEL = "Jobb megtalálhatóság engedélyezése";
 
 export const AI_ENHANCE_DESCRIPTION =
   "AI alapú keresés engedélyezése: a bizniszed címe, leírása mentésekor el lesz küldve az OpenAI-nak. " +
-  "Nem mindenki kedvence, ezért rád bízom. Kikapcsolva csak kulcsszavas keresés működik.";
+  "Nem mindenki kedvence, ezért rád bízom. Példa: \"állat\" keresésre megtalálod a kutyás bizniszeket.";
 
 /** Reminder that the switch is not local to the screen it is shown on. */
 export const AI_ENHANCE_GLOBAL_NOTE =
