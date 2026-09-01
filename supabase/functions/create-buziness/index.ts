@@ -136,29 +136,52 @@ Deno.serve(async (req)=>{
     });
   }
   
-  // Proceed with buziness creation
-  const openai = new OpenAI({
-    apiKey: openaiApiKey
-  });
-  const input = buziness.title.replace(/(\s\$\s)+/g, ", ") + (buziness.description || "");
-  console.log("run embedding with input", input);
-  const completion = await openai.responses.create({
-    model: "gpt-4.1-mini",
-    temperature: 0.3,
-    instructions: embedding_instructions,
-    input
-  });
+  // "AI-s megtalálhatóság": the user decides whether their listing text may be
+  // sent to OpenAI at all. Read here rather than taken from the request body —
+  // a privacy choice the client could set for itself is not a choice.
+  // No settings row (or an unreadable one) means the text stays put.
+  const { data: settings, error: settingsError } = await supabase
+    .from("user_settings")
+    .select("ai_enhance")
+    .eq("author", author)
+    .maybeSingle();
+  if (settingsError) {
+    console.error("Could not read the author's ai_enhance flag:", settingsError.message);
+  }
+  const aiEnhance: boolean = settings?.ai_enhance ?? false;
 
+  // Both stay null when the AI is off. They are sent to the upsert as explicit
+  // nulls, which clears whatever a previous save left behind: turning the
+  // setting off and saving the listing again is what removes its AI-derived
+  // columns.
+  let embedding_text: string | null = null;
+  let embedding: number[] | null = null;
 
-  const embedding_text = completion.output_text;
-  console.log("embedding_text",embedding_text);
+  if (aiEnhance) {
+    const openai = new OpenAI({
+      apiKey: openaiApiKey
+    });
+    const input = buziness.title.replace(/(\s\$\s)+/g, ", ") + (buziness.description || "");
+    console.log("run embedding with input", input);
+    const completion = await openai.responses.create({
+      model: "gpt-4.1-mini",
+      temperature: 0.3,
+      instructions: embedding_instructions,
+      input
+    });
 
-  const embeddingResponse = await openai.embeddings.create({
-    model: "text-embedding-3-large",
-    input: embedding_text,
-    dimensions: 512
-  });
-  console.log(embeddingResponse);
+    embedding_text = completion.output_text;
+    console.log("embedding_text", embedding_text);
+
+    const embeddingResponse = await openai.embeddings.create({
+      model: "text-embedding-3-large",
+      input: embedding_text,
+      dimensions: 512
+    });
+    embedding = embeddingResponse.data[0].embedding;
+  } else {
+    console.log("ai_enhance is off for", author, "— skipping OpenAI, clearing the embedding");
+  }
   
   // Explicit allowlist. Spreading the request body would let a caller set
   // author, created_at, or the embedding columns that drive search ranking.
@@ -171,7 +194,7 @@ Deno.serve(async (req)=>{
     defaultContact: buziness.defaultContact,
     radius: buziness.radius,
     images: buziness.images,
-    embedding: embeddingResponse.data[0].embedding,
+    embedding,
     embedding_text,
   };
   // Keep nulls (they clear a column) but drop keys the client never sent.

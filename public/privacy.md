@@ -1,6 +1,6 @@
 # Adatkezelési Tájékoztató – FiFe App mobilalkalmazás
 
-Hatályos: 2026. május 12.
+Hatályos: 2026. augusztus 28.
 
 ## 1. Az adatkezelő adatai
 
@@ -149,21 +149,35 @@ címen.
 
 ## 7. Adatfeldolgozók és külső szolgáltatók
 
-A FiFe App működtetése során az Adatkezelő adatfeldolgozókat vehet igénybe.
-
-Különösen:
-
-* tárhelyszolgáltató,
-* felhőszolgáltató,
-* push notification szolgáltató,
-* analitikai szolgáltató,
-* hibakövető szolgáltatás,
-* e-mail szolgáltató.
-
 Az adatfeldolgozók kizárólag az Adatkezelő utasításai alapján kezelhetik az adatokat.
 
-A szolgáltatás Supabase infrastruktúrát használ autentikációs és backend célokra. A Supabase adatkezelési gyakorlatáról
-bővebb információ a [https://supabase.com/privacy](https://supabase.com/privacy) oldalon található.
+Az alkalmazás az alábbi adatfeldolgozókat veszi igénybe:
+
+* **Supabase Inc.** – autentikáció, adatbázis, fájltárolás
+  ([adatvédelmi szabályzat](https://supabase.com/privacy))
+* **Expo (Expo Go / EAS – Expo Inc.)** – push értesítések küldése
+  ([adatvédelmi szabályzat](https://expo.dev/privacy))
+* **Google LLC (Google Maps Platform)** – térképszolgáltatás és helyadatok megjelenítése
+  ([adatvédelmi szabályzat](https://policies.google.com/privacy))
+* **Apple Inc. (Apple Push Notification Service)** – push értesítések iOS eszközökre
+  ([adatvédelmi szabályzat](https://www.apple.com/legal/privacy/))
+* **OpenAI Ireland Ltd. / OpenAI, L.L.C.** – a bizniszhirdetések szövegének és a keresési
+  kifejezéseknek a feldolgozása, hogy a keresés pontosabb találatokat adjon
+  ([adatvédelmi szabályzat](https://openai.com/policies/privacy-policy))
+
+### Mesterséges intelligencia használata
+
+Az alkalmazás keresőjének pontosításához az OpenAI szolgáltatását vesszük igénybe. Ide
+kizárólag a következők kerülnek: a **biznisz címe és leírása**, amelyet a felhasználó maga
+ír és amely az alkalmazásban egyébként is nyilvános, valamint a **keresőbe beírt szöveg**.
+Név, e-mail-cím, felhasználói azonosító, helyadat és elérhetőség nem kerül továbbításra, és
+a továbbított szöveget a szolgáltató a szerződése szerint nem használja fel modellek
+tanítására.
+
+Ez a funkció bármikor kikapcsolható a **Profil → Beállítások → Mesterséges intelligencia**
+menüpontban (illetve ugyanez a kapcsoló megtalálható a biznisz szerkesztésénél és a keresés
+finomításánál is). Kikapcsolt állapotban a felhasználó szövegéből semmi nem kerül az OpenAI
+felé; a keresés ilyenkor kulcsszavas találatokat ad.
 
 Amennyiben az alkalmazás Google Firebase, Apple Push Notification Service vagy Meta szolgáltatásokat használ, ezek a
 szolgáltatók önálló adatkezelőként is eljárhatnak saját adatvédelmi szabályzataik szerint.
@@ -196,7 +210,9 @@ Az Adatkezelő személyes adatot harmadik fél részére kizárólag:
 továbbít.
 
 Az Adatkezelő személyes adatokat az Európai Gazdasági Térségen kívülre kizárólag megfelelő garanciák megléte esetén
-továbbít.
+továbbít. A 7. pontban írt AI-funkció esetén az adattovábbítás alapja az Európai Bizottság
+által elfogadott általános szerződési feltételek (SCC), a szolgáltatóval kötött
+adatfeldolgozói szerződés keretében.
 
 ---
 

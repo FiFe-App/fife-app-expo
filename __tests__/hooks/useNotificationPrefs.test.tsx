@@ -106,9 +106,11 @@ describe("useNotificationPrefs / reload", () => {
           notify_email: false,
           newsletter: true,
           emotion_daily_prompt: true,
+          ai_enhance: true,
           push_asked_at: "2026-01-01T00:00:00.000Z",
           emotion_prompt_asked_at: null,
           newsletter_asked_at: null,
+          ai_asked_at: "2026-02-02T00:00:00.000Z",
         },
       ],
       error: null,
@@ -127,9 +129,11 @@ describe("useNotificationPrefs / reload", () => {
       notifyEmail: false,
       newsletter: true,
       emotionDailyPrompt: true,
+      aiEnhance: true,
       pushAskedAt: "2026-01-01T00:00:00.000Z",
       emotionPromptAskedAt: null,
       newsletterAskedAt: null,
+      aiAskedAt: "2026-02-02T00:00:00.000Z",
     });
   });
 
@@ -193,6 +197,39 @@ describe("useNotificationPrefs / setPref", () => {
     const written = lastPrefsUpdate();
     expect(written.newsletter).toBe(true);
     expect(written.newsletter_asked_at).toEqual(expect.any(String));
+  });
+
+  it("writes the AI setting and its asked column, with no permission prompt", async () => {
+    const store = storeWith();
+    const { result } = await renderHookWithProviders(() => useNotificationPrefs(), {
+      store,
+    });
+
+    await act(async () => {
+      expect(await result.current.setPref("aiEnhance", true)).toBe(true);
+    });
+
+    const written = lastPrefsUpdate();
+    expect(written.ai_enhance).toBe(true);
+    expect(written.ai_asked_at).toEqual(expect.any(String));
+    // Nothing to do with notifications: this one must never touch the OS
+    // permission or the push token.
+    expect(mockedPermission).not.toHaveBeenCalled();
+    expect(mockedRegisterToken).not.toHaveBeenCalled();
+  });
+
+  it("turns the AI setting off again", async () => {
+    // The edge functions read this column on the next save or search, so the
+    // write has to happen immediately rather than through a debounce.
+    const { result } = await renderHookWithProviders(() => useNotificationPrefs(), {
+      store: storeWith({ aiEnhance: true }),
+    });
+
+    await act(async () => {
+      expect(await result.current.setPref("aiEnhance", false)).toBe(false);
+    });
+
+    expect(lastPrefsUpdate().ai_enhance).toBe(false);
   });
 
   it("does not stamp an asked column for notifyEmail", async () => {

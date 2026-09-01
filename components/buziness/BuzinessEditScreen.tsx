@@ -35,6 +35,13 @@ import { ThemedView } from "../ThemedView";
 import BuzinessMediaUpload, {
   BuzinessMediaUploadHandle,
 } from "./BuzinessMediaUpload";
+import {
+  AI_ENHANCE_DESCRIPTION,
+  AI_ENHANCE_GLOBAL_NOTE,
+  AI_ENHANCE_ICON,
+  AI_ENHANCE_LABEL,
+} from "@/constants/aiEnhance";
+import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
 import getMediaKind from "@/lib/functions/getMediaKind";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
@@ -47,6 +54,7 @@ import { useAppTheme } from "@/assets/theme";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import SectionLabel from "./SectionLabel";
+import { ThemedText } from "../ThemedText";
 
 interface NewBuzinessInterface {
   title: string;
@@ -65,6 +73,7 @@ export default function BuzinessEditScreen({
   const theme = useAppTheme();
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
+  const { prefs, setPref, hydrated: prefsHydrated } = useNotificationPrefs();
   const [categories, setCategories] = useState<string[]>([]);
   const [newBuziness, setNewBuziness] = useState<NewBuzinessInterface>({
     title: "",
@@ -148,8 +157,12 @@ export default function BuzinessEditScreen({
           title,
           ingyen,
           author: uid,
-          location: selectedLocation
-            ? `POINT(${selectedLocation?.longitude} ${selectedLocation?.latitude})`
+          // The chosen circle alone, never `selectedLocation`: that one falls
+          // back to the device's GPS so the map preview has something to
+          // centre on, and saving through it pinned every "Bárhol" biznisz to
+          // wherever its author happened to be standing.
+          location: circle?.location
+            ? `POINT(${circle.location.longitude} ${circle.location.latitude})`
             : null,
           defaultContact,
         },
@@ -195,7 +208,7 @@ export default function BuzinessEditScreen({
     media.length,
     ingyen,
     newBuziness,
-    selectedLocation,
+    circle,
     title,
     uid,
   ]);
@@ -496,7 +509,7 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
                   color={theme.colors.primary}
                 />
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Text variant="bodyMedium">Ingyenes / önkéntes biznisz</Text>
+                  <ThemedText variant="bodyMedium">Ingyenes / önkéntes biznisz</ThemedText>
                   <Text
                     variant="bodyMedium"
                     style={{ color: theme.colors.onSurfaceVariant }}
@@ -508,6 +521,40 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
                   value={ingyen}
                   onValueChange={setIngyen}
                   color={theme.colors.nature}
+                />
+              </View>
+              {/* Global preference, not a property of this biznisz: the same
+                  switch is on the search screen and in the profile settings,
+                  and the edge function reads it from user_settings when it
+                  decides whether to send this text to OpenAI at all. */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: Spacing.md,
+                }}
+              >
+                <Icon
+                  source={AI_ENHANCE_ICON}
+                  size={24}
+                  color={theme.colors.primary}
+                />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <ThemedText variant="bodyMedium">{AI_ENHANCE_LABEL}</ThemedText>
+                  <Text
+                    variant="bodyMedium"
+                    style={{ color: theme.colors.onSurfaceVariant }}
+                  >
+                    {AI_ENHANCE_DESCRIPTION} {AI_ENHANCE_GLOBAL_NOTE}
+                  </Text>
+                </View>
+                {/* Until the stored value is in, the hook serves the
+                    default (off) — tapping then would write that default over
+                    the user's real setting. */}
+                <Switch
+                  value={prefs.aiEnhance}
+                  disabled={!prefsHydrated}
+                  onValueChange={(v) => { setPref("aiEnhance", v); }}
                 />
               </View>
             </Surface>

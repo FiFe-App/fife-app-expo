@@ -10,6 +10,7 @@ import {
   TogglePref,
   useNotificationPrefs,
 } from "@/hooks/useNotificationPrefs";
+import { AI_ENHANCE_DESCRIPTION } from "@/constants/aiEnhance";
 import { dismissHomeAddBuzinessCard, dismissHomeMessagingCard } from "@/redux/reducers/appReducer";
 import { RootState } from "@/redux/store";
 
@@ -35,8 +36,9 @@ interface ActionPrompt extends BasePrompt {
   kind: "action";
   key: string;
   acceptText: string;
-  onAccept: () => void;
-  onDismiss: () => void;
+  dismissText?: string;
+  onAccept: () => void | Promise<void>;
+  onDismiss: () => void | Promise<void>;
 }
 
 type Prompt = PrefPrompt | ActionPrompt;
@@ -100,6 +102,31 @@ export default function NotificationPrompts() {
       answered: askedAt.newsletter !== null,
     },
     {
+      // Deliberately an action prompt rather than a pref one: a pref
+      // dismissal only stamps the asked column and leaves the value alone,
+      // which would leave an existing user — grandfathered to true by the
+      // migration — switched on after they answered "no". Here both answers
+      // are written.
+      kind: "action",
+      key: "aiEnhance",
+      icon: "creation",
+      title: "Segítsen az AI, hogy többen rád találjanak?",
+      body: `${AI_ENHANCE_DESCRIPTION} Bármikor átállíthatod a Profil → Beállítások alatt.`,
+      nativeOnly: false,
+      available: true,
+      answered: prefs.aiAskedAt !== null,
+      acceptText: "Bekapcsolom",
+      dismissText: "Nem kérem",
+      // Both branches stamp ai_asked_at, so the card does not come back either
+      // way.
+      onAccept: async () => {
+        await setPref("aiEnhance", true);
+      },
+      onDismiss: async () => {
+        await setPref("aiEnhance", false);
+      },
+    },
+    {
       kind: "action",
       key: "addBuziness",
       icon: "storefront-plus-outline",
@@ -118,7 +145,9 @@ export default function NotificationPrompts() {
         dispatch(dismissHomeAddBuzinessCard());
         router.push("/biznisz/new");
       },
-      onDismiss: () => dispatch(dismissHomeAddBuzinessCard()),
+      onDismiss: () => {
+        dispatch(dismissHomeAddBuzinessCard());
+      },
     },
     {
       kind: "action",
@@ -141,7 +170,9 @@ export default function NotificationPrompts() {
         // right on the "Közvetlen üzenet" switch with no deep link needed.
         router.push("/user/edit");
       },
-      onDismiss: () => dispatch(dismissHomeMessagingCard()),
+      onDismiss: () => {
+        dispatch(dismissHomeMessagingCard());
+      },
     },
   ];
 
@@ -158,8 +189,10 @@ export default function NotificationPrompts() {
     setBusy(next.key);
     try {
       if (next.kind === "action") {
-        if (accepted) next.onAccept();
-        else next.onDismiss();
+        // Awaited: some of these write a preference to the server, and the
+        // card's spinner should last as long as the write does.
+        if (accepted) await next.onAccept();
+        else await next.onDismiss();
         return;
       }
       // setPref stamps the "asked" column itself; a dismissal only
@@ -177,6 +210,7 @@ export default function NotificationPrompts() {
       title={next.title}
       body={next.body}
       acceptText={next.kind === "action" ? next.acceptText : undefined}
+      dismissText={next.kind === "action" ? next.dismissText : undefined}
       loading={busy === next.key}
       onAccept={() => answer(true)}
       onDismiss={() => answer(false)}

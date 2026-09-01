@@ -1,4 +1,10 @@
 import { ThemedText } from "@/components/ThemedText";
+import {
+  AI_ENHANCE_DESCRIPTION,
+  AI_ENHANCE_LABEL,
+} from "@/constants/aiEnhance";
+import { LEGAL_DOCUMENTS } from "@/constants/legal";
+import { useInviteLink } from "@/hooks/useInviteLink";
 import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
@@ -10,6 +16,7 @@ import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { router } from "expo-router";
+import { openBrowserAsync } from "expo-web-browser";
 import { useState } from "react";
 import { Platform, TouchableWithoutFeedback, View, Text } from "react-native";
 import {
@@ -17,10 +24,12 @@ import {
   Dialog,
   Divider,
   HelperText,
+  Icon,
   Menu,
   Portal,
   Switch,
   TextInput,
+  TouchableRipple,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
@@ -33,7 +42,8 @@ export default function BeallitasokTab() {
   const { userData, themePreference }: UserState = useSelector(
     (state: RootState) => state.user,
   );
-  const { prefs, setPref } = useNotificationPrefs();
+  const { prefs, setPref, hydrated: prefsHydrated } = useNotificationPrefs();
+  const { copyInviteLink } = useInviteLink();
 
   const [themeMenuVisible, setThemeMenuVisible] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -106,7 +116,76 @@ export default function BeallitasokTab() {
 
   return (
     <View>
-      <View style={{ padding: Spacing.sm }}>
+      {/* The home screen's invite card can be dismissed for good, and it used
+          to be the only way to reach this link. Here it always is. */}
+      <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
+        <ThemedText variant="bodyLarge" type="bold">Hívd meg a barátaidat</ThemedText>
+        <ThemedText type="label">
+          Ha úgy érzed van egy barátod, akinek jól jönne a FiFe App, másold le a
+          saját meghívó linkedet és küldd el neki bátran! A link megmutatja neki
+          a profilodat, és megjegyzi, hogy te hívtad meg.
+        </ThemedText>
+        <Button
+          mode="contained-tonal"
+          icon="account-plus"
+          onPress={copyInviteLink}
+        >
+          Link másolása
+        </Button>
+      </View>
+      <Divider />
+      <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
+        <ThemedText variant="bodyLarge" type="bold">Értesítések</ThemedText>
+
+        {emotionAvailable && Platform.OS !== "web" && (
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <View style={{ flex: 1 }}>
+              <ThemedText>Hangulatnapló</ThemedText>
+              <ThemedText type="label">Minden este megkérdezem, milyen napod volt és naptárban követheted a jegyzeteidet, hangulatodat.</ThemedText>
+            </View>
+            <Switch
+              value={prefs.emotionDailyPrompt}
+              onValueChange={(v) => { setPref("emotionDailyPrompt", v); }}
+            />
+          </View>
+        )}
+        <Divider />
+        {Platform.OS !== "web" && (
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <View style={{ flex: 1 }}>
+              <ThemedText>Push értesítések</ThemedText>
+              <ThemedText type="label">Ajánlások, kommentek és üzenetek a telefonodon</ThemedText>
+            </View>
+            <Switch
+              value={prefs.notifyPush}
+              onValueChange={(v) => { setPref("notifyPush", v); }}
+            />
+          </View>
+        )}
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <View style={{ flex: 1 }}>
+            <ThemedText>Email értesítések</ThemedText>
+            <ThemedText type="label">Ajánlások, kommentek és üzenetek {userData?.email} címedre</ThemedText>
+          </View>
+          <Switch
+            value={prefs.notifyEmail}
+            onValueChange={(v) => { setPref("notifyEmail", v); }}
+          />
+        </View>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <View style={{ flex: 1 }}>
+            <ThemedText>Kérek hírlevelet</ThemedText>
+            <ThemedText type="label">Újdonságok és tippek emailben</ThemedText>
+          </View>
+          <Switch
+            value={prefs.newsletter}
+            onValueChange={(v) => { setPref("newsletter", v); }}
+          />
+        </View>
+      </View>
+      <Divider />
+      <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
+        <ThemedText variant="bodyLarge" type="bold">Egyéb</ThemedText>
         <Menu
           visible={themeMenuVisible}
           onDismiss={() => setThemeMenuVisible(false)}
@@ -160,56 +239,41 @@ export default function BeallitasokTab() {
             leadingIcon={themePreference === "dark" ? "check" : undefined}
           />
         </Menu>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <View style={{ flex: 1 }}>
+            <ThemedText>{AI_ENHANCE_LABEL}</ThemedText>
+            <ThemedText type="label">{AI_ENHANCE_DESCRIPTION}</ThemedText>
+          </View>
+          <Switch
+            value={prefs.aiEnhance}
+            disabled={!prefsHydrated}
+            onValueChange={(v) => { setPref("aiEnhance", v); }}
+          />
+        </View>
       </View>
       <Divider />
-      <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
-        <ThemedText variant="bodyLarge" type="bold">Értesítések</ThemedText>
-
-        {emotionAvailable && Platform.OS !== "web" && (
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <View style={{ flex: 1 }}>
-              <ThemedText>Hangulatnapló</ThemedText>
-              <ThemedText type="label">Minden este megkérdezem, milyen napod volt és naptárban követheted a jegyzeteidet, hangulatodat.</ThemedText>
+      {/* Until now these were only reachable from the registration flow, so a
+          member who had already signed up could not read them again. */}
+      <View style={{ paddingVertical: Spacing.lg, gap: Spacing.xs }}>
+        <ThemedText variant="bodyLarge" type="bold">Jogi dokumentumok</ThemedText>
+        {LEGAL_DOCUMENTS.map((document) => (
+          <TouchableRipple
+            key={document.url}
+            onPress={() => openBrowserAsync(document.url)}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: Spacing.sm,
+                paddingVertical: Spacing.sm,
+              }}
+            >
+              <ThemedText style={{ flex: 1 }}>{document.label}</ThemedText>
+              <Icon source="open-in-new" size={16} color={theme.colors.onSurfaceVariant} />
             </View>
-            <Switch
-              value={prefs.emotionDailyPrompt}
-              onValueChange={(v) => { setPref("emotionDailyPrompt", v); }}
-            />
-          </View>
-        )}
-        <Divider />
-        {Platform.OS !== "web" && (
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <View style={{ flex: 1 }}>
-              <ThemedText>Push értesítések</ThemedText>
-              <ThemedText type="label">Ajánlások, kommentek és üzenetek a telefonodon</ThemedText>
-            </View>
-            <Switch
-              value={prefs.notifyPush}
-              onValueChange={(v) => { setPref("notifyPush", v); }}
-            />
-          </View>
-        )}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <View style={{ flex: 1 }}>
-            <ThemedText>Email értesítések</ThemedText>
-            <ThemedText type="label">Ajánlások, kommentek és üzenetek {userData?.email} címedre</ThemedText>
-          </View>
-          <Switch
-            value={prefs.notifyEmail}
-            onValueChange={(v) => { setPref("notifyEmail", v); }}
-          />
-        </View>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <View style={{ flex: 1 }}>
-            <ThemedText>Kérek hírlevelet</ThemedText>
-            <ThemedText type="label">Újdonságok és tippek emailben</ThemedText>
-          </View>
-          <Switch
-            value={prefs.newsletter}
-            onValueChange={(v) => { setPref("newsletter", v); }}
-          />
-        </View>
+          </TouchableRipple>
+        ))}
       </View>
       <Divider style={{ marginTop: 16, marginBottom: 16 }} />
       <View style={{ gap: 8, paddingBottom: 32 }}>
