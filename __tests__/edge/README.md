@@ -38,6 +38,12 @@ against the production project — or any non-local URL, unless you set
 | nothing beyond the local stack | auth gates, validation, ownership, world/ingyen filters, paging, unsubscribe tokens, storage cleanup, user deletion |
 | `OPENAI_API_KEY` | creating/updating a buziness (the embedding is generated before the insert) and hybrid text search + its embedding cache |
 
+The AI itself is a per-user setting (`user_settings.ai_enhance`, off for a new
+account), so the fixtures opt a user in with `createUser({ aiEnhance: true })`
+wherever a suite expects OpenAI to be reached. The opposite case — a user who
+opted out — is covered *without* a key, because the whole point is that no call
+is made.
+
 Without `OPENAI_API_KEY` those two blocks skip and the rest still runs. With it,
 put the key where the functions can see it too:
 

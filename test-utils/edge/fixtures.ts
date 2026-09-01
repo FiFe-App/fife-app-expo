@@ -44,9 +44,22 @@ export class TestData {
     this.admin = admin;
   }
 
-  /** Creates a confirmed auth user (and, via trigger, their profile) and signs in. */
+  /**
+   * Creates a confirmed auth user (and, via trigger, their profile and settings
+   * row) and signs in.
+   *
+   * `aiEnhance` opts the user into the AI path. It is off for a new account, so
+   * every suite that expects create-buziness or business-search to reach OpenAI
+   * has to ask for it — which is also what makes the opposite case testable
+   * without an API key at all.
+   */
   async createUser(
-    options: { fullName?: string; badBoy?: boolean; newsletter?: boolean } = {},
+    options: {
+      fullName?: string;
+      badBoy?: boolean;
+      newsletter?: boolean;
+      aiEnhance?: boolean;
+    } = {},
   ): Promise<TestUser> {
     const email = `${TEST_MARKER}${crypto.randomUUID()}@${TEST_EMAIL_DOMAIN}`;
     const { data, error } = await this.admin.auth.admin.createUser({
@@ -69,6 +82,14 @@ export class TestData {
         .update(profileFlags)
         .eq("id", data.user.id);
       if (flagError) throw new Error(`Could not set profile flags: ${flagError.message}`);
+    }
+
+    if (options.aiEnhance !== undefined) {
+      const { error: aiError } = await this.admin
+        .from("user_settings")
+        .update({ ai_enhance: options.aiEnhance })
+        .eq("author", data.user.id);
+      if (aiError) throw new Error(`Could not set ai_enhance: ${aiError.message}`);
     }
 
     const { data: session, error: signInError } = await anonClient().auth.signInWithPassword({
@@ -100,6 +121,9 @@ export class TestData {
    * Writes a buziness row directly, bypassing create-buziness — the tests that
    * need an existing row (ownership checks, search results) shouldn't have to
    * spend an OpenAI call to get one.
+   *
+   * `location` is WKT, the same shape the editor sends ("POINT(long lat)").
+   * Left out, the row has no location at all — a "Bárhol" biznisz.
    */
   async seedBuziness(
     author: string,
@@ -108,6 +132,7 @@ export class TestData {
       description: string;
       ingyen: boolean;
       embedding_text: string;
+      location: string;
     }> = {},
   ): Promise<{ id: number; title: string }> {
     const title = overrides.title ?? `${TEST_MARKER}${crypto.randomUUID().slice(0, 8)}`;
@@ -119,6 +144,7 @@ export class TestData {
         description: overrides.description ?? `${TEST_MARKER}description`,
         ingyen: overrides.ingyen ?? false,
         embedding_text: overrides.embedding_text ?? title,
+        ...(overrides.location ? { location: overrides.location } : {}),
       })
       .select("id, title")
       .single();

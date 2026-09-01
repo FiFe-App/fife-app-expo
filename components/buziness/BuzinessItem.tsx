@@ -45,6 +45,10 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
         ? toDistanceText(distance / 1000) + " távolságra"
         : "közel hozzád"
       : "";
+  // A biznisz saved as "Bárhol" has no location at all, so there is no distance
+  // to show. Without this it would simply have no location line, which reads as
+  // missing data rather than as the deliberate choice it is.
+  const anywhere = !data.location;
 
   const isNew = data?.created_at && new Date().getTime() - new Date(data.created_at).getTime() < 1000 * 60 * 60 * 24 * 10;
 
@@ -111,7 +115,11 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
           </View>
           <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.sm }}>
             <MetaStat icon="account-group">{recommendations} ember ajánlja</MetaStat>
-            {!!distanceText && <MetaStat icon="map-marker">{distanceText}</MetaStat>}
+            {anywhere ? (
+              <MetaStat icon="wifi">Bárhol elérhető</MetaStat>
+            ) : (
+              !!distanceText && <MetaStat icon="map-marker">{distanceText}</MetaStat>
+            )}
             {mediaCounts.map((stat) => (
               <MetaStat key={stat.label} icon={stat.icon}>
                 {stat.count} {stat.label}

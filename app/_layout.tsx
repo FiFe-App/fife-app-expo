@@ -184,9 +184,11 @@ function RootContent() {
         notifyEmail: prefs.notify_email ?? true,
         newsletter: prefs.newsletter ?? false,
         emotionDailyPrompt: prefs.emotion_daily_prompt ?? false,
+        aiEnhance: prefs.ai_enhance ?? false,
         pushAskedAt: prefs.push_asked_at ?? null,
         emotionPromptAskedAt: prefs.emotion_prompt_asked_at ?? null,
         newsletterAskedAt: prefs.newsletter_asked_at ?? null,
+        aiAskedAt: prefs.ai_asked_at ?? null,
       }));
       if (Platform.OS === "web") return;
       if (prefs.notify_push) {
@@ -374,6 +376,13 @@ function RootContent() {
                 name="leiratkozas"
                 options={{ headerShown: false }}
               />
+              {/* Outside both guards on purpose: an invite link is opened by
+                  someone who has no account yet, but a member who taps their
+                  own link has to be able to see it too. */}
+              <Stack.Screen
+                name="meghivo/[uid]"
+                options={{ headerShown: false }}
+              />
             </Stack>
                         {/* Only inside the app itself — the nudge has no business on the
                 public landing page or in the middle of signing up. */}
@@ -389,6 +398,7 @@ function RootContent() {
               !pathname.includes("password") &&
               !pathname.includes("user/deleted-account") &&
               !pathname.includes("csatlakozom") &&
+              !pathname.includes("meghivo") &&
               !pathname.includes("leiratkozas") &&
               pathname !== "/biznisz/new" &&
               !pathname.startsWith("/biznisz/edit") && <BottomNavigation />}

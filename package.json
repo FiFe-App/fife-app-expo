@@ -1,7 +1,7 @@
 {
   "name": "fife-app-blodqy3cwbfgnkjv24has",
   "main": "expo-router/entry",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "scripts": {
     "dev": "node -e \"require('fs').copyFileSync('.env.dev','.env')\" && expo start",
     "prod": "node -e \"require('fs').copyFileSync('.env.prod','.env')\" && expo start",

@@ -397,30 +397,72 @@ export type Database = {
       }
       help_contacts: {
         Row: {
+          author: string | null
           created_at: string
           data: string
           description: string | null
           id: number
+          public: boolean
           title: string
           type: Database["public"]["Enums"]["contact_type"]
         }
         Insert: {
+          author?: string | null
           created_at?: string
           data: string
           description?: string | null
           id?: number
+          public?: boolean
           title: string
           type: Database["public"]["Enums"]["contact_type"]
         }
         Update: {
+          author?: string | null
           created_at?: string
           data?: string
           description?: string | null
           id?: number
+          public?: boolean
           title?: string
           type?: Database["public"]["Enums"]["contact_type"]
         }
         Relationships: []
+      }
+      invitations: {
+        Row: {
+          author: string
+          created_at: string
+          guest: string
+          id: number
+        }
+        Insert: {
+          author: string
+          created_at?: string
+          guest: string
+          id?: never
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          guest?: string
+          id?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_guest_fkey"
+            columns: ["guest"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -722,6 +764,8 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          ai_asked_at: string | null
+          ai_enhance: boolean
           author: string
           chat_last_read: Json
           created_at: string
@@ -743,6 +787,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_asked_at?: string | null
+          ai_enhance?: boolean
           author: string
           chat_last_read?: Json
           created_at?: string
@@ -764,6 +810,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_asked_at?: string | null
+          ai_enhance?: boolean
           author?: string
           chat_last_read?: Json
           created_at?: string
@@ -805,6 +853,8 @@ export type Database = {
       get_my_notification_prefs: {
         Args: never
         Returns: {
+          ai_asked_at: string
+          ai_enhance: boolean
           emotion_daily_prompt: boolean
           emotion_prompt_asked_at: string
           newsletter: boolean
