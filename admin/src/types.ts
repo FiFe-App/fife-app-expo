@@ -15,6 +15,7 @@ export interface Newsletter {
   cta_label: string | null;
   cta_url: string | null;
   recipients: string[] | null;
+  excluded: string[] | null;
   audience: NewsletterAudience;
   status: NewsletterStatus;
   sent_count: number;
@@ -31,4 +32,6 @@ export interface NewsletterInput {
   ctaUrl: string;
   testEmail: string;
   audience: NewsletterAudience;
+  /** Ezek a címek kimaradnak, bármit is mond a célcsoport. */
+  excluded: string[];
 }

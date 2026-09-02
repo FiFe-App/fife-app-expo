@@ -21,10 +21,12 @@ type Audience = "subscribers" | "all";
 async function resolve(
   audience: Audience,
   emails: string[] | null = null,
+  exclude: string[] | null = null,
 ): Promise<string[]> {
   const { data: rows, error } = await admin.rpc("get_newsletter_recipients", {
     p_emails: emails,
     p_audience: audience,
+    p_exclude: exclude,
   });
   if (error) throw new Error(`get_newsletter_recipients failed: ${error.message}`);
   return (rows ?? []).map((row: { email: string }) => row.email);
@@ -84,6 +86,41 @@ describe("get_newsletter_recipients", () => {
     const list = await resolve("subscribers", [dormant.email.toUpperCase()]);
 
     expect(list).toEqual([dormant.email.toLowerCase()]);
+  });
+
+  it("drops an excluded address from the audience", async () => {
+    const kept = await data.createUser({ newsletter: false });
+    const skipped = await data.createUser({ newsletter: false });
+
+    const list = await resolve("all", null, [skipped.email]);
+
+    expect(list).toContain(kept.email.toLowerCase());
+    expect(list).not.toContain(skipped.email.toLowerCase());
+  });
+
+  it("matches an exception regardless of case and surrounding space", async () => {
+    const skipped = await data.createUser({ newsletter: true });
+
+    const list = await resolve("subscribers", null, [`  ${skipped.email.toUpperCase()}  `]);
+
+    expect(list).not.toContain(skipped.email.toLowerCase());
+  });
+
+  it("lets an exception override an explicitly named address", async () => {
+    // Excluding someone is always the safe answer, so it wins over p_emails.
+    const user = await data.createUser({ newsletter: false });
+
+    const list = await resolve("all", [user.email], [user.email]);
+
+    expect(list).toEqual([]);
+  });
+
+  it("ignores blank entries in the exception list", async () => {
+    const user = await data.createUser({ newsletter: true });
+
+    const list = await resolve("subscribers", null, ["", "   "]);
+
+    expect(list).toContain(user.email.toLowerCase());
   });
 
   it("suppresses an unsubscribed address in every mode", async () => {

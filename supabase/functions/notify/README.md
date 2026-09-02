@@ -54,6 +54,10 @@ VALUES ('Itt az új FiFe App', '<p>Nézd meg, mi változott.</p>', 'all');
 -- To specific addresses only (test send, targeted mail):
 INSERT INTO public.newsletters (subject, body, recipients)
 VALUES ('Teszt', '<p>Csak nekem.</p>', ARRAY['kristofakos1229@gmail.com']);
+
+-- Everyone except a few (announcement with exceptions):
+INSERT INTO public.newsletters (subject, body, audience, excluded)
+VALUES ('Itt az új FiFe App', '<p>Nézd meg.</p>', 'all', ARRAY['kollega@fifeapp.hu']);
 ```
 
 | Column | Meaning |
@@ -64,6 +68,7 @@ VALUES ('Teszt', '<p>Csak nekem.</p>', ARRAY['kristofakos1229@gmail.com']);
 | `cta_label` + `cta_url` | Optional red CTA button. Both or neither |
 | `audience` | `subscribers` (default) → the newsletter opt-ins. `all` → every registered user with a confirmed address. Ignored when `recipients` is set |
 | `recipients` | `NULL`/empty → resolve from `audience`. Otherwise exactly these addresses |
+| `excluded` | Addresses to skip for this issue only, whatever the audience says. Overrides `recipients` too |
 | `status` | `pending` → `sending` → `sent` \| `failed`, written back by this function |
 | `sent_count`, `failed_count`, `sent_at`, `error` | Run result, written back by this function |
 
@@ -93,6 +98,17 @@ The suppression list is applied to **all three** — an unsubscribed person is n
 mailed even when named explicitly, and `all` means "everyone who has not said
 no", never "everyone". Explicit addresses do not have to belong to a user;
 unknown ones simply get `Szia!`.
+
+`p_exclude` drops addresses from whichever of the three produced them, matched
+case- and whitespace-insensitively. An address in both `p_emails` and
+`p_exclude` is skipped: excluding someone is always the safe answer. It is a
+per-issue exception list set by the sender, not a substitute for
+`newsletter_unsubscribes`, which is permanent and belongs to the recipient — so
+it does not carry over to the next issue.
+
+The count the admin shows before sending comes from this same function with the
+same arguments, so what the sender is told and what the run walks cannot drift
+apart.
 
 `all` additionally requires a confirmed address because unconfirmed sign-ups are
 where the dead addresses are, and a bulk send to a dormant list is the worst

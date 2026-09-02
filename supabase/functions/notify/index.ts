@@ -196,6 +196,8 @@ type NewsletterRecord = {
   recipients: string[] | null;
   /** 'subscribers' (opt-ins) or 'all' (every registered user). See the audience column. */
   audience: string | null;
+  /** Addresses to skip for this issue only, whatever the audience says. */
+  excluded: string[] | null;
   status: string;
 };
 
@@ -231,9 +233,13 @@ async function sendNewsletter(
     // Anything but an exact "all" is treated as the opt-in audience, so a webhook
     // replayed from a payload that predates the column still sends to subscribers.
     const audience = record.audience === "all" ? "all" : "subscribers";
+    // Resolved server-side alongside the audience so the count the admin showed
+    // before sending and the list walked here cannot disagree.
+    const excluded = record.excluded?.filter((e) => e && e.trim() !== "") ?? [];
     const { data: recipients, error } = await supabase.rpc("get_newsletter_recipients", {
       p_emails: explicit.length > 0 ? explicit : null,
       p_audience: audience,
+      p_exclude: excluded.length > 0 ? excluded : null,
     });
     if (error) throw error;
 
@@ -248,6 +254,7 @@ async function sendNewsletter(
         : audience === "all"
           ? "(every registered user)"
           : "(newsletter subscribers only)",
+      excluded.length > 0 ? `— ${excluded.length} exception(s) applied` : "",
     );
 
     let sent = 0;

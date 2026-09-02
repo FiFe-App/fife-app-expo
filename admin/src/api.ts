@@ -41,9 +41,21 @@ export async function fetchNewsletters(): Promise<Newsletter[]> {
   return data.newsletters as Newsletter[];
 }
 
-/** Hány címzettnek menne ki egy most indított élesküldés a megadott célcsoportnak. */
-export async function fetchRecipientCount(audience: NewsletterAudience): Promise<number> {
-  const res = await fetch(`/api/newsletters?count=${audience}`, { credentials: "same-origin" });
+/**
+ * Hány címzettnek menne ki egy most indított élesküldés — a célcsoport és a
+ * kivételek együtt. POST, mert a kivételek listája hosszú lehet; ettől még nem
+ * ír semmit, a `count` paraméter dönti el, hogy nem létrehozás.
+ */
+export async function fetchRecipientCount(
+  audience: NewsletterAudience,
+  excluded: string[],
+): Promise<number> {
+  const res = await fetch(`/api/newsletters?count=${audience}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ excluded }),
+  });
   if (res.status === 401) throw new AuthError();
   if (!res.ok) throw new Error(await parseErrorBody(res));
   const data = await res.json();

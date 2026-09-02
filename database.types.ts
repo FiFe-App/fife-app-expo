@@ -525,6 +525,7 @@ export type Database = {
           cta_label: string | null
           cta_url: string | null
           error: string | null
+          excluded: string[] | null
           failed_count: number
           id: number
           recipients: string[] | null
@@ -541,6 +542,7 @@ export type Database = {
           cta_label?: string | null
           cta_url?: string | null
           error?: string | null
+          excluded?: string[] | null
           failed_count?: number
           id?: number
           recipients?: string[] | null
@@ -557,6 +559,7 @@ export type Database = {
           cta_label?: string | null
           cta_url?: string | null
           error?: string | null
+          excluded?: string[] | null
           failed_count?: number
           id?: number
           recipients?: string[] | null
@@ -875,7 +878,7 @@ export type Database = {
         }[]
       }
       get_newsletter_recipients: {
-        Args: { p_audience?: string; p_emails?: string[] }
+        Args: { p_audience?: string; p_emails?: string[]; p_exclude?: string[] }
         Returns: {
           email: string
           full_name: string

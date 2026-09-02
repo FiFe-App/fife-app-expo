@@ -56,6 +56,12 @@ A leiratkozottak mindkét esetben kimaradnak. A küldés gomb fölött mindig ot
 címzettek aktuális száma: ha ez nem az, amire számítasz, akkor a célcsoport a
 rossz, nem a kiküldés.
 
+A **Kivételek** mezőbe felsorolt címek kimaradnak, bármit is mond a célcsoport —
+vesszővel, pontosvesszővel vagy soronként, kis- és nagybetű mindegy. Ezt
+ugyanaz az adatbázis-függvény vonja le, amelyik a kiküldést is hajtja, így a
+kiírt címzettszám már a kivételek nélkül értendő. Egyszeri, erre a hírlevélre
+szóló kihagyás — nem ugyanaz, mint a végleges leiratkozás.
+
 A lista 5 másodpercenként frissül, amíg van `pending`/`sending` állapotú hírlevél
 (a tényleges kiküldés a `notify` function-ben aszinkron zajlik, a `status`/`sent_count`/
 `failed_count` mezőket az írja vissza).

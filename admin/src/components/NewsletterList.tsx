@@ -53,6 +53,7 @@ export function NewsletterList({ newsletters }: { newsletters: Newsletter[] }) {
           // teljes felhasználói kör nagyságrendekkel eltér, és utólag csak ez a
           // mező mondja meg, melyik ment ki.
           const isEveryone = !isTest && n.audience === "all";
+          const excludedCount = n.excluded?.length ?? 0;
           const status = (n.status as NewsletterStatus) in STATUS_COLOR ? (n.status as NewsletterStatus) : "pending";
           return (
             <Table.Tr key={n.id}>
@@ -64,6 +65,13 @@ export function NewsletterList({ newsletters }: { newsletters: Newsletter[] }) {
                     <Tooltip label={n.recipients?.join(", ")}>
                       <Badge color="yellow" variant="filled" size="sm">
                         TESZT
+                      </Badge>
+                    </Tooltip>
+                  )}
+                  {excludedCount > 0 && (
+                    <Tooltip label={n.excluded?.join(", ")}>
+                      <Badge color="gray" variant="light" size="sm">
+                        {excludedCount} KIVÉTEL
                       </Badge>
                     </Tooltip>
                   )}
