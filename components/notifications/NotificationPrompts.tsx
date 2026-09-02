@@ -10,7 +10,7 @@ import {
   TogglePref,
   useNotificationPrefs,
 } from "@/hooks/useNotificationPrefs";
-import { AI_ENHANCE_DESCRIPTION } from "@/constants/aiEnhance";
+import { AI_ENHANCE_DESCRIPTION, AI_ENHANCE_ICON } from "@/constants/aiEnhance";
 import { dismissHomeAddBuzinessCard, dismissHomeMessagingCard } from "@/redux/reducers/appReducer";
 import { RootState } from "@/redux/store";
 
@@ -109,7 +109,7 @@ export default function NotificationPrompts() {
       // are written.
       kind: "action",
       key: "aiEnhance",
-      icon: "creation",
+      icon: AI_ENHANCE_ICON,
       title: "Egyszerűbb keresés és megtalálhatóság",
       body: `${AI_ENHANCE_DESCRIPTION} Bármikor átállíthatod a Profil → Beállítások alatt.`,
       nativeOnly: false,

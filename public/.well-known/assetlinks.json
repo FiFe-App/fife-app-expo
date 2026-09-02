@@ -8,7 +8,8 @@
       "namespace": "android_app",
       "package_name": "com.fife.app",
       "sha256_cert_fingerprints": [
-        "AE:D9:A6:D5:D0:4F:4C:D2:5D:5B:76:41:18:54:31:93:02:4D:5D:36:B0:4A:69:45:43:87:F8:AB:F8:DE:18:9C"
+        "AE:D9:A6:D5:D0:4F:4C:D2:5D:5B:76:41:18:54:31:93:02:4D:5D:36:B0:4A:69:45:43:87:F8:AB:F8:DE:18:9C",
+        "13:19:90:85:F1:06:8B:30:9C:FC:55:BA:FF:82:CF:2A:97:00:AF:16:17:A6:59:49:BE:11:2A:A1:D5:97:6F:75"
       ]
     }
   }
