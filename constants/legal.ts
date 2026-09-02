@@ -8,6 +8,12 @@
 export const TERMS_URL = "https://fifeapp.hu/terms.html";
 export const PRIVACY_URL = "https://fifeapp.hu/privacy.html";
 export const CSAE_URL = "https://fifeapp.hu/CSAE.html";
+/**
+ * Public account/data deletion page required by Google Play (and referenced by
+ * Apple) for apps with account creation. Must work without installing the app
+ * or logging in, so it lives in public/ next to the other static legal pages.
+ */
+export const DELETE_ACCOUNT_URL = "https://fifeapp.hu/fiok-torlese.html";
 
 export interface LegalDocument {
   label: string;

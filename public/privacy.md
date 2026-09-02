@@ -174,7 +174,7 @@ Név, e-mail-cím, felhasználói azonosító, helyadat és elérhetőség nem k
 a továbbított szöveget a szolgáltató a szerződése szerint nem használja fel modellek
 tanítására.
 
-Ez a funkció bármikor kikapcsolható a **Profil → Beállítások → Mesterséges intelligencia**
+Ez a funkció bármikor kikapcsolható a **Profil → Beállítások → Egyéb**
 menüpontban (illetve ugyanez a kapcsoló megtalálható a biznisz szerkesztésénél és a keresés
 finomításánál is). Kikapcsolt állapotban a felhasználó szövegéből semmi nem kerül az OpenAI
 felé; a keresés ilyenkor kulcsszavas találatokat ad.
