@@ -29,6 +29,7 @@ import { MyAppbar } from "@/components/MyAppBar";
 import type { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import FakeSearchInput from "@/components/FakeSearchInput";
 import { RootState } from "@/redux/store";
+import { SearchMode } from "@/redux/store.type";
 import { setLocation, logout, setNotificationPrefs, setMessagingEnabled } from "@/redux/reducers/userReducer";
 import { fetchMessagingEnabled } from "@/lib/chat/messagingContact";
 import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
@@ -48,10 +49,10 @@ import { emotionAvailable } from "@/constants/emotionTiming";
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
 let splashAlreadyShown = false;
 
-function HomeHeader() {
+function HomeHeader({ mode = "biznisz" }: { mode?: SearchMode }) {
   return (
     <MyAppbar
-      center={<FakeSearchInput />}
+      center={<FakeSearchInput mode={mode} />}
       style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }}
     />
   );
@@ -302,7 +303,7 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="fifeRadar"
-                  options={{ header: () => <HomeHeader /> }}
+                  options={{ header: () => <HomeHeader mode="fife" /> }}
                 />
                 <Stack.Screen
                   name="biznisz/index"

@@ -1,7 +1,7 @@
 export default {
   name: "Fife App",
   slug: "fife-app-blodqy3cwbfgnkjv24has",
-  version: "1.2.7",
+  version: "1.3.0",
   orientation: "portrait",
   icon: "./assets/images/Slimey.png",
   scheme: "com.fife.app",
@@ -14,6 +14,10 @@ export default {
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.fife.app",
+    associatedDomains: [
+      "applinks:fifeapp.hu",
+      "webcredentials:fifeapp.hu"
+    ],
     splash: {
       image: "./assets/images/Slimey.png",
       resizeMode: "contain",
@@ -40,7 +44,20 @@ export default {
       }
     },
     package: "com.fife.app",
-    googleServicesFile: "./google-services.json"
+    googleServicesFile: "./google-services.json",
+    intentFilters: [
+      {
+        action: "VIEW",
+        autoVerify: true,
+        data: [
+          {
+            scheme: "https",
+            host: "fifeapp.hu"
+          }
+        ],
+        category: ["BROWSABLE", "DEFAULT"]
+      }
+    ]
   },
   web: {
     bundler: "metro",

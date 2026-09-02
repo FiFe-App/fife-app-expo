@@ -19,48 +19,91 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/Button";
 import { useFifeSearch } from "@/hooks/useFifeSearch";
+import {
+  NO_PROFILE_RESULTS,
+  NO_PROFILE_RESULTS_HINT,
+  useProfileSearch,
+} from "@/hooks/useProfileSearch";
 
 export default function FifeRadarScreen() {
   const { uid } = useSelector((state: RootState) => state.user);
-  const { userSearchParams } = useSelector(
-    (state: RootState) => state.users,
+  const searchCircle = useSelector(
+    (state: RootState) => state.users.userSearchParams?.searchCircle,
   );
-  const searchCircle = userSearchParams?.searchCircle;
+  const searchText = useSelector(
+    (state: RootState) => state.users.userSearchParams?.text ?? "",
+  );
+  const isSearching = searchText.trim().length > 0;
   const dispatch = useDispatch();
 
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
-  const { fetch, data, fetchNextPage, hasMore, error } = useFifeSearch();
+  const fife = useFifeSearch();
+  const profile = useProfileSearch();
+  const { fetch: fetchNearby, data: nearbyData } = fife;
 
+  // Both fetch paths are gated on isSearching so the proximity query cannot run
+  // — and, more importantly, cannot raise NO_LOCATION_ERROR — while a name
+  // search is on screen. UsersList renders an error card instead of the list, so
+  // an ungated fetch would hide results from exactly the people without a
+  // location set, who are the ones most likely to search by name.
+  useEffect(() => {
+    if (!isSearching) fetchNearby();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSearching, searchCircle]);
 
   useEffect(() => {
-    fetch();
-  }, [searchCircle]);
+    if (isSearching) profile.search(searchText);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSearching, searchText]);
 
   useFocusEffect(
     useCallback(() => {
-      if (data.length === 0) {
-        fetch();
-      }
-    }, [data.length, fetch]),
+      if (isSearching || nearbyData.length > 0) return;
+      fetchNearby();
+    }, [isSearching, nearbyData.length, fetchNearby]),
   );
+
+  const list = isSearching
+    ? {
+      data: profile.results,
+      error: profile.error,
+      loading: profile.loading,
+      canLoadMore: profile.hasMore,
+      load: profile.loadNext,
+      emptyTitle: NO_PROFILE_RESULTS,
+      emptyHint: NO_PROFILE_RESULTS_HINT,
+      endOfListText: "Nem található több fife\n\nKis és nagybetű, illetve ékezetek számítanak!",
+    }
+    : {
+      data: fife.data,
+      error: fife.error,
+      loading: fife.loading,
+      canLoadMore: fife.hasMore,
+      load: fife.fetchNextPage,
+    };
 
   return (
     <>
       {uid && (
         <ThemedView style={{ flex: 1, zIndex: 100 }} type="default">
           <ThemedView type="card" style={{ paddingHorizontal: Spacing.lg, paddingTop: 0, paddingBottom: Spacing.sm, flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between" }}>
-            <View style={{ flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
-              <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>FiFe Radar</ThemedText>
-              <Icon size={18} color={theme.colors.secondary} source="wifi" />
+            <View style={{ flex: 1, flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
+              <ThemedText variant="labelLarge" type="bold" numberOfLines={1} style={{ color: theme.colors.secondary, flexShrink: 1 }}>
+                {isSearching ? `Találatok: ${searchText}` : "FiFe Radar"}
+              </ThemedText>
+              {!isSearching && <Icon size={18} color={theme.colors.secondary} source="wifi" />}
             </View>
-            <Button
-              icon={searchCircle ? "map-marker" : "map-marker-outline"}
-              mode="text"
-              labelStyle={{marginVertical: Spacing.xs}}
-              onPress={() => setLocationMenuVisible(true)}
-            >Hol keresel?</Button>
+            {isSearching ? (<></>
+            ) : (
+              <Button
+                icon={searchCircle ? "map-marker" : "map-marker-outline"}
+                mode="text"
+                labelStyle={{marginVertical: Spacing.xs}}
+                onPress={() => setLocationMenuVisible(true)}
+              >Hol keresel?</Button>
+            )}
           </ThemedView>
-          <UsersList load={fetchNextPage} canLoadMore={hasMore} data={data} error={error}/>
+          <UsersList {...list} />
           <Portal>
             <Modal
               visible={locationMenuVisible}

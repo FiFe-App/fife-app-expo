@@ -68,6 +68,9 @@ export function useUserSettings() {
   const mantra = useSelector((state: RootState) => state.user.mantra);
   const tasks = useSelector((state: RootState) => state.user.tasks);
   const previousSearches = useSelector((state: RootState) => state.user.previousSearches);
+  const previousProfileSearches = useSelector(
+    (state: RootState) => state.user.previousProfileSearches,
+  );
   const themePreference = useSelector((state: RootState) => state.user.themePreference);
   const savedBuzinesses = useSelector((state: RootState) => state.user.savedBuzinesses);
   const isItSafeDismissed = useSelector((state: RootState) => state.user.isItSafeDismissed);
@@ -85,6 +88,7 @@ export function useUserSettings() {
       mantra,
       tasks: tasks ?? [],
       previousSearches: previousSearches ?? [],
+      previousProfileSearches: previousProfileSearches ?? [],
       themePreference: themePreference ?? DEFAULT_THEME_PREFERENCE,
       savedBuzinesses: savedBuzinesses ?? [],
       isItSafeDismissed: isItSafeDismissed ?? false,
@@ -97,6 +101,7 @@ export function useUserSettings() {
       mantra,
       tasks,
       previousSearches,
+      previousProfileSearches,
       themePreference,
       savedBuzinesses,
       isItSafeDismissed,
@@ -130,6 +135,7 @@ export function useUserSettings() {
         mantra: settings.mantra,
         tasks: settings.tasks,
         previousSearches: settings.previousSearches,
+        previousProfileSearches: settings.previousProfileSearches,
       });
       const { data, error } = await supabase
         .from("user_settings")
@@ -187,12 +193,18 @@ export function useUserSettings() {
         : null;
 
     // A missing or undecryptable blob must not wipe the user's mantra and
-    // tasks — fall back to whatever this device already has.
+    // tasks — fall back to whatever this device already has. A blob that
+    // decrypts fine but predates a field is the same story one level down,
+    // which is why previousProfileSearches uses ?? rather than the ternary:
+    // absent means "keep what we have", while an explicit [] is a real clear
+    // made on another device and must win.
     const current = localRef.current;
     const settings: UserSettingsPayload = {
       mantra: decrypted ? decrypted.mantra : current.mantra,
       tasks: decrypted ? decrypted.tasks : current.tasks,
       previousSearches: decrypted ? decrypted.previousSearches : current.previousSearches,
+      previousProfileSearches:
+        decrypted?.previousProfileSearches ?? current.previousProfileSearches,
       themePreference:
         (data.theme_preference as UserSettingsPayload["themePreference"]) ??
         DEFAULT_THEME_PREFERENCE,

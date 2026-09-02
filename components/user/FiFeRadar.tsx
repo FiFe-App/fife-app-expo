@@ -11,6 +11,8 @@ import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
 import { NO_LOCATION_ERROR, NO_NEARBY_USERS, NO_NEARBY_USERS_HINT } from "@/hooks/useFifeSearch";
 import { Button } from "../Button";
+import { useDispatch } from "react-redux";
+import { storeUserSearchParams } from "@/redux/reducers/usersReducer";
 
 interface FiFeRadarProps {
   data: NearestProfile[];
@@ -55,11 +57,17 @@ export const FiFeRadar: React.FC<FiFeRadarProps> = ({
 }) => {
   const users = data.filter((item) => item.id !== "-1");
   const theme = useAppTheme();
+  const dispatch = useDispatch();
 
   return (
     <View>
       <Pressable
-        onPress={() => router.push("/fifeRadar")}
+        onPress={() => {
+          // This strip shows nearby fifék, so open the proximity list rather
+          // than whatever name search was last run.
+          dispatch(storeUserSearchParams({ text: "" }));
+          router.push("/fifeRadar");
+        }}
         style={{
           paddingHorizontal: Spacing.lg,
           paddingVertical: Spacing.sm,

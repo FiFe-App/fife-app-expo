@@ -68,6 +68,13 @@ export interface UserState {
   savedBuzinesses: number[];
   previousSearches: string[];
   /**
+   * Recent fifék searches, kept apart from `previousSearches` so a name never
+   * surfaces as a biznisz suggestion. Optional unlike its neighbour on purpose:
+   * redux-persist rehydrates the whole slice (autoMergeLevel1, no migration), so
+   * on an install that predates this field it really is absent at runtime.
+   */
+  previousProfileSearches?: string[];
+  /**
    * `updated_at` of the user_settings row this state was last hydrated from or
    * pushed to. Undefined means "never synced with the server on this device".
    */
@@ -76,8 +83,9 @@ export interface UserState {
 
 /**
  * The preference set that useUserSettings mirrors to public.user_settings.
- * `mantra`, `tasks` and `previousSearches` travel inside the row's encrypted
- * blob; the rest are plain columns. See lib/crypto/settingsEncryption.ts.
+ * `mantra`, `tasks`, `previousSearches` and `previousProfileSearches` travel
+ * inside the row's encrypted blob; the rest are plain columns. See
+ * lib/crypto/settingsEncryption.ts.
  *
  * The notification columns of that same row are deliberately absent here:
  * useNotificationPrefs owns them, writing each one as the user answers it. The
@@ -91,6 +99,7 @@ export interface UserSettingsPayload {
   mantra?: string;
   tasks: TaskItem[];
   previousSearches: string[];
+  previousProfileSearches: string[];
   themePreference: "light" | "dark" | "auto";
   savedBuzinesses: number[];
   isItSafeDismissed: boolean;
@@ -104,6 +113,29 @@ export type User = Tables<"profiles"> & {
     buzinesses: { title: string }[];
     profileRecommendations?: { count: number }[];
   };
+
+/** Which of the two searches the search screen is currently driving. */
+export type SearchMode = "biznisz" | "fife";
+
+/**
+ * A profile row as returned by the name/username search.
+ *
+ * Deliberately not `Tables<"profiles">`: `authenticated` holds column-level
+ * SELECT on only these columns (migration 20260304120000), so the row really
+ * does lack `location`, `bad_boy` and the rest.
+ */
+export interface ProfileSearchResult {
+  id: string;
+  full_name: string;
+  username: string | null;
+  avatar_url: string | null;
+  website: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  viewed_functions: string[] | null;
+  profileRecommendations: { count: number }[];
+  buzinesses: { title: string }[];
+}
 
 /** Return type of the nearest_profiles RPC */
 export interface NearestProfile {

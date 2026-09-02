@@ -5,49 +5,76 @@ import { Spacing } from "@/constants/spacing";
 import { useAppTheme } from "@/assets/theme";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 import { storeBuzinesses, storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { storeUserSearchParams } from "@/redux/reducers/usersReducer";
 import { addPreviousSearch, removeFromPreviousSearches } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
-import { router, useNavigation } from "expo-router";
-import { useCallback, useEffect, useMemo } from "react";
-import { FlatList, Pressable } from "react-native";
-import { Icon } from "react-native-paper";
+import { SearchMode } from "@/redux/store.type";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { FlatList, Pressable, View } from "react-native";
+import { Chip, Icon } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { MyAppbar } from "@/components/MyAppBar";
+import { BorderRadius } from "@/constants/borderRadius";
 
 type ListItem =
   | { kind: "section"; label: string }
   | { kind: "previous"; query: string }
   | { kind: "suggestion"; query: string };
 
+const MODES: { key: SearchMode; label: string; icon: string }[] = [
+  { key: "biznisz", label: "Bizniszek", icon: "briefcase-outline" },
+  { key: "fife", label: "Fifék", icon: "account" },
+];
+
 export default function SearchScreen() {
   const theme = useAppTheme();
   const dispatch = useDispatch();
   const navigation = useNavigation();
-  const searchText = useSelector((state: RootState) => state.buziness.searchParams?.text ?? "");
-  const previousSearches = useSelector((state: RootState) => state.user.previousSearches ?? []);
+  const params = useLocalSearchParams<{ mode?: string }>();
+  const [mode, setMode] = useState<SearchMode>(params.mode === "fife" ? "fife" : "biznisz");
 
-  const suggestions = useSearchSuggestions(searchText, true);
+  const buzinessText = useSelector((state: RootState) => state.buziness.searchParams?.text ?? "");
+  const fifeText = useSelector((state: RootState) => state.users.userSearchParams?.text ?? "");
+  const searchText = mode === "fife" ? fifeText : buzinessText;
+  // Each mode keeps its own history: a name you looked up is not a biznisz query.
+  const previousBuzinessSearches = useSelector((state: RootState) => state.user.previousSearches);
+  const previousProfileSearches = useSelector(
+    (state: RootState) => state.user.previousProfileSearches,
+  );
+  const previousSearches =
+    mode === "fife" ? previousProfileSearches : previousBuzinessSearches;
+
+  const suggestions = useSearchSuggestions(searchText, mode === "biznisz");
 
   const handleSearch = useCallback((query: string) => {
-    dispatch(addPreviousSearch(query));
-    dispatch(storeBuzinessSearchParams({ text: query }));
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    dispatch(addPreviousSearch({ query: trimmed, mode }));
+    if (mode === "fife") {
+      dispatch(storeUserSearchParams({ text: trimmed, skip: 0 }));
+      router.replace("/fifeRadar");
+      return;
+    }
+    dispatch(storeBuzinessSearchParams({ text: trimmed }));
     dispatch(storeBuzinesses([]));
     router.replace("/biznisz");
-  }, [dispatch]);
+  }, [dispatch, mode]);
 
   useEffect(() => {
     navigation.setOptions({
       header: () => (
         <MyAppbar
-          center={<BuzinessSearchInput onSearch={handleSearch} autoFocus showSuggestionsDropdown={false} />}
+          // key re-seeds the input's local text from the other slice on a flip.
+          center={<BuzinessSearchInput key={mode} mode={mode} onSearch={handleSearch} autoFocus showSuggestionsDropdown={false} />}
           style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }}
         />
       ),
     });
-  }, [navigation, handleSearch]);
+  }, [navigation, handleSearch, mode]);
 
   const listData = useMemo<ListItem[]>(() => {
-    const prev = previousSearches.filter((q) =>
+    const prev = (previousSearches ?? []).filter((q) =>
       !searchText || q.toLowerCase().includes(searchText.toLowerCase())
     );
     const suggestionTexts = new Set(prev.map((q) => q.toLowerCase()));
@@ -58,19 +85,65 @@ export default function SearchScreen() {
       items.push({ kind: "section", label: "Korábbi kereséseid" });
       prev.forEach((q) => items.push({ kind: "previous", query: q }));
     }
-    if (filtered.length > 0) {
+    if (mode === "biznisz" && filtered.length > 0) {
       items.push({ kind: "section", label: "Gyakori keresések" });
       filtered.forEach((s) => items.push({ kind: "suggestion", query: s.query_text }));
     }
     return items;
-  }, [previousSearches, suggestions, searchText]);
+  }, [previousSearches, suggestions, searchText, mode]);
 
   return (
     <ThemedView style={{ flex: 1 }} type="default">
+      <ThemedView
+        type="card"
+        style={{
+          flexDirection: "row",
+          gap: Spacing.sm,
+          paddingHorizontal: Spacing.lg,
+          paddingVertical: Spacing.sm,
+        }}
+      >
+        {MODES.map((m) => {
+          const selected = mode === m.key;
+          return (
+            <Chip
+              key={m.key}
+              testID={`search-mode-${m.key}`}
+              icon={m.icon}
+              selected={selected}
+              showSelectedCheck={false}
+              mode={selected ? "flat" : "outlined"}
+              onPress={() => setMode(m.key)}
+              style={{
+                borderRadius: BorderRadius.full,
+                backgroundColor: selected ? theme.colors.secondaryContainer : "transparent",
+                borderColor: theme.colors.outlineVariant,
+              }}
+              textStyle={{
+                color: selected ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant,
+              }}
+            >
+              {m.label}
+            </Chip>
+          );
+        })}
+      </ThemedView>
       <FlatList
         data={listData}
         keyExtractor={(item, i) => item.kind + (item.kind === "section" ? item.label : item.query) + i}
         keyboardShouldPersistTaps="handled"
+        ListEmptyComponent={
+          mode === "fife" ? (
+            <View style={{ padding: Spacing.lg }}>
+              <ThemedText
+                variant="labelMedium"
+                style={{ color: theme.colors.onSurfaceVariant, textAlign: "center" }}
+              >
+                Írd be egy fife nevét vagy @felhasználónevét.
+              </ThemedText>
+            </View>
+          ) : null
+        }
         renderItem={({ item }) => {
           if (item.kind === "section") {
             return (
@@ -104,7 +177,8 @@ export default function SearchScreen() {
               </ThemedText>
               {item.kind === "previous" && (
                 <Pressable
-                  onPress={() => dispatch(removeFromPreviousSearches(item.query))}
+                  testID={`remove-previous-${item.query}`}
+                  onPress={() => dispatch(removeFromPreviousSearches({ query: item.query, mode }))}
                   hitSlop={8}
                 >
                   <Icon source="close" size={18} color={theme.colors.onSurfaceVariant} />

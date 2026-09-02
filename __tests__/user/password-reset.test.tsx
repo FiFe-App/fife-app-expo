@@ -81,7 +81,9 @@ describe("password reset", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Visszaállító email küldése" }));
 
     await waitFor(() =>
-      expect(auth.resetPasswordForEmail).toHaveBeenCalledWith("anna@example.com"),
+      expect(auth.resetPasswordForEmail).toHaveBeenCalledWith("anna@example.com", {
+        redirectTo: "fife://user/password-reset",
+      }),
     );
   });
 });

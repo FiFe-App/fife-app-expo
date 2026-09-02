@@ -1,6 +1,7 @@
 import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
 import { supabase } from "@/lib/supabase/supabase";
+import { makeRedirectUri } from "expo-auth-session";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuthRedirectParams } from "@/hooks/useAuthRedirectParams";
 import {
@@ -24,6 +25,10 @@ export default function PasswordResetScreen() {
   // Not `useLocalSearchParams()["#"]`: expo-router strips the fragment from
   // native deep links, so on a phone the recovery tokens never arrived and the
   // screen stayed stuck on the "request a link" stage.
+  // Without this, resetPasswordForEmail falls back to Supabase's dashboard
+  // "Site URL" (a plain https address), so the emailed link opens a browser
+  // instead of the app — mirrors the redirect used by the sign-up flows.
+  const redirectTo = makeRedirectUri({ path: "/user/password-reset" });
   const redirectParams = useAuthRedirectParams();
   const tokens = useMemo(() => getAuthRedirectTokens(redirectParams), [redirectParams]);
   const linkError = useMemo(
@@ -67,7 +72,7 @@ export default function PasswordResetScreen() {
     setLoading(true);
     setError(null);
     setMessage(null);
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
     if (error) setError(error.message);
     else {
       setSent(true);

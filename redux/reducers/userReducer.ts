@@ -1,6 +1,18 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { NotificationPrefs, TaskItem, UserSettingsPayload, UserState } from "../store.type";
+import { NotificationPrefs, SearchMode, TaskItem, UserSettingsPayload, UserState } from "../store.type";
 import { DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
+
+type SearchHistoryKey = "previousSearches" | "previousProfileSearches";
+
+/** Newest first, deduped, per list. */
+const MAX_PREVIOUS_SEARCHES = 10;
+
+/**
+ * The two searches keep separate histories — a fife's name must never surface
+ * as a biznisz suggestion, and vice versa.
+ */
+const searchHistoryKey = (mode: SearchMode): SearchHistoryKey =>
+  mode === "fife" ? "previousProfileSearches" : "previousSearches";
 
 const initialState: UserState = {
   uid: undefined,
@@ -15,6 +27,7 @@ const initialState: UserState = {
   themePreference: DEFAULT_THEME_PREFERENCE,
   savedBuzinesses: [],
   previousSearches: [],
+  previousProfileSearches: [],
   inviteCardDismissed: false,
   isItSafeDismissed: false,
 };
@@ -107,17 +120,27 @@ const userReducer = createSlice({
       if (!state.notificationPrefs) return;
       state.notificationPrefs = { ...state.notificationPrefs, ...payload };
     },
-    addPreviousSearch: (state, { payload }: PayloadAction<string>) => {
-      if (!payload.trim()) return;
-      if (!state.previousSearches) state.previousSearches = [];
-      state.previousSearches = [
-        payload,
-        ...state.previousSearches.filter((s) => s !== payload),
-      ].slice(0, 10);
+    addPreviousSearch: (
+      state,
+      { payload }: PayloadAction<{ query: string; mode: SearchMode }>,
+    ) => {
+      const { query, mode } = payload;
+      if (!query.trim()) return;
+      const key = searchHistoryKey(mode);
+      // redux-persist rehydrates slices written before either key existed, so
+      // the list can genuinely be missing however the type reads.
+      const list = state[key] ?? [];
+      state[key] = [query, ...list.filter((s) => s !== query)].slice(
+        0,
+        MAX_PREVIOUS_SEARCHES,
+      );
     },
-    removeFromPreviousSearches: (state, { payload }: PayloadAction<string>) => {
-      if (!state.previousSearches) return;
-      state.previousSearches = state.previousSearches.filter((s) => s !== payload);
+    removeFromPreviousSearches: (
+      state,
+      { payload }: PayloadAction<{ query: string; mode: SearchMode }>,
+    ) => {
+      const key = searchHistoryKey(payload.mode);
+      state[key] = (state[key] ?? []).filter((s) => s !== payload.query);
     },
     /**
      * Applies a user_settings row fetched from the server, replacing the local
@@ -133,6 +156,7 @@ const userReducer = createSlice({
       state.mantra = settings.mantra;
       state.tasks = settings.tasks;
       state.previousSearches = settings.previousSearches;
+      state.previousProfileSearches = settings.previousProfileSearches;
       state.themePreference = settings.themePreference;
       state.savedBuzinesses = settings.savedBuzinesses;
       state.isItSafeDismissed = settings.isItSafeDismissed;
