@@ -25,7 +25,7 @@ export function NewsletterForm({
   const [sending, setSending] = useState<"test" | "live" | null>(null);
   const [audience, setAudience] = useState<NewsletterAudience>("subscribers");
   const [recipientCount, setRecipientCount] = useState<number | null>(null);
-  const [countError, setCountError] = useState(false);
+  const [countError, setCountError] = useState<string | null>(null);
 
   // A címzettszám a küldés előtti utolsó ellenőrzés. A 19-es hírlevél hat
   // embert ért el, mert a "Küldés mindenkinek" gomb valójában a feliratkozókat
@@ -33,15 +33,17 @@ export function NewsletterForm({
   useEffect(() => {
     let cancelled = false;
     setRecipientCount(null);
-    setCountError(false);
+    setCountError(null);
     fetchRecipientCount(audience)
       .then((n) => {
         if (!cancelled) setRecipientCount(n);
       })
-      .catch(() => {
-        // Lejárt session is idekerül; a következő tényleges művelet úgyis
-        // kiváltja a bejelentkeztetést.
-        if (!cancelled) setCountError(true);
+      .catch((err) => {
+        // A szerver saját üzenetét mutatjuk: ha a migráció még nem futott le,
+        // itt derül ki ("Could not find the function ..."), nem egy általános
+        // hibaszövegbe rejtve. Lejárt session is idekerül; a következő
+        // tényleges művelet úgyis kiváltja a bejelentkeztetést.
+        if (!cancelled) setCountError(err instanceof Error ? err.message : "Ismeretlen hiba.");
       });
     return () => {
       cancelled = true;
@@ -209,7 +211,7 @@ export function NewsletterForm({
         />
         <Text size="sm" c={countError ? "red" : "dimmed"} mt={6}>
           {countError
-            ? "Nem sikerült lekérdezni a címzettek számát."
+            ? `Nem sikerült lekérdezni a címzettek számát: ${countError}`
             : recipientCount === null
               ? "Címzettek számolása…"
               : audience === "all"

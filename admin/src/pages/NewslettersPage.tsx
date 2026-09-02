@@ -13,6 +13,7 @@ const POLL_INTERVAL_MS = 5000;
 export function NewslettersPage({ onLoggedOut }: { onLoggedOut: () => void }) {
   const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [formOpened, { open: openForm, close: closeForm }] = useDisclosure(false);
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -20,10 +21,16 @@ export function NewslettersPage({ onLoggedOut }: { onLoggedOut: () => void }) {
     try {
       const data = await fetchNewsletters();
       setNewsletters(data);
+      setLoadError(null);
     } catch (err) {
       if (err instanceof AuthError) {
         onLoggedOut();
+        return;
       }
+      // Enélkül minden hiba üres listaként jelent meg, ami pontosan úgy néz ki,
+      // mintha még nem lenne egy hírlevél sem — pedig lehet hiányzó env
+      // változó, le nem futtatott migráció vagy elérhetetlen Supabase.
+      setLoadError(err instanceof Error ? err.message : "Ismeretlen hiba történt.");
     } finally {
       setLoading(false);
     }
@@ -82,7 +89,20 @@ export function NewslettersPage({ onLoggedOut }: { onLoggedOut: () => void }) {
           </Group>
 
           <Paper withBorder radius="lg" p="md">
-            {loading ? <Text c="dimmed">Betöltés...</Text> : <NewsletterList newsletters={newsletters} />}
+            {loading ? (
+              <Text c="dimmed">Betöltés...</Text>
+            ) : loadError ? (
+              <Stack gap={4}>
+                <Text c="red" fw={500}>
+                  Nem sikerült betölteni a hírleveleket.
+                </Text>
+                <Text c="dimmed" size="sm">
+                  {loadError}
+                </Text>
+              </Stack>
+            ) : (
+              <NewsletterList newsletters={newsletters} />
+            )}
           </Paper>
         </Stack>
       </AppShell.Main>

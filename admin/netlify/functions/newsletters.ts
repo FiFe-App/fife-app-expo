@@ -117,11 +117,26 @@ export const handler: Handler = async (event) => {
     return { statusCode: 401, body: JSON.stringify({ error: "Nincs bejelentkezve." }) };
   }
 
-  if (event.httpMethod === "GET") {
-    const requested = event.queryStringParameters?.count;
-    if (requested) return count(parseAudience(requested));
-    return list();
+  try {
+    // A `return await` itt nem felesleges: `return list()` esetén a promise a
+    // try blokkon kívül dőlne el, így az alábbi catch sosem futna le.
+    if (event.httpMethod === "GET") {
+      const requested = event.queryStringParameters?.count;
+      if (requested) return await count(parseAudience(requested));
+      return await list();
+    }
+    if (event.httpMethod === "POST") return await create(event.body);
+    return { statusCode: 405, body: "Method Not Allowed" };
+  } catch (err) {
+    // getSupabaseAdmin() dob, ha az env változók hiányoznak. Kezeletlenül ez
+    // Netlify-oldali HTML hibaoldal lenne JSON helyett, amit a kliens csak
+    // "Ismeretlen hiba"-ként tud megjeleníteni — pedig pontos oka van.
+    return {
+      statusCode: 500,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        error: err instanceof Error ? err.message : "Ismeretlen szerverhiba.",
+      }),
+    };
   }
-  if (event.httpMethod === "POST") return create(event.body);
-  return { statusCode: 405, body: "Method Not Allowed" };
 };
