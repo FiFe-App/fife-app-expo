@@ -3,6 +3,7 @@ import { Button, Group, SegmentedControl, Stack, Text, TextInput, Textarea } fro
 import { RichTextEditor, Link } from "@mantine/tiptap";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { DOMParser as ProseMirrorDOMParser } from "@tiptap/pm/model";
 import Underline from "@tiptap/extension-underline";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
@@ -23,6 +24,18 @@ function parseExcluded(raw: string): string[] {
     .map((entry) => entry.trim().toLowerCase())
     .filter((entry) => entry !== "");
   return [...new Set(entries)];
+}
+
+/**
+ * Egy beillesztett szöveg HTML forrás-e.
+ *
+ * Szándékosan szűk: a szövegnek `<`-tel kell kezdődnie ÉS tartalmaznia kell egy
+ * záró vagy önzáró tag-et. Egy hírlevélszöveg, ami csak említ egy "<" jelet
+ * (vagy egy "<3"-at), így nem esik bele.
+ */
+function looksLikeHtml(text: string): boolean {
+  const trimmed = text.trim();
+  return /^</.test(trimmed) && /<\/[a-z][^>]*>|<[a-z][^>]*\/>/i.test(trimmed);
 }
 
 export function NewsletterForm({
@@ -79,6 +92,34 @@ export function NewsletterForm({
   const editor = useEditor({
     extensions: [StarterKit, Underline, Link],
     content: "",
+    editorProps: {
+      /**
+       * HTML forrás beillesztése formázott tartalommá váljon, ne szó szerinti
+       * kacsacsőrökké. Ha a vágólapon valódi text/html van (böngészőből vagy
+       * másik szerkesztőből másolva), azt a ProseMirror magától kezeli — ez a
+       * másik esetre való: HTML, ami sima szövegként érkezik, mert fájlból, egy
+       * adatbázis-mezőből vagy egy korábbi getHTML() kimenetből másolták ki.
+       *
+       * A parseSlice a szerkesztő sémáján keresztül dolgozik, így ami nincs a
+       * sémában (script, style, iframe, on* attribútumok), az egyszerűen
+       * eltűnik — a mentett body pedig a sémából visszaszerializált getHTML(),
+       * tehát a kör bezárul. A DOMParser által létrehozott dokumentum inert,
+       * script nem fut le benne.
+       */
+      handlePaste: (view, event) => {
+        const clipboard = event.clipboardData;
+        if (!clipboard) return false;
+        if (clipboard.getData("text/html").trim() !== "") return false;
+
+        const text = clipboard.getData("text/plain");
+        if (!looksLikeHtml(text)) return false;
+
+        const parsed = new window.DOMParser().parseFromString(text, "text/html");
+        const slice = ProseMirrorDOMParser.fromSchema(view.state.schema).parseSlice(parsed.body);
+        view.dispatch(view.state.tr.replaceSelection(slice).scrollIntoView());
+        return true;
+      },
+    },
   });
 
   // A számot már a kivételek levonása után kapjuk, de kiírjuk hányat vontunk le:
