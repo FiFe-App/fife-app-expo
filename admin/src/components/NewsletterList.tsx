@@ -49,6 +49,10 @@ export function NewsletterList({ newsletters }: { newsletters: Newsletter[] }) {
       <Table.Tbody>
         {newsletters.map((n) => {
           const isTest = Boolean(n.recipients && n.recipients.length > 0);
+          // Egy éles kiküldésnél az számít, kit ért el: a feliratkozói kör és a
+          // teljes felhasználói kör nagyságrendekkel eltér, és utólag csak ez a
+          // mező mondja meg, melyik ment ki.
+          const isEveryone = !isTest && n.audience === "all";
           const status = (n.status as NewsletterStatus) in STATUS_COLOR ? (n.status as NewsletterStatus) : "pending";
           return (
             <Table.Tr key={n.id}>
@@ -60,6 +64,13 @@ export function NewsletterList({ newsletters }: { newsletters: Newsletter[] }) {
                     <Tooltip label={n.recipients?.join(", ")}>
                       <Badge color="yellow" variant="filled" size="sm">
                         TESZT
+                      </Badge>
+                    </Tooltip>
+                  )}
+                  {isEveryone && (
+                    <Tooltip label="Minden regisztrált felhasználónak, nem csak a feliratkozóknak">
+                      <Badge color="orange" variant="filled" size="sm">
+                        MINDENKI
                       </Badge>
                     </Tooltip>
                   )}

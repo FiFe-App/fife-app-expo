@@ -71,11 +71,24 @@ export class TestData {
     if (error || !data.user) throw new Error(`Could not create test user: ${error?.message}`);
     this.userIds.push(data.user.id);
 
-    // Set on the profile rather than through user metadata: these have to hold
+    // Set on the rows rather than through user metadata: these have to hold
     // whatever handle_new_user() decides to default them to.
+    //
+    // `newsletter` is written to BOTH tables. get_newsletter_recipients reads it
+    // as COALESCE(s.newsletter, p.newsletter), and user_settings.newsletter is
+    // NOT NULL DEFAULT false — so the COALESCE never falls through to profiles,
+    // and a profiles-only write would produce a "subscriber" that the resolver
+    // does not return. Writing both also keeps the fixture honest about the
+    // split the app still has.
     const profileFlags: Record<string, boolean> = {};
+    const settingsFlags: Record<string, boolean> = {};
     if (options.badBoy) profileFlags.bad_boy = true;
-    if (options.newsletter !== undefined) profileFlags.newsletter = options.newsletter;
+    if (options.newsletter !== undefined) {
+      profileFlags.newsletter = options.newsletter;
+      settingsFlags.newsletter = options.newsletter;
+    }
+    if (options.aiEnhance !== undefined) settingsFlags.ai_enhance = options.aiEnhance;
+
     if (Object.keys(profileFlags).length) {
       const { error: flagError } = await this.admin
         .from("profiles")
@@ -84,12 +97,12 @@ export class TestData {
       if (flagError) throw new Error(`Could not set profile flags: ${flagError.message}`);
     }
 
-    if (options.aiEnhance !== undefined) {
-      const { error: aiError } = await this.admin
+    if (Object.keys(settingsFlags).length) {
+      const { error: settingsError } = await this.admin
         .from("user_settings")
-        .update({ ai_enhance: options.aiEnhance })
+        .update(settingsFlags)
         .eq("author", data.user.id);
-      if (aiError) throw new Error(`Could not set ai_enhance: ${aiError.message}`);
+      if (settingsError) throw new Error(`Could not set user settings: ${settingsError.message}`);
     }
 
     const { data: session, error: signInError } = await anonClient().auth.signInWithPassword({
@@ -101,6 +114,29 @@ export class TestData {
     }
 
     return { id: data.user.id, email, accessToken: session.session.access_token };
+  }
+
+  /**
+   * An auth user whose address was never confirmed, and who is therefore never
+   * signed in — there is no session to hand back.
+   *
+   * The 'all' newsletter audience deliberately skips these: unconfirmed
+   * sign-ups are where the dead addresses are, and a bulk send to a dormant
+   * list is the worst moment to hand a pile of bounces to the receiving side.
+   */
+  async createUnconfirmedUser(): Promise<{ id: string; email: string }> {
+    const email = `${TEST_MARKER}${crypto.randomUUID()}@${TEST_EMAIL_DOMAIN}`;
+    const { data, error } = await this.admin.auth.admin.createUser({
+      email,
+      password: TEST_PASSWORD,
+      email_confirm: false,
+      user_metadata: { full_name: `${TEST_MARKER}unconfirmed` },
+    });
+    if (error || !data.user) {
+      throw new Error(`Could not create unconfirmed test user: ${error?.message}`);
+    }
+    this.userIds.push(data.user.id);
+    return { id: data.user.id, email };
   }
 
   /**

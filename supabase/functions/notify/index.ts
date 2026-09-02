@@ -194,6 +194,8 @@ type NewsletterRecord = {
   cta_label: string | null;
   cta_url: string | null;
   recipients: string[] | null;
+  /** 'subscribers' (opt-ins) or 'all' (every registered user). See the audience column. */
+  audience: string | null;
   status: string;
 };
 
@@ -226,15 +228,26 @@ async function sendNewsletter(
 
   try {
     const explicit = record.recipients?.filter((e) => e && e.trim() !== "") ?? [];
+    // Anything but an exact "all" is treated as the opt-in audience, so a webhook
+    // replayed from a payload that predates the column still sends to subscribers.
+    const audience = record.audience === "all" ? "all" : "subscribers";
     const { data: recipients, error } = await supabase.rpc("get_newsletter_recipients", {
       p_emails: explicit.length > 0 ? explicit : null,
+      p_audience: audience,
     });
     if (error) throw error;
 
     const list = (recipients ?? []) as { email: string; full_name: string | null }[];
+    // Name the audience: a small number here is the difference between "the send
+    // failed" and "the opt-in list really is that small", and the log is where
+    // that question gets answered.
     console.log(
       `Newsletter ${record.id}: ${list.length} recipient(s)`,
-      explicit.length > 0 ? "(explicit list)" : "(all subscribers)",
+      explicit.length > 0
+        ? "(explicit list)"
+        : audience === "all"
+          ? "(every registered user)"
+          : "(newsletter subscribers only)",
     );
 
     let sent = 0;

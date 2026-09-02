@@ -10,7 +10,7 @@ Handles all transactional notifications for FiFe. Triggered by database webhooks
 | `profileRecommendations` | Recommended profile |
 | `comments` (key `buziness/{id}`) | Buziness owner |
 | `messages` | Message recipient |
-| `newsletters` | Every newsletter subscriber, or an explicit address list — see [Newsletter](#newsletter) |
+| `newsletters` | The issue's audience — subscribers or every registered user — or an explicit address list. See [Newsletter](#newsletter) |
 
 ## Architecture
 
@@ -37,7 +37,7 @@ Sending a newsletter is one `INSERT`. The `AFTER INSERT` trigger on
 notification — no separate cron, queue or admin service.
 
 ```sql
--- To every subscriber (profiles.newsletter = true):
+-- To the newsletter opt-ins (the default audience):
 INSERT INTO public.newsletters (subject, title, body, cta_label, cta_url)
 VALUES (
   'Nyári FiFe hírlevél',
@@ -46,6 +46,10 @@ VALUES (
   'Irány a FiFe App',
   'https://fifeapp.hu'
 );
+
+-- To every registered user, opted in or not — announcements and win-back:
+INSERT INTO public.newsletters (subject, body, audience)
+VALUES ('Itt az új FiFe App', '<p>Nézd meg, mi változott.</p>', 'all');
 
 -- To specific addresses only (test send, targeted mail):
 INSERT INTO public.newsletters (subject, body, recipients)
@@ -58,7 +62,8 @@ VALUES ('Teszt', '<p>Csak nekem.</p>', ARRAY['kristofakos1229@gmail.com']);
 | `title` | Headline above the body. Falls back to `subject` |
 | `body` | HTML fragment (required). Inline styles only — Gmail strips `<style>` |
 | `cta_label` + `cta_url` | Optional red CTA button. Both or neither |
-| `recipients` | `NULL`/empty → **all subscribers**. Otherwise exactly these addresses |
+| `audience` | `subscribers` (default) → the newsletter opt-ins. `all` → every registered user with a confirmed address. Ignored when `recipients` is set |
+| `recipients` | `NULL`/empty → resolve from `audience`. Otherwise exactly these addresses |
 | `status` | `pending` → `sending` → `sent` \| `failed`, written back by this function |
 | `sent_count`, `failed_count`, `sent_at`, `error` | Run result, written back by this function |
 
@@ -74,11 +79,33 @@ can read or write it — the app can't send newsletters or read past ones.
 
 ### Who receives it
 
-`get_newsletter_recipients(p_emails)` resolves the audience and returns
-`email` + `full_name`, so every mail is greeted with the recipient's own name
-(`Szia Anna!`). Addresses on the suppression list are dropped in both modes —
-an unsubscribed person is not mailed even if listed explicitly. Explicit
-addresses do not have to belong to a user; unknown ones simply get `Szia!`.
+`get_newsletter_recipients(p_emails, p_audience)` resolves the audience and
+returns `email` + `full_name`, so every mail is greeted with the recipient's own
+name (`Szia Anna!`).
+
+| Call | Who comes back |
+|---|---|
+| `p_emails` non-empty | Exactly those addresses. Subscription state and `p_audience` both ignored |
+| `p_audience = 'subscribers'` | `COALESCE(user_settings.newsletter, profiles.newsletter) = true` |
+| `p_audience = 'all'` | Every profile whose `auth.users.email_confirmed_at` is set |
+
+The suppression list is applied to **all three** — an unsubscribed person is not
+mailed even when named explicitly, and `all` means "everyone who has not said
+no", never "everyone". Explicit addresses do not have to belong to a user;
+unknown ones simply get `Szia!`.
+
+`all` additionally requires a confirmed address because unconfirmed sign-ups are
+where the dead addresses are, and a bulk send to a dormant list is the worst
+moment to hand a pile of bounces to the receiving side. Opt-ins are not filtered
+that way — they asked for the mail.
+
+The audience is named in the run's first log line, so a surprising `sent_count`
+can be traced to the audience rather than to delivery:
+
+```
+Newsletter 21: 412 recipient(s) (every registered user)
+Newsletter 19: 6 recipient(s) (newsletter subscribers only)
+```
 
 ### Unsubscribe
 
@@ -94,8 +121,9 @@ an address can only be unsubscribed by someone who actually received a mail for
 it. Clicking it:
 
 1. verifies the HMAC (constant-time),
-2. calls `newsletter_unsubscribe(email)` — sets `profiles.newsletter = false`
-   and records the address in `public.newsletter_unsubscribes`,
+2. calls `newsletter_unsubscribe(email)` — clears the newsletter flag in both
+   `public.user_settings` and `public.profiles`, and records the address in
+   `public.newsletter_unsubscribes`,
 3. shows a FiFe-styled confirmation page.
 
 The link is clicked from a mail client, with no session and no JWT, so the
@@ -288,10 +316,19 @@ supabase secrets set SMTP_HOST=smtp.rackhost.hu SMTP_PORT=465 SMTP_USER=... SMTP
 5. Check Mailpit at `http://127.0.0.1:54324` for the rendered email
 6. Check push in edge runtime logs: `docker logs supabase_edge_runtime_fife-app-expo --tail 50`
 
-For the newsletter, set `newsletter = true` on a few test profiles, insert a row
-into `public.newsletters`, then check Mailpit — one mail per subscriber — and
+For the newsletter, set `newsletter = true` on a few test users **in
+`public.user_settings`** — the resolver reads
+`COALESCE(user_settings.newsletter, profiles.newsletter)`, and because
+`user_settings.newsletter` is `NOT NULL DEFAULT false` it never falls through, so
+setting it on `profiles` alone produces a subscriber nobody mails. Then insert a
+row into `public.newsletters`, and check Mailpit — one mail per subscriber — and
 click the unsubscribe link in the footer. Locally the link resolves to
 `http://127.0.0.1:54321/functions/v1/newsletter-unsubscribe`.
+
+To exercise the `all` audience, insert with `audience => 'all'` and confirm the
+mail also reaches users who never opted in. `npm run test:edge` covers the
+resolver itself (`__tests__/edge/newsletter-recipients.integration.test.ts`)
+without sending anything.
 
 ## Deployment
 

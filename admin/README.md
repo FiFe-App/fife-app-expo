@@ -42,9 +42,19 @@ trigger hívja a meglévő `notify` edge function-t). Emiatt:
 
 - **Teszt küldés**: a `recipients` mezőbe csak a megadott teszt email kerül — a
   listában sárga "TESZT" jelöléssel jelenik meg.
-- **Küldés mindenkinek**: `recipients = NULL`, ilyenkor minden `profiles.newsletter = true`
-  feliratkozó megkapja. Megerősítő dialógus védi a véletlen küldést, mert ez a
-  művelet nem vonható vissza.
+- **Éles küldés**: `recipients = NULL`, a címzetteket az `audience` mező dönti el.
+  Megerősítő dialógus védi a véletlen küldést, mert ez a művelet nem vonható vissza.
+
+Az `audience` a form tetején állítható:
+
+| Célcsoport | `audience` | Kik kapják meg |
+|---|---|---|
+| Feliratkozók (alapértelmezés) | `subscribers` | Akiknél a hírlevél kapcsoló be van kapcsolva |
+| Minden regisztrált felhasználó | `all` | Minden felhasználó megerősített email címmel, feliratkozástól függetlenül — a listában narancs "MINDENKI" jelölést kap |
+
+A leiratkozottak mindkét esetben kimaradnak. A küldés gomb fölött mindig ott a
+címzettek aktuális száma: ha ez nem az, amire számítasz, akkor a célcsoport a
+rossz, nem a kiküldés.
 
 A lista 5 másodpercenként frissül, amíg van `pending`/`sending` állapotú hírlevél
 (a tényleges kiküldés a `notify` function-ben aszinkron zajlik, a `status`/`sent_count`/

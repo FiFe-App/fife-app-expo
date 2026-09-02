@@ -1,4 +1,4 @@
-import type { Newsletter, NewsletterInput } from "./types";
+import type { Newsletter, NewsletterAudience, NewsletterInput } from "./types";
 
 export class AuthError extends Error {}
 
@@ -39,6 +39,15 @@ export async function fetchNewsletters(): Promise<Newsletter[]> {
   if (!res.ok) throw new Error(await parseErrorBody(res));
   const data = await res.json();
   return data.newsletters as Newsletter[];
+}
+
+/** Hány címzettnek menne ki egy most indított élesküldés a megadott célcsoportnak. */
+export async function fetchRecipientCount(audience: NewsletterAudience): Promise<number> {
+  const res = await fetch(`/api/newsletters?count=${audience}`, { credentials: "same-origin" });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  const data = await res.json();
+  return data.count as number;
 }
 
 export async function createNewsletter(input: NewsletterInput): Promise<Newsletter> {

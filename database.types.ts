@@ -519,6 +519,7 @@ export type Database = {
       }
       newsletters: {
         Row: {
+          audience: string
           body: string
           created_at: string
           cta_label: string | null
@@ -534,6 +535,7 @@ export type Database = {
           title: string | null
         }
         Insert: {
+          audience?: string
           body: string
           created_at?: string
           cta_label?: string | null
@@ -549,6 +551,7 @@ export type Database = {
           title?: string | null
         }
         Update: {
+          audience?: string
           body?: string
           created_at?: string
           cta_label?: string | null
@@ -872,7 +875,7 @@ export type Database = {
         }[]
       }
       get_newsletter_recipients: {
-        Args: { p_emails?: string[] }
+        Args: { p_audience?: string; p_emails?: string[] }
         Returns: {
           email: string
           full_name: string

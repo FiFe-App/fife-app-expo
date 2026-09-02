@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Button, Group, Stack, TextInput } from "@mantine/core";
+import { useEffect, useState } from "react";
+import { Button, Group, SegmentedControl, Stack, Text, TextInput } from "@mantine/core";
 import { RichTextEditor, Link } from "@mantine/tiptap";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -7,8 +7,8 @@ import Underline from "@tiptap/extension-underline";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 
-import { AuthError, createNewsletter } from "../api";
-import type { Newsletter } from "../types";
+import { AuthError, createNewsletter, fetchRecipientCount } from "../api";
+import type { Newsletter, NewsletterAudience } from "../types";
 
 export function NewsletterForm({
   onSent,
@@ -23,6 +23,30 @@ export function NewsletterForm({
   const [ctaUrl, setCtaUrl] = useState("");
   const [testEmail, setTestEmail] = useState("");
   const [sending, setSending] = useState<"test" | "live" | null>(null);
+  const [audience, setAudience] = useState<NewsletterAudience>("subscribers");
+  const [recipientCount, setRecipientCount] = useState<number | null>(null);
+  const [countError, setCountError] = useState(false);
+
+  // A címzettszám a küldés előtti utolsó ellenőrzés. A 19-es hírlevél hat
+  // embert ért el, mert a "Küldés mindenkinek" gomb valójában a feliratkozókat
+  // jelentette, és ez sehol nem látszott a kiküldés előtt.
+  useEffect(() => {
+    let cancelled = false;
+    setRecipientCount(null);
+    setCountError(false);
+    fetchRecipientCount(audience)
+      .then((n) => {
+        if (!cancelled) setRecipientCount(n);
+      })
+      .catch(() => {
+        // Lejárt session is idekerül; a következő tényleges művelet úgyis
+        // kiváltja a bejelentkeztetést.
+        if (!cancelled) setCountError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [audience]);
 
   const editor = useEditor({
     extensions: [StarterKit, Underline, Link],
@@ -44,6 +68,7 @@ export function NewsletterForm({
         ctaLabel: ctaLabel.trim(),
         ctaUrl: ctaUrl.trim(),
         testEmail: recipientOverride,
+        audience,
       });
       notifications.show({
         color: "green",
@@ -51,13 +76,18 @@ export function NewsletterForm({
         message:
           mode === "test"
             ? `Elment a(z) ${recipientOverride} címre.`
-            : "A hírlevél elindult a feliratkozóknak.",
+            : audience === "all"
+              ? "A hírlevél elindult minden regisztrált felhasználónak."
+              : "A hírlevél elindult a feliratkozóknak.",
       });
       setTitle("");
       setSubject("");
       setCtaLabel("");
       setCtaUrl("");
       setTestEmail("");
+      // Az "all" nem ragad be a következő hírlevélre: a tágabb célcsoportot
+      // mindig külön kell választani.
+      setAudience("subscribers");
       editor.commands.clearContent();
       onSent(newsletter);
     } catch (err) {
@@ -89,11 +119,14 @@ export function NewsletterForm({
   }
 
   function handleLiveSend() {
+    const isAll = audience === "all";
+    const countLine = recipientCount === null ? "" : ` Jelenleg ${recipientCount} címzett.`;
     modals.openConfirmModal({
-      title: "Hírlevél küldése mindenkinek",
-      children:
-        "Ez azonnal kiküldi a hírlevelet minden feliratkozott felhasználónak. Ez a művelet nem vonható vissza. Biztosan folytatod?",
-      labels: { confirm: "Küldés mindenkinek", cancel: "Mégse" },
+      title: isAll ? "Hírlevél küldése minden felhasználónak" : "Hírlevél küldése a feliratkozóknak",
+      children: isAll
+        ? `Ez azonnal kiküldi a hírlevelet MINDEN regisztrált felhasználónak, nem csak a feliratkozóknak.${countLine} Ez a művelet nem vonható vissza. Biztosan folytatod?`
+        : `Ez azonnal kiküldi a hírlevelet minden feliratkozott felhasználónak.${countLine} Ez a művelet nem vonható vissza. Biztosan folytatod?`,
+      labels: { confirm: isAll ? "Küldés mindenkinek" : "Küldés a feliratkozóknak", cancel: "Mégse" },
       confirmProps: { color: "red" },
       onConfirm: () => void send(""),
     });
@@ -160,6 +193,31 @@ export function NewsletterForm({
         />
       </Group>
 
+      <div>
+        <Text size="sm" fw={500}>
+          Célcsoport
+        </Text>
+        <SegmentedControl
+          fullWidth
+          mt={4}
+          value={audience}
+          onChange={(value) => setAudience(value as NewsletterAudience)}
+          data={[
+            { label: "Feliratkozók", value: "subscribers" },
+            { label: "Minden regisztrált felhasználó", value: "all" },
+          ]}
+        />
+        <Text size="sm" c={countError ? "red" : "dimmed"} mt={6}>
+          {countError
+            ? "Nem sikerült lekérdezni a címzettek számát."
+            : recipientCount === null
+              ? "Címzettek számolása…"
+              : audience === "all"
+                ? `Ez ${recipientCount} címzettnek megy ki: azok is megkapják, akik nem iratkoztak fel. A leiratkozottak és a meg nem erősített címek kimaradnak.`
+                : `Ez ${recipientCount} címzettnek megy ki: csak a hírlevélre feliratkozottaknak.`}
+        </Text>
+      </div>
+
       <Group align="flex-end" justify="space-between" wrap="wrap">
         <TextInput
           label="Teszt címzett email"
@@ -184,7 +242,7 @@ export function NewsletterForm({
             loading={sending === "live"}
             disabled={!canSubmit || sending !== null}
           >
-            Küldés mindenkinek
+            {audience === "all" ? "Küldés mindenkinek" : "Küldés a feliratkozóknak"}
           </Button>
         </Group>
       </Group>
