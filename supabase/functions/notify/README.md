@@ -71,6 +71,7 @@ VALUES ('Itt az új FiFe App', '<p>Nézd meg.</p>', 'all', ARRAY['kollega@fifeap
 | `excluded` | Addresses to skip for this issue only, whatever the audience says. Overrides `recipients` too |
 | `status` | `pending` → `sending` → `sent` \| `failed`, written back by this function |
 | `sent_count`, `failed_count`, `sent_at`, `error` | Run result, written back by this function |
+| `sent_recipients`, `failed_recipients` | Which addresses were reached and which errored. Checkpointed as the run progresses |
 
 Check how a send went:
 
@@ -165,6 +166,46 @@ Tuning (optional secrets): `NEWSLETTER_BATCH_SIZE`, `NEWSLETTER_BATCH_DELAY_MS`.
 
 Each mail goes out as multipart/alternative — the HTML template plus a text part
 derived from it by `htmlToText()`. HTML-only bulk mail filters badly.
+
+### Provider rate limits, and finishing a partial send
+
+Shared SMTP hosting is not a bulk sender. Two replies say so:
+
+```
+451 4.7.1 Mailbox rate limit reached, please try again later
+421 4.7.0 <host> Error: too many connections from <ip>
+```
+
+The first is a per-mailbox message rate, the second a per-IP connection cap —
+and the edge runtime's outbound IP is shared with other tenants, so the
+connection cap can be reached by traffic that is not even ours. Both are 4xx,
+i.e. temporary: each recipient is retried (`NEWSLETTER_MAX_RETRIES`) before
+being counted as failed.
+
+Retrying does not create capacity. **Ask the provider for the actual per-hour
+limit and set `SMTP_RATE_LIMIT` / `SMTP_RATE_DELTA_MS` to match** before a bulk
+send. Keep `SMTP_MAX_CONNECTIONS` at `1` unless they say otherwise.
+
+If a run still stops short, it is recoverable: `sent_recipients` is checkpointed
+after every batch, so send the remainder as a new issue that excludes whoever
+has already been reached.
+
+```sql
+-- Who is still owed issue 21, without mailing anyone twice
+INSERT INTO public.newsletters (subject, title, body, cta_label, cta_url, audience, excluded)
+SELECT n.subject, n.title, n.body, n.cta_label, n.cta_url, n.audience,
+       COALESCE(n.sent_recipients, ARRAY[]::text[])
+FROM public.newsletters n WHERE n.id = 21;
+
+-- Or retry just the ones that errored
+INSERT INTO public.newsletters (subject, title, body, cta_label, cta_url, recipients)
+SELECT n.subject, n.title, n.body, n.cta_label, n.cta_url, n.failed_recipients
+FROM public.newsletters n WHERE n.id = 21 AND n.failed_recipients IS NOT NULL;
+```
+
+A run that is killed by the edge runtime's wall-clock limit leaves `status` at
+`sending` and never reaches `sent`; its `sent_recipients` is still accurate up
+to the last completed batch, so the same recovery applies.
 
 ### "Status is sent but nothing arrived"
 
@@ -317,6 +358,11 @@ SELECT * FROM private.notify_recent_calls(20);
 | `FUNCTIONS_BASE_URL` | `supabase secrets set` (optional) | Base URL used to build unsubscribe links. Defaults to `$SUPABASE_URL/functions/v1` |
 | `NEWSLETTER_BATCH_SIZE` | `supabase secrets set` (optional) | Mails per batch, default `10` |
 | `NEWSLETTER_BATCH_DELAY_MS` | `supabase secrets set` (optional) | Pause between batches, default `1000` |
+| `NEWSLETTER_MAX_RETRIES` | `supabase secrets set` (optional) | Retries per recipient on a **temporary** SMTP reply, default `2` |
+| `NEWSLETTER_RETRY_DELAY_MS` | `supabase secrets set` (optional) | Base backoff between retries, default `5000`, multiplied by the attempt number |
+| `SMTP_MAX_CONNECTIONS` | `supabase secrets set` (optional) | Simultaneous SMTP connections, default `1`. Raise only if the provider says it is safe |
+| `SMTP_RATE_LIMIT` | `supabase secrets set` (optional) | Max messages per `SMTP_RATE_DELTA_MS`. `0` (default) disables the limiter |
+| `SMTP_RATE_DELTA_MS` | `supabase secrets set` (optional) | Window for `SMTP_RATE_LIMIT`, default `60000` |
 
 Set secrets for production:
 ```bash

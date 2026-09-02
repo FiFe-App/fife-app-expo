@@ -527,10 +527,12 @@ export type Database = {
           error: string | null
           excluded: string[] | null
           failed_count: number
+          failed_recipients: string[] | null
           id: number
           recipients: string[] | null
           sent_at: string | null
           sent_count: number
+          sent_recipients: string[] | null
           status: string
           subject: string
           title: string | null
@@ -544,10 +546,12 @@ export type Database = {
           error?: string | null
           excluded?: string[] | null
           failed_count?: number
+          failed_recipients?: string[] | null
           id?: number
           recipients?: string[] | null
           sent_at?: string | null
           sent_count?: number
+          sent_recipients?: string[] | null
           status?: string
           subject: string
           title?: string | null
@@ -561,10 +565,12 @@ export type Database = {
           error?: string | null
           excluded?: string[] | null
           failed_count?: number
+          failed_recipients?: string[] | null
           id?: number
           recipients?: string[] | null
           sent_at?: string | null
           sent_count?: number
+          sent_recipients?: string[] | null
           status?: string
           subject?: string
           title?: string | null
