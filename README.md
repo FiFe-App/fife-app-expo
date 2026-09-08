@@ -80,3 +80,26 @@ megkérdezi a `get_app_version_status` függvényt. Ha a hívás hibázik vagy
 nincs sor az adott platformra, az app **nem** blokkol: a kapu udvariassági
 kérés a felhasználó felé, a tényleges jogosultságokat továbbra is az RLS és
 az edge functionök tartják be.
+
+## Nyilvános bizniszek és a link előnézete
+
+Egy biznisz alapból csak belépve látszik. A szerkesztőben a **Megosztható
+link** kapcsoló írja a `buziness.public` oszlopot; ha be van kapcsolva, a
+`/biznisz/<id>` oldal fiók nélkül is megnyílik. Ezt nem a kliens dönti el,
+hanem a SELECT policy: az anon kulcs csak a `public = true` sorokat látja
+(lásd `supabase/migrations/20260908120000_add_buziness_public.sql`).
+
+A belépés nélküli látogatónak nem jelenik meg az alsó menü, az ajánlás és a
+mentés gomb, és az „Üzenet" elérhetőség sem — helyette a Csatlakozom gomb.
+
+A weboldal minden URL-en ugyanazt az `index.html`-t szolgálja ki, ezért a
+Facebook (Messenger, WhatsApp, Slack) crawlere magától mindig az app
+általános előnézetét látná. Ezt a `netlify/edge-functions/social-preview.ts`
+javítja: a CDN-en megnézi a biznisz adatait az anon kulccsal, és beírja a
+címét, leírását és első képét a HTML fejlécébe. Az alapértelmezett tagek
+(`app/+html.tsx`) és a hozzájuk tartozó kép (`public/og-image.png`) maradnak
+minden más oldalra.
+
+A Supabase címét és anon kulcsát a Netlify környezeti változóiból olvassa
+(`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`); ha nincsenek
+beállítva, a produkciós projekt nyilvános értékeivel dolgozik.

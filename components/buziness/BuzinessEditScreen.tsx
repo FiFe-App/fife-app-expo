@@ -85,6 +85,9 @@ export default function BuzinessEditScreen({
   const [defaultContact, setDefaultContact] = useState<number | undefined>();
 
   const [ingyen, setIngyen] = useState(false);
+  // Off by default: a listing only leaves the members-only app once its author
+  // says so. See the buziness "public" column.
+  const [isPublic, setIsPublic] = useState(false);
   const [media, setMedia] = useState<MediaDataType[]>([]);
   const mediaUploadRef = useRef<BuzinessMediaUploadHandle | null>(null);
   const contactEditRef = useRef<{
@@ -156,6 +159,7 @@ export default function BuzinessEditScreen({
           ...newBuziness,
           title,
           ingyen,
+          public: isPublic,
           author: uid,
           // The chosen circle alone, never `selectedLocation`: that one falls
           // back to the device's GPS so the map preview has something to
@@ -207,6 +211,7 @@ export default function BuzinessEditScreen({
     editId,
     media.length,
     ingyen,
+    isPublic,
     newBuziness,
     circle,
     title,
@@ -267,6 +272,8 @@ export default function BuzinessEditScreen({
                   .filter(Boolean),
               );
               setIngyen(!!editingBuziness.ingyen);
+              setIsPublic(!!editingBuziness.public);
+              setIsPublic(!!editingBuziness.public);
               if (editingBuziness.defaultContact)
                 setDefaultContact(editingBuziness.defaultContact);
               if (editingBuziness.images)
@@ -522,6 +529,33 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
                   onValueChange={setIngyen}
                   color={theme.colors.nature}
                 />
+              </View>
+              {/* Sharing outside the app: with this on, the biznisz page opens
+                  for anybody who has the link — no account, no login — and a
+                  link posted on Facebook shows its title and description. */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: Spacing.md,
+                }}
+              >
+                <Icon
+                  source="share-variant"
+                  size={24}
+                  color={theme.colors.primary}
+                />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <ThemedText variant="bodyMedium">Megosztható link</ThemedText>
+                  <Text
+                    variant="bodyMedium"
+                    style={{ color: theme.colors.onSurfaceVariant }}
+                  >
+                    Ha bekapcsolod, bárki megnézheti ezt a bizniszt a linkkel,
+                    fiók nélkül is — és megoszthatod közösségi oldalakon.
+                  </Text>
+                </View>
+                <Switch value={isPublic} onValueChange={setIsPublic} />
               </View>
               {/* Global preference, not a property of this biznisz: the same
                   switch is on the search screen and in the profile settings,

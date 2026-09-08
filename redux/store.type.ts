@@ -192,6 +192,8 @@ export interface BuzinessItemInterface {
   recommendations: number | { count: number }[];
   created_at?: string;
   ingyen?: boolean;
+  /** The author let anyone open this biznisz with a link, without an account. */
+  public?: boolean;
 }
 export interface EventItemInterface extends Tables<"events"> {
   lat: number | null;

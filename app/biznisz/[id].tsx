@@ -26,10 +26,11 @@ import getMediaKind from "@/lib/functions/getMediaKind";
 import getLinkForContact from "@/lib/functions/getLinkForContact";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import typeToIcon from "@/lib/functions/typeToIcon";
+import { shareBuziness } from "@/lib/buziness/buzinessLink";
 import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
 import { SaveBuzinessButton } from "@/lib/supabase/SaveBuzinessButton";
 import { supabase } from "@/lib/supabase/supabase";
-import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
+import { addSnack, clearOptions, setOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import {
   BuzinessItemInterface,
@@ -49,6 +50,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View }
 import openMap from "react-native-open-maps";
 import {
   ActivityIndicator,
+  Appbar,
   Button,
   IconButton,
   Portal,
@@ -175,6 +177,14 @@ export default function Index() {
   const audioItemWidth = windowWidth - Spacing.md * 2;
 
   const myBuziness = myUid === data?.author;
+  // A visitor with no account cannot open a chat, so the in-app message
+  // contact is left out for them; every other kind (phone, e-mail, web) works
+  // just as well from a shared link.
+  const visibleContacts = myUid
+    ? contacts
+    : contacts.filter((c) => c.type !== "MESSAGE");
+  const visibleDefaultContact =
+    myUid || defaultContact?.type !== "MESSAGE" ? defaultContact : null;
   const { myLocation } = useMyLocation();
   const [commentsCount, setCommentsCount] = useState<number>();
   const isNew = data?.created_at && new Date().getTime() - new Date(data.created_at).getTime() < 1000 * 60 * 60 * 24 * 10;
@@ -191,6 +201,20 @@ export default function Index() {
     setTab(next);
     // allow the new tab content to mount/lay out before scrolling to the tab bar
     setTimeout(() => scrollRef.current?.scrollTo({ y: tabBarY, animated: true }), 50);
+  };
+
+  const onShare = async () => {
+    const result = await shareBuziness(id, title);
+    if (result === "copied")
+      dispatch(
+        addSnack({
+          title: data?.public
+            ? "Link a vágólapon"
+            : "Link a vágólapon — egyelőre csak belépve nyílik meg",
+        }),
+      );
+    else if (result === "failed")
+      dispatch(addSnack({ title: "Nem sikerült megosztani a linket" }));
   };
 
   const goToMap = () => {
@@ -295,10 +319,18 @@ export default function Index() {
                     }
                   });
               }} else{
-                setError({
-                  code: "jaj basszus",
-                  message: "Ez a biznisz nem található",
-                });}
+                setError(
+                  myUid
+                    ? {
+                        code: "jaj basszus",
+                        message: "Ez a biznisz nem található",
+                      }
+                    : {
+                        code: "Nem látható",
+                        message:
+                          "Ez a biznisz nem található, vagy a gazdája nem osztotta meg nyilvánosan. Lépj be, hogy lásd!",
+                      },
+                );}
 
               try {
                 if (data?.images) setMedia(getImagesUrlFromSupabase(data.images));
@@ -331,6 +363,15 @@ export default function Index() {
       <Stack.Screen options={{
         header: () => <MyAppbar
           title="Biznisz"
+          actions={
+            data ? (
+              <Appbar.Action
+                icon="share-variant"
+                accessibilityLabel="Biznisz megosztása"
+                onPress={onShare}
+              />
+            ) : undefined
+          }
           style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} />
       }} />
       {/* iOS keyboard handling comes from the ScrollView's
@@ -354,6 +395,13 @@ export default function Index() {
             icon="briefcase-off"
             title={error.code}
             text={error.message}
+            action={
+              myUid ? undefined : (
+                <Link asChild href="/csatlakozom">
+                  <Button mode="contained">Csatlakozom</Button>
+                </Link>
+              )
+            }
           />
         )}
         {!!id && !!data && (
@@ -485,16 +533,16 @@ export default function Index() {
                         Biznisz szerkesztése
                       </Button>
                     </Link>
-                  ) : defaultContact ? (
-                    <Link asChild href={getLinkForContact(defaultContact)}>
+                  ) : visibleDefaultContact ? (
+                    <Link asChild href={getLinkForContact(visibleDefaultContact)}>
                       <Button
                         mode="contained"
-                        icon={typeToIcon(defaultContact.type)}
+                        icon={typeToIcon(visibleDefaultContact.type)}
                         contentStyle={{ height: 50 }}
                         labelStyle={{ fontSize: 16 }}
                         style={{ borderRadius: BorderRadius.pill, width: "100%" }}
                       >
-                        {defaultContact.title || (defaultContact.type=="MESSAGE" ? "Üzenet" : defaultContact?.data)}
+                        {visibleDefaultContact.title || (visibleDefaultContact.type=="MESSAGE" ? "Üzenet" : visibleDefaultContact?.data)}
                       </Button>
                     </Link>
                   ) : (
@@ -504,14 +552,26 @@ export default function Index() {
                       contentStyle={{ height: 50 }}
                       labelStyle={{ fontSize: 16 }}
                       style={{ borderRadius: BorderRadius.pill, width: "100%" }}
-                      disabled={contacts.length === 0}
+                      disabled={visibleContacts.length === 0}
                       onPress={() => goToTab("overview")}
                     >
                       Kapcsolat
                     </Button>
                   )}
 
-                  {!myBuziness && (
+                  {!myBuziness && !myUid && (
+                    <Link asChild href="/csatlakozom">
+                      <Button
+                        mode="outlined"
+                        icon="account-plus"
+                        style={{ borderRadius: BorderRadius.pill, width: "100%" }}
+                      >
+                        Csatlakozz, hogy ajánlhasd
+                      </Button>
+                    </Link>
+                  )}
+
+                  {!myBuziness && !!myUid && (
                     <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
                       <RecommendBuzinessButton
                         buzinessId={id}
@@ -637,10 +697,10 @@ export default function Index() {
             <View style={{ paddingTop: Spacing.xl, minHeight: windowHeight/2, flex:1 }}>
               {tab === "overview" ? (
                 <View style={{ gap: Spacing.xl }}>
-                  {contacts.length > 0 && (
+                  {visibleContacts.length > 0 && (
                     <View style={{ paddingHorizontal: Spacing.md, gap: Spacing.sm }}>
                       <SectionLabel label="Elérhetőségek" />
-                      <ContactsCard contacts={contacts} />
+                      <ContactsCard contacts={visibleContacts} />
                     </View>
                   )}
 
@@ -692,7 +752,7 @@ export default function Index() {
                     </View>
                   )}
 
-                  {contacts.length === 0 && !data.location && (
+                  {visibleContacts.length === 0 && !data.location && (
                     <ThemedText
                       style={{
                         textAlign: "center",

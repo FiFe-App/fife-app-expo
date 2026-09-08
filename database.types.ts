@@ -112,6 +112,7 @@ export type Database = {
           images: string[] | null
           ingyen: boolean
           location: unknown
+          public: boolean
           radius: number | null
           title: string
         }
@@ -126,6 +127,7 @@ export type Database = {
           images?: string[] | null
           ingyen?: boolean
           location?: unknown
+          public?: boolean
           radius?: number | null
           title: string
         }
@@ -140,6 +142,7 @@ export type Database = {
           images?: string[] | null
           ingyen?: boolean
           location?: unknown
+          public?: boolean
           radius?: number | null
           title?: string
         }

@@ -320,10 +320,6 @@ function RootContent() {
                   options={{ title: "Új Biznisz" }}
                 />
                 <Stack.Screen
-                  name="biznisz/[id]"
-                  options={{ title: "Biznisz" }}
-                />
-                <Stack.Screen
                   name="biznisz/edit/[editId]"
                   options={{ title: "Biznisz szerkesztése" }}
                 />
@@ -376,6 +372,14 @@ function RootContent() {
                 name="leiratkozas"
                 options={{ headerShown: false }}
               />
+              {/* Outside both guards on purpose: a biznisz its author marked
+                  public can be opened by anyone who has the link, with no
+                  account — the page itself asks a visitor to sign in when the
+                  biznisz is not public (or does not exist). */}
+              <Stack.Screen
+                name="biznisz/[id]"
+                options={{ title: "Biznisz" }}
+              />
               {/* Outside both guards on purpose: an invite link is opened by
                   someone who has no account yet, but a member who taps their
                   own link has to be able to see it too. */}
@@ -393,7 +397,10 @@ function RootContent() {
                 onDismiss={versionGate.dismissUpdate}
               />
             )}
-            {pathname !== "/" && !pathname.includes("projekt") &&
+            {/* Every tab of the bottom bar leads somewhere only members can
+                open, so a signed-out visitor on a shared biznisz page gets
+                none of it. */}
+            {!!uid && pathname !== "/" && !pathname.includes("projekt") &&
               !pathname.includes("login") &&
               !pathname.includes("password") &&
               !pathname.includes("user/deleted-account") &&
