@@ -59,6 +59,21 @@ async function sendPushNotification(pushToken: string, message: string, data?: R
 
 // Pooled transporter: a newsletter run sends hundreds of mails and must not
 // open a fresh SMTP connection per recipient.
+//
+// Defaults are deliberately timid. Shared SMTP hosts cap both the number of
+// simultaneous connections from one IP and the number of messages a mailbox may
+// send per hour, and the edge runtime's outbound IP is shared with other
+// tenants — so "too many connections from <ip>" can be triggered by traffic
+// that is not even ours. One connection, reused, is the setting that cannot
+// provoke it.
+//
+// The rate limiter is off unless configured, because the only correct value is
+// the one the mail provider will state. Set SMTP_RATE_LIMIT/SMTP_RATE_DELTA_MS
+// from their answer before any bulk send.
+const smtpMaxConnections = parseInt(Deno.env.get("SMTP_MAX_CONNECTIONS") || "1");
+const smtpRateLimit = parseInt(Deno.env.get("SMTP_RATE_LIMIT") || "0");
+const smtpRateDeltaMs = parseInt(Deno.env.get("SMTP_RATE_DELTA_MS") || "60000");
+
 let transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
 
 function getTransporter() {
@@ -69,11 +84,26 @@ function getTransporter() {
       secure: smtpPort === 465,
       auth: { user: smtpUser, pass: smtpPass },
       pool: true,
-      maxConnections: 3,
+      maxConnections: smtpMaxConnections,
       maxMessages: 100,
+      ...(smtpRateLimit > 0 ? { rateLimit: smtpRateLimit, rateDelta: smtpRateDeltaMs } : {}),
     });
   }
   return transporter;
+}
+
+/**
+ * A 4xx SMTP reply means "not now", not "never" — a rate limit, a busy mailbox,
+ * a refused connection. Retrying one of these is the difference between a
+ * recipient who gets the mail a few seconds late and one who never gets it.
+ * 5xx replies are permanent (no such mailbox) and must not be retried.
+ */
+function isTransientSmtpError(err: unknown): boolean {
+  const responseCode = (err as { responseCode?: number } | null)?.responseCode;
+  if (typeof responseCode === "number") return responseCode >= 400 && responseCode < 500;
+  const code = (err as { code?: string } | null)?.code;
+  return code === "ECONNECTION" || code === "ETIMEDOUT" || code === "ESOCKET" ||
+    code === "EAI_AGAIN" || code === "ECONNRESET";
 }
 
 let smtpConfigLogged = false;
@@ -194,6 +224,10 @@ type NewsletterRecord = {
   cta_label: string | null;
   cta_url: string | null;
   recipients: string[] | null;
+  /** 'subscribers' (opt-ins) or 'all' (every registered user). See the audience column. */
+  audience: string | null;
+  /** Addresses to skip for this issue only, whatever the audience says. */
+  excluded: string[] | null;
   status: string;
 };
 
@@ -201,6 +235,9 @@ type NewsletterRecord = {
 // under the SMTP provider's rate limit.
 const NEWSLETTER_BATCH_SIZE = parseInt(Deno.env.get("NEWSLETTER_BATCH_SIZE") || "10");
 const NEWSLETTER_BATCH_DELAY_MS = parseInt(Deno.env.get("NEWSLETTER_BATCH_DELAY_MS") || "1000");
+// Retries apply only to temporary SMTP replies — see isTransientSmtpError.
+const NEWSLETTER_MAX_RETRIES = parseInt(Deno.env.get("NEWSLETTER_MAX_RETRIES") || "2");
+const NEWSLETTER_RETRY_DELAY_MS = parseInt(Deno.env.get("NEWSLETTER_RETRY_DELAY_MS") || "5000");
 
 async function sendNewsletter(
   supabase: ReturnType<typeof createClient>,
@@ -226,26 +263,66 @@ async function sendNewsletter(
 
   try {
     const explicit = record.recipients?.filter((e) => e && e.trim() !== "") ?? [];
+    // Anything but an exact "all" is treated as the opt-in audience, so a webhook
+    // replayed from a payload that predates the column still sends to subscribers.
+    const audience = record.audience === "all" ? "all" : "subscribers";
+    // Resolved server-side alongside the audience so the count the admin showed
+    // before sending and the list walked here cannot disagree.
+    const excluded = record.excluded?.filter((e) => e && e.trim() !== "") ?? [];
     const { data: recipients, error } = await supabase.rpc("get_newsletter_recipients", {
       p_emails: explicit.length > 0 ? explicit : null,
+      p_audience: audience,
+      p_exclude: excluded.length > 0 ? excluded : null,
     });
     if (error) throw error;
 
     const list = (recipients ?? []) as { email: string; full_name: string | null }[];
+    // Name the audience: a small number here is the difference between "the send
+    // failed" and "the opt-in list really is that small", and the log is where
+    // that question gets answered.
     console.log(
       `Newsletter ${record.id}: ${list.length} recipient(s)`,
-      explicit.length > 0 ? "(explicit list)" : "(all subscribers)",
+      explicit.length > 0
+        ? "(explicit list)"
+        : audience === "all"
+          ? "(every registered user)"
+          : "(newsletter subscribers only)",
+      excluded.length > 0 ? `— ${excluded.length} exception(s) applied` : "",
     );
 
     let sent = 0;
     let failed = 0;
     const failures: string[] = [];
+    // Per-address, not just counts: after a run that stops halfway there has to
+    // be a way to send the remainder without mailing the delivered ones twice.
+    const sentRecipients: string[] = [];
+    const failedRecipients: string[] = [];
 
-    for (let i = 0; i < list.length; i += NEWSLETTER_BATCH_SIZE) {
-      const batch = list.slice(i, i + NEWSLETTER_BATCH_SIZE);
-      const results = await Promise.allSettled(
-        batch.map(async (recipient) => {
-          const url = await unsubscribeUrl(recipient.email);
+    /** Written after every batch, so a run killed mid-flight still says how far it got. */
+    const checkpoint = async () => {
+      const { error: checkpointError } = await supabase
+        .from("newsletters")
+        .update({
+          sent_count: sent,
+          failed_count: failed,
+          sent_recipients: sentRecipients,
+          failed_recipients: failedRecipients,
+        })
+        .eq("id", record.id);
+      // A failed checkpoint costs progress information, not delivery — log it
+      // and keep sending rather than abandoning the run.
+      if (checkpointError) {
+        console.error(`Newsletter ${record.id}: checkpoint failed:`, checkpointError);
+      }
+    };
+
+    const sendOne = async (recipient: { email: string; full_name: string | null }) => {
+      const url = await unsubscribeUrl(recipient.email);
+      // One retry per transient reply, backing off. The provider's rate limit
+      // is the thing being waited out, so the pause is generous relative to the
+      // per-message cost.
+      for (let attempt = 0; ; attempt++) {
+        try {
           await sendEmailNotification(
             recipient.email,
             record.subject,
@@ -256,18 +333,37 @@ async function sendNewsletter(
               "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
             },
           );
-        }),
-      );
-
-      for (const result of results) {
-        if (result.status === "fulfilled") {
-          sent++;
-        } else {
-          failed++;
-          failures.push(String(result.reason));
-          console.error("Newsletter send failed:", result.reason);
+          return;
+        } catch (err) {
+          if (attempt >= NEWSLETTER_MAX_RETRIES || !isTransientSmtpError(err)) throw err;
+          const backoff = NEWSLETTER_RETRY_DELAY_MS * (attempt + 1);
+          console.log(
+            `Newsletter ${record.id}: ${recipient.email} got a temporary error, ` +
+              `retrying in ${backoff}ms (attempt ${attempt + 2}) — ${String(err)}`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, backoff));
         }
       }
+    };
+
+    for (let i = 0; i < list.length; i += NEWSLETTER_BATCH_SIZE) {
+      const batch = list.slice(i, i + NEWSLETTER_BATCH_SIZE);
+      const results = await Promise.allSettled(batch.map(sendOne));
+
+      results.forEach((result, index) => {
+        const email = batch[index].email;
+        if (result.status === "fulfilled") {
+          sent++;
+          sentRecipients.push(email);
+        } else {
+          failed++;
+          failedRecipients.push(email);
+          failures.push(String(result.reason));
+          console.error(`Newsletter send failed for ${email}:`, result.reason);
+        }
+      });
+
+      await checkpoint();
 
       if (i + NEWSLETTER_BATCH_SIZE < list.length && NEWSLETTER_BATCH_DELAY_MS > 0) {
         await new Promise((resolve) => setTimeout(resolve, NEWSLETTER_BATCH_DELAY_MS));
@@ -277,6 +373,8 @@ async function sendNewsletter(
     await supabase
       .from("newsletters")
       .update({
+        sent_recipients: sentRecipients,
+        failed_recipients: failedRecipients,
         status: "sent",
         sent_count: sent,
         failed_count: failed,

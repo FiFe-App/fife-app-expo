@@ -10,7 +10,7 @@ Handles all transactional notifications for FiFe. Triggered by database webhooks
 | `profileRecommendations` | Recommended profile |
 | `comments` (key `buziness/{id}`) | Buziness owner |
 | `messages` | Message recipient |
-| `newsletters` | Every newsletter subscriber, or an explicit address list — see [Newsletter](#newsletter) |
+| `newsletters` | The issue's audience — subscribers or every registered user — or an explicit address list. See [Newsletter](#newsletter) |
 
 ## Architecture
 
@@ -37,7 +37,7 @@ Sending a newsletter is one `INSERT`. The `AFTER INSERT` trigger on
 notification — no separate cron, queue or admin service.
 
 ```sql
--- To every subscriber (profiles.newsletter = true):
+-- To the newsletter opt-ins (the default audience):
 INSERT INTO public.newsletters (subject, title, body, cta_label, cta_url)
 VALUES (
   'Nyári FiFe hírlevél',
@@ -47,9 +47,17 @@ VALUES (
   'https://fifeapp.hu'
 );
 
+-- To every registered user, opted in or not — announcements and win-back:
+INSERT INTO public.newsletters (subject, body, audience)
+VALUES ('Itt az új FiFe App', '<p>Nézd meg, mi változott.</p>', 'all');
+
 -- To specific addresses only (test send, targeted mail):
 INSERT INTO public.newsletters (subject, body, recipients)
 VALUES ('Teszt', '<p>Csak nekem.</p>', ARRAY['kristofakos1229@gmail.com']);
+
+-- Everyone except a few (announcement with exceptions):
+INSERT INTO public.newsletters (subject, body, audience, excluded)
+VALUES ('Itt az új FiFe App', '<p>Nézd meg.</p>', 'all', ARRAY['kollega@fifeapp.hu']);
 ```
 
 | Column | Meaning |
@@ -58,9 +66,12 @@ VALUES ('Teszt', '<p>Csak nekem.</p>', ARRAY['kristofakos1229@gmail.com']);
 | `title` | Headline above the body. Falls back to `subject` |
 | `body` | HTML fragment (required). Inline styles only — Gmail strips `<style>` |
 | `cta_label` + `cta_url` | Optional red CTA button. Both or neither |
-| `recipients` | `NULL`/empty → **all subscribers**. Otherwise exactly these addresses |
+| `audience` | `subscribers` (default) → the newsletter opt-ins. `all` → every registered user with a confirmed address. Ignored when `recipients` is set |
+| `recipients` | `NULL`/empty → resolve from `audience`. Otherwise exactly these addresses |
+| `excluded` | Addresses to skip for this issue only, whatever the audience says. Overrides `recipients` too |
 | `status` | `pending` → `sending` → `sent` \| `failed`, written back by this function |
 | `sent_count`, `failed_count`, `sent_at`, `error` | Run result, written back by this function |
+| `sent_recipients`, `failed_recipients` | Which addresses were reached and which errored. Checkpointed as the run progresses |
 
 Check how a send went:
 
@@ -74,11 +85,44 @@ can read or write it — the app can't send newsletters or read past ones.
 
 ### Who receives it
 
-`get_newsletter_recipients(p_emails)` resolves the audience and returns
-`email` + `full_name`, so every mail is greeted with the recipient's own name
-(`Szia Anna!`). Addresses on the suppression list are dropped in both modes —
-an unsubscribed person is not mailed even if listed explicitly. Explicit
-addresses do not have to belong to a user; unknown ones simply get `Szia!`.
+`get_newsletter_recipients(p_emails, p_audience)` resolves the audience and
+returns `email` + `full_name`, so every mail is greeted with the recipient's own
+name (`Szia Anna!`).
+
+| Call | Who comes back |
+|---|---|
+| `p_emails` non-empty | Exactly those addresses. Subscription state and `p_audience` both ignored |
+| `p_audience = 'subscribers'` | `COALESCE(user_settings.newsletter, profiles.newsletter) = true` |
+| `p_audience = 'all'` | Every profile whose `auth.users.email_confirmed_at` is set |
+
+The suppression list is applied to **all three** — an unsubscribed person is not
+mailed even when named explicitly, and `all` means "everyone who has not said
+no", never "everyone". Explicit addresses do not have to belong to a user;
+unknown ones simply get `Szia!`.
+
+`p_exclude` drops addresses from whichever of the three produced them, matched
+case- and whitespace-insensitively. An address in both `p_emails` and
+`p_exclude` is skipped: excluding someone is always the safe answer. It is a
+per-issue exception list set by the sender, not a substitute for
+`newsletter_unsubscribes`, which is permanent and belongs to the recipient — so
+it does not carry over to the next issue.
+
+The count the admin shows before sending comes from this same function with the
+same arguments, so what the sender is told and what the run walks cannot drift
+apart.
+
+`all` additionally requires a confirmed address because unconfirmed sign-ups are
+where the dead addresses are, and a bulk send to a dormant list is the worst
+moment to hand a pile of bounces to the receiving side. Opt-ins are not filtered
+that way — they asked for the mail.
+
+The audience is named in the run's first log line, so a surprising `sent_count`
+can be traced to the audience rather than to delivery:
+
+```
+Newsletter 21: 412 recipient(s) (every registered user)
+Newsletter 19: 6 recipient(s) (newsletter subscribers only)
+```
 
 ### Unsubscribe
 
@@ -94,8 +138,9 @@ an address can only be unsubscribed by someone who actually received a mail for
 it. Clicking it:
 
 1. verifies the HMAC (constant-time),
-2. calls `newsletter_unsubscribe(email)` — sets `profiles.newsletter = false`
-   and records the address in `public.newsletter_unsubscribes`,
+2. calls `newsletter_unsubscribe(email)` — clears the newsletter flag in both
+   `public.user_settings` and `public.profiles`, and records the address in
+   `public.newsletter_unsubscribes`,
 3. shows a FiFe-styled confirmation page.
 
 The link is clicked from a mail client, with no session and no JWT, so the
@@ -121,6 +166,46 @@ Tuning (optional secrets): `NEWSLETTER_BATCH_SIZE`, `NEWSLETTER_BATCH_DELAY_MS`.
 
 Each mail goes out as multipart/alternative — the HTML template plus a text part
 derived from it by `htmlToText()`. HTML-only bulk mail filters badly.
+
+### Provider rate limits, and finishing a partial send
+
+Shared SMTP hosting is not a bulk sender. Two replies say so:
+
+```
+451 4.7.1 Mailbox rate limit reached, please try again later
+421 4.7.0 <host> Error: too many connections from <ip>
+```
+
+The first is a per-mailbox message rate, the second a per-IP connection cap —
+and the edge runtime's outbound IP is shared with other tenants, so the
+connection cap can be reached by traffic that is not even ours. Both are 4xx,
+i.e. temporary: each recipient is retried (`NEWSLETTER_MAX_RETRIES`) before
+being counted as failed.
+
+Retrying does not create capacity. **Ask the provider for the actual per-hour
+limit and set `SMTP_RATE_LIMIT` / `SMTP_RATE_DELTA_MS` to match** before a bulk
+send. Keep `SMTP_MAX_CONNECTIONS` at `1` unless they say otherwise.
+
+If a run still stops short, it is recoverable: `sent_recipients` is checkpointed
+after every batch, so send the remainder as a new issue that excludes whoever
+has already been reached.
+
+```sql
+-- Who is still owed issue 21, without mailing anyone twice
+INSERT INTO public.newsletters (subject, title, body, cta_label, cta_url, audience, excluded)
+SELECT n.subject, n.title, n.body, n.cta_label, n.cta_url, n.audience,
+       COALESCE(n.sent_recipients, ARRAY[]::text[])
+FROM public.newsletters n WHERE n.id = 21;
+
+-- Or retry just the ones that errored
+INSERT INTO public.newsletters (subject, title, body, cta_label, cta_url, recipients)
+SELECT n.subject, n.title, n.body, n.cta_label, n.cta_url, n.failed_recipients
+FROM public.newsletters n WHERE n.id = 21 AND n.failed_recipients IS NOT NULL;
+```
+
+A run that is killed by the edge runtime's wall-clock limit leaves `status` at
+`sending` and never reaches `sent`; its `sent_recipients` is still accurate up
+to the last completed batch, so the same recovery applies.
 
 ### "Status is sent but nothing arrived"
 
@@ -273,6 +358,11 @@ SELECT * FROM private.notify_recent_calls(20);
 | `FUNCTIONS_BASE_URL` | `supabase secrets set` (optional) | Base URL used to build unsubscribe links. Defaults to `$SUPABASE_URL/functions/v1` |
 | `NEWSLETTER_BATCH_SIZE` | `supabase secrets set` (optional) | Mails per batch, default `10` |
 | `NEWSLETTER_BATCH_DELAY_MS` | `supabase secrets set` (optional) | Pause between batches, default `1000` |
+| `NEWSLETTER_MAX_RETRIES` | `supabase secrets set` (optional) | Retries per recipient on a **temporary** SMTP reply, default `2` |
+| `NEWSLETTER_RETRY_DELAY_MS` | `supabase secrets set` (optional) | Base backoff between retries, default `5000`, multiplied by the attempt number |
+| `SMTP_MAX_CONNECTIONS` | `supabase secrets set` (optional) | Simultaneous SMTP connections, default `1`. Raise only if the provider says it is safe |
+| `SMTP_RATE_LIMIT` | `supabase secrets set` (optional) | Max messages per `SMTP_RATE_DELTA_MS`. `0` (default) disables the limiter |
+| `SMTP_RATE_DELTA_MS` | `supabase secrets set` (optional) | Window for `SMTP_RATE_LIMIT`, default `60000` |
 
 Set secrets for production:
 ```bash
@@ -288,10 +378,19 @@ supabase secrets set SMTP_HOST=smtp.rackhost.hu SMTP_PORT=465 SMTP_USER=... SMTP
 5. Check Mailpit at `http://127.0.0.1:54324` for the rendered email
 6. Check push in edge runtime logs: `docker logs supabase_edge_runtime_fife-app-expo --tail 50`
 
-For the newsletter, set `newsletter = true` on a few test profiles, insert a row
-into `public.newsletters`, then check Mailpit — one mail per subscriber — and
+For the newsletter, set `newsletter = true` on a few test users **in
+`public.user_settings`** — the resolver reads
+`COALESCE(user_settings.newsletter, profiles.newsletter)`, and because
+`user_settings.newsletter` is `NOT NULL DEFAULT false` it never falls through, so
+setting it on `profiles` alone produces a subscriber nobody mails. Then insert a
+row into `public.newsletters`, and check Mailpit — one mail per subscriber — and
 click the unsubscribe link in the footer. Locally the link resolves to
 `http://127.0.0.1:54321/functions/v1/newsletter-unsubscribe`.
+
+To exercise the `all` audience, insert with `audience => 'all'` and confirm the
+mail also reaches users who never opted in. `npm run test:edge` covers the
+resolver itself (`__tests__/edge/newsletter-recipients.integration.test.ts`)
+without sending anything.
 
 ## Deployment
 

@@ -3,10 +3,56 @@ import { isAuthenticated } from "./_lib/auth";
 import { getSupabaseAdmin } from "./_lib/supabase";
 
 const SELECT_COLUMNS =
-  "id, created_at, subject, title, cta_label, cta_url, recipients, status, sent_count, failed_count, error, sent_at";
+  "id, created_at, subject, title, cta_label, cta_url, recipients, excluded, audience, status, sent_count, failed_count, error, sent_at";
+
+type Audience = "subscribers" | "all";
+
+// A kliensből érkező érték sosem kerül közvetlenül az adatbázisba: csak a két
+// ismert értéket engedjük át, minden más a szűkebb (feliratkozók) ágra esik.
+function parseAudience(value: unknown): Audience {
+  return value === "all" ? "all" : "subscribers";
+}
 
 function str(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+// Kivételek: ismeretlen alakú érték sosem jut el az adatbázisig. A resolver
+// amúgy is normalizál, de a tárolt sor is a tisztított listát őrizze meg, hogy
+// utólag látszódjon, pontosan kit hagytunk ki.
+function parseExcluded(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const cleaned = value
+    .filter((entry): entry is string => typeof entry === "string")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter((entry) => entry !== "");
+  return [...new Set(cleaned)];
+}
+
+// Hány címzettet érintene a kiküldés? A NewsletterForm ezt mutatja a küldés
+// gomb mellett — a 19-es hírlevél azért ment ki hat embernek, mert senki nem
+// látta előre, milyen kicsi a feliratkozói lista.
+//
+// A sorokat itt számoljuk meg ahelyett, hogy a PostgREST count=exact/head
+// változatát használnánk: a head-es hívás query stringbe teszi a paramétereket,
+// ahol a NULL tömb (p_emails) nem egyértelműen kódolható.
+async function count(audience: Audience, excluded: string[]) {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase.rpc("get_newsletter_recipients", {
+    p_emails: null,
+    p_audience: audience,
+    p_exclude: excluded.length > 0 ? excluded : null,
+  });
+
+  if (error) {
+    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+  }
+
+  return {
+    statusCode: 200,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ count: (data ?? []).length }),
+  };
 }
 
 async function list() {
@@ -44,6 +90,11 @@ async function create(body: string | null) {
   const ctaLabel = str(payload.ctaLabel) || null;
   const ctaUrl = str(payload.ctaUrl) || null;
   const testEmail = str(payload.testEmail);
+  // Teszt küldésnél a recipients nyer a resolverben, így az audience úgyis
+  // figyelmen kívül marad — 'subscribers'-ként tároljuk, hogy a lista ne
+  // mutasson félrevezető "MINDENKI" címkét egy teszt soron.
+  const audience: Audience = testEmail ? "subscribers" : parseAudience(payload.audience);
+  const excluded = parseExcluded(payload.excluded);
 
   if (!subject || !bodyHtml) {
     return { statusCode: 400, body: JSON.stringify({ error: "A tárgy és a tartalom megadása kötelező." }) };
@@ -59,6 +110,8 @@ async function create(body: string | null) {
       cta_label: ctaLabel,
       cta_url: ctaUrl,
       recipients: testEmail ? [testEmail] : null,
+      excluded: excluded.length > 0 ? excluded : null,
+      audience,
     })
     .select(SELECT_COLUMNS)
     .single();
@@ -79,7 +132,40 @@ export const handler: Handler = async (event) => {
     return { statusCode: 401, body: JSON.stringify({ error: "Nincs bejelentkezve." }) };
   }
 
-  if (event.httpMethod === "GET") return list();
-  if (event.httpMethod === "POST") return create(event.body);
-  return { statusCode: 405, body: "Method Not Allowed" };
+  try {
+    // A `return await` itt nem felesleges: `return list()` esetén a promise a
+    // try blokkon kívül dőlne el, így az alábbi catch sosem futna le.
+    if (event.httpMethod === "GET") return await list();
+
+    if (event.httpMethod === "POST") {
+      // A címzettszám lekérdezése is POST, nem GET: a kivételek listája
+      // tetszőlegesen hosszú lehet, query stringbe fűzve pedig könnyen túlnő az
+      // URL limiten. A `count` query paraméter különbözteti meg a hírlevél
+      // létrehozásától — csak ez utóbbi ír az adatbázisba.
+      const requested = event.queryStringParameters?.count;
+      if (requested) {
+        let parsed: Record<string, unknown> = {};
+        try {
+          parsed = JSON.parse(event.body || "{}");
+        } catch {
+          return { statusCode: 400, body: JSON.stringify({ error: "Érvénytelen kérés." }) };
+        }
+        return await count(parseAudience(requested), parseExcluded(parsed.excluded));
+      }
+      return await create(event.body);
+    }
+
+    return { statusCode: 405, body: "Method Not Allowed" };
+  } catch (err) {
+    // getSupabaseAdmin() dob, ha az env változók hiányoznak. Kezeletlenül ez
+    // Netlify-oldali HTML hibaoldal lenne JSON helyett, amit a kliens csak
+    // "Ismeretlen hiba"-ként tud megjeleníteni — pedig pontos oka van.
+    return {
+      statusCode: 500,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        error: err instanceof Error ? err.message : "Ismeretlen szerverhiba.",
+      }),
+    };
+  }
 };

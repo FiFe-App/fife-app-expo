@@ -1,4 +1,4 @@
-import type { Newsletter, NewsletterInput } from "./types";
+import type { Newsletter, NewsletterAudience, NewsletterInput } from "./types";
 
 export class AuthError extends Error {}
 
@@ -39,6 +39,27 @@ export async function fetchNewsletters(): Promise<Newsletter[]> {
   if (!res.ok) throw new Error(await parseErrorBody(res));
   const data = await res.json();
   return data.newsletters as Newsletter[];
+}
+
+/**
+ * Hány címzettnek menne ki egy most indított élesküldés — a célcsoport és a
+ * kivételek együtt. POST, mert a kivételek listája hosszú lehet; ettől még nem
+ * ír semmit, a `count` paraméter dönti el, hogy nem létrehozás.
+ */
+export async function fetchRecipientCount(
+  audience: NewsletterAudience,
+  excluded: string[],
+): Promise<number> {
+  const res = await fetch(`/api/newsletters?count=${audience}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ excluded }),
+  });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  const data = await res.json();
+  return data.count as number;
 }
 
 export async function createNewsletter(input: NewsletterInput): Promise<Newsletter> {

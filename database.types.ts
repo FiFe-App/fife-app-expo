@@ -519,46 +519,58 @@ export type Database = {
       }
       newsletters: {
         Row: {
+          audience: string
           body: string
           created_at: string
           cta_label: string | null
           cta_url: string | null
           error: string | null
+          excluded: string[] | null
           failed_count: number
+          failed_recipients: string[] | null
           id: number
           recipients: string[] | null
           sent_at: string | null
           sent_count: number
+          sent_recipients: string[] | null
           status: string
           subject: string
           title: string | null
         }
         Insert: {
+          audience?: string
           body: string
           created_at?: string
           cta_label?: string | null
           cta_url?: string | null
           error?: string | null
+          excluded?: string[] | null
           failed_count?: number
+          failed_recipients?: string[] | null
           id?: number
           recipients?: string[] | null
           sent_at?: string | null
           sent_count?: number
+          sent_recipients?: string[] | null
           status?: string
           subject: string
           title?: string | null
         }
         Update: {
+          audience?: string
           body?: string
           created_at?: string
           cta_label?: string | null
           cta_url?: string | null
           error?: string | null
+          excluded?: string[] | null
           failed_count?: number
+          failed_recipients?: string[] | null
           id?: number
           recipients?: string[] | null
           sent_at?: string | null
           sent_count?: number
+          sent_recipients?: string[] | null
           status?: string
           subject?: string
           title?: string | null
@@ -872,7 +884,7 @@ export type Database = {
         }[]
       }
       get_newsletter_recipients: {
-        Args: { p_emails?: string[] }
+        Args: { p_audience?: string; p_emails?: string[]; p_exclude?: string[] }
         Returns: {
           email: string
           full_name: string
