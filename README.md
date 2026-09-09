@@ -103,3 +103,19 @@ minden más oldalra.
 A Supabase címét és anon kulcsát a Netlify környezeti változóiból olvassa
 (`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`); ha nincsenek
 beállítva, a produkciós projekt nyilvános értékeivel dolgozik.
+
+### Belépés utáni visszairányítás
+
+Ha valaki kilépve nyit meg egy csak tagoknak szóló linket (`/chats`,
+`/user/<id>`, …), a router a belépés képernyőre teszi, és a cím elveszne. Ezt
+a `lib/auth/loginRedirect.ts` őrzi meg: weben a bundle betöltésekor olvassa ki
+a címet (még mielőtt a router átírná), mobilon a megnyitó deep linkből. A
+belépés után a login képernyő oda navigál tovább, nem a főoldalra.
+
+Az appon belüli, zárt oldalra mutató gombok maguk viszik a célt:
+`getLoginHref("/user/abc")` → `/login?redirected_from=/user/abc`. A cél mindig
+csak appon belüli útvonal lehet (`sanitizeRedirectTarget`), így külső URL-re
+nem lehet kicsalni a felhasználót belépés után.
+
+A regisztrációs folyamat (`/csatlakozom`) egyelőre nem viszi tovább a
+paramétert — aki fiókot hoz létre, a szokásos módon köt ki.

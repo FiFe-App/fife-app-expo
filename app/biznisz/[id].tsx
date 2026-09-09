@@ -27,6 +27,7 @@ import getLinkForContact from "@/lib/functions/getLinkForContact";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import typeToIcon from "@/lib/functions/typeToIcon";
 import { shareBuziness } from "@/lib/buziness/buzinessLink";
+import { getLoginHref } from "@/lib/auth/loginRedirect";
 import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
 import { SaveBuzinessButton } from "@/lib/supabase/SaveBuzinessButton";
 import { supabase } from "@/lib/supabase/supabase";
@@ -397,9 +398,15 @@ export default function Index() {
             text={error.message}
             action={
               myUid ? undefined : (
-                <Link asChild href="/csatlakozom">
-                  <Button mode="contained">Csatlakozom</Button>
-                </Link>
+                <View style={{ gap: Spacing.sm, alignItems: "stretch" }}>
+                  {/* Belépés után ide tér vissza, nem a főoldalra. */}
+                  <Link asChild href={getLoginHref(`/biznisz/${id}`)}>
+                    <Button mode="contained">Belépek</Button>
+                  </Link>
+                  <Link asChild href="/csatlakozom">
+                    <Button mode="outlined">Csatlakozom</Button>
+                  </Link>
+                </View>
               )
             }
           />
@@ -476,10 +483,14 @@ export default function Index() {
                         avatar={{ uid: data.author, url: data.avatarUrl }}
                         label={data.authorName ?? ""}
                         onPress={() =>
-                          router.push({
-                            pathname: "/user/[uid]",
-                            params: { uid: data.author },
-                          })
+                          router.push(
+                            myUid
+                              ? {
+                                  pathname: "/user/[uid]",
+                                  params: { uid: data.author },
+                                }
+                              : getLoginHref(`/user/${data.author}`),
+                          )
                         }
                       />
 

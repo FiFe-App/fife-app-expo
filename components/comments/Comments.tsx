@@ -33,6 +33,7 @@ import UrlText from "../UrlText";
 import { Comment, CommentsProps } from "./comments.types";
 import { ThemedText } from "../ThemedText";
 import { addSnack } from "@/redux/reducers/infoReducer";
+import { getLoginHref } from "@/lib/auth/loginRedirect";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 
@@ -323,11 +324,18 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
                     >
                       <Pressable
                         onPress={() => {
-                          if (comment?.author)
-                            navigation.navigate({
-                              pathname: "/user/[uid]",
-                              params: { uid: comment.author },
-                            });
+                          if (!comment?.author) return;
+                          // A profile is members-only: a signed-out reader of a
+                          // public page gets the login screen, and lands on the
+                          // profile once they are in.
+                          navigation.navigate(
+                            uid
+                              ? {
+                                  pathname: "/user/[uid]",
+                                  params: { uid: comment.author },
+                                }
+                              : getLoginHref(`/user/${comment.author}`),
+                          );
                         }}
                       >
                         <ThemedText style={{ fontWeight: "bold", fontSize: 14 }}>
