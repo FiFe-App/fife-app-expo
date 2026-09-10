@@ -1,5 +1,10 @@
 import { theme } from "@/assets/theme";
 import { ThemedView } from "@/components/ThemedView";
+import {
+  REDIRECT_PARAM,
+  sanitizeRedirectTarget,
+} from "@/lib/auth/loginRedirect";
+import { setRedirectAfterAuth } from "@/redux/reducers/appReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import {
@@ -9,14 +14,28 @@ import {
   useGlobalSearchParams,
   usePathname,
 } from "expo-router";
+import { useEffect } from "react";
 import { ScrollView, View } from "react-native";
 import Dots from "react-native-dots-pagination";
 import { Button } from "react-native-paper";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 
 export default function RootLayout() {
   const { uid }: UserState = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
+  const params = useGlobalSearchParams();
+  // The page a locked link was pointing at, handed over by whoever sent the
+  // visitor here. Put away for the length of the wizard: the e-mail
+  // confirmation restarts the app, so a route parameter would not survive it.
+  const redirectAfterAuth = useSelector(
+    (state: RootState) => state.app.redirectAfterAuth,
+  );
+  const incomingRedirect = sanitizeRedirectTarget(params[REDIRECT_PARAM]);
+
+  useEffect(() => {
+    if (incomingRedirect) dispatch(setRedirectAfterAuth(incomingRedirect));
+  }, [incomingRedirect, dispatch]);
   const pages = [
     "/csatlakozom/",
     "/csatlakozom/iranyelvek",
@@ -25,7 +44,7 @@ export default function RootLayout() {
     "/csatlakozom/elso-lepesek",
   ] as const;
   type JoinPage = (typeof pages)[number];
-  const canGoNext = useGlobalSearchParams().canGoNext === "true";
+  const canGoNext = params.canGoNext === "true";
 
   const path = usePathname().split("#")[0];
 
@@ -39,7 +58,12 @@ export default function RootLayout() {
   const next: JoinPage = pages[current + 1] ?? pages[0];
 
 
-  if (uid && path === "/csatlakozom") return <Redirect href="/user" />;
+  // Signed in and back at the start of the wizard: there is nothing left to do
+  // here. The page they were locked out of comes first, the profile after —
+  // this is the fallback for a visitor who never reached the last step, which
+  // is where the target is normally used and cleared.
+  if (uid && path === "/csatlakozom")
+    return <Redirect href={(redirectAfterAuth ?? "/user") as `/${string}`} />;
 
   return (
     <ThemedView type="default" style={{ flex: 1 }}>

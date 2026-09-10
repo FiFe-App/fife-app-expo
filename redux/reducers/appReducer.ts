@@ -25,6 +25,14 @@ export interface AppState {
     email: string;
     acceptConditions: boolean;
   };
+  /**
+   * The members-only page a visitor was turned away from before they signed
+   * in or registered — see lib/auth/loginRedirect.ts. Here rather than in the
+   * user slice for the same reason as `invitedBy`: it belongs to somebody who
+   * has no account yet, and it has to survive the app restart that confirming
+   * the e-mail address causes. Cleared the moment it is used.
+   */
+  redirectAfterAuth: string | null;
 }
 
 const initialState: AppState = {
@@ -32,6 +40,7 @@ const initialState: AppState = {
   homeMessagingCardDismissed: false,
   invitedBy: null,
   signupDraft: { name: "", username: "", email: "", acceptConditions: false },
+  redirectAfterAuth: null,
 };
 
 const appReducer = createSlice({
@@ -72,6 +81,14 @@ const appReducer = createSlice({
     clearSignupDraft: (state) => {
       state.signupDraft = initialState.signupDraft;
     },
+    /** A locked link sent this visitor to sign in or register; this is the page. */
+    setRedirectAfterAuth: (state, { payload }: PayloadAction<string>) => {
+      state.redirectAfterAuth = payload;
+    },
+    /** Used, or no longer relevant — it is good for one arrival. */
+    clearRedirectAfterAuth: (state) => {
+      state.redirectAfterAuth = null;
+    },
   },
 });
 
@@ -84,6 +101,8 @@ export const {
   clearInvitedBy,
   setSignupDraft,
   clearSignupDraft,
+  setRedirectAfterAuth,
+  clearRedirectAfterAuth,
 } = appReducer.actions;
 
 export default appReducer;

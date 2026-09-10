@@ -78,6 +78,23 @@ export const getLoginHref = (target?: string | null): LoginHref => {
     : "/login";
 };
 
+/**
+ * The same, for the registration wizard. A visitor with no account at all
+ * takes this way in, and app/csatlakozom/_layout.tsx puts the target away for
+ * the length of the flow — it has to survive the app restart that confirming
+ * the e-mail causes, which no route parameter would.
+ */
+export type JoinHref =
+  | "/csatlakozom"
+  | { pathname: "/csatlakozom"; params: Record<string, string> };
+
+export const getJoinHref = (target?: string | null): JoinHref => {
+  const safe = sanitizeRedirectTarget(target);
+  return safe
+    ? { pathname: "/csatlakozom", params: { [REDIRECT_PARAM]: safe } }
+    : "/csatlakozom";
+};
+
 let attemptedPath: string | null = null;
 
 /**

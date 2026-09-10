@@ -117,5 +117,32 @@ Az appon belüli, zárt oldalra mutató gombok maguk viszik a célt:
 csak appon belüli útvonal lehet (`sanitizeRedirectTarget`), így külső URL-re
 nem lehet kicsalni a felhasználót belépés után.
 
-A regisztrációs folyamat (`/csatlakozom`) egyelőre nem viszi tovább a
-paramétert — aki fiókot hoz létre, a szokásos módon köt ki.
+A regisztráció is ugyanezt a célt viszi: a `/csatlakozom` folyamat a
+`redirectAfterAuth` mezőben (app slice, `invitedBy` mintájára) teszi el, mert a
+megerősítő e-mail újraindítja az appot, amit egyetlen route paraméter sem élne
+túl. Az utolsó lépés (`elso-lepesek`) a sikeres regisztráció után oda navigál.
+
+
+## Napi hangulat-emlékeztető (esti értesítés)
+
+Az esti "Hogy vagy?" értesítés **a telefonon ütemezett** helyi értesítés, nem a
+szerver küldi. Ezért magától is eltűnhet: app frissítés, másik telefonra
+visszaállítás, "adatok törlése", vagy ha az értesítési engedélyt visszavonják
+és újra megadják.
+
+Korábban csak belépéskor lett beütemezve, így ha egyszer eltűnt, a bejelentkezve
+maradó felhasználó soha nem kapta vissza. Most a `hooks/useDailyEmotionReminder.ts`
+tartja karban: minden előtérbe hozáskor és a beállítás változásakor ellenőrzi,
+hogy ott van-e még, és csak akkor ütemez újra, ha tényleg hiányzik. Kilépéskor
+törli — a következő ember, aki kézbe veszi a telefont, ne kapjon kérdést egy
+másik fiók nevében.
+
+Két további csapda, amit ugyanez a kör javít:
+
+- az ütemezés törlése már csak azután történik, hogy tudjuk: van OS-engedély
+  (korábban egy sikertelen engedély-ellenőrzés kitörölte a működő emlékeztetőt,
+  és nem tett a helyére semmit);
+- ha a kapcsoló be van kapcsolva, de az OS-engedély hiányzik, a felhasználó
+  kap egy figyelmeztetést (eddig csak a konzolra ment egy warning).
+
+Androidon saját értesítési csatornán (`daily-emotion-reminder`) érkezik.

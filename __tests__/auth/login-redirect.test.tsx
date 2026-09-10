@@ -148,6 +148,29 @@ describe("the login screen", () => {
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/"));
   });
 
+  it("hands the page to the join wizard too", async () => {
+    // "Még nincs fiókom" leads out of this screen, and the confirmation
+    // e-mail restarts the app — so the target is put away in the store rather
+    // than left in the URL.
+    __setLocalSearchParams({ redirected_from: "/chats" });
+
+    const { store } = await renderWithProviders(<Login />);
+
+    await waitFor(() =>
+      expect(store.getState().app.redirectAfterAuth).toBe("/chats"),
+    );
+  });
+
+  it("puts the page away again once the user is in", async () => {
+    __setLocalSearchParams({ redirected_from: "/chats" });
+
+    const { store } = await renderWithProviders(<Login />);
+    await signIn();
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/chats"));
+    expect(store.getState().app.redirectAfterAuth).toBeNull();
+  });
+
   it("will not be talked into sending the user to another site", async () => {
     __setLocalSearchParams({ redirected_from: "https://evil.example" });
 

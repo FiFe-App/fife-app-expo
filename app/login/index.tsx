@@ -1,10 +1,15 @@
 import { ThemedView } from "@/components/ThemedView";
 import { fetchUserProfile } from "@/lib/auth/fetchUserProfile";
 import {
+  getJoinHref,
   REDIRECT_PARAM,
   sanitizeRedirectTarget,
   takeAttemptedPath,
 } from "@/lib/auth/loginRedirect";
+import {
+  clearRedirectAfterAuth,
+  setRedirectAfterAuth,
+} from "@/redux/reducers/appReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
@@ -44,6 +49,13 @@ export default function Index() {
   // Read once, on mount: taking it is what forgets it.
   const [capturedPath] = useState(() => takeAttemptedPath());
   const redirectTarget = sanitizeRedirectTarget(redirectedFrom) ?? capturedPath;
+  // Handed to the join wizard as well: somebody who taps "Még nincs fiókom"
+  // is after the same page, and the e-mail confirmation restarts the app in
+  // the middle of it — which no route parameter survives.
+  useEffect(() => {
+    if (redirectTarget) dispatch(setRedirectAfterAuth(redirectTarget));
+  }, [redirectTarget, dispatch]);
+
   const token_data = hash
     ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
     : null;
@@ -100,6 +112,7 @@ export default function Index() {
   const getUserData = async (userData: User) => {
     const profile = await fetchUserProfile(userData, dispatch);
     if (profile) {
+      dispatch(clearRedirectAfterAuth());
       router.replace((redirectTarget ?? "/") as `/${string}`);
     }
   };
@@ -187,7 +200,7 @@ export default function Index() {
               Bejelentkezés
             </Button>
             <View style={{ flexDirection: "row", justifyContent: "center", flexWrap: "wrap", gap: Spacing.xs }}>
-              <Link href="/csatlakozom" asChild>
+              <Link href={getJoinHref(redirectTarget)} asChild>
                 <Button>Még nincs fiókom</Button>
               </Link>
               <Link href="/user/password-reset" asChild>
