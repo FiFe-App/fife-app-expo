@@ -89,7 +89,16 @@ const StatItem = ({
 }) => {
   const theme = useAppTheme();
   const inner = (
-    <View style={{ alignItems: "center", paddingVertical: Spacing.xs }}>
+    <View
+      style={{
+        alignItems: "center",
+        paddingVertical: Spacing.xs,
+        paddingHorizontal: Spacing.xs,
+        // minWidth:0 lets the label ellipsise instead of stretching its column
+        // and squeezing the neighbours out of the card.
+        minWidth: 0,
+      }}
+    >
       {avatar ? (
         <ProfileImage
           uid={avatar.uid}
@@ -126,7 +135,12 @@ const StatItem = ({
           </Text>
         </View>
       )}
-      <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+      <Text
+        variant="labelSmall"
+        numberOfLines={1}
+        ellipsizeMode="tail"
+        style={{ color: theme.colors.onSurfaceVariant, textAlign: "center" }}
+      >
         {label}
       </Text>
     </View>
@@ -134,12 +148,17 @@ const StatItem = ({
   return onPress ? (
     <TouchableRipple
       onPress={onPress}
-      style={{ flex: 1, alignItems: "center", borderRadius: BorderRadius.md }}
+      style={{
+        flex: 1,
+        minWidth: 0,
+        alignItems: "center",
+        borderRadius: BorderRadius.md,
+      }}
     >
       {inner}
     </TouchableRipple>
   ) : (
-    <View style={{ flex: 1 }}>{inner}</View>
+    <View style={{ flex: 1, minWidth: 0 }}>{inner}</View>
   );
 };
 
@@ -472,31 +491,33 @@ export default function Index() {
                     flexDirection: "row",
                     borderRadius: BorderRadius.lg,
                     paddingVertical: Spacing.md,
-                    paddingHorizontal: Spacing.lg,
+                    // Room for four columns on a narrow phone: the author, the
+                    // recommendations, the reviews and the distance.
+                    paddingHorizontal: Spacing.sm,
                     width: "100%",
                   }}
                   elevation={1}
                 >
-                  {!distanceText && (
-                    <>
-                      <StatItem
-                        avatar={{ uid: data.author, url: data.avatarUrl }}
-                        label={data.authorName ?? ""}
-                        onPress={() =>
-                          router.push(
-                            myUid
-                              ? {
-                                  pathname: "/user/[uid]",
-                                  params: { uid: data.author },
-                                }
-                              : getLoginHref(`/user/${data.author}`),
-                          )
-                        }
-                      />
+                  {/* Whose biznisz this is comes first and always: it used to
+                      give up its place to the distance whenever the viewer's
+                      location was known, which is most of the time — so the
+                      one thing every reader wants was the one thing missing. */}
+                  <StatItem
+                    avatar={{ uid: data.author, url: data.avatarUrl }}
+                    label={data.authorName ?? ""}
+                    onPress={() =>
+                      router.push(
+                        myUid
+                          ? {
+                              pathname: "/user/[uid]",
+                              params: { uid: data.author },
+                            }
+                          : getLoginHref(`/user/${data.author}`),
+                      )
+                    }
+                  />
 
-                      <StatDivider />
-                    </>
-                  )}
+                  <StatDivider />
 
                   <StatItem
                     value={recommendations.length}

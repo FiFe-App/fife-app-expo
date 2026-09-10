@@ -22,8 +22,11 @@ jest.mock("@/components/media/MediaView", () => {
   return { __esModule: true, default: View };
 });
 jest.mock("react-native-open-maps", () => jest.fn());
+// Reassigned per test: whether the device knows where it is decides whether
+// the page can show a distance, which is what used to displace the author.
+let mockMyLocation: { coords: { latitude: number; longitude: number } } | null = null;
 jest.mock("@/hooks/useMyLocation", () => ({
-  useMyLocation: () => ({ myLocation: null }),
+  useMyLocation: () => ({ myLocation: mockMyLocation }),
 }));
 
 import BuzinessDetail from "@/app/biznisz/[id]";
@@ -33,6 +36,9 @@ import { __resetSupabase, __setTableRow, __setTableRows } from "@/test-utils/moc
 import { createTestStore, renderWithProviders } from "@/test-utils/renderWithProviders";
 
 const AUTHOR = "author-1";
+
+/** POINT(19.0402 47.4979) as PostGIS hands it over — Budapest. */
+const BUDAPEST_WKB = "0101000000984c158c4a0a3340d656ec2fbbbf4740";
 
 const PUBLIC_BUZINESS = {
   id: 12,
@@ -61,6 +67,7 @@ const signedIn = () => {
 };
 
 beforeEach(() => {
+  mockMyLocation = null;
   __resetRouter();
   __resetSupabase();
   __setGlobalSearchParams({ id: "12" });
@@ -109,5 +116,32 @@ describe("biznisz detail / signed in", () => {
 
     expect(await screen.findByText("Kerékpárszerviz")).toBeOnTheScreen();
     expect(screen.queryByText("Csatlakozz, hogy ajánlhasd")).toBeNull();
+  });
+});
+
+describe("biznisz detail / the stats card", () => {
+  it("names the author when there is no distance to show", async () => {
+    await renderWithProviders(<BuzinessDetail />, { store: signedIn() });
+
+    expect(await screen.findByText("Kovács Anna")).toBeOnTheScreen();
+  });
+
+  it("keeps naming the author once the distance is known", async () => {
+    // The regression: whoever the biznisz belongs to used to be dropped from
+    // the card the moment a distance could be worked out — which is most of
+    // the time, since the app knows where the reader is.
+    __setTableRow("buziness", {
+      data: { ...PUBLIC_BUZINESS, location: BUDAPEST_WKB },
+      error: null,
+    });
+    mockMyLocation = { coords: { latitude: 47.53, longitude: 19.08 } };
+
+    await renderWithProviders(<BuzinessDetail />, { store: signedIn() });
+
+    expect(await screen.findByText("Kovács Anna")).toBeOnTheScreen();
+    expect(screen.getByText("Távolság")).toBeOnTheScreen();
+    // Both stay, alongside the two that were always there.
+    expect(screen.getByText("Ajánlás")).toBeOnTheScreen();
+    expect(screen.getByText("Vélemény")).toBeOnTheScreen();
   });
 });
