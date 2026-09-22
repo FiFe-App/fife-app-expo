@@ -42,6 +42,11 @@ import {
   AI_ENHANCE_LABEL,
 } from "@/constants/aiEnhance";
 import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
+import {
+  BuzinessDraftValues,
+  draftMatches,
+  useBuzinessDraft,
+} from "@/hooks/useBuzinessDraft";
 import getImagesUrlFromSupabase from "@/lib/functions/getImagesUrlFromSupabase";
 import getMediaKind from "@/lib/functions/getMediaKind";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
@@ -104,6 +109,34 @@ export default function BuzinessEditScreen({
   const [circle, setCircle] = useState<CircleType | undefined>(undefined);
   const selectedLocation = circle?.location || myLocation?.coords;
   const [loading, setLoading] = useState(false);
+
+  // Everything typed here is kept across an app restart: Android reclaims a
+  // backgrounded app whenever it wants the memory, and a form that only lived
+  // in this component went with it. See hooks/useBuzinessDraft.ts.
+  const { pendingDraft, saveDraft, clearDraft } = useBuzinessDraft(editId);
+  // Writes start only once the screen has decided what to show — otherwise the
+  // empty first render would save itself over the draft it is about to restore.
+  const [draftReady, setDraftReady] = useState(false);
+  const draftSettled = useRef(false);
+
+  const currentValues: BuzinessDraftValues = {
+    title: newBuziness.title,
+    description: newBuziness.description,
+    categories,
+    ingyen,
+    isPublic,
+    circle: circle ?? null,
+    defaultContact: defaultContact ?? null,
+  };
+
+  const applyValues = useCallback((values: BuzinessDraftValues) => {
+    setNewBuziness({ title: values.title, description: values.description });
+    setCategories(values.categories);
+    setIngyen(values.ingyen);
+    setIsPublic(values.isPublic);
+    setCircle(values.circle ?? undefined);
+    setDefaultContact(values.defaultContact ?? undefined);
+  }, []);
 
   const [mapModalVisible, setMapModalVisible] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
@@ -203,6 +236,8 @@ export default function BuzinessEditScreen({
           );
           return;
         }
+        // It is on the server now; the draft would only offer it back.
+        clearDraft();
         router.navigate("/user");
       });
   }, [
@@ -216,6 +251,7 @@ export default function BuzinessEditScreen({
     circle,
     title,
     uid,
+    clearDraft,
   ]);
 
   const saveRef = useRef(save);
@@ -248,51 +284,134 @@ export default function BuzinessEditScreen({
     loadContacts();
   }, [dispatch, loadContacts]);
 
+  /**
+   * Reads the biznisz being edited and puts it in the form. `keepDraft` is
+   * what separates opening the screen (where an unsaved draft wins) from
+   * throwing that draft away (where the stored row must win).
+   */
+  const loadBuziness = useCallback(
+    async (keepDraft: boolean) => {
+      if (!editId || !uid) return;
+
+      const res = await supabase
+        .from("buziness")
+        .select("*")
+        .eq("id", editId);
+      const editingBuziness = res?.data?.[0];
+      if (!editingBuziness || editingBuziness.author !== uid) {
+        setDraftReady(true);
+        return;
+      }
+
+      const stored: BuzinessDraftValues = {
+        title: editingBuziness.title.split(" $ ")[0],
+        description: editingBuziness.description,
+        categories: editingBuziness.title.split(" $ ").slice(1).filter(Boolean),
+        ingyen: !!editingBuziness.ingyen,
+        isPublic: !!editingBuziness.public,
+        defaultContact: editingBuziness.defaultContact ?? null,
+        circle: editingBuziness.location
+          ? (() => {
+              const cords = locationToCoords(String(editingBuziness.location));
+              return {
+                location: { latitude: cords[1], longitude: cords[0] },
+                radius: editingBuziness.radius || DEFAULT_RADIUS,
+              };
+            })()
+          : null,
+      };
+
+      applyValues(stored);
+      if (editingBuziness.images)
+        setMedia(getImagesUrlFromSupabase(editingBuziness.images));
+
+      if (keepDraft && !draftSettled.current) {
+        draftSettled.current = true;
+        // A draft that only repeats the stored row is not an unsaved change —
+        // restoring it would announce something that never went missing.
+        if (pendingDraft && !draftMatches(pendingDraft, stored)) {
+          applyValues(pendingDraft);
+          announceRestoredDraft();
+        } else if (pendingDraft) {
+          clearDraft();
+        }
+      }
+      setDraftReady(true);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [editId, uid, applyValues, pendingDraft, clearDraft],
+  );
+
+  /**
+   * Offers the draft back, with a way out: whoever came here to start over
+   * should not have to delete a form they did not write.
+   */
+  const announceRestoredDraft = useCallback(() => {
+    dispatch(
+      addSnack({
+        title: "Folytathatod, ahol abbahagytad.",
+        buttonText: "Elvetem",
+        onPress: () => {
+          clearDraft();
+          draftSettled.current = true;
+          if (editId) loadBuzinessRef.current?.(false);
+          else
+            applyValues({
+              title: "",
+              description: "",
+              categories: [],
+              ingyen: false,
+              isPublic: false,
+              circle: null,
+              defaultContact: null,
+            });
+        },
+      }),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, clearDraft, editId, applyValues]);
+
+  // The snack's "Elvetem" outlives the render that created it, and the loader
+  // it calls is defined above it.
+  const loadBuzinessRef = useRef(loadBuziness);
+  useEffect(() => {
+    loadBuzinessRef.current = loadBuziness;
+  }, [loadBuziness]);
+
+  // A brand new biznisz has nothing to read from the server, so the draft is
+  // all there is to restore.
+  useEffect(() => {
+    if (editId || draftSettled.current) return;
+    draftSettled.current = true;
+    if (pendingDraft) {
+      applyValues(pendingDraft);
+      announceRestoredDraft();
+    }
+    setDraftReady(true);
+  }, [editId, pendingDraft, applyValues, announceRestoredDraft]);
+
+  // Keep the draft up to date with the form. Debounced inside the hook, so
+  // this runs on every keystroke without touching the disk on every keystroke.
+  useEffect(() => {
+    if (!draftReady) return;
+    saveDraft(currentValues);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    draftReady,
+    newBuziness.title,
+    newBuziness.description,
+    categories,
+    ingyen,
+    isPublic,
+    circle,
+    defaultContact,
+  ]);
+
   useFocusEffect(
     useCallback(() => {
-      if (editId && uid) {
-        supabase
-          .from("buziness")
-          .select("*")
-          .eq("id", editId)
-          .then((res) => {
-            const editingBuziness = res?.data?.[0];
-
-            if (editingBuziness?.author !== uid) return;
-            if (editingBuziness) {
-              setNewBuziness({
-                title: editingBuziness.title.split(" $ ")[0],
-                description: editingBuziness.description,
-              });
-
-              setCategories(
-                editingBuziness.title
-                  .split(" $ ")
-                  .slice(1)
-                  .filter(Boolean),
-              );
-              setIngyen(!!editingBuziness.ingyen);
-              setIsPublic(!!editingBuziness.public);
-              setIsPublic(!!editingBuziness.public);
-              if (editingBuziness.defaultContact)
-                setDefaultContact(editingBuziness.defaultContact);
-              if (editingBuziness.images)
-                setMedia(getImagesUrlFromSupabase(editingBuziness.images));
-              if (editingBuziness.location) {
-                const cords = locationToCoords(
-                  String(editingBuziness.location),
-                );
-
-                setCircle({
-                  location: { latitude: cords[1], longitude: cords[0] },
-                  radius: editingBuziness.radius || DEFAULT_RADIUS,
-                });
-              }
-            }
-          });
-      }
+      loadBuzinessRef.current?.(true);
       loadContacts();
-    }, [editId, uid, loadContacts]),
+    }, [loadContacts]),
   );
 
   const handleOpenDialog = () => {

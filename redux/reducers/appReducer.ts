@@ -1,5 +1,24 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 
+import { CircleType } from "@/redux/store.type";
+
+/**
+ * A biznisz being written, as the editor holds it. Media is deliberately
+ * absent: those are files on the device with their own upload flow, and a path
+ * that survives into the next app run may not point at anything any more.
+ */
+export interface BuzinessDraft {
+  title: string;
+  description: string;
+  categories: string[];
+  ingyen: boolean;
+  isPublic: boolean;
+  circle: CircleType | null;
+  defaultContact: number | null;
+  /** ISO timestamp of the last keystroke, so a stale draft can be recognised. */
+  savedAt: string;
+}
+
 export interface AppState {
   homeAddBuzinessCardDismissed: boolean;
   homeMessagingCardDismissed: boolean;
@@ -33,6 +52,20 @@ export interface AppState {
    * the e-mail address causes. Cleared the moment it is used.
    */
   redirectAfterAuth: string | null;
+  /**
+   * Unsaved biznisz editors, keyed by what is being edited: the row's id, or
+   * "new" for one that does not exist yet. Android kills a backgrounded app
+   * whenever it needs the memory, and everything typed into a form went with
+   * it — so the editor writes here as the user types and reads it back when
+   * it opens. Cleared when the biznisz is saved, or thrown away by hand.
+   */
+  buzinessDrafts: Record<string, BuzinessDraft>;
+  /**
+   * The last screen the user was actually on, and when. Restored on the next
+   * cold start so a kill in the background does not put them back at the
+   * beginning — see hooks/useLastRoute.ts.
+   */
+  lastRoute: { path: string; at: string } | null;
 }
 
 const initialState: AppState = {
@@ -41,6 +74,8 @@ const initialState: AppState = {
   invitedBy: null,
   signupDraft: { name: "", username: "", email: "", acceptConditions: false },
   redirectAfterAuth: null,
+  buzinessDrafts: {},
+  lastRoute: null,
 };
 
 const appReducer = createSlice({
@@ -89,6 +124,32 @@ const appReducer = createSlice({
     clearRedirectAfterAuth: (state) => {
       state.redirectAfterAuth = null;
     },
+    /** The editor's current contents, written as the user types. */
+    setBuzinessDraft: (
+      state,
+      { payload }: PayloadAction<{ key: string; draft: BuzinessDraft }>,
+    ) => {
+      // Rebuilt rather than mutated: a store persisted before this field
+      // existed rehydrates without it (redux-persist replaces each slice
+      // wholesale instead of deep-merging the new defaults in).
+      state.buzinessDrafts = {
+        ...(state.buzinessDrafts ?? {}),
+        [payload.key]: payload.draft,
+      };
+    },
+    /** Saved, or discarded by the user — either way there is nothing to restore. */
+    clearBuzinessDraft: (state, { payload }: PayloadAction<string>) => {
+      const drafts = { ...(state.buzinessDrafts ?? {}) };
+      delete drafts[payload];
+      state.buzinessDrafts = drafts;
+    },
+    /** Where the user is right now, remembered for the next cold start. */
+    setLastRoute: (state, { payload }: PayloadAction<{ path: string; at: string }>) => {
+      state.lastRoute = payload;
+    },
+    clearLastRoute: (state) => {
+      state.lastRoute = null;
+    },
   },
 });
 
@@ -103,6 +164,10 @@ export const {
   clearSignupDraft,
   setRedirectAfterAuth,
   clearRedirectAfterAuth,
+  setBuzinessDraft,
+  clearBuzinessDraft,
+  setLastRoute,
+  clearLastRoute,
 } = appReducer.actions;
 
 export default appReducer;

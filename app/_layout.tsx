@@ -38,6 +38,7 @@ import { fetchUnreadCounts } from "@/lib/chat/fetchUnreadCounts";
 import { supabase } from "@/lib/supabase/supabase";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 import { useDailyEmotionReminder } from "@/hooks/useDailyEmotionReminder";
+import { useLastRoute } from "@/hooks/useLastRoute";
 import { setStatusBarColor } from "@/redux/reducers/infoReducer";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
 import { useUserSettings } from "@/hooks/useUserSettings";
@@ -77,6 +78,9 @@ function RootContent() {
 
   const { syncPendingLogs, loadFromServer } = useEmotionLog();
   useDailyEmotionReminder();
+  // Android kills a backgrounded app for its memory; this is what makes the
+  // cold start that follows land where the user left off.
+  useLastRoute();
   const { loadFromServer: loadSettings } = useUserSettings();
   const versionGate = useAppVersionGate();
 

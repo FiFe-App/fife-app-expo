@@ -146,3 +146,34 @@ Két további csapda, amit ugyanez a kör javít:
   kap egy figyelmeztetést (eddig csak a konzolra ment egy warning).
 
 Androidon saját értesítési csatornán (`daily-emotion-reminder`) érkezik.
+
+
+## Újraindulás után ott folytatjuk, ahol abbahagytad
+
+Androidon a rendszer bármikor felszabadíthatja a háttérben lévő appot, ezért a
+visszaváltás sokszor nem folytatás, hanem hideg indítás: splash, majd az app
+eleje. Magát a folyamat kilövését nem tudjuk megakadályozni — azt viszont igen,
+hogy ne számítson:
+
+- `hooks/useLastRoute.ts` megjegyzi, melyik képernyőn volt a felhasználó, és a
+  következő hideg indításnál (ha az app a saját kezdőképernyőjén indul, tehát
+  nem deep linkről) oda navigál vissza. 24 óránál régebbi állapotot már nem
+  állít vissza, és weben egyáltalán nem fut: ott a címsor az igazság.
+- A splash animáció (kb. 9 másodperc) belépett felhasználónak már nem játszik
+  le — a webes build eddig is kihagyta, most a telefon is. Aki be van lépve,
+  annak ez nem márkaélmény, hanem várakozás.
+
+## Űrlap-piszkozatok (biznisz szerkesztő)
+
+A biznisz szerkesztőbe gépelt tartalom eddig csak a képernyő state-jében élt,
+így az app újraindulásakor elveszett. Mostantól a `hooks/useBuzinessDraft.ts`
+menti (redux-persist, a gépelés után ~0,6 mp-cel, nem minden leütésnél), külön
+kulcson az új (`new`) és a szerkesztett bizniszek (`<id>`) alatt.
+
+Megnyitáskor a szerkesztő előbb betölti a szerverről a bizniszt, és csak utána
+teszi rá a piszkozatot — így a mentetlen gépelés nem vész el, az olyan
+piszkozat viszont, ami csak megismétli a szerveren lévő állapotot, szó nélkül
+törlődik. Ha tényleg volt mentetlen változás, a felhasználó kap egy
+"Folytathatod, ahol abbahagytad." üzenetet "Elvetem" gombbal. Sikeres mentés
+után a piszkozat törlődik. A médiafájlok szándékosan nem részei: azok eszközön
+lévő fájlok, saját feltöltési folyamattal.
