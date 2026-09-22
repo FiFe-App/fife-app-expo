@@ -11,6 +11,7 @@ import {
   draftKeyFor,
   draftMatches,
   isDraftWorthKeeping,
+  sanitizeDraft,
   useBuzinessDraft,
   type BuzinessDraftValues,
 } from "@/hooks/useBuzinessDraft";
@@ -79,6 +80,45 @@ describe("draftMatches", () => {
   });
 });
 
+describe("sanitizeDraft", () => {
+  // What comes off the disk may have been written by an older version of the
+  // app, or half-written when the process died. The editor must not be handed
+  // any of that: a malformed map circle crashes the screen it was meant to
+  // restore.
+  it("refuses anything that is not a draft", () => {
+    expect(sanitizeDraft(undefined)).toBeUndefined();
+    expect(sanitizeDraft("nonsense")).toBeUndefined();
+  });
+
+  it("fills in what a draft from an older version lacks", () => {
+    const draft = sanitizeDraft({ title: "Süti" });
+
+    expect(draft).toMatchObject({
+      title: "Süti",
+      description: "",
+      categories: [],
+      ingyen: false,
+      isPublic: false,
+      circle: null,
+      defaultContact: null,
+    });
+  });
+
+  it("drops a map circle that could not be drawn", () => {
+    expect(sanitizeDraft({ title: "Süti", circle: { location: {} } })?.circle).toBeNull();
+    expect(
+      sanitizeDraft({ title: "Süti", circle: { location: { latitude: "47", longitude: 19 } } })
+        ?.circle,
+    ).toBeNull();
+  });
+
+  it("keeps a circle that can", () => {
+    const circle = { location: { latitude: 47.4979, longitude: 19.0402 }, radius: 20 };
+
+    expect(sanitizeDraft({ title: "Süti", circle })?.circle).toEqual(circle);
+  });
+});
+
 describe("useBuzinessDraft", () => {
   /** The stored draft for a key, once the hook's debounce has run. */
   const storedDraft = (store: ReturnType<typeof createTestStore>, key: string) =>
@@ -134,6 +174,22 @@ describe("useBuzinessDraft", () => {
     await act(async () => result.current.saveDraft(EMPTY));
 
     await waitFor(() => expect(storedDraft(store, "new")).toBeUndefined());
+  });
+
+  it("ignores a stored draft that has nothing in it", async () => {
+    const store = createTestStore();
+    store.dispatch(
+      setBuzinessDraft({
+        key: "new",
+        draft: { ...EMPTY, savedAt: new Date().toISOString() },
+      }),
+    );
+
+    const { result } = await renderHookWithProviders(() => useBuzinessDraft(), {
+      store,
+    });
+
+    expect(result.current.pendingDraft).toBeUndefined();
   });
 
   it("hands back the draft as it was when the screen opened", async () => {

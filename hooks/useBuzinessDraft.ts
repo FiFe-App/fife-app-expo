@@ -72,6 +72,53 @@ const sameCircle = (
   );
 };
 
+/**
+ * A draft comes back off the disk, where it may have been written by an older
+ * version of the app — or have been half-written when the process died. It is
+ * read like any other untrusted input, and anything that does not make sense
+ * is dropped rather than handed to the editor, where a malformed map circle or
+ * a missing field would crash the screen instead of restoring it.
+ */
+export const sanitizeDraft = (value: unknown): BuzinessDraft | undefined => {
+  if (!value || typeof value !== "object") return undefined;
+  const draft = value as Record<string, unknown>;
+
+  const text = (v: unknown) => (typeof v === "string" ? v : "");
+  const flag = (v: unknown) => v === true;
+  const circle = draft.circle as
+    | { location?: { latitude?: unknown; longitude?: unknown }; radius?: unknown }
+    | null
+    | undefined;
+  const validCircle =
+    circle &&
+    typeof circle.location?.latitude === "number" &&
+    typeof circle.location?.longitude === "number" &&
+    Number.isFinite(circle.location.latitude) &&
+    Number.isFinite(circle.location.longitude)
+      ? {
+          location: {
+            latitude: circle.location.latitude,
+            longitude: circle.location.longitude,
+          },
+          radius: typeof circle.radius === "number" ? circle.radius : 0,
+        }
+      : null;
+
+  return {
+    title: text(draft.title),
+    description: text(draft.description),
+    categories: Array.isArray(draft.categories)
+      ? draft.categories.filter((c): c is string => typeof c === "string")
+      : [],
+    ingyen: flag(draft.ingyen),
+    isPublic: flag(draft.isPublic),
+    circle: validCircle,
+    defaultContact:
+      typeof draft.defaultContact === "number" ? draft.defaultContact : null,
+    savedAt: text(draft.savedAt) || new Date(0).toISOString(),
+  };
+};
+
 export const draftKeyFor = (editId?: number) =>
   editId === undefined || editId === null ? "new" : String(editId);
 
@@ -84,7 +131,10 @@ export function useBuzinessDraft(editId?: number) {
 
   // Read once, as the screen opens. Reading it live would hand the editor its
   // own writes back and fight whatever the user is typing.
-  const [pendingDraft] = useState<BuzinessDraft | undefined>(() => stored);
+  const [pendingDraft] = useState<BuzinessDraft | undefined>(() => {
+    const draft = sanitizeDraft(stored);
+    return draft && isDraftWorthKeeping(draft) ? draft : undefined;
+  });
 
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef<BuzinessDraftValues | null>(null);

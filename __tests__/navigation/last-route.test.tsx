@@ -6,7 +6,7 @@
  * beginning of the app. The kill cannot be prevented; landing back where the
  * user was is what makes it not matter.
  */
-import { act } from "@testing-library/react-native";
+import { act, waitFor } from "@testing-library/react-native";
 import { Platform } from "react-native";
 
 jest.mock("expo-router", () => require("@/test-utils/mocks/expo-router"));
@@ -21,6 +21,7 @@ import { login } from "@/redux/reducers/userReducer";
 import {
   __resetRouter,
   __setPathname,
+  __setRootNavigationReady,
   router,
 } from "@/test-utils/mocks/expo-router";
 import {
@@ -57,8 +58,14 @@ describe("isRestorablePath", () => {
   it("accepts the places a user is actually reading", () => {
     expect(isRestorablePath("/chats")).toBe(true);
     expect(isRestorablePath("/biznisz/12")).toBe(true);
-    expect(isRestorablePath("/biznisz/new")).toBe(true);
     expect(isRestorablePath("/user/abc")).toBe(true);
+  });
+
+  it("refuses the editor, heavy enough to be a bad first screen", () => {
+    // Its contents are kept by the draft either way, so nothing is lost by
+    // letting the app start somewhere lighter.
+    expect(isRestorablePath("/biznisz/new")).toBe(false);
+    expect(isRestorablePath("/biznisz/edit/12")).toBe(false);
   });
 
   it("refuses the steps of signing in and registering", () => {
@@ -85,7 +92,44 @@ describe("useLastRoute", () => {
       store: storeLastOn("/chats"),
     });
 
-    expect(router.replace).toHaveBeenCalledWith("/chats");
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/chats"));
+  });
+
+  it("waits for the router to exist before navigating", async () => {
+    // Navigating before the root layout has mounted throws, and an exception
+    // here would close the app on launch with nothing to show for it.
+    __setRootNavigationReady(false);
+
+    await renderHookWithProviders(() => useLastRoute(), {
+      store: storeLastOn("/chats"),
+    });
+    await act(async () => {});
+
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it("forgets the screen before going to it", async () => {
+    // A screen that cannot survive being mounted first would otherwise be
+    // retried on every single start — a crash loop with no way out.
+    const store = storeLastOn("/chats");
+
+    await renderHookWithProviders(() => useLastRoute(), { store });
+
+    expect(store.getState().app.lastRoute).toBeNull();
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/chats"));
+  });
+
+  it("survives a router that refuses the target", async () => {
+    (router.replace as jest.Mock).mockImplementationOnce(() => {
+      throw new Error("Attempted to navigate before mounting the Root Layout");
+    });
+
+    await expect(
+      renderHookWithProviders(() => useLastRoute(), {
+        store: storeLastOn("/chats"),
+      }),
+    ).resolves.toBeTruthy();
+    await act(async () => {});
   });
 
   it("leaves a deep link alone", async () => {

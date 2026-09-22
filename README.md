@@ -159,6 +159,13 @@ hogy ne számítson:
   következő hideg indításnál (ha az app a saját kezdőképernyőjén indul, tehát
   nem deep linkről) oda navigál vissza. 24 óránál régebbi állapotot már nem
   állít vissza, és weben egyáltalán nem fut: ott a címsor az igazság.
+  Óvatosságból: megvárja, amíg a router elindul (előtte navigálni kivételt dob,
+  ami indításkor szó nélkül kilövi az appot), a navigálás előtt törli a tárolt
+  útvonalat (így egy problémás képernyő nem tud végtelen indítás–összeomlás
+  kört csinálni), és a biznisz szerkesztőt szándékosan nem állítja vissza — az
+  a legnehezebb képernyő (térkép, médiaválasztó), és nem szerencsés vele
+  kezdeni egy hideg indítást. Nem is veszik el vele semmi: a begépelt tartalmat
+  a piszkozat őrzi.
 - A splash animáció (kb. 9 másodperc) belépett felhasználónak már nem játszik
   le — a webes build eddig is kihagyta, most a telefon is. Aki be van lépve,
   annak ez nem márkaélmény, hanem várakozás.
@@ -176,4 +183,17 @@ piszkozat viszont, ami csak megismétli a szerveren lévő állapotot, szó nél
 törlődik. Ha tényleg volt mentetlen változás, a felhasználó kap egy
 "Folytathatod, ahol abbahagytad." üzenetet "Elvetem" gombbal. Sikeres mentés
 után a piszkozat törlődik. A médiafájlok szándékosan nem részei: azok eszközön
-lévő fájlok, saját feltöltési folyamattal.
+lévő fájlok, saját feltöltési folyamattal. A lemezről visszaolvasott piszkozat
+nem megbízható adat (írhatta régebbi verzió, félbeszakadhatott a mentés), ezért
+a hook ellenőrzi és szükség esetén eldobja, mielőtt a szerkesztő megkapná.
+
+## Mi nem marad meg újraindítás után
+
+Az `info` slice azt tartja, ami épp a képernyőn van: nyitott dialógusok, a
+"Kérlek várj" overlay, snackbarok, az appbar menüje — mindegyikben callback
+függvényekkel, amik nem élik túl a lemezre írást. Ezeket eddig a redux-persist
+mentette, így egy háttérben kilőtt app úgy jött vissza, hogy volt benne egy
+dialógus, aminek a gombja nem csinál semmit, vagy — a legrosszabb — egy
+elbocsáthatatlan betöltő overlay egy feltöltésről, ami az appal együtt ért
+véget. Mostantól az `info`-ból csak a `policiesAccepted` és a
+`notificationToken` marad meg (`redux/store.ts`).

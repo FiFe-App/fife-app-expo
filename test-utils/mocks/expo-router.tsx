@@ -27,6 +27,9 @@ export const router = {
 };
 
 let pathname = "/csatlakozom";
+// The real hook returns undefined until the navigator has mounted; code that
+// navigates on startup has to wait for it, so tests can take it away.
+let rootNavigationState: { key: string } | undefined = { key: "stack-test" };
 let globalSearchParams: SearchParams = {};
 let localSearchParams: SearchParams = {};
 
@@ -45,9 +48,15 @@ export const __setLocalSearchParams = (next: SearchParams) => {
   localSearchParams = next;
 };
 
+/** Whether the root navigator is mounted yet — `useRootNavigationState`. */
+export const __setRootNavigationReady = (ready: boolean) => {
+  rootNavigationState = ready ? { key: "stack-test" } : undefined;
+};
+
 /** Clears recorded navigation and route state. Call from `beforeEach`. */
 export const __resetRouter = () => {
   pathname = "/csatlakozom";
+  rootNavigationState = { key: "stack-test" };
   globalSearchParams = {};
   localSearchParams = {};
   (Object.values(router) as jest.Mock[]).forEach((fn) => fn.mockClear());
@@ -58,6 +67,7 @@ export const useGlobalSearchParams = () => globalSearchParams;
 export const useLocalSearchParams = () => localSearchParams;
 export const useSegments = () => pathname.split("/").filter(Boolean);
 export const useRouter = () => router;
+export const useRootNavigationState = () => rootNavigationState;
 export const useNavigation = () => ({ setOptions: jest.fn(), addListener: jest.fn() });
 
 /**
