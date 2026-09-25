@@ -1,11 +1,10 @@
-import { Tables } from "@/database.types";
 import getMessagePreview from "@/lib/functions/getMessagePreview";
 import { Spacing } from "@/constants/spacing";
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { IconButton, Text, useTheme } from "react-native-paper";
 
-type Message = Tables<"messages">;
+type Message = { author: string; text: string; image?: string | null };
 
 interface ReplyPreviewProps {
   message: Message;

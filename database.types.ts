@@ -395,6 +395,112 @@ export type Database = {
           },
         ]
       }
+      group_chat_members: {
+        Row: {
+          group_id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_chat_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_chat_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_chat_messages: {
+        Row: {
+          author: string
+          created_at: string
+          group_id: string
+          id: number
+          reply_to: number | null
+          text: string
+        }
+        Insert: {
+          author: string
+          created_at?: string
+          group_id: string
+          id?: never
+          reply_to?: number | null
+          text?: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          group_id?: string
+          id?: never
+          reply_to?: number | null
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_chat_messages_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_chat_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_chat_messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "group_chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_chats: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          title?: string
+        }
+        Relationships: []
+      }
       help_contacts: {
         Row: {
           author: string | null
@@ -945,6 +1051,11 @@ export type Database = {
       }
       is_bad_boy: { Args: never; Returns: boolean }
       is_blocked_by: { Args: { other_user: string }; Returns: boolean }
+      is_group_chat_member: {
+        Args: { p_group_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_public_group_chat: { Args: { p_group_id: string }; Returns: boolean }
       nearby_buziness: {
         Args: {
           lat: number
