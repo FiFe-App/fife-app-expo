@@ -13,6 +13,8 @@ interface MessageInputProps {
   image: ExpoImagePicker.ImagePickerAsset | null;
   onImageChange: (image: ExpoImagePicker.ImagePickerAsset | null) => void;
   disabled?: boolean;
+  /** Hides the attach-image button (group chats don't take images yet). */
+  allowImage?: boolean;
 }
 
 export function MessageInput({
@@ -22,6 +24,7 @@ export function MessageInput({
   image,
   onImageChange,
   disabled = false,
+  allowImage = true,
 }: MessageInputProps) {
   const theme = useTheme();
   const canSend = !!value.trim() || !!image;
@@ -78,13 +81,15 @@ export function MessageInput({
         maxLength={1000}
         style={styles.input}
         left={
-          <TextInput.Icon
-            icon="image-plus"
-            color={theme.colors.secondary}
-            onPress={pickImage}
-            disabled={disabled}
-            accessibilityLabel="Kép csatolása"
-          />
+          allowImage ? (
+            <TextInput.Icon
+              icon="image-plus"
+              color={theme.colors.secondary}
+              onPress={pickImage}
+              disabled={disabled}
+              accessibilityLabel="Kép csatolása"
+            />
+          ) : undefined
         }
         right={
           <TextInput.Icon
