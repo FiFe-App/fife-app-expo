@@ -66,6 +66,13 @@ export interface UserState {
   locationError: string | null;
   themePreference: "light" | "dark" | "auto";
   savedBuzinesses: number[];
+  /**
+   * Interest tags, in the same shape a biznisz gives its own: a plain string list.
+   * They steer the opening biznisz list on the community screen. Optional like its
+   * neighbours below because redux-persist rehydrates this slice without a migration,
+   * so an older persisted blob simply has no key here.
+   */
+  interests?: string[];
   previousSearches: string[];
   /**
    * Recent fifék searches, kept apart from `previousSearches` so a name never
@@ -102,6 +109,7 @@ export interface UserSettingsPayload {
   previousProfileSearches: string[];
   themePreference: "light" | "dark" | "auto";
   savedBuzinesses: number[];
+  interests: string[];
   isItSafeDismissed: boolean;
   inviteCardDismissed: boolean;
   homeAddBuzinessCardDismissed: boolean;

@@ -774,6 +774,89 @@ export type Database = {
         }
         Relationships: []
       }
+      buziness_tags: {
+        Row: {
+          buziness_id: number
+          tag_id: number
+        }
+        Insert: {
+          buziness_id: number
+          tag_id: number
+        }
+        Update: {
+          buziness_id?: number
+          tag_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buziness_tags_buziness_id_fkey"
+            columns: ["buziness_id"]
+            isOneToOne: false
+            referencedRelation: "buziness"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buziness_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interest_tags: {
+        Row: {
+          author: string
+          tag_id: number
+        }
+        Insert: {
+          author: string
+          tag_id: number
+        }
+        Update: {
+          author?: string
+          tag_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interest_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tags: {
+        Row: {
+          created_at: string
+          embedded_at: string | null
+          embedding: string | null
+          id: number
+          name: string
+          normalized: string
+          usage_count: number
+        }
+        Insert: {
+          created_at?: string
+          embedded_at?: string | null
+          embedding?: string | null
+          id?: number
+          name: string
+          normalized: string
+          usage_count?: number
+        }
+        Update: {
+          created_at?: string
+          embedded_at?: string | null
+          embedding?: string | null
+          id?: number
+          name?: string
+          normalized?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           ai_asked_at: string | null
@@ -786,6 +869,7 @@ export type Database = {
           encrypted_data: string | null
           home_add_buziness_card_dismissed: boolean
           home_messaging_card_dismissed: boolean
+          interests: string[]
           invite_card_dismissed: boolean
           is_it_safe_dismissed: boolean
           newsletter: boolean
@@ -809,6 +893,7 @@ export type Database = {
           encrypted_data?: string | null
           home_add_buziness_card_dismissed?: boolean
           home_messaging_card_dismissed?: boolean
+          interests?: string[]
           invite_card_dismissed?: boolean
           is_it_safe_dismissed?: boolean
           newsletter?: boolean
@@ -832,6 +917,7 @@ export type Database = {
           encrypted_data?: string | null
           home_add_buziness_card_dismissed?: boolean
           home_messaging_card_dismissed?: boolean
+          interests?: string[]
           invite_card_dismissed?: boolean
           is_it_safe_dismissed?: boolean
           newsletter?: boolean
@@ -908,6 +994,34 @@ export type Database = {
           query_text: string
         }[]
       }
+      interest_buziness_feed: {
+        Args: {
+          p_bad_boy?: boolean
+          p_ingyen?: boolean
+          p_interests: string[]
+          p_match_threshold?: number
+          p_semantic?: boolean
+          p_skip?: number
+          p_take?: number
+        }
+        Returns: {
+          author: string
+          created_at: string
+          defaultcontact: number
+          description: string
+          id: number
+          images: string[]
+          ingyen: boolean
+          is_match: boolean
+          lat: number
+          location: unknown
+          long: number
+          radius: number
+          recommendations: number
+          distance: number
+          title: string
+        }[]
+      }
       hybrid_buziness_search: {
         Args: {
           distance_sort?: number
@@ -945,6 +1059,7 @@ export type Database = {
       }
       is_bad_boy: { Args: never; Returns: boolean }
       is_blocked_by: { Args: { other_user: string }; Returns: boolean }
+      normalize_tag: { Args: { p_tag: string }; Returns: string }
       nearby_buziness: {
         Args: {
           lat: number
@@ -1057,6 +1172,28 @@ export type Database = {
       }
       newsletter_unsubscribe: { Args: { p_email: string }; Returns: boolean }
       parse_app_version: { Args: { v: string }; Returns: number[] }
+      search_tags: {
+        Args: { p_limit?: number; p_prefix: string }
+        Returns: {
+          name: string
+          usage_count: number
+        }[]
+      }
+      sync_buziness_tags: {
+        Args: { p_buziness_id: number; p_tags: string[] }
+        Returns: undefined
+      }
+      sync_interest_tags: {
+        Args: { p_author: string; p_tags: string[] }
+        Returns: undefined
+      }
+      tags_pending_embedding: {
+        Args: { p_limit?: number }
+        Returns: {
+          id: number
+          name: string
+        }[]
+      }
       update_my_profile_location: {
         Args: { lat: number; long: number; radius_m: number }
         Returns: undefined

@@ -11,7 +11,7 @@ import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzin
 import { clearChatReadState, clearDrafts } from "@/redux/reducers/chatReducer";
 import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
-import { logout, setThemePreference } from "@/redux/reducers/userReducer";
+import { logout, setInterests, setThemePreference } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
@@ -35,6 +35,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { useAppTheme } from "@/assets/theme";
 import { emotionAvailable } from "@/constants/emotionTiming";
+import TagInput from "@/components/TagInput";
 
 export default function BeallitasokTab() {
   const theme = useAppTheme();
@@ -42,6 +43,9 @@ export default function BeallitasokTab() {
   const { userData, themePreference }: UserState = useSelector(
     (state: RootState) => state.user,
   );
+  // Persisted by useUserSettings' debounced push, like the rest of this tab — there is
+  // no save button here on purpose.
+  const interests = useSelector((state: RootState) => state.user.interests) ?? [];
   const { prefs, setPref, hydrated: prefsHydrated } = useNotificationPrefs();
   const { copyInviteLink } = useInviteLink();
 
@@ -182,6 +186,23 @@ export default function BeallitasokTab() {
             onValueChange={(v) => { setPref("newsletter", v); }}
           />
         </View>
+      </View>
+      <Divider />
+      <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
+        <ThemedText variant="bodyLarge" type="bold">Érdeklődési köröd</ThemedText>
+        <ThemedText type="label">
+          Add meg, mi érdekel — ezek alapján rendezzük eléd a bizniszeket a Közösség
+          oldaladon. Elég egy is, és bármikor változtathatsz rajtuk.
+        </ThemedText>
+        <TagInput
+          value={interests}
+          onChange={(next) => dispatch(setInterests(next))}
+          placeholder="Új érdeklődési kör…"
+          suggest
+        />
+        <HelperText type="info" visible style={{ paddingLeft: 0 }}>
+          Pl. kertészet, kerékpár, programozás
+        </HelperText>
       </View>
       <Divider />
       <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>

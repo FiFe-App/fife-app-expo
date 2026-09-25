@@ -378,6 +378,7 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
                 placeholder="Új kulcsszó…"
                 onChange={setCategories}
                 value={categories}
+                suggest
               />
               <HelperText type="info" visible style={{ paddingLeft: 0 }}>
                 Pl. süti, kerékpár, programozás

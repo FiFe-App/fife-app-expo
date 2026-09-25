@@ -92,7 +92,47 @@ Deno.serve(async (req) => {
   }
   const aiEnhance: boolean = settings?.ai_enhance ?? false;
 
-  const { query, skip, take, lat, long, maxdistance, ingyen, match_threshold, fts_weight, semantic_weight, score_sort, distance_sort, recommendation_sort } = await req.json();
+  const { query, skip, take, lat, long, maxdistance, ingyen, match_threshold, fts_weight, semantic_weight, score_sort, distance_sort, recommendation_sort, interests } = await req.json();
+
+  // The tags are user text and go straight into a pgroonga query, so they are trimmed,
+  // de-duplicated and capped here before the database ever sees them. MAX_INTERESTS is
+  // about keeping that query bounded, not about the user's settings.
+  const MAX_INTERESTS = 20;
+  const cleanInterests: string[] = Array.isArray(interests)
+    ? Array.from(
+        new Set(
+          interests
+            .filter((t: unknown): t is string => typeof t === "string")
+            .map((t: string) => t.trim())
+            .filter((t: string) => t.length > 0),
+        ),
+      ).slice(0, MAX_INTERESTS)
+    : [];
+
+  // A brand new interest tag has no vector yet, so it can only match literally until
+  // embed-tags catches up. Nudging that function here is what makes the semantic half
+  // start working on the *next* load rather than whenever someone next saves a biznisz.
+  // The lookup is one indexed hit on a small table, and both the check and the invoke are
+  // fire-and-forget: a failure here must not cost the user their feed.
+  if (cleanInterests.length > 0) {
+    // Must match public.normalize_tag: lowercase, collapse inner whitespace, trim.
+    const normalized = cleanInterests.map((t) =>
+      t.toLowerCase().replace(/\s+/g, " ").trim()
+    );
+    supabase
+      .from("tags")
+      .select("id")
+      .in("normalized", normalized)
+      .is("embedding", null)
+      .limit(1)
+      .then(({ data: unembedded }) => {
+        if (unembedded && unembedded.length > 0) {
+          console.log("interest tags without an embedding — invoking embed-tags");
+          return supabase.functions.invoke("embed-tags").then(() => {});
+        }
+      })
+      .then(undefined, (e: unknown) => console.warn("embed-tags nudge failed", e));
+  }
 
   // Generate (or retrieve cached) embedding for the user's query.
   //
@@ -195,18 +235,25 @@ Deno.serve(async (req) => {
       filter_bad_boy: isBadBoy,
     });
   } else {
-    console.log("no query, normal search");
+    console.log("no query, interest feed");
 
-    // Join profiles to filter by the same bad_boy world as the caller
-    let q = supabase
-      .from("buziness")
-      .select("*, recommendations: buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(count), author_profile: profiles!buziness_author_fkey1(bad_boy)")
-      .eq("author_profile.bad_boy", isBadBoy);
-    if (ingyen) q = q.eq("ingyen", true);
-    res = await q
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .range(skip || 0, (skip || 0) + (take < 1 ? 20 : take) - 1);
+    // The community screen's opening list. With no interests this is byte-for-byte the
+    // old "created_at DESC, id DESC" page; with interests, the matching listings sort to
+    // the front and the rest follow, so the list never comes back empty and skip-based
+    // paging stays deterministic. See the migration for why the semantic half compares
+    // tag to tag rather than against buziness.embedding.
+    //
+    // No OpenAI call happens on this path: every vector it needs is precomputed in
+    // public.tags by the embed-tags function.
+    res = await supabase.rpc("interest_buziness_feed", {
+      p_interests: cleanInterests,
+      p_semantic: true,
+      p_match_threshold: match_threshold ?? 0.6,
+      p_ingyen: ingyen || false,
+      p_bad_boy: isBadBoy,
+      p_skip: skip || 0,
+      p_take: take < 1 ? 20 : take,
+    });
   }
   if (res.error) {
     console.error("search rpc error", res.error);
@@ -237,6 +284,7 @@ Deno.serve(async (req) => {
       lat,
       long,
       filter_ingyen: ingyen || false,
+      interests: cleanInterests,
       skip: skip || 0,
       take: take || 20,
     });
