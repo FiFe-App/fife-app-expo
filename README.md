@@ -147,6 +147,26 @@ Két további csapda, amit ugyanez a kör javít:
 
 Androidon saját értesítési csatornán (`daily-emotion-reminder`) érkezik.
 
+**Miért ütemezünk újra minden indításnál?** Mert a "már be van ütemezve"
+ellenőrzés nem azt méri, amit gondolnánk: az `getAllScheduledNotificationsAsync`
+az expo-notifications *saját* mentett kéréslistáját olvassa
+(`SharedPreferencesNotificationsStore`), nem a rendszer AlarmManager-ében élő
+ébresztőt. Force stop, "gyorsítótár törlése" vagy egy OEM takarító app elviheti
+az ébresztőt úgy, hogy a kérés ott marad — ilyenkor az app azt hiszi, minden
+rendben, és soha nem ütemez újra. Az ébresztő újra beállítása ingyen van, ezért
+mindig megtörténik.
+
+**Ha mégsem jön az értesítés**, a Profil → Beállítások alatt a kapcsoló alatt
+ott van az igazság: van-e OS engedély, ki van-e kapcsolva a csatorna, be van-e
+ütemezve, és mikor jön a következő. A "Teszt értesítés" gomb 10 másodperc múlva
+küld egyet ugyanazon a csatornán — ha az megjön, de az esti nem, akkor a telefon
+dobja el az ébresztőt (energiagazdálkodás), és a megoldás szerveroldali push
+lenne, nem helyi ütemezés.
+
+A beállítások írása `upsert` (nem `update`): ha valakinek valamiért nincs
+`user_settings` sora, az `update` nulla sort írt volna — hiba nélkül —, és a
+beállítás csak a következő indításig tűnt volna mentettnek.
+
 
 ## Újraindulás után ott folytatjuk, ahol abbahagytad
 

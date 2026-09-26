@@ -57,13 +57,21 @@ const storeWith = (prefs?: Partial<typeof DEFAULT_NOTIFICATION_PREFS>) => {
  * columns, so the table name is checked here rather than left implicit.
  */
 const lastPrefsUpdate = () => {
+  // Written with `upsert`: a settings row that is missing must be created
+  // rather than have the write silently land nowhere.
   const written = supabase.from.mock.results
     .map((r, i) => ({ table: supabase.from.mock.calls[i][0], builder: r.value }))
-    .filter(({ builder }) => (builder.update as jest.Mock).mock.calls.length > 0);
+    .filter(({ builder }) => (builder.upsert as jest.Mock).mock.calls.length > 0);
   const last = written[written.length - 1];
   expect(last.table).toBe("user_settings");
-  const updateCalls = (last.builder.update as jest.Mock).mock.calls;
-  return updateCalls[updateCalls.length - 1][0];
+  const upsertCalls = (last.builder.upsert as jest.Mock).mock.calls;
+  const [row, options] = upsertCalls[upsertCalls.length - 1];
+  expect(options).toMatchObject({ onConflict: "author" });
+  // The columns the caller meant to write, without the key that identifies
+  // the row.
+  const { author, ...columns } = row;
+  expect(author).toBe("me");
+  return columns;
 };
 
 beforeEach(() => {

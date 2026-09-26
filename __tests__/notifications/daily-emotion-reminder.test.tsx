@@ -15,9 +15,10 @@ jest.mock("expo-notifications", () => ({
   scheduleNotificationAsync: jest.fn(async () => "daily-emotion-reminder"),
   cancelScheduledNotificationAsync: jest.fn(async () => {}),
   setNotificationChannelAsync: jest.fn(async () => null),
+  getNotificationChannelAsync: jest.fn(async () => null),
   setNotificationHandler: jest.fn(),
-  SchedulableTriggerInputTypes: { DAILY: "daily" },
-  AndroidImportance: { DEFAULT: 3 },
+  SchedulableTriggerInputTypes: { DAILY: "daily", TIME_INTERVAL: "timeInterval" },
+  AndroidImportance: { DEFAULT: 3, NONE: 0 },
 }));
 jest.mock("@/lib/notifications/registerForPushNotifications", () => ({
   hasNotificationPermission: jest.fn(async () => true),
@@ -34,8 +35,10 @@ import * as Notifications from "expo-notifications";
 import { useDailyEmotionReminder } from "@/hooks/useDailyEmotionReminder";
 import { hasNotificationPermission } from "@/lib/notifications/registerForPushNotifications";
 import {
-  cancelDailyEmotionReminder,
+  getReminderDiagnostics,
+  nextReminderTime,
   scheduleDailyEmotionReminder,
+  sendReminderTestNotification,
   syncDailyEmotionReminder,
 } from "@/lib/notifications/scheduleDailyEmotionReminder";
 import { DEFAULT_NOTIFICATION_PREFS } from "@/hooks/useNotificationPrefs";
@@ -99,12 +102,17 @@ describe("syncDailyEmotionReminder", () => {
     expect(scheduled).toHaveBeenCalled();
   });
 
-  it("leaves a reminder that is already there untouched", async () => {
+  it("re-arms it even when the app thinks it is already scheduled", async () => {
+    // The bug this is here for. What the check could read is
+    // expo-notifications' own list of remembered requests, not the alarm the
+    // system holds — and on the phones this went wrong on, the request
+    // outlives the alarm (a force stop, a cleaner app). Trusting the list
+    // meant the reminder was never armed again, while the app kept insisting
+    // everything was fine.
     reminderIsOnTheDevice();
 
-    expect(await syncDailyEmotionReminder(true)).toBe("already-scheduled");
-    expect(scheduled).not.toHaveBeenCalled();
-    expect(cancelled).not.toHaveBeenCalled();
+    expect(await syncDailyEmotionReminder(true)).toBe("scheduled");
+    expect(scheduled).toHaveBeenCalled();
   });
 
   it("cancels it when the preference is off", async () => {
@@ -192,5 +200,75 @@ describe("useDailyEmotionReminder", () => {
 
     await waitFor(() => expect(store.getState().info.snacks).toHaveLength(1));
     expect(store.getState().info.snacks[0].title).toContain("engedélyezd");
+  });
+});
+
+describe("nextReminderTime", () => {
+  it("is tonight before eight", () => {
+    const next = nextReminderTime(new Date("2026-09-26T10:00:00"));
+
+    expect(next.getHours()).toBe(20);
+    expect(next.getDate()).toBe(26);
+  });
+
+  it("is tomorrow after eight", () => {
+    const next = nextReminderTime(new Date("2026-09-26T21:30:00"));
+
+    expect(next.getHours()).toBe(20);
+    expect(next.getDate()).toBe(27);
+  });
+});
+
+describe("getReminderDiagnostics", () => {
+  it("reports a phone where everything is in place", async () => {
+    reminderIsOnTheDevice();
+
+    const state = await getReminderDiagnostics();
+
+    expect(state).toMatchObject({
+      permissionGranted: true,
+      scheduled: true,
+      channelMuted: false,
+    });
+  });
+
+  it("reports a missing OS permission", async () => {
+    permission.mockResolvedValue(false);
+
+    expect(await getReminderDiagnostics()).toMatchObject({
+      permissionGranted: false,
+    });
+  });
+
+  it("survives a phone that cannot answer", async () => {
+    // Every one of these is a call into the OS and can fail on its own; the
+    // line under the switch must still render something.
+    permission.mockRejectedValue(new Error("no"));
+    listScheduled.mockRejectedValue(new Error("no"));
+
+    expect(await getReminderDiagnostics()).toMatchObject({
+      permissionGranted: false,
+      scheduled: false,
+    });
+  });
+});
+
+describe("sendReminderTestNotification", () => {
+  it("fires in a few seconds, through the same channel as the reminder", async () => {
+    expect(await sendReminderTestNotification()).toBe("scheduled");
+
+    expect(scheduled).toHaveBeenCalledWith(
+      expect.objectContaining({
+        identifier: "daily-emotion-reminder-test",
+        trigger: expect.objectContaining({ seconds: 10 }),
+      }),
+    );
+  });
+
+  it("says why it cannot, rather than pretending it worked", async () => {
+    permission.mockResolvedValue(false);
+
+    expect(await sendReminderTestNotification()).toBe("no-permission");
+    expect(scheduled).not.toHaveBeenCalled();
   });
 });
