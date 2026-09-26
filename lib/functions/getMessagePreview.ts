@@ -4,7 +4,7 @@ import { Tables } from "@/database.types";
  * One-line preview of a message for reply quotes and the chat list. Image-only
  * messages have no text to show.
  */
-type Profile = Tables<"profiles">;
+type Profile = Pick<Tables<"profiles">, "id">;
 const getMessagePreview = (message: {
   author: string;
   created_at: string;

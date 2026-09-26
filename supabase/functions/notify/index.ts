@@ -5,6 +5,7 @@ import nodemailer from "npm:nodemailer@6";
 import {
   buzinessRecommendationHtml,
   commentHtml,
+  escapeHtml,
   htmlToText,
   messageHtml,
   newsletterHtml,
@@ -206,7 +207,7 @@ async function sendNotification(
   if (prefs.notify_email && prefs.email) {
     const html = options.htmlBuilder
       ? options.htmlBuilder(prefs.full_name ?? null)
-      : `<p>${message}</p>`;
+      : `<p>${escapeHtml(message)}</p>`;
     promises.push(sendEmailNotificationSafe(prefs.email, options.subject || "FiFe értesítés", html));
   }
   if (promises.length === 0) {
@@ -507,18 +508,31 @@ Deno.serve(async (req) => {
       } else if (!record.to || record.to === record.author) {
         // No recipient or self-message — skip
       } else {
-        // Rate-limit: check if there's a recent message from same author→to within last 60s
-        const cutoff = new Date(new Date(record.created_at).getTime() - 3600).toISOString();
-        const { count } = await supabase
-          .from("messages")
-          .select("id", { count: "exact", head: true })
-          .eq("author", record.author)
-          .eq("to", record.to)
-          .gt("created_at", cutoff)
-          .lt("created_at", record.created_at)
-          .limit(1);
+        // Rate-limit: check if there's another message from same author→to within
+        // the last 60s. The window is anchored to server time and excludes this row
+        // by id — created_at is client-writable, so it can't be trusted here.
+        const cutoff = new Date(Date.now() - 60_000).toISOString();
+        const [{ count }, { count: blockedCount }] = await Promise.all([
+          supabase
+            .from("messages")
+            .select("id", { count: "exact", head: true })
+            .eq("author", record.author)
+            .eq("to", record.to)
+            .gt("created_at", cutoff)
+            .neq("id", record.id)
+            .limit(1),
+          supabase
+            .from("blocked_users")
+            .select("id", { count: "exact", head: true })
+            .or(
+              `and(blocker_id.eq.${record.to},blocked_id.eq.${record.author}),` +
+                `and(blocker_id.eq.${record.author},blocked_id.eq.${record.to})`,
+            ),
+        ]);
 
-        if (count && count > 0) {
+        if (blockedCount && blockedCount > 0) {
+          console.log(`Blocked: message notification skipped for ${record.author} → ${record.to}`);
+        } else if (count && count > 0) {
           console.log(`Rate-limited: message notification skipped for ${record.author} → ${record.to}`);
         } else {
           const authorRes = await supabase

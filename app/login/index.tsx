@@ -38,8 +38,6 @@ export default function Index() {
   useEffect(() => {
     navigation.setOptions({ "title": "Bejelentkezés" });
     if (token_data) {
-      console.log(token_data);
-
       supabase.auth
         .setSession({
           refresh_token: token_data.refresh_token,
