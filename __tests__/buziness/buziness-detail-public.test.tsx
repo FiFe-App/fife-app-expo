@@ -105,7 +105,9 @@ describe("biznisz detail / signed out", () => {
 
     await renderWithProviders(<BuzinessDetail />);
 
-    expect(await screen.findByText("Nem látható")).toBeOnTheScreen();
+    // The two ways in, rather than the wording around them — the copy on this
+    // screen is edited often and is not what the test is about.
+    expect(await screen.findByText("Belépek")).toBeOnTheScreen();
     expect(screen.getByText("Csatlakozom")).toBeOnTheScreen();
   });
 });
@@ -138,10 +140,25 @@ describe("biznisz detail / the stats card", () => {
 
     await renderWithProviders(<BuzinessDetail />, { store: signedIn() });
 
+    // Both, in the same card. The recommendation and review stats only appear
+    // when there is something to count, so they are not asserted here.
     expect(await screen.findByText("Kovács Anna")).toBeOnTheScreen();
     expect(screen.getByText("Távolság")).toBeOnTheScreen();
-    // Both stay, alongside the two that were always there.
-    expect(screen.getByText("Ajánlás")).toBeOnTheScreen();
+  });
+
+  it("shows the counted stats when there is something to count", async () => {
+    __setTableRow("buziness", {
+      data: {
+        ...PUBLIC_BUZINESS,
+        buzinessRecommendations: [{ author: "fan-1", profiles: { avatar_url: null } }],
+      },
+      error: null,
+    });
+    __setTableRow("comments", { data: { count: 3 }, error: null });
+
+    await renderWithProviders(<BuzinessDetail />, { store: signedIn() });
+
+    expect(await screen.findByText("Ajánlás")).toBeOnTheScreen();
     expect(screen.getByText("Vélemény")).toBeOnTheScreen();
   });
 });
