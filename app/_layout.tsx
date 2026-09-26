@@ -251,10 +251,6 @@ function RootContent() {
   const theme = getTheme(isDarkMode);
 
   useEffect(() => {
-    if (Platform.OS === "android") {
-      NavigationBar.setBackgroundColorAsync(bottomBarColor || theme.colors.background);
-      NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
-    }
     if (pathname.includes("csatlakozom") || pathname=="/")
       dispatch(setStatusBarColor(theme.colors.background));
     else

@@ -346,9 +346,9 @@ export default function Index() {
                         message: "Ez a biznisz nem található",
                       }
                     : {
-                        code: "Nem látható",
+                        code: "Lépj be hogy lásd ezt a bizniszt.",
                         message:
-                          "Ez a biznisz nem található, vagy a gazdája nem osztotta meg nyilvánosan. Lépj be, hogy lásd!",
+                          "Ez a biznisz nem található, vagy a gazdája nem osztotta meg nyilvánosan.",
                       },
                 );}
 
@@ -384,7 +384,7 @@ export default function Index() {
         header: () => <MyAppbar
           title="Biznisz"
           actions={
-            data ? (
+            data?.public ? (
               <Appbar.Action
                 icon="share-variant"
                 accessibilityLabel="Biznisz megosztása"
@@ -412,7 +412,7 @@ export default function Index() {
         )}
         {!!error && (
           <ErrorScreen
-            icon="briefcase-off"
+            icon="alert"
             title={error.code}
             text={error.message}
             action={
@@ -517,31 +517,35 @@ export default function Index() {
                     }
                   />
 
-                  <StatDivider />
+                    {recommendations.length > 0 &&<>
+                    
+                    <StatDivider />
+                    <StatItem
+                      value={recommendations.length}
+                      avatars={recommendations.map((rec) => ({
+                        uid: rec.author,
+                        url: rec.avatar_url,
+                      }))}
+                      label="Ajánlás"
+                      onPress={
+                        recommendations.length
+                          ? () => setShowRecommendsModal(true)
+                          : undefined
+                      }
+                    />
+                    </>}
 
-                  <StatItem
-                    value={recommendations.length}
-                    avatars={recommendations.map((rec) => ({
-                      uid: rec.author,
-                      url: rec.avatar_url,
-                    }))}
-                    label="Ajánlás"
-                    onPress={
-                      recommendations.length
-                        ? () => setShowRecommendsModal(true)
-                        : undefined
-                    }
-                  />
+                  
+                  {!!commentsCount && commentsCount > 0 && <>
+                    <StatItem
+                      value={commentsCount ?? 0}
+                      label="Vélemény"
+                      onPress={() => goToTab("reviews")}
+                    />
+                    <StatDivider />
+                  </>}
 
-                  <StatDivider />
-
-                  <StatItem
-                    value={commentsCount ?? 0}
-                    label="Vélemény"
-                    onPress={() => goToTab("reviews")}
-                  />
-
-                  {distanceText && (
+                  {!!distanceText && (
                     <>
                       <StatDivider />
                       <StatItem

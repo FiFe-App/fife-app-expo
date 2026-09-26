@@ -50,7 +50,7 @@ const MyBuzinesses = ({ buzinesses, loading, myProfile, name }: MyBuzinessesProp
         </>
       ) : (
         <View style={{ alignItems: "center", gap: Spacing.lg, padding: Spacing.sm }}>
-          <ThemedView responsive={400} style={{ flexDirection: "row", padding: Spacing.sm, alignItems: "center",gap: Spacing.lg }}>
+          <ThemedView style={{ flexDirection: "column", padding: Spacing.sm, alignItems: "center",gap: Spacing.lg }}>
 
             <View style={{ alignItems: "center", justifyContent: "center", gap: Spacing.lg }}>
 
@@ -59,7 +59,7 @@ const MyBuzinesses = ({ buzinesses, loading, myProfile, name }: MyBuzinessesProp
                 style={{ height: 150, width: 150 }}
               />
             </View>
-              <ThemedText variant="bodyMedium" style={{fontFamily:"Piazzolla-ExtraBold"}}>
+              <ThemedText variant="bodyMedium" style={{fontFamily:"Piazzolla-ExtraBold", textAlign:"center"}}>
                 {myProfile
                   ? "Hirdesd magad vagy vállalkozásodat ingyen a bizniszeddel!"
                   : `${name} még nem adott meg bizniszt.`}

@@ -13,7 +13,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Button, IconButton, Surface, Text } from "react-native-paper";
+import { Button, Surface, Text } from "react-native-paper";
 import { trackPromise } from "react-promise-tracker";
 import { useDispatch, useSelector } from "react-redux";
 import CategoryChip from "../CategoryChip";
@@ -101,7 +101,7 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
           <View style={{ flexDirection: "row" }}>
             <View style={{ flex: 1 }}>
               <Text variant="titleLarge" style={{ fontSize: 18, lineHeight: 24 }}>{title}</Text>
-              <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.xs, marginTop: Spacing.xs }}>
+              <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.xs, marginTop: Spacing.xs, maxHeight: 52, overflow:"hidden" }}>
                 {!!isNew && <CategoryChip key="category-new" style={{ backgroundColor: theme.colors.tertiary }} textStyle={{ color: theme.colors.onTertiary }}>új</CategoryChip>}
                 {!!data.ingyen && <CategoryChip key="category-ingyen" style={{ backgroundColor: theme.colors.nature }} textStyle={{ color: theme.colors.onNature }}>ingyenes</CategoryChip>}
                 {categories?.map((e, i) => {
@@ -114,7 +114,7 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
             </View>
           </View>
           <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.sm }}>
-            <MetaStat icon="account-group">{recommendations} ember ajánlja</MetaStat>
+            {recommendations > 0 && <MetaStat icon="account-group">{recommendations} ember ajánlja</MetaStat>}
             {anywhere ? (
               <MetaStat icon="wifi">Bárhol elérhető</MetaStat>
             ) : (
