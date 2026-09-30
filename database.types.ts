@@ -851,6 +851,54 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_reports: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_reason?: string
+          p_reported_id?: string
+        }
+        Returns: {
+          author_email: string
+          author_id: string
+          author_name: string
+          created_at: string
+          description: string
+          id: number
+          reason: string
+          reported_bad_boy: boolean
+          reported_email: string
+          reported_id: string
+          reported_name: string
+          total_count: number
+        }[]
+      }
+      admin_list_users: {
+        Args: {
+          p_bad_boy?: boolean
+          p_limit?: number
+          p_offset?: number
+          p_reported?: boolean
+          p_search?: string
+        }
+        Returns: {
+          bad_boy: boolean
+          buziness_count: number
+          email: string
+          email_confirmed: boolean
+          full_name: string
+          id: string
+          last_sign_in_at: string
+          registered_at: string
+          report_count: number
+          total_count: number
+          username: string
+        }[]
+      }
+      admin_weekly_stats: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
       count_user_contacts: { Args: { user_id: string }; Returns: number }
       get_app_version_status: {
         Args: { p_platform: string; p_version: string }

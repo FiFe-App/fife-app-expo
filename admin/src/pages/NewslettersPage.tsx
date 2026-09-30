@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppShell, Button, Group, Modal, Paper, Stack, Text, Title } from "@mantine/core";
+import { Button, Group, Modal, Paper, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 
-import { AuthError, fetchNewsletters, logout } from "../api";
+import { AuthError, fetchNewsletters } from "../api";
 import type { Newsletter } from "../types";
 import { NewsletterForm } from "../components/NewsletterForm";
 import { NewsletterList } from "../components/NewsletterList";
@@ -58,54 +58,38 @@ export function NewslettersPage({ onLoggedOut }: { onLoggedOut: () => void }) {
     };
   }, [newsletters, load]);
 
-  async function handleLogout() {
-    await logout();
-    onLoggedOut();
-  }
-
   return (
-    <AppShell header={{ height: 60 }} padding="md">
-      <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
-          <Title order={3}>FiFe Admin</Title>
-          <Button variant="subtle" onClick={handleLogout}>
-            Kijelentkezés
+    <>
+      <Stack gap="lg" maw={960} mx="auto">
+        <Group justify="space-between">
+          <div>
+            <Title order={2}>Hírlevelek</Title>
+            <Text c="dimmed" size="sm">
+              Kiküldött és teszt hírlevelek listája
+            </Text>
+          </div>
+          <Button leftSection={<IconPlus size={16} />} onClick={openForm}>
+            Új hírlevél
           </Button>
         </Group>
-      </AppShell.Header>
 
-      <AppShell.Main bg="#fff5e0">
-        <Stack gap="lg" maw={960} mx="auto">
-          <Group justify="space-between">
-            <div>
-              <Title order={2}>Hírlevelek</Title>
-              <Text c="dimmed" size="sm">
-                Kiküldött és teszt hírlevelek listája
+        <Paper withBorder radius="lg" p="md">
+          {loading ? (
+            <Text c="dimmed">Betöltés...</Text>
+          ) : loadError ? (
+            <Stack gap={4}>
+              <Text c="red" fw={500}>
+                Nem sikerült betölteni a hírleveleket.
               </Text>
-            </div>
-            <Button leftSection={<IconPlus size={16} />} onClick={openForm}>
-              Új hírlevél
-            </Button>
-          </Group>
-
-          <Paper withBorder radius="lg" p="md">
-            {loading ? (
-              <Text c="dimmed">Betöltés...</Text>
-            ) : loadError ? (
-              <Stack gap={4}>
-                <Text c="red" fw={500}>
-                  Nem sikerült betölteni a hírleveleket.
-                </Text>
-                <Text c="dimmed" size="sm">
-                  {loadError}
-                </Text>
-              </Stack>
-            ) : (
-              <NewsletterList newsletters={newsletters} />
-            )}
-          </Paper>
-        </Stack>
-      </AppShell.Main>
+              <Text c="dimmed" size="sm">
+                {loadError}
+              </Text>
+            </Stack>
+          ) : (
+            <NewsletterList newsletters={newsletters} />
+          )}
+        </Paper>
+      </Stack>
 
       <Modal opened={formOpened} onClose={closeForm} title="Új hírlevél" size="lg">
         <NewsletterForm
@@ -116,6 +100,6 @@ export function NewslettersPage({ onLoggedOut }: { onLoggedOut: () => void }) {
           onAuthError={onLoggedOut}
         />
       </Modal>
-    </AppShell>
+    </>
   );
 }

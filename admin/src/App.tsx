@@ -3,7 +3,7 @@ import { Center, Loader } from "@mantine/core";
 
 import { fetchSession } from "./api";
 import { LoginPage } from "./pages/LoginPage";
-import { NewslettersPage } from "./pages/NewslettersPage";
+import { AdminShell } from "./pages/AdminShell";
 
 export function App() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
@@ -24,5 +24,5 @@ export function App() {
     return <LoginPage onLoggedIn={() => setAuthenticated(true)} />;
   }
 
-  return <NewslettersPage onLoggedOut={() => setAuthenticated(false)} />;
+  return <AdminShell onLoggedOut={() => setAuthenticated(false)} />;
 }
