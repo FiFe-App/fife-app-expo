@@ -65,7 +65,9 @@ export function useNearbyBuzinesses(take = 5) {
           },
         },
       );
-      if (error) throw new Error(error.message);
+      console.log("biznisz", buzinesses,error);
+      
+      if (error) throw new Error(error.message == "Edge Function returned a non-2xx status code" ? "Sajnos hiba történt, próbáld meg később" :error.message);
       return (buzinesses || []) as BuzinessSearchItemInterface[];
     },
     [take, getSearchLocation, interests],

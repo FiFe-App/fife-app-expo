@@ -3,8 +3,12 @@ import MapSelector from "@/components/MapSelector/MapSelector";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import UsernameInput from "@/components/UsernameInput";
+import TagInput from "@/components/TagInput";
 import { Tables } from "@/database.types";
 import { CircleType } from "@/redux/store.type";
+import { RootState } from "@/redux/store";
+import { setInterests } from "@/redux/reducers/userReducer";
+import { useDispatch, useSelector } from "react-redux";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import { Dispatch, RefObject, SetStateAction } from "react";
 import { View } from "react-native";
@@ -55,6 +59,10 @@ export default function AdatokTab({
   contactEditRef,
 }: AdatokTabProps) {
   const theme = useAppTheme();
+  const dispatch = useDispatch();
+  // Not part of the profile save: persisted by useUserSettings' debounced push into
+  // user_settings, so it saves on its own like the settings tab does.
+  const interests = useSelector((state: RootState) => state.user.interests) ?? [];
 
   const containerStyle = {
     flex: 1,
@@ -89,6 +97,23 @@ export default function AdatokTab({
       <View style={{ padding: Spacing.sm }}>
         <ThemedText type="label">Email, amivel regisztráltál:</ThemedText>
         <ThemedText>{email}</ThemedText>
+      </View>
+      <Divider />
+      <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
+        <ThemedText variant="bodyLarge" type="bold">Érdeklődési köröd</ThemedText>
+        <ThemedText type="label">
+          Add meg, mi érdekel — ezek alapján rendezzük eléd a bizniszeket a Közösség
+          oldaladon. Elég egy is, és bármikor változtathatsz rajtuk.
+        </ThemedText>
+        <TagInput
+          value={interests}
+          onChange={(next) => dispatch(setInterests(next))}
+          placeholder="Új érdeklődési kör…"
+          suggest
+        />
+        <HelperText type="info" visible style={{ paddingLeft: 0 }}>
+          Pl. kertészet, kerékpár, programozás
+        </HelperText>
       </View>
       <Divider />
       <View style={{ paddingVertical: Spacing.lg }}>

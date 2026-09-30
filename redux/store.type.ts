@@ -184,6 +184,8 @@ export interface BuzinessSearchItemInterface {
   distance?: number;
   relevance: number;
   buzinessRecommendations: { author: string }[];
+  /** Only on the interest feed: whether the listing matches the user's interests. */
+  is_match?: boolean;
 }
 export interface BuzinessItemInterface {
   id: number;

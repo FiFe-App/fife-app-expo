@@ -11,7 +11,7 @@ import { clearOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { useCallback, useEffect } from "react";
 import { Pressable, View } from "react-native";
-import { Icon } from "react-native-paper";
+import { Divider, Icon } from "react-native-paper";
 import { ScrollView } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
@@ -105,9 +105,9 @@ export default function Index() {
         >
           <View style={{ flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
             <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>
-              {searchCircle ? "Közeli" : "Budapesti"} Bizniszek
+              {searchCircle ? "Közeli" : "Budapesti"} Bizniszek neked
             </ThemedText>
-            <Icon size={18} color={theme.colors.secondary} source="map-marker" />
+            <Icon size={18} color={theme.colors.secondary  source="map-marker" />
             <Pressable onPress={()=>router.push("/search")} style={{ flex:1, flexDirection: "row", alignItems: "center", justifyContent:"flex-end", gap: Spacing.xs }}>
               <ThemedText variant="labelMedium" type="bold" style={{ color: theme.colors.primary }}>
                 Keresés
@@ -127,6 +127,13 @@ export default function Index() {
               key={buziness.id}
               style={{ marginBottom: index === nearbyBuzinesses.length - 1 ? 0 : Spacing.sm }}
             >
+              {/* Where the interest matches end and the rest of the feed begins. */}
+              {!buziness.is_match && index > 0 && nearbyBuzinesses[index - 1].is_match && (
+                <View>
+                  <ThemedText type="label">Egyéb bizniszek a környéken</ThemedText>
+                  <Divider style={{ marginVertical: Spacing.sm }} />
+                </View>
+              )}
               <BuzinessItem data={buziness} />
             </View>
           ))}
