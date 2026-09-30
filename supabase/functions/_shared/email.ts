@@ -295,6 +295,80 @@ export function messageHtml(
 }
 
 // ---------------------------------------------------------------------------
+// Weekly admin report
+// ---------------------------------------------------------------------------
+
+/** For user-written text (titles, names) placed into a template. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+export interface WeeklyStats {
+  new_users: number;
+  new_users_prev: number;
+  new_buziness: number;
+  new_buziness_prev: number;
+  new_reports: number;
+  new_reports_prev: number;
+  new_bad_boys: number;
+  new_bad_boys_prev: number;
+  total_users: number;
+  total_buziness: number;
+  total_bad_boys: number;
+  buzinesses: { id: number; title: string; author_name: string | null; author_bad_boy: boolean }[];
+}
+
+function statRow(label: string, value: number, prev: number): string {
+  const diff = value - prev;
+  const diffText = diff === 0 ? "±0" : diff > 0 ? `+${diff}` : String(diff);
+  const diffColor = diff > 0 ? "#2f7d32" : diff < 0 ? COLOR.cta : COLOR.textMuted;
+  return `
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #eee3cc;font-size:16px;color:${COLOR.text};">${label}</td>
+        <td align="right" style="padding:10px 0;border-bottom:1px solid #eee3cc;font-size:22px;font-weight:bold;color:${COLOR.text};">${value}</td>
+        <td align="right" style="padding:10px 0 10px 12px;border-bottom:1px solid #eee3cc;font-size:13px;color:${diffColor};white-space:nowrap;">${diffText} az előző héthez</td>
+      </tr>`;
+}
+
+export function weeklyReportHtml(
+  stats: WeeklyStats,
+  periodLabel: string,
+  adminUrl: string | null,
+): string {
+  const list = stats.buzinesses.length
+    ? `<ul style="margin:0;padding-left:20px;font-size:15px;line-height:1.7;">
+        ${stats.buzinesses.map((b) => `
+          <li>
+            <a href="${HOME_URL}/biznisz/${b.id}" style="color:${COLOR.cta};text-decoration:underline;">${escapeHtml(b.title)}</a>
+            <span style="color:${COLOR.textMuted};"> — ${escapeHtml(b.author_name ?? "ismeretlen")}${b.author_bad_boy ? " (badboy)" : ""}</span>
+          </li>`).join("")}
+      </ul>`
+    : `<p style="font-size:15px;color:${COLOR.textMuted};margin:0;">Ezen a héten nem jött létre új biznisz.</p>`;
+
+  const body = `
+    <p style="font-size:18px;font-weight:bold;color:${COLOR.text};margin:0 0 4px 0;">Heti FiFe riport</p>
+    <p style="font-size:14px;color:${COLOR.textMuted};margin:0 0 20px 0;">${periodLabel}</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      ${statRow("Új felhasználók", stats.new_users, stats.new_users_prev)}
+      ${statRow("Új bizniszek", stats.new_buziness, stats.new_buziness_prev)}
+      ${statRow("Új feljelentések", stats.new_reports, stats.new_reports_prev)}
+      ${statRow("Új regisztrált badboyok", stats.new_bad_boys, stats.new_bad_boys_prev)}
+    </table>
+    <p style="font-size:14px;color:${COLOR.textMuted};margin:16px 0 28px 0;">
+      Összesen: ${stats.total_users} felhasználó, ${stats.total_buziness} biznisz, ${stats.total_bad_boys} badboy.
+    </p>
+    <p style="font-size:16px;font-weight:bold;color:${COLOR.text};margin:0 0 8px 0;">A hét új bizniszei</p>
+    ${list}
+    ${adminUrl ? ctaButton("Admin megnyitása", adminUrl) : ""}`;
+  return layout(null, body, { pageTitle: "Heti FiFe riport" });
+}
+
+// ---------------------------------------------------------------------------
 // Plain-text alternative
 // ---------------------------------------------------------------------------
 
