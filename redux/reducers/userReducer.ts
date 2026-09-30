@@ -26,6 +26,7 @@ const initialState: UserState = {
   locationError: null,
   themePreference: DEFAULT_THEME_PREFERENCE,
   savedBuzinesses: [],
+  interests: [],
   previousSearches: [],
   previousProfileSearches: [],
   inviteCardDismissed: false,
@@ -85,6 +86,14 @@ const userReducer = createSlice({
     removeSavedBuziness: (state, { payload }: PayloadAction<number>) => {
       if (!state.savedBuzinesses) state.savedBuzinesses = [];
       state.savedBuzinesses = state.savedBuzinesses.filter((id) => id !== payload);
+    },
+    /**
+     * Replaces the whole interest list. The TagInput hands back the next array rather
+     * than a single add/remove, so a setter matching that shape keeps the component and
+     * the store from disagreeing about intermediate states.
+     */
+    setInterests: (state, { payload }: PayloadAction<string[]>) => {
+      state.interests = payload;
     },
     dismissInviteCard: (state) => {
       state.inviteCardDismissed = true;
@@ -159,6 +168,7 @@ const userReducer = createSlice({
       state.previousProfileSearches = settings.previousProfileSearches;
       state.themePreference = settings.themePreference;
       state.savedBuzinesses = settings.savedBuzinesses;
+      state.interests = settings.interests;
       state.isItSafeDismissed = settings.isItSafeDismissed;
       state.inviteCardDismissed = settings.inviteCardDismissed;
       state.settingsSyncedAt = payload.syncedAt;
@@ -184,6 +194,7 @@ export const {
   setThemePreference,
   addSavedBuziness,
   removeSavedBuziness,
+  setInterests,
   setLocation,
   setNotificationPrefs,
   patchNotificationPrefs,

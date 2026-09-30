@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
@@ -18,6 +18,10 @@ export function useNearbyBuzinesses(take = 5) {
   const profileLocation = useSelector(
     (state: RootState) => state.user.userData?.location,
   );
+
+  // The user's interest tags. The server ORs them together and sorts the matching
+  // listings to the front, so this is what makes the opening list personal.
+  const interests = useSelector((state: RootState) => state.user.interests);
 
   const [data, setData] = useState<BuzinessSearchItemInterface[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,14 +60,17 @@ export function useNearbyBuzinesses(take = 5) {
             skip,
             ingyen: false,
             maxdistance: 100000,
+            interests: interests ?? [],
             ...getSearchLocation(),
           },
         },
       );
-      if (error) throw new Error(error.message);
+      console.log("biznisz", buzinesses,error);
+      
+      if (error) throw new Error(error.message == "Edge Function returned a non-2xx status code" ? "Sajnos hiba történt, próbáld meg később" :error.message);
       return (buzinesses || []) as BuzinessSearchItemInterface[];
     },
-    [take, getSearchLocation],
+    [take, getSearchLocation, interests],
   );
 
   const fetch = useCallback(async () => {
@@ -121,6 +128,26 @@ export function useNearbyBuzinesses(take = 5) {
     setLoading(false);
     loadingRef.current = false;
   }, [runSearch, take]);
+
+  // Editing the interests has to reorder the feed. The home screen's focus effect only
+  // fetches when the list is empty, so without this the user would save a new interest
+  // and come back to the same stale order. fetch() bumps requestIdRef, which discards any
+  // page still in flight from the previous interest set.
+  const interestsKey = (interests ?? []).join("\u0000");
+  const lastInterestsKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    // Skip the first run: the screen's own focus effect already fetches the first page,
+    // and firing here too would spend a second request on the same result.
+    if (lastInterestsKeyRef.current === null) {
+      lastInterestsKeyRef.current = interestsKey;
+      return;
+    }
+    if (lastInterestsKeyRef.current === interestsKey) return;
+    lastInterestsKeyRef.current = interestsKey;
+    skipRef.current = 0;
+    hasMoreRef.current = true;
+    fetch();
+  }, [interestsKey, fetch]);
 
   return { data, loading, error, hasMore, fetch, fetchNextPage };
 }
