@@ -4,17 +4,22 @@ import { Spacing } from "@/constants/spacing";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 import { View } from "react-native";
+import { ReactNode } from "react";
 
 interface ErrorScreenProps {
   icon?: string;
   title?: string;
   text?: string;
+  /** Replaces the "back to the home page" button, for screens where something
+   *  more useful can be offered — signing up, for instance. */
+  action?: ReactNode;
 }
 
 const ErrorScreen = ({
   icon = "emoticon-sad",
   title = "A manóba!",
   text = "Valami hiba történt",
+  action,
 }: ErrorScreenProps) => {
   return (
     <ThemedView
@@ -32,9 +37,11 @@ const ErrorScreen = ({
       <View style={{ alignItems: "center" }}>
         <ThemedText>{text}</ThemedText>
       </View>
-      <Link asChild href="/">
-        <Button mode="contained">Vissza a főoldalra</Button>
-      </Link>
+      {action ?? (
+        <Link asChild href="/">
+          <Button mode="contained">Vissza a főoldalra</Button>
+        </Link>
+      )}
     </ThemedView>
   );
 };

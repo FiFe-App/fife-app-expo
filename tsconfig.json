@@ -11,6 +11,12 @@
       ]
     }
   },
+  "exclude": [
+    "node_modules",
+    // Runs on Deno at the CDN, not in the app bundle: it imports over https and
+    // uses Deno globals, neither of which this config knows about.
+    "netlify/edge-functions/social-preview.ts"
+  ],
   "include": [
     "**/*.ts",
     "**/*.tsx",

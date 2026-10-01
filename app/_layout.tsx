@@ -37,7 +37,8 @@ import { clearChatReadState, clearDrafts, setUnreadCounts } from "@/redux/reduce
 import { fetchUnreadCounts } from "@/lib/chat/fetchUnreadCounts";
 import { supabase } from "@/lib/supabase/supabase";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
-import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
+import { useDailyEmotionReminder } from "@/hooks/useDailyEmotionReminder";
+import { useLastRoute } from "@/hooks/useLastRoute";
 import { setStatusBarColor } from "@/redux/reducers/infoReducer";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
 import { useUserSettings } from "@/hooks/useUserSettings";
@@ -76,6 +77,10 @@ function RootContent() {
   }, []);
 
   const { syncPendingLogs, loadFromServer } = useEmotionLog();
+  useDailyEmotionReminder();
+  // Android kills a backgrounded app for its memory; this is what makes the
+  // cold start that follows land where the user left off.
+  useLastRoute();
   const { loadFromServer: loadSettings } = useUserSettings();
   const versionGate = useAppVersionGate();
 
@@ -203,15 +208,10 @@ function RootContent() {
           console.warn("Push token registration failed:", err);
         }
       }
-      try {
-        if (emotionAvailable && prefs.emotion_daily_prompt) {
-          await scheduleDailyEmotionReminder();
-        } else {
-          await cancelDailyEmotionReminder();
-        }
-      } catch (err) {
-        console.warn("Could not apply the daily emotion reminder:", err);
-      }
+      // The daily reminder is not armed from here: useDailyEmotionReminder
+      // owns the device's schedule and follows the preference this dispatch
+      // just hydrated — and keeps following it on every foreground, which is
+      // what survives an app update wiping the schedule.
     });
   }, [uid, dispatch]);
 
@@ -251,10 +251,6 @@ function RootContent() {
   const theme = getTheme(isDarkMode);
 
   useEffect(() => {
-    if (Platform.OS === "android") {
-      NavigationBar.setBackgroundColorAsync(bottomBarColor || theme.colors.background);
-      NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
-    }
     if (pathname.includes("csatlakozom") || pathname=="/")
       dispatch(setStatusBarColor(theme.colors.background));
     else
@@ -320,10 +316,6 @@ function RootContent() {
                   options={{ title: "Új Biznisz" }}
                 />
                 <Stack.Screen
-                  name="biznisz/[id]"
-                  options={{ title: "Biznisz" }}
-                />
-                <Stack.Screen
                   name="biznisz/edit/[editId]"
                   options={{ title: "Biznisz szerkesztése" }}
                 />
@@ -380,6 +372,14 @@ function RootContent() {
                 name="leiratkozas"
                 options={{ headerShown: false }}
               />
+              {/* Outside both guards on purpose: a biznisz its author marked
+                  public can be opened by anyone who has the link, with no
+                  account — the page itself asks a visitor to sign in when the
+                  biznisz is not public (or does not exist). */}
+              <Stack.Screen
+                name="biznisz/[id]"
+                options={{ title: "Biznisz" }}
+              />
               {/* Outside both guards on purpose: an invite link is opened by
                   someone who has no account yet, but a member who taps their
                   own link has to be able to see it too. */}
@@ -397,7 +397,10 @@ function RootContent() {
                 onDismiss={versionGate.dismissUpdate}
               />
             )}
-            {pathname !== "/" && !pathname.includes("projekt") &&
+            {/* Every tab of the bottom bar leads somewhere only members can
+                open, so a signed-out visitor on a shared biznisz page gets
+                none of it. */}
+            {!!uid && pathname !== "/" && !pathname.includes("projekt") &&
               !pathname.includes("login") &&
               !pathname.includes("password") &&
               !pathname.includes("user/deleted-account") &&

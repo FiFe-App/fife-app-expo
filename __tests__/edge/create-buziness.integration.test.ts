@@ -7,9 +7,16 @@
  * the insert. The opt-out suite needs no key either: with the AI setting off
  * there is no call to make.
  */
-import { adminClient, edgeStack, invokeFunction, readBody } from "@/test-utils/edge/clients";
+import {
+  adminClient,
+  anonClient,
+  edgeStack,
+  invokeFunction,
+  readBody,
+} from "@/test-utils/edge/clients";
 import { TestData, TEST_MARKER } from "@/test-utils/edge/fixtures";
 import { describeWithOpenAI } from "@/test-utils/edge/gates";
+import { createClient } from "@supabase/supabase-js";
 
 const data = new TestData();
 const admin = adminClient();
@@ -220,5 +227,113 @@ describe("create-buziness: the AI setting", () => {
       .single();
     expect(row?.embedding).toBeNull();
     expect(row?.embedding_text).toBeNull();
+  });
+});
+
+/**
+ * The "public" flag: whether a biznisz can be opened with a link by somebody
+ * who is not signed in. The flag itself is written by the edge function; what
+ * it *means* is the SELECT policy, which is what the second suite checks — the
+ * anon key is exactly what a stranger's browser (and the link-preview edge
+ * function) holds.
+ */
+describe("create-buziness: the public flag", () => {
+  it("defaults to private", async () => {
+    const user = await data.createUser({ aiEnhance: false });
+    await data.createContact(user.id);
+
+    const res = await invokeFunction("create-buziness", {
+      token: user.accessToken,
+      body: { title: `${TEST_MARKER}asztalos`, description: "Bútorkészítés" },
+    });
+
+    expect(res.status).toBe(200);
+    const created = (await readBody(res)) as Record<string, unknown>;
+    data.trackBuziness(created.id as number);
+
+    expect(created.public).toBe(false);
+  });
+
+  it("saves the author's choice, and lets them take it back", async () => {
+    const user = await data.createUser({ aiEnhance: false });
+    await data.createContact(user.id);
+
+    const shared = await invokeFunction("create-buziness", {
+      token: user.accessToken,
+      body: {
+        title: `${TEST_MARKER}kőműves`,
+        description: "Falazás, vakolás",
+        public: true,
+      },
+    });
+    const created = (await readBody(shared)) as Record<string, unknown>;
+    data.trackBuziness(created.id as number);
+    expect(created.public).toBe(true);
+
+    const withdrawn = await invokeFunction("create-buziness", {
+      token: user.accessToken,
+      body: {
+        id: created.id,
+        title: `${TEST_MARKER}kőműves`,
+        description: "Falazás, vakolás",
+        public: false,
+      },
+    });
+
+    expect(withdrawn.status).toBe(200);
+    expect((await readBody(withdrawn)) as Record<string, unknown>).toMatchObject({
+      public: false,
+    });
+  });
+});
+
+describe("buziness: what a signed-out visitor can read", () => {
+  const anon = anonClient();
+
+  it("serves a public biznisz to a link with no account behind it", async () => {
+    const user = await data.createUser();
+    const buziness = await data.seedBuziness(user.id, { public: true });
+
+    const { data: row } = await anon
+      .from("buziness")
+      .select("id, title, description, images")
+      .eq("id", buziness.id)
+      .maybeSingle();
+
+    expect(row).toMatchObject({ id: buziness.id, title: buziness.title });
+  });
+
+  it("hides a private one — the page has nothing to show a stranger", async () => {
+    const user = await data.createUser();
+    const buziness = await data.seedBuziness(user.id);
+
+    const { data: row, error } = await anon
+      .from("buziness")
+      .select("id, title")
+      .eq("id", buziness.id)
+      .maybeSingle();
+
+    expect(error).toBeNull();
+    expect(row).toBeNull();
+  });
+
+  it("still shows a private one to a signed-in member", async () => {
+    const owner = await data.createUser();
+    const reader = await data.createUser();
+    const buziness = await data.seedBuziness(owner.id);
+
+    const { url, anonKey } = edgeStack();
+    const memberClient = createClient(url, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: { headers: { Authorization: `Bearer ${reader.accessToken}` } },
+    });
+
+    const { data: row } = await memberClient
+      .from("buziness")
+      .select("id, title")
+      .eq("id", buziness.id)
+      .maybeSingle();
+
+    expect(row).toMatchObject({ id: buziness.id });
   });
 });

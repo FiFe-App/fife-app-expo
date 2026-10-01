@@ -26,10 +26,12 @@ import getMediaKind from "@/lib/functions/getMediaKind";
 import getLinkForContact from "@/lib/functions/getLinkForContact";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import typeToIcon from "@/lib/functions/typeToIcon";
+import { shareBuziness } from "@/lib/buziness/buzinessLink";
+import { getJoinHref, getLoginHref } from "@/lib/auth/loginRedirect";
 import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
 import { SaveBuzinessButton } from "@/lib/supabase/SaveBuzinessButton";
 import { supabase } from "@/lib/supabase/supabase";
-import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
+import { addSnack, clearOptions, setOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import {
   BuzinessItemInterface,
@@ -49,6 +51,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View }
 import openMap from "react-native-open-maps";
 import {
   ActivityIndicator,
+  Appbar,
   Button,
   IconButton,
   Portal,
@@ -86,7 +89,16 @@ const StatItem = ({
 }) => {
   const theme = useAppTheme();
   const inner = (
-    <View style={{ alignItems: "center", paddingVertical: Spacing.xs }}>
+    <View
+      style={{
+        alignItems: "center",
+        paddingVertical: Spacing.xs,
+        paddingHorizontal: Spacing.xs,
+        // minWidth:0 lets the label ellipsise instead of stretching its column
+        // and squeezing the neighbours out of the card.
+        minWidth: 0,
+      }}
+    >
       {avatar ? (
         <ProfileImage
           uid={avatar.uid}
@@ -123,7 +135,12 @@ const StatItem = ({
           </Text>
         </View>
       )}
-      <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+      <Text
+        variant="labelSmall"
+        numberOfLines={1}
+        ellipsizeMode="tail"
+        style={{ color: theme.colors.onSurfaceVariant, textAlign: "center" }}
+      >
         {label}
       </Text>
     </View>
@@ -131,12 +148,17 @@ const StatItem = ({
   return onPress ? (
     <TouchableRipple
       onPress={onPress}
-      style={{ flex: 1, alignItems: "center", borderRadius: BorderRadius.md }}
+      style={{
+        flex: 1,
+        minWidth: 0,
+        alignItems: "center",
+        borderRadius: BorderRadius.md,
+      }}
     >
       {inner}
     </TouchableRipple>
   ) : (
-    <View style={{ flex: 1 }}>{inner}</View>
+    <View style={{ flex: 1, minWidth: 0 }}>{inner}</View>
   );
 };
 
@@ -175,6 +197,14 @@ export default function Index() {
   const audioItemWidth = windowWidth - Spacing.md * 2;
 
   const myBuziness = myUid === data?.author;
+  // A visitor with no account cannot open a chat, so the in-app message
+  // contact is left out for them; every other kind (phone, e-mail, web) works
+  // just as well from a shared link.
+  const visibleContacts = myUid
+    ? contacts
+    : contacts.filter((c) => c.type !== "MESSAGE");
+  const visibleDefaultContact =
+    myUid || defaultContact?.type !== "MESSAGE" ? defaultContact : null;
   const { myLocation } = useMyLocation();
   const [commentsCount, setCommentsCount] = useState<number>();
   const isNew = data?.created_at && new Date().getTime() - new Date(data.created_at).getTime() < 1000 * 60 * 60 * 24 * 10;
@@ -191,6 +221,20 @@ export default function Index() {
     setTab(next);
     // allow the new tab content to mount/lay out before scrolling to the tab bar
     setTimeout(() => scrollRef.current?.scrollTo({ y: tabBarY, animated: true }), 50);
+  };
+
+  const onShare = async () => {
+    const result = await shareBuziness(id, title);
+    if (result === "copied")
+      dispatch(
+        addSnack({
+          title: data?.public
+            ? "Link a vágólapon"
+            : "Link a vágólapon — egyelőre csak belépve nyílik meg",
+        }),
+      );
+    else if (result === "failed")
+      dispatch(addSnack({ title: "Nem sikerült megosztani a linket" }));
   };
 
   const goToMap = () => {
@@ -295,10 +339,18 @@ export default function Index() {
                     }
                   });
               }} else{
-                setError({
-                  code: "jaj basszus",
-                  message: "Ez a biznisz nem található",
-                });}
+                setError(
+                  myUid
+                    ? {
+                        code: "jaj basszus",
+                        message: "Ez a biznisz nem található",
+                      }
+                    : {
+                        code: "Lépj be hogy lásd ezt a bizniszt.",
+                        message:
+                          "Ez a biznisz nem található, vagy a gazdája nem osztotta meg nyilvánosan.",
+                      },
+                );}
 
               try {
                 if (data?.images) setMedia(getImagesUrlFromSupabase(data.images));
@@ -331,6 +383,15 @@ export default function Index() {
       <Stack.Screen options={{
         header: () => <MyAppbar
           title="Biznisz"
+          actions={
+            data?.public ? (
+              <Appbar.Action
+                icon="share-variant"
+                accessibilityLabel="Biznisz megosztása"
+                onPress={onShare}
+              />
+            ) : undefined
+          }
           style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }} />
       }} />
       {/* iOS keyboard handling comes from the ScrollView's
@@ -351,9 +412,22 @@ export default function Index() {
         )}
         {!!error && (
           <ErrorScreen
-            icon="briefcase-off"
+            icon="alert"
             title={error.code}
             text={error.message}
+            action={
+              myUid ? undefined : (
+                <View style={{ gap: Spacing.sm, alignItems: "stretch" }}>
+                  {/* Belépés után ide tér vissza, nem a főoldalra. */}
+                  <Link asChild href={getLoginHref(`/biznisz/${id}`)}>
+                    <Button mode="contained">Belépek</Button>
+                  </Link>
+                  <Link asChild href={getJoinHref(`/biznisz/${id}`)}>
+                    <Button mode="outlined">Csatlakozom</Button>
+                  </Link>
+                </View>
+              )
+            }
           />
         )}
         {!!id && !!data && (
@@ -417,51 +491,61 @@ export default function Index() {
                     flexDirection: "row",
                     borderRadius: BorderRadius.lg,
                     paddingVertical: Spacing.md,
-                    paddingHorizontal: Spacing.lg,
+                    // Room for four columns on a narrow phone: the author, the
+                    // recommendations, the reviews and the distance.
+                    paddingHorizontal: Spacing.sm,
                     width: "100%",
                   }}
                   elevation={1}
                 >
-                  {!distanceText && (
-                    <>
-                      <StatItem
-                        avatar={{ uid: data.author, url: data.avatarUrl }}
-                        label={data.authorName ?? ""}
-                        onPress={() =>
-                          router.push({
-                            pathname: "/user/[uid]",
-                            params: { uid: data.author },
-                          })
-                        }
-                      />
-
-                      <StatDivider />
-                    </>
-                  )}
-
+                  {/* Whose biznisz this is comes first and always: it used to
+                      give up its place to the distance whenever the viewer's
+                      location was known, which is most of the time — so the
+                      one thing every reader wants was the one thing missing. */}
                   <StatItem
-                    value={recommendations.length}
-                    avatars={recommendations.map((rec) => ({
-                      uid: rec.author,
-                      url: rec.avatar_url,
-                    }))}
-                    label="Ajánlás"
-                    onPress={
-                      recommendations.length
-                        ? () => setShowRecommendsModal(true)
-                        : undefined
+                    avatar={{ uid: data.author, url: data.avatarUrl }}
+                    label={data.authorName ?? ""}
+                    onPress={() =>
+                      router.push(
+                        myUid
+                          ? {
+                              pathname: "/user/[uid]",
+                              params: { uid: data.author },
+                            }
+                          : getLoginHref(`/user/${data.author}`),
+                      )
                     }
                   />
 
-                  <StatDivider />
+                    {recommendations.length > 0 &&<>
+                    
+                    <StatDivider />
+                    <StatItem
+                      value={recommendations.length}
+                      avatars={recommendations.map((rec) => ({
+                        uid: rec.author,
+                        url: rec.avatar_url,
+                      }))}
+                      label="Ajánlás"
+                      onPress={
+                        recommendations.length
+                          ? () => setShowRecommendsModal(true)
+                          : undefined
+                      }
+                    />
+                    </>}
 
-                  <StatItem
-                    value={commentsCount ?? 0}
-                    label="Vélemény"
-                    onPress={() => goToTab("reviews")}
-                  />
+                  
+                  {!!commentsCount && commentsCount > 0 && <>
+                    <StatItem
+                      value={commentsCount ?? 0}
+                      label="Vélemény"
+                      onPress={() => goToTab("reviews")}
+                    />
+                    <StatDivider />
+                  </>}
 
-                  {distanceText && (
+                  {!!distanceText && (
                     <>
                       <StatDivider />
                       <StatItem
@@ -485,16 +569,16 @@ export default function Index() {
                         Biznisz szerkesztése
                       </Button>
                     </Link>
-                  ) : defaultContact ? (
-                    <Link asChild href={getLinkForContact(defaultContact)}>
+                  ) : visibleDefaultContact ? (
+                    <Link asChild href={getLinkForContact(visibleDefaultContact)}>
                       <Button
                         mode="contained"
-                        icon={typeToIcon(defaultContact.type)}
+                        icon={typeToIcon(visibleDefaultContact.type)}
                         contentStyle={{ height: 50 }}
                         labelStyle={{ fontSize: 16 }}
                         style={{ borderRadius: BorderRadius.pill, width: "100%" }}
                       >
-                        {defaultContact.title || (defaultContact.type=="MESSAGE" ? "Üzenet" : defaultContact?.data)}
+                        {visibleDefaultContact.title || (visibleDefaultContact.type=="MESSAGE" ? "Üzenet" : visibleDefaultContact?.data)}
                       </Button>
                     </Link>
                   ) : (
@@ -504,14 +588,26 @@ export default function Index() {
                       contentStyle={{ height: 50 }}
                       labelStyle={{ fontSize: 16 }}
                       style={{ borderRadius: BorderRadius.pill, width: "100%" }}
-                      disabled={contacts.length === 0}
+                      disabled={visibleContacts.length === 0}
                       onPress={() => goToTab("overview")}
                     >
                       Kapcsolat
                     </Button>
                   )}
 
-                  {!myBuziness && (
+                  {!myBuziness && !myUid && (
+                    <Link asChild href={getJoinHref(`/biznisz/${id}`)}>
+                      <Button
+                        mode="outlined"
+                        icon="account-plus"
+                        style={{ borderRadius: BorderRadius.pill, width: "100%" }}
+                      >
+                        Csatlakozz, hogy ajánlhasd
+                      </Button>
+                    </Link>
+                  )}
+
+                  {!myBuziness && !!myUid && (
                     <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
                       <RecommendBuzinessButton
                         buzinessId={id}
@@ -637,10 +733,10 @@ export default function Index() {
             <View style={{ paddingTop: Spacing.xl, minHeight: windowHeight/2, flex:1 }}>
               {tab === "overview" ? (
                 <View style={{ gap: Spacing.xl }}>
-                  {contacts.length > 0 && (
+                  {visibleContacts.length > 0 && (
                     <View style={{ paddingHorizontal: Spacing.md, gap: Spacing.sm }}>
                       <SectionLabel label="Elérhetőségek" />
-                      <ContactsCard contacts={contacts} />
+                      <ContactsCard contacts={visibleContacts} />
                     </View>
                   )}
 
@@ -692,7 +788,7 @@ export default function Index() {
                     </View>
                   )}
 
-                  {contacts.length === 0 && !data.location && (
+                  {visibleContacts.length === 0 && !data.location && (
                     <ThemedText
                       style={{
                         textAlign: "center",

@@ -128,10 +128,16 @@ export function SplashAnimation({ onFinished }: SplashAnimationProps) {
   }, []);
 
   useEffect(() => {
+    // Nothing is drawn for a signed-in member (see below), so finish at once
+    // rather than leaving the caller waiting on an animation that never runs.
+    if (uid) {
+      onFinished();
+      return;
+    }
     const timer = setTimeout(dismiss, DISMISS_AFTER);
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [uid]);
 
   const containerStyle = useAnimatedStyle(() => ({
     opacity: containerOpacity.value,
@@ -139,7 +145,11 @@ export function SplashAnimation({ onFinished }: SplashAnimationProps) {
 
   const bgColor = colorScheme == "dark" ? "#1e1b16" : colorScheme == "light" ? "#fff5e0" : "transparent";
 
-  if (Platform.OS === "web" && uid) return null;
+  // A member who is already signed in has seen this; what they are looking at
+  // is the app taking eight seconds to let them back in — and on Android, that
+  // is exactly what a cold start after the OS reclaimed the app looks like.
+  // The web build has always skipped it for them; the phone now does too.
+  if (uid) return null;
   if (Platform.OS === "web") {
     const darkModeMql = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
     return (

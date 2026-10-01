@@ -167,6 +167,7 @@ export class TestData {
       title: string;
       description: string;
       ingyen: boolean;
+      public: boolean;
       embedding_text: string;
       location: string;
     }> = {},
@@ -179,6 +180,7 @@ export class TestData {
         title,
         description: overrides.description ?? `${TEST_MARKER}description`,
         ingyen: overrides.ingyen ?? false,
+        public: overrides.public ?? false,
         embedding_text: overrides.embedding_text ?? title,
         ...(overrides.location ? { location: overrides.location } : {}),
       })

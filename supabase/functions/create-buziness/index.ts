@@ -190,6 +190,10 @@ Deno.serve(async (req)=>{
     title: buziness.title,
     description: buziness.description,
     ingyen: buziness.ingyen,
+    // The author's own choice: a public biznisz can be opened with a link by
+    // anyone, with no account (see the buziness SELECT policy). Coerced so a
+    // truthy string from an older client cannot turn sharing on by accident.
+    public: buziness.public === undefined ? undefined : buziness.public === true,
     location: buziness.location,
     defaultContact: buziness.defaultContact,
     radius: buziness.radius,

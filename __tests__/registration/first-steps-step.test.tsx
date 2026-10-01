@@ -17,6 +17,7 @@ import {
   router,
 } from "@/test-utils/mocks/expo-router";
 import { login } from "@/redux/reducers/userReducer";
+import { setRedirectAfterAuth } from "@/redux/reducers/appReducer";
 import { __resetLinking, __setLinkingURL } from "@/test-utils/mocks/expo-linking";
 import { __resetSupabase, __setTableRow, auth } from "@/test-utils/mocks/supabase";
 import { createTestStore, renderWithProviders } from "@/test-utils/renderWithProviders";
@@ -93,6 +94,50 @@ describe("registration / first steps, opened by a native deep link", () => {
 
     expect(auth.setSession).not.toHaveBeenCalled();
     expect(screen.getByText("Gratulálok!")).toBeOnTheScreen();
+  });
+});
+
+describe("registration / first steps, arriving from a locked link", () => {
+  // A visitor who followed a members-only link and had no account at all is
+  // sent through the wizard; registering is what unlocks the page, so this is
+  // where they finally get there instead of being left on the welcome screen.
+  it("goes on to the page the visitor came for", async () => {
+    profileExists();
+    __setLocalSearchParams({ "#": CONFIRMATION_HASH });
+    const store = createTestStore();
+    store.dispatch(setRedirectAfterAuth("/chats"));
+
+    await renderWithProviders(<FirstSteps />, { store });
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/chats"));
+    // Good for one arrival: a later registration on this device must not be
+    // sent to somebody else's page.
+    expect(store.getState().app.redirectAfterAuth).toBeNull();
+  });
+
+  it("stays on the welcome screen when there was no locked link", async () => {
+    profileExists();
+    __setLocalSearchParams({ "#": CONFIRMATION_HASH });
+
+    await renderWithProviders(<FirstSteps />);
+
+    expect(await screen.findByText("Gratulálok!")).toBeOnTheScreen();
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it("waits for the account before going anywhere", async () => {
+    // The confirmation link was refused: there is no session, so the target
+    // would only lead back to the login screen.
+    __setLocalSearchParams({
+      "#": "error=access_denied&error_code=otp_expired&error_description=expired",
+    });
+    const store = createTestStore();
+    store.dispatch(setRedirectAfterAuth("/chats"));
+
+    await renderWithProviders(<FirstSteps />, { store });
+
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(store.getState().app.redirectAfterAuth).toBe("/chats");
   });
 });
 

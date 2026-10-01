@@ -1,3 +1,5 @@
+import { SITE_URL } from "@/lib/siteUrl";
+
 /**
  * The link a member shares to invite somebody (see components/InviteCard.tsx).
  *
@@ -6,6 +8,6 @@
  * build serves app/meghivo/[uid].tsx there, and a visitor who already has the
  * app installed still lands on the same page.
  */
-export const INVITE_BASE_URL = "https://fifeapp.hu";
+export const INVITE_BASE_URL = SITE_URL;
 
 export const getInviteUrl = (uid: string) => `${INVITE_BASE_URL}/meghivo/${uid}`;
