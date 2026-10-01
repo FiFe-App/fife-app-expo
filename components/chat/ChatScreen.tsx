@@ -66,7 +66,10 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [otherUser, setOtherUser] = useState<Tables<"profiles"> | null>(null);
+  const [otherUser, setOtherUser] = useState<Pick<
+    Tables<"profiles">,
+    "id" | "full_name" | "username" | "avatar_url"
+  > | null>(null);
   const [otherUserNotFound, setOtherUserNotFound] = useState(false);
   const hasMessagingEnabled = myMessagingEnabledFromRedux ?? false;
   const [otherHasMessagingEnabled, setOtherHasMessagingEnabled] = useState(false);
@@ -110,7 +113,7 @@ export default function ChatScreen() {
       setOtherUserNotFound(false);
       supabase
         .from("profiles")
-        .select("*")
+        .select("id, full_name, username, avatar_url")
         .eq("id", currentOtherUid)
         .single()
         .then(({ data, error }) => {

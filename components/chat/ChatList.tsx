@@ -19,7 +19,7 @@ import {
 } from "@/lib/chat/groupChats";
 
 type Message = Tables<"messages">;
-type Profile = Tables<"profiles">;
+type Profile = Pick<Tables<"profiles">, "id" | "full_name" | "username" | "avatar_url">;
 
 interface ChatInfo {
   otherUser: Profile;
@@ -88,7 +88,7 @@ export default function ChatList() {
       // Load profiles for all users
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, full_name, username, avatar_url")
         .in("id", Array.from(userIds));
 
       if (profilesError) {

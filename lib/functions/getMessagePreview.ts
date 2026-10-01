@@ -5,7 +5,7 @@ import { Tables } from "@/database.types";
  * messages have no text to show. With `otherUser` given (the 1:1 chat list),
  * my own messages get a "Te: " prefix.
  */
-type Profile = Tables<"profiles">;
+type Profile = Pick<Tables<"profiles">, "id">;
 const getMessagePreview = (message: {
   author: string;
   text: string;

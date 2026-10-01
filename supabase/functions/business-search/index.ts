@@ -20,6 +20,14 @@ const corsHeaders = {
 };
 
 const MODEL_VERSION = "gpt-4.1-mini/text-embedding-3-large";
+const MAX_QUERY_LENGTH = 200;
+// The map view asks for every pin with take: -1; that now means "up to MAX_TAKE".
+const MAX_TAKE = 500;
+
+function clampInt(value: unknown, fallback: number, min: number, max: number): number {
+  const n = typeof value === "number" && Number.isFinite(value) ? Math.trunc(value) : fallback;
+  return Math.min(Math.max(n, min), max);
+}
 
 async function hashQuery(normalized: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(normalized));
@@ -92,7 +100,13 @@ Deno.serve(async (req) => {
   }
   const aiEnhance: boolean = settings?.ai_enhance ?? false;
 
-  const { query, skip, take, lat, long, maxdistance, ingyen, match_threshold, fts_weight, semantic_weight, score_sort, distance_sort, recommendation_sort, interests } = await req.json();
+  const body = await req.json();
+  const { lat, long, maxdistance, ingyen, match_threshold, fts_weight, semantic_weight, score_sort, distance_sort, recommendation_sort, interests } = body;
+  // Every unique query costs an OpenAI call, and `take: -1` used to reach the
+  // SQL as LIMIT NULL (the whole table) — bound what a caller can ask for.
+  const query: string = typeof body.query === "string" ? body.query.slice(0, MAX_QUERY_LENGTH) : "";
+  const skip = clampInt(body.skip, 0, 0, Number.MAX_SAFE_INTEGER);
+  const take = body.take === -1 ? MAX_TAKE : clampInt(body.take, 20, 1, MAX_TAKE);
 
   // The tags are user text and go straight into a pgroonga query, so they are trimmed,
   // de-duplicated and capped here before the database ever sees them. MAX_INTERESTS is
@@ -174,6 +188,7 @@ Deno.serve(async (req) => {
         temperature: 0,
         instructions: embedding_instructions,
         input: query,
+        max_output_tokens: 500,
       });
       const embedding_text = completion.output_text;
       console.log("embedding input", embedding_text);
@@ -214,8 +229,8 @@ Deno.serve(async (req) => {
   if (query && query.length > 0) {
   // Call hybrid_search Postgres function via RPC
     res = await supabase.rpc("hybrid_buziness_search", {
-      skip: skip || 0,
-      take: take || 20,
+      skip,
+      take,
       lat: lat || 0,
       long: long || 0,
       max_distance: maxdistance || 0,
@@ -251,13 +266,13 @@ Deno.serve(async (req) => {
       p_match_threshold: match_threshold ?? 0.6,
       p_ingyen: ingyen || false,
       p_bad_boy: isBadBoy,
-      p_skip: skip || 0,
-      p_take: take < 1 ? 20 : take,
+      p_skip: skip,
+      p_take: take,
     });
   }
   if (res.error) {
     console.error("search rpc error", res.error);
-    return new Response(JSON.stringify({ error: res.error.message }), {
+    return new Response(JSON.stringify({ error: "Search failed" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
@@ -285,8 +300,8 @@ Deno.serve(async (req) => {
       long,
       filter_ingyen: ingyen || false,
       interests: cleanInterests,
-      skip: skip || 0,
-      take: take || 20,
+      skip,
+      take,
     });
   }
 

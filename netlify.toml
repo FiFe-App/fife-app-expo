@@ -5,3 +5,16 @@
   from = "/*"
   to = "/"
   status = 200
+
+# Baseline security headers. A full script/style CSP is left out on purpose:
+# Expo web and the maps SDK load inline and third-party scripts, so it needs
+# testing on its own. frame-ancestors alone already stops clickjacking.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "frame-ancestors 'none'"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Permissions-Policy = "payment=(), usb=()"

@@ -15,6 +15,11 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
 };
+
+// Generous limits: well above any real listing, far below abuse.
+const MAX_TITLE_LENGTH = 1000;
+const MAX_DESCRIPTION_LENGTH = 10000;
+
 Deno.serve(async (req)=>{
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -65,6 +70,18 @@ Deno.serve(async (req)=>{
     });
   }
   buziness.title = titleSegments.join(" $ ");
+
+  // Both are sent to OpenAI on every save; unbounded input is unbounded cost.
+  if (
+    buziness.title.length > MAX_TITLE_LENGTH ||
+    (buziness.description != null &&
+      (typeof buziness.description !== "string" || buziness.description.length > MAX_DESCRIPTION_LENGTH))
+  ) {
+    return new Response(JSON.stringify({ error: "Title or description is too long" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
+  }
   
   // Validate that user has at least one contact before proceeding
   if (!supabaseServiceRoleKey) {
@@ -167,7 +184,8 @@ Deno.serve(async (req)=>{
       model: "gpt-4.1-mini",
       temperature: 0.3,
       instructions: embedding_instructions,
-      input
+      input,
+      max_output_tokens: 1000,
     });
 
     embedding_text = completion.output_text;
