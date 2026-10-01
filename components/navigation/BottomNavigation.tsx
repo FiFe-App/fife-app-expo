@@ -24,7 +24,7 @@ const BottomNavigation = () => {
   const profilActive = segment[0]?.includes("user");
   const meActive = segment[0] === "me";
   const usActive = segment[0]?.includes("home") || segment[0]?.includes("fifeRadar") || segment[0]?.includes("search");
-  const chatActive = segment[0]?.includes("chat");
+  const chatActive = segment[0]?.includes("chat") || segment[0] === "group";
   const lastNavTime = useRef(0);
 
   const navigateTo = useCallback((path: Route) => {

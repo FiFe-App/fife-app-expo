@@ -1,14 +1,22 @@
 import { Tables } from "@/database.types";
+import { Link } from "expo-router";
 import getMessagePreview from "@/lib/functions/getMessagePreview";
 import { RootState } from "@/redux/store";
 import React, { useEffect, useRef } from "react";
-import { View, StyleSheet } from "react-native";
+import { Pressable, View, StyleSheet } from "react-native";
 import { Card, Icon, Text, useTheme } from "react-native-paper";
 import { useSelector } from "react-redux";
+import ProfileImage from "../ProfileImage";
 import SupabaseImage from "../SupabaseImage";
 import UrlText from "../UrlText";
 
-type Message = Tables<"messages">;
+// The fields both 1:1 messages and group chat messages have.
+type Message = Pick<Tables<"messages">, "id" | "author" | "created_at" | "text" | "reply_to"> & {
+  image?: string | null;
+};
+type AuthorProfile = Pick<Tables<"profiles">, "id" | "full_name" | "username" | "avatar_url">;
+
+const AUTHOR_AVATAR_SIZE = 32;
 
 const DOUBLE_TAP_DELAY = 250;
 
@@ -22,6 +30,16 @@ interface MessageItemProps {
   replyToMessage?: Message | null;
   replyToDeleted?: boolean;
   otherUserName?: string;
+  /**
+   * Group chats: the message's author. When given, other people's messages get
+   * the author's profile picture next to them.
+   */
+  author?: AuthorProfile | null;
+  /**
+   * Group chats: first message of a run from the same author — shows the
+   * name and picture; the rest of the run only keeps the picture's space.
+   */
+  showAuthor?: boolean;
 }
 export function MessageItem({
   message,
@@ -33,10 +51,14 @@ export function MessageItem({
   replyToMessage,
   replyToDeleted,
   otherUserName,
+  author,
+  showAuthor = false,
 }: MessageItemProps) {
   const theme = useTheme();
   const { uid } = useSelector((state: RootState) => state.user);
   const isMyMessage = message.author === uid;
+  const withAuthor = author !== undefined && !isMyMessage;
+  const authorName = author?.full_name || author?.username || "Ismeretlen";
 
   const tapTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPressRef = useRef(false);
@@ -93,13 +115,23 @@ export function MessageItem({
     }
   };
 
-  return (
+  const content = (
     <View
       style={[
         styles.container,
         isMyMessage ? styles.myMessageContainer : styles.theirMessageContainer,
+        withAuthor && styles.withAuthorContainer,
       ]}
     >
+      {withAuthor && showAuthor && (
+        <Text
+          variant="labelSmall"
+          numberOfLines={1}
+          style={[styles.authorName, { color: theme.colors.onSurfaceVariant }]}
+        >
+          {authorName}
+        </Text>
+      )}
       {(replyToMessage || replyToDeleted) && (
         <View style={styles.replyContainer}>
           <View style={[styles.replyBar, { backgroundColor: theme.colors.primary }]} />
@@ -183,12 +215,56 @@ export function MessageItem({
       )}
     </View>
   );
+
+  if (!withAuthor) return content;
+
+  return (
+    <View style={styles.authorRow}>
+      {showAuthor && author ? (
+        <Link href={`/user/${author.id}`} asChild>
+          <Pressable accessibilityRole="link" accessibilityLabel={authorName}>
+            <ProfileImage
+              uid={author.id}
+              avatar_url={author.avatar_url}
+              size={AUTHOR_AVATAR_SIZE}
+              style={styles.authorAvatar}
+            />
+          </Pressable>
+        </Link>
+      ) : (
+        <View style={styles.authorAvatarPlaceholder} />
+      )}
+      {content}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     marginVertical: 4,
     marginHorizontal: 8,
+  },
+  withAuthorContainer: {
+    flex: 1,
+    marginLeft: 4,
+  },
+  authorRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginLeft: 8,
+  },
+  authorAvatar: {
+    width: AUTHOR_AVATAR_SIZE,
+    height: AUTHOR_AVATAR_SIZE,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  authorAvatarPlaceholder: {
+    width: AUTHOR_AVATAR_SIZE,
+  },
+  authorName: {
+    marginLeft: 4,
+    marginBottom: 2,
   },
   myMessageContainer: {
     alignItems: "flex-end",

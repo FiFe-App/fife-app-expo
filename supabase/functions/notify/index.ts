@@ -194,6 +194,8 @@ async function sendNotification(
     subject?: string;
     htmlBuilder?: (recipientName: string | null) => string;
     data?: Record<string, unknown>;
+    /** Skip the email channel (e.g. busy group chats, where mail would be spam). */
+    pushOnly?: boolean;
   } = {},
 ) {
   const prefs = await getNotificationPrefs(supabase, targetUserId);
@@ -203,7 +205,7 @@ async function sendNotification(
   if (prefs.notify_push && prefs.push_token) {
     promises.push(sendPushNotification(prefs.push_token, message, options.data));
   }
-  if (prefs.notify_email && prefs.email) {
+  if (!options.pushOnly && prefs.notify_email && prefs.email) {
     const html = options.htmlBuilder
       ? options.htmlBuilder(prefs.full_name ?? null)
       : `<p>${message}</p>`;
@@ -214,6 +216,63 @@ async function sendNotification(
     return;
   }
   await Promise.all(promises);
+}
+
+// Group chat push notifications are built but not live yet.
+// TODO: flip to true together with enabling the on_group_chat_message_created
+// trigger (see supabase/migrations/20260925120000_add_group_chats.sql).
+const GROUP_CHAT_NOTIFICATIONS_ENABLED = false;
+
+// A member gets at most one push per group within this window, so a lively
+// conversation doesn't buzz everyone's phone for every line.
+const GROUP_CHAT_NOTIFY_WINDOW_MS = 10 * 60 * 1000;
+
+async function notifyGroupChatMembers(
+  supabase: ReturnType<typeof createClient>,
+  record: { id: number; group_id: string; author: string; text: string; created_at: string },
+) {
+  const [groupRes, authorRes, membersRes] = await Promise.all([
+    supabase.from("group_chats").select("title").eq("id", record.group_id).maybeSingle(),
+    supabase.from("profiles").select("full_name").eq("id", record.author).maybeSingle(),
+    supabase
+      .from("group_chat_members")
+      .select("user_id")
+      .eq("group_id", record.group_id)
+      .neq("user_id", record.author),
+  ]);
+
+  const groupTitle = groupRes.data?.title || "Csoport";
+  const senderName = authorRes.data?.full_name || "Valaki";
+  const members = (membersRes.data ?? []) as { user_id: string }[];
+  if (members.length === 0) return;
+
+  // Rate limit per group: if there already was a message in the window before
+  // this one, members were notified recently enough.
+  const cutoff = new Date(
+    new Date(record.created_at).getTime() - GROUP_CHAT_NOTIFY_WINDOW_MS,
+  ).toISOString();
+  const { count } = await supabase
+    .from("group_chat_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("group_id", record.group_id)
+    .gt("created_at", cutoff)
+    .lt("created_at", record.created_at)
+    .limit(1);
+  if (count && count > 0) {
+    console.log(`Rate-limited: group chat notification skipped for ${record.group_id}`);
+    return;
+  }
+
+  const preview = (record.text || "").slice(0, 100);
+  const message = `${groupTitle} – ${senderName}: ${preview}`;
+  await Promise.all(
+    members.map((m) =>
+      sendNotification(supabase, m.user_id, message, {
+        pushOnly: true,
+        data: { url: `/group/${record.group_id}` },
+      }).catch((err) => console.error(`Group notify failed for ${m.user_id}:`, err)),
+    ),
+  );
 }
 
 type NewsletterRecord = {
@@ -499,6 +558,12 @@ Deno.serve(async (req) => {
             data: { url: `/biznisz/${buzinessId}` },
           });
         }
+      }
+    } else if (table === "group_chat_messages") {
+      if (!GROUP_CHAT_NOTIFICATIONS_ENABLED) {
+        console.log("Group chat notifications are disabled — skipping");
+      } else {
+        await notifyGroupChatMembers(supabase, record);
       }
     } else if (table === "messages") {
       // Notify recipient of a new message, rate-limited to 1 per 60s per sender→recipient pair

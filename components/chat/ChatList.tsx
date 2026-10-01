@@ -11,6 +11,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { ChatListItem } from "./ChatListItem";
 import { useFocusEffect } from "expo-router";
 import { MessagingDisabledCard } from "./MessagingDisabledCard";
+import { GroupChatListItem } from "./GroupChatListItem";
+import {
+  fetchPublicGroupChats,
+  groupChatKey,
+  GroupChatSummary,
+} from "@/lib/chat/groupChats";
 
 type Message = Tables<"messages">;
 type Profile = Tables<"profiles">;
@@ -25,11 +31,21 @@ export default function ChatList() {
   const { uid: myUid, messagingEnabled } = useSelector((state: RootState) => state.user);
   const { lastReadAt, unreadCounts } = useSelector((state: RootState) => state.chat);
   const [chats, setChats] = useState<ChatInfo[]>([]);
+  const [groupChats, setGroupChats] = useState<GroupChatSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Public groups are listed for everyone, whether or not 1:1 messaging is
+  // switched on, so they load independently of the conversations below.
+  const loadGroupChats = useCallback(async () => {
+    if (!myUid) return;
+    setGroupChats(await fetchPublicGroupChats(myUid));
+  }, [myUid]);
+
   const loadChats = useCallback(async () => {
     if (!myUid) return;
+
+    loadGroupChats();
 
     try {
       // Get all messages involving the current user
@@ -102,7 +118,7 @@ export default function ChatList() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [myUid, lastReadAt, dispatch]);
+  }, [myUid, lastReadAt, dispatch, loadGroupChats]);
 
   useFocusEffect(
     useCallback(() => {
@@ -123,9 +139,26 @@ export default function ChatList() {
     );
   }
 
+  const groupChatsHeader = groupChats.length > 0 && (
+    <View>
+      {groupChats.map((summary) => {
+        const readAt = lastReadAt[groupChatKey(summary.group.id)];
+        const unread =
+          summary.isMember &&
+          !!summary.lastMessage &&
+          summary.lastMessage.author !== myUid &&
+          (!readAt || summary.lastMessage.created_at > readAt);
+        return (
+          <GroupChatListItem key={summary.group.id} summary={summary} unread={unread} />
+        );
+      })}
+    </View>
+  );
+
   if (!messagingEnabled) {
     return (
       <ThemedView style={styles.container}>
+        {groupChatsHeader}
         <MessagingDisabledCard
           myMessagingEnabled={false}
           onEnabled={() => {
@@ -141,6 +174,7 @@ export default function ChatList() {
       <FlatList
         data={chats}
         keyExtractor={(item) => item.otherUser.id}
+        ListHeaderComponent={groupChatsHeader || null}
         renderItem={({ item }) => (
           <ChatListItem
             otherUser={item.otherUser}
@@ -148,7 +182,9 @@ export default function ChatList() {
             unreadCount={unreadCounts[item.otherUser.id] ?? 0}
           />
         )}
-        contentContainerStyle={chats.length === 0 ? styles.emptyContainer : styles.listContent}
+        contentContainerStyle={
+          chats.length === 0 && groupChats.length === 0 ? styles.emptyContainer : styles.listContent
+        }
         ListEmptyComponent={
           <View style={styles.emptyTextContainer}>
             <Text variant="bodyLarge">Nincs még beszélgetés</Text>

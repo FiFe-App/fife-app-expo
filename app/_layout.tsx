@@ -344,6 +344,10 @@ function RootContent() {
                   options={{ title: "Üzenet" }}
                 />
                 <Stack.Screen
+                  name="group/[id]"
+                  options={{ title: "Csoport" }}
+                />
+                <Stack.Screen
                   name="user/emotion-history"
                   options={{ title: "Napló" }}
                 />
