@@ -107,7 +107,7 @@ export default function Index() {
             <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>
               {searchCircle ? "Közeli" : "Budapesti"} Bizniszek neked
             </ThemedText>
-            <Icon size={18} color={theme.colors.secondary  source="map-marker" />
+            <Icon size={18} color={theme.colors.secondary} source="map-marker" />
             <Pressable onPress={()=>router.push("/search")} style={{ flex:1, flexDirection: "row", alignItems: "center", justifyContent:"flex-end", gap: Spacing.xs }}>
               <ThemedText variant="labelMedium" type="bold" style={{ color: theme.colors.primary }}>
                 Keresés
