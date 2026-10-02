@@ -15,6 +15,7 @@ import { logout, setThemePreference } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
+import { invokeFunction } from "@/lib/supabase/invokeFunction";
 import { router } from "expo-router";
 import { openBrowserAsync } from "expo-web-browser";
 import { useState } from "react";
@@ -80,7 +81,7 @@ export default function BeallitasokTab() {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke("delete-user", {
+      const { data, error } = await invokeFunction("delete-user", {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },

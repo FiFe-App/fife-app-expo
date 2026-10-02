@@ -12,6 +12,7 @@ import {
 import { RootState } from "@/redux/store";
 import { CircleType, MediaDataType, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
+import { invokeFunction } from "@/lib/supabase/invokeFunction";
 import { router, Stack, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
@@ -185,8 +186,7 @@ export default function BuzinessEditScreen({
       return;
     }
 
-    await supabase.functions
-      .invoke("create-buziness", {
+    await invokeFunction("create-buziness", {
         body: {
           id: editId,
           ...newBuziness,

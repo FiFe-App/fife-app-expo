@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import { supabase } from "@/lib/supabase/supabase";
+import { invokeFunction } from "@/lib/supabase/invokeFunction";
 import { RootState } from "@/redux/store";
 import { BuzinessSearchItemInterface } from "@/redux/store.type";
 import { useMyLocation } from "./useMyLocation";
@@ -51,7 +51,7 @@ export function useNearbyBuzinesses(take = 5) {
 
   const runSearch = useCallback(
     async (skip: number) => {
-      const { data: buzinesses, error } = await supabase.functions.invoke(
+      const { data: buzinesses, error } = await invokeFunction(
         "business-search",
         {
           body: {

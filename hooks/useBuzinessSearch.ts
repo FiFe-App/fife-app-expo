@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loadBuzinesses, removeTrailingDivider, storeBuzinesses, storeBuzinessLoading, storeBuzinessSearchParams, storeBuzinessHasMore } from "@/redux/reducers/buzinessReducer";
-import { supabase } from "@/lib/supabase/supabase";
+import { invokeFunction } from "@/lib/supabase/invokeFunction";
 import { RootState } from "@/redux/store";
 import { CircleType } from "@/redux/store.type";
 import { useMyLocation } from "./useMyLocation";
@@ -88,7 +88,7 @@ export function useBuzinessSearch() {
 
     try {
       const effectiveQuery = query ?? params?.text ?? "";
-      const { data, error } = await supabase.functions.invoke("business-search", {
+      const { data, error } = await invokeFunction("business-search", {
         body: {
           query: effectiveQuery,
           take: params?.searchType === "map" ? -1 : PAGE_SIZE,
@@ -145,7 +145,7 @@ export function useBuzinessSearch() {
         };
 
     try {
-      const { data, error } = await supabase.functions.invoke("business-search", {
+      const { data, error } = await invokeFunction("business-search", {
         body: {
           query: params?.text ?? "",
           take: PAGE_SIZE,
