@@ -5,6 +5,11 @@ export interface CommentsProps {
   placeholder: string;
   limit?: number;
   style?: StyleProp<ViewStyle>;
+  /**
+   * Signed-out visitors: the comments to show, already loaded. anon cannot
+   * read the comments table, so nothing is queried or subscribed to.
+   */
+  publicComments?: Comment[];
 }
 
 export interface Comment extends Tables<"comments"> {

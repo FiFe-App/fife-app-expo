@@ -12,14 +12,15 @@ import {
   joinGroupChat,
   leaveGroupChat,
 } from "@/lib/chat/groupChats";
+import { useJumpToMessage } from "@/hooks/useJumpToMessage";
+import { useReplyTargets } from "@/hooks/useReplyTargets";
 import { isSameCalendarDay } from "@/lib/functions/formatChatDate";
 import { supabase } from "@/lib/supabase/supabase";
 import { clearDraftMessage, setDraftMessage, setLastReadAt } from "@/redux/reducers/chatReducer";
 import { addSnack, clearOptions, setOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { useNavigation } from "@react-navigation/native";
 import { RealtimeChannel } from "@supabase/supabase-js";
-import { Link, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { Link, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import {
@@ -81,6 +82,9 @@ export default function GroupChatScreen() {
   const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null);
   const [replyingTo, setReplyingTo] = useState<GroupChatMessage | null>(null);
   const [actionsMessage, setActionsMessage] = useState<GroupChatMessage | null>(null);
+  // message id → ids of the users who hearted it
+  const [hearts, setHearts] = useState<Map<number, Set<string>>>(new Map());
+  const listRef = useRef<FlatList<GroupChatMessage>>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const requestedProfiles = useRef(new Set<string>());
   const mountId = useRef(Date.now()).current;
@@ -109,6 +113,43 @@ export default function GroupChatScreen() {
       return next;
     });
   }, []);
+
+  const addHeart = useCallback((messageId: number, userId: string) => {
+    setHearts((prev) => {
+      if (prev.get(messageId)?.has(userId)) return prev;
+      const next = new Map(prev);
+      next.set(messageId, new Set(prev.get(messageId)).add(userId));
+      return next;
+    });
+  }, []);
+
+  const removeHeart = useCallback((messageId: number, userId: string) => {
+    setHearts((prev) => {
+      if (!prev.get(messageId)?.has(userId)) return prev;
+      const next = new Map(prev);
+      const users = new Set(prev.get(messageId));
+      users.delete(userId);
+      next.set(messageId, users);
+      return next;
+    });
+  }, []);
+
+  // Hearts are loaded alongside each page of messages.
+  const loadHearts = useCallback(
+    async (messageIds: number[]) => {
+      if (messageIds.length === 0) return;
+      const { data, error } = await supabase
+        .from("group_chat_message_hearts")
+        .select("message_id, user_id")
+        .in("message_id", messageIds);
+      if (error) {
+        console.error("Error loading hearts:", error);
+        return;
+      }
+      (data ?? []).forEach((h) => addHeart(h.message_id, h.user_id));
+    },
+    [addHeart],
+  );
 
   const loadMemberCount = useCallback(async () => {
     if (!groupId) return;
@@ -247,12 +288,13 @@ export default function GroupChatScreen() {
 
     const page = data || [];
     await loadProfiles(page.map((m) => m.author));
+    loadHearts(page.map((m) => m.id));
     setMessages(page);
     setHasMoreOlder(page.length === PAGE_SIZE);
     setOldestLoadedCreatedAt(page.length > 0 ? page[page.length - 1].created_at : null);
     markRead(page);
     setLoading(false);
-  }, [groupId, loadProfiles, markRead]);
+  }, [groupId, loadProfiles, loadHearts, markRead]);
 
   const loadOlderMessages = useCallback(async () => {
     if (!groupId || loadingOlder || !hasMoreOlder || !oldestLoadedCreatedAt) return;
@@ -274,11 +316,40 @@ export default function GroupChatScreen() {
 
     const olderPage = data || [];
     await loadProfiles(olderPage.map((m) => m.author));
+    loadHearts(olderPage.map((m) => m.id));
     setMessages((prev) => [...prev, ...olderPage]);
     setHasMoreOlder(olderPage.length === PAGE_SIZE);
     if (olderPage.length > 0) setOldestLoadedCreatedAt(olderPage[olderPage.length - 1].created_at);
     setLoadingOlder(false);
-  }, [groupId, loadingOlder, hasMoreOlder, oldestLoadedCreatedAt, loadProfiles]);
+  }, [groupId, loadingOlder, hasMoreOlder, oldestLoadedCreatedAt, loadProfiles, loadHearts]);
+
+  // Everything between the oldest loaded message and `createdAt`, so a quoted
+  // message further back can be scrolled to.
+  const loadThrough = useCallback(async (createdAt: string) => {
+    if (!groupId || !oldestLoadedCreatedAt) return;
+
+    const { data, error } = await supabase
+      .from("group_chat_messages")
+      .select("*")
+      .eq("group_id", groupId)
+      .gte("created_at", createdAt)
+      .lt("created_at", oldestLoadedCreatedAt)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error loading group messages up to the quoted one:", error);
+      return;
+    }
+
+    const olderPage = data || [];
+    await loadProfiles(olderPage.map((m) => m.author));
+    loadHearts(olderPage.map((m) => m.id));
+    setMessages((prev) => {
+      const ids = new Set(prev.map((m) => m.id));
+      return [...prev, ...olderPage.filter((m) => !ids.has(m.id))];
+    });
+    if (olderPage.length > 0) setOldestLoadedCreatedAt(olderPage[olderPage.length - 1].created_at);
+  }, [groupId, oldestLoadedCreatedAt, loadProfiles, loadHearts]);
 
   // Initial load + realtime
   useEffect(() => {
@@ -318,6 +389,30 @@ export default function GroupChatScreen() {
           setMessages((prev) => prev.filter((m) => m.id !== oldId));
         },
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "group_chat_message_hearts",
+          filter: `group_id=eq.${groupId}`,
+        },
+        (payload) => {
+          const heart = payload.new as { message_id: number; user_id: string };
+          addHeart(heart.message_id, heart.user_id);
+        },
+      )
+      .on(
+        "postgres_changes",
+        // DELETE events cannot be filtered; the old row is just its primary
+        // key, and a heart on a message not shown here changes nothing.
+        { event: "DELETE", schema: "public", table: "group_chat_message_hearts" },
+        (payload) => {
+          const heart = payload.old as { message_id?: number; user_id?: string } | null;
+          if (heart?.message_id == null || !heart.user_id) return;
+          removeHeart(heart.message_id, heart.user_id);
+        },
+      )
       .subscribe();
 
     channelRef.current = channel;
@@ -325,7 +420,7 @@ export default function GroupChatScreen() {
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
     };
-  }, [groupId, myUid, loadMessages, loadProfiles, markRead, mountId]);
+  }, [groupId, myUid, loadMessages, loadProfiles, markRead, mountId, addHeart, removeHeart]);
 
   const join = async () => {
     if (!groupId || !myUid || joining) return;
@@ -386,16 +481,61 @@ export default function GroupChatScreen() {
     setMessages((prev) => prev.filter((m) => m.id !== message.id));
   }, []);
 
+  // Shown right away, put back if the server says no.
+  const toggleHeart = useCallback(
+    async (message: GroupChatMessage) => {
+      if (!myUid || !groupId) return;
+      if (!isMember) {
+        dispatch(addSnack({ title: "Csatlakozz a csoporthoz, hogy szívecskét adhass!" }));
+        return;
+      }
+
+      if (hearts.get(message.id)?.has(myUid)) {
+        removeHeart(message.id, myUid);
+        const { error } = await supabase
+          .from("group_chat_message_hearts")
+          .delete()
+          .eq("message_id", message.id)
+          .eq("user_id", myUid);
+        if (error) {
+          console.error("Error removing heart:", error);
+          addHeart(message.id, myUid);
+        }
+      } else {
+        addHeart(message.id, myUid);
+        const { error } = await supabase
+          .from("group_chat_message_hearts")
+          .insert({ message_id: message.id, user_id: myUid, group_id: groupId });
+        if (error) {
+          console.error("Error adding heart:", error);
+          removeHeart(message.id, myUid);
+        }
+      }
+    },
+    [myUid, groupId, isMember, hearts, addHeart, removeHeart, dispatch],
+  );
+
   const displayMessages = useMemo(
     () => messages.filter((m) => !blockedIds.has(m.author)),
     [messages, blockedIds],
   );
 
-  const messageById = useMemo(() => {
-    const map = new Map<number, GroupChatMessage>();
-    messages.forEach((m) => map.set(m.id, m));
-    return map;
-  }, [messages]);
+  const replyTarget = useReplyTargets("group_chat_messages", messages);
+  const { highlightedId, jumpTo, onScrollToIndexFailed } = useJumpToMessage({
+    listRef,
+    items: displayMessages,
+    loadThrough,
+  });
+
+  // Hearts from blocked users are not counted, same as their messages.
+  const heartCountOf = useCallback(
+    (messageId: number) => {
+      let count = 0;
+      hearts.get(messageId)?.forEach((userId) => !blockedIds.has(userId) && count++);
+      return count;
+    },
+    [hearts, blockedIds],
+  );
 
   const nameOf = useCallback(
     (authorId: string) => {
@@ -432,12 +572,14 @@ export default function GroupChatScreen() {
     >
       <ThemedView style={styles.container}>
         <FlatList
+          ref={listRef}
           data={displayMessages}
           inverted
           keyExtractor={(item) => item.id.toString()}
+          onScrollToIndexFailed={onScrollToIndexFailed}
           renderItem={({ item, index }) => {
-            const replyToMessage = item.reply_to ? messageById.get(item.reply_to) ?? null : null;
-            const replyToDeleted = !!item.reply_to && !replyToMessage;
+            const { message: replyToMessage, deleted: replyToDeleted } = replyTarget(item.reply_to);
+            const heartCount = heartCountOf(item.id);
             const older = displayMessages[index + 1] ?? null;
 
             const showDateSeparator =
@@ -460,11 +602,15 @@ export default function GroupChatScreen() {
                   onPress={() =>
                     setSelectedMessageId((prev) => (prev === item.id ? null : item.id))
                   }
-                  hearted={false}
-                  onToggleHeart={() => {}}
-                  onLongPress={() => setActionsMessage(item)}
+                  hearted={heartCount > 0}
+                  heartCount={heartCount}
+                  onToggleHeart={() => toggleHeart(item)}
+                  onLongPress={item.author === myUid ? () => setActionsMessage(item) : undefined}
+                  onSwipeReply={isMember ? () => setReplyingTo(item) : undefined}
                   replyToMessage={replyToMessage}
                   replyToDeleted={replyToDeleted}
+                  onReplyPress={replyToMessage ? () => jumpTo(replyToMessage) : undefined}
+                  highlighted={highlightedId === item.id}
                   otherUserName={replyToMessage ? nameOf(replyToMessage.author) : undefined}
                   author={profiles[item.author] ?? null}
                   showAuthor={showAuthor}
@@ -572,11 +718,6 @@ export default function GroupChatScreen() {
       <MessageActionsSheet
         visible={!!actionsMessage}
         onDismiss={() => setActionsMessage(null)}
-        isOwn={actionsMessage?.author === myUid}
-        onReply={() => {
-          if (isMember) setReplyingTo(actionsMessage);
-          setActionsMessage(null);
-        }}
         onDelete={() => {
           if (actionsMessage) deleteMessage(actionsMessage);
           setActionsMessage(null);

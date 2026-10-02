@@ -187,7 +187,7 @@ export function SplashAnimation({ onFinished }: SplashAnimationProps) {
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   },
   // Web uses flex-fill layout so cellSize=0 during SSR doesn't break anything
   webContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",

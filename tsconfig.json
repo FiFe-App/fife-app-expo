@@ -5,6 +5,8 @@
     "declaration": true,
     "noImplicitAny": true,
     "moduleResolution": "bundler",
+    // TypeScript 6 no longer auto-includes every @types package.
+    "types": ["jest", "node", "google.maps"],
     "paths": {
       "@/*": [
         "./*"

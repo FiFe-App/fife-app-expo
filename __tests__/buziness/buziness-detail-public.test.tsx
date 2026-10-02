@@ -32,7 +32,12 @@ jest.mock("@/hooks/useMyLocation", () => ({
 import BuzinessDetail from "@/app/biznisz/[id]";
 import { login } from "@/redux/reducers/userReducer";
 import { __resetRouter, __setGlobalSearchParams } from "@/test-utils/mocks/expo-router";
-import { __resetSupabase, __setTableRow, __setTableRows } from "@/test-utils/mocks/supabase";
+import {
+  __resetSupabase,
+  __setTableRow,
+  __setTableRows,
+  supabase,
+} from "@/test-utils/mocks/supabase";
 import { createTestStore, renderWithProviders } from "@/test-utils/renderWithProviders";
 
 const AUTHOR = "author-1";
@@ -60,6 +65,16 @@ const CONTACTS = [
   { id: 6, author: AUTHOR, type: "MESSAGE", data: AUTHOR, title: "Üzenet" },
 ];
 
+// What get_public_buziness returns for it: a signed-out visitor has no table
+// access, so the page reads everything through that one function.
+const PUBLIC_RPC = {
+  ...PUBLIC_BUZINESS,
+  buzinessRecommendations: undefined,
+  contacts: CONTACTS,
+  recommendations: [],
+  comments: [],
+};
+
 const signedIn = () => {
   const store = createTestStore();
   store.dispatch(login({ uid: "member-1", name: "Tag" }));
@@ -74,6 +89,7 @@ beforeEach(() => {
   __setTableRow("buziness", { data: PUBLIC_BUZINESS, error: null });
   __setTableRows("contacts", { data: CONTACTS, error: null });
   __setTableRow("comments", { data: { count: 0 }, error: null });
+  supabase.rpc.mockResolvedValue({ data: PUBLIC_RPC, error: null });
 });
 
 describe("biznisz detail / signed out", () => {
@@ -82,6 +98,8 @@ describe("biznisz detail / signed out", () => {
 
     expect(await screen.findByText("Kerékpárszerviz")).toBeOnTheScreen();
     expect(screen.getByText("Bármit megjavítok.")).toBeOnTheScreen();
+    expect(supabase.rpc).toHaveBeenCalledWith("get_public_buziness", { p_id: 12 });
+    expect(supabase.from).not.toHaveBeenCalled();
   });
 
   it("offers signing up instead of the member-only actions", async () => {
@@ -101,7 +119,7 @@ describe("biznisz detail / signed out", () => {
   });
 
   it("asks a visitor to sign in when the biznisz is not theirs to see", async () => {
-    __setTableRow("buziness", { data: null, error: null });
+    supabase.rpc.mockResolvedValue({ data: null, error: null });
 
     await renderWithProviders(<BuzinessDetail />);
 

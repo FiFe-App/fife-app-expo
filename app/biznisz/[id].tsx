@@ -9,6 +9,7 @@ import BuzinessRecommendationsModal from "@/components/buziness/BuzinessRecommen
 import ContactsCard from "@/components/buziness/ContactsCard";
 import SectionLabel from "@/components/buziness/SectionLabel";
 import Comments from "@/components/comments/Comments";
+import type { Comment } from "@/components/comments/comments.types";
 import MediaView from "@/components/media/MediaView";
 import UrlText from "@/components/UrlText";
 import FiFeMap from "@/components/mapView/FiFeMap";
@@ -27,6 +28,10 @@ import getLinkForContact from "@/lib/functions/getLinkForContact";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import typeToIcon from "@/lib/functions/typeToIcon";
 import { shareBuziness } from "@/lib/buziness/buzinessLink";
+import {
+  fetchPublicBuziness,
+  PublicRecommendation,
+} from "@/lib/buziness/fetchPublicBuziness";
 import { getJoinHref, getLoginHref } from "@/lib/auth/loginRedirect";
 import { RecommendBuzinessButton } from "@/lib/supabase/RecommendBuzinessButton";
 import { SaveBuzinessButton } from "@/lib/supabase/SaveBuzinessButton";
@@ -60,6 +65,10 @@ import {
   TouchableRipple,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+
+// Stable empties for a signed-out visitor while the public data is loading.
+const NO_COMMENTS: Comment[] = [];
+const NO_RECOMMENDATIONS: PublicRecommendation[] = [];
 
 const StatDivider = () => {
   const theme = useAppTheme();
@@ -182,6 +191,11 @@ export default function Index() {
     { author: string; avatar_url: string | null }[]
   >([]);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
+  // Signed-out visitors only: what get_public_buziness returned, handed to the
+  // comments and recommendations views instead of letting them query.
+  const [publicComments, setPublicComments] = useState<Comment[] | null>(null);
+  const [publicRecommendations, setPublicRecommendations] =
+    useState<PublicRecommendation[] | null>(null);
   const iRecommended = recommendations.some((r) => r.author === myUid);
   const location: LatLng | null =
     data?.lat && data?.long
@@ -285,6 +299,55 @@ export default function Index() {
         setShowRecommendsModal(false);
 
         if (!id) return;
+
+        // A signed-out visitor has no table access; everything a public
+        // biznisz shows comes from one function instead.
+        if (!myUid) {
+          fetchPublicBuziness(id).then(({ data: pub, error }) => {
+            if (error) {
+              console.log(error);
+              setError(error);
+              return;
+            }
+            if (!pub) {
+              setError({
+                code: "Lépj be hogy lásd ezt a bizniszt.",
+                message:
+                  "Ez a biznisz nem található, vagy a gazdája nem osztotta meg nyilvánosan.",
+              });
+              return;
+            }
+            const cords = pub.location ? locationToCoords(pub.location) : null;
+            setData({
+              ...pub,
+              images: undefined,
+              recommendations: pub.recommendations.length,
+              lat: cords?.[1],
+              long: cords?.[0],
+              distance: 0,
+              authorName: pub.profiles.full_name || "???",
+              avatarUrl: pub.profiles.avatar_url,
+            });
+            setRecommendations(
+              pub.recommendations.map((r) => ({
+                author: r.author,
+                avatar_url: r.profiles?.avatar_url ?? null,
+              })),
+            );
+            setPublicRecommendations(pub.recommendations);
+            setPublicComments(pub.comments);
+            setCommentsCount(pub.comments.length);
+            setDefaultContact(pub.contacts.find((c) => c.id == pub.defaultContact));
+            setContacts(pub.contacts);
+            try {
+              if (pub.images) setMedia(getImagesUrlFromSupabase(pub.images));
+            } catch {
+              console.log("image error");
+            }
+          });
+          return;
+        }
+
         supabase
           .from("buziness")
           .select(
@@ -375,7 +438,7 @@ export default function Index() {
         setShowRecommendsModal(false);
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id])
+    }, [id, myUid])
   );
 
   return (
@@ -802,7 +865,11 @@ export default function Index() {
                 </View>
               ) : (
                 <View style={{ paddingHorizontal: Spacing.md}}>
-                  <Comments path={"buziness/" + id} placeholder="Mondd el a véleményed" />
+                  <Comments
+                    path={"buziness/" + id}
+                    placeholder="Mondd el a véleményed"
+                    publicComments={myUid ? undefined : publicComments ?? NO_COMMENTS}
+                  />
                 </View>
               )}
             </View>
@@ -815,6 +882,7 @@ export default function Index() {
               setShow={setShowRecommendsModal}
               id={id}
               name={title}
+              preloaded={myUid ? undefined : publicRecommendations ?? NO_RECOMMENDATIONS}
             />
           </Portal>
         )}

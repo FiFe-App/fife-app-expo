@@ -21,6 +21,8 @@ interface RMP {
   setShow: React.Dispatch<React.SetStateAction<boolean>>;
   id: number;
   name: string;
+  /** Signed-out visitors: the list, already loaded — anon cannot query it. */
+  preloaded?: RecommendElement[];
 }
 
 interface RecommendElement extends Tables<"buzinessRecommendations"> {
@@ -30,11 +32,12 @@ interface RecommendElement extends Tables<"buzinessRecommendations"> {
   } | null;
 }
 
-const BuzinessRecommendationsModal = ({ show, setShow, id, name }: RMP) => {
-  const [list, setList] = useState<RecommendElement[]>([]);
+const BuzinessRecommendationsModal = ({ show, setShow, id, name, preloaded }: RMP) => {
+  const [fetched, setFetched] = useState<RecommendElement[]>([]);
+  const list = preloaded ?? fetched;
 
   useEffect(() => {
-    if (show) {
+    if (show && !preloaded) {
       supabase
         .from("buzinessRecommendations")
         .select(
@@ -43,11 +46,11 @@ const BuzinessRecommendationsModal = ({ show, setShow, id, name }: RMP) => {
         .eq("buziness_id", id)
         .then((res) => {
           if (res.data) {
-            setList(res.data);
+            setFetched(res.data);
           }
         });
     }
-  }, [show, id]);
+  }, [show, id, preloaded]);
 
   return (
     <Modal

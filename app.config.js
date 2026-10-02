@@ -122,7 +122,14 @@ export default {
           "imageWidth": 80
         }
       ],
-    "expo-secure-store"
+    "expo-secure-store",
+    "expo-audio",
+    "expo-image",
+    "expo-router",
+    "expo-status-bar",
+    "expo-video",
+    "expo-web-browser",
+    "expo-asset"
   ],
   experiments: {
     typedRoutes: true,

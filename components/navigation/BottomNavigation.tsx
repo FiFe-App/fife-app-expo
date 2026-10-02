@@ -1,4 +1,4 @@
-import { Route, router, usePathname, useSegments } from "expo-router";
+import { Href, router, usePathname, useSegments } from "expo-router";
 import { Image } from "expo-image";
 import { useRef, useCallback } from "react";
 import { StyleSheet, View } from "react-native";
@@ -27,7 +27,7 @@ const BottomNavigation = () => {
   const chatActive = segment[0]?.includes("chat") || segment[0] === "group";
   const lastNavTime = useRef(0);
 
-  const navigateTo = useCallback((path: Route) => {
+  const navigateTo = useCallback((path: Href) => {
     const now = Date.now();
     if (now - lastNavTime.current < 300) return;
     // Skip if already on the exact same route
@@ -47,7 +47,7 @@ const BottomNavigation = () => {
   const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
 
   return (
-    <ThemedView type="card" style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level1, zIndex:1, padding: Spacing.sm }}>
+    <ThemedView type="card" style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level1, zIndex:1 }}>
       {/* Messaging is opt-in, so the entry point only exists once it's on. */}
       {messagingEnabled && (
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/chats")}>

@@ -37,7 +37,7 @@ import { getLoginHref } from "@/lib/auth/loginRedirect";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 
-const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
+const Comments = ({ path, placeholder, limit = 10, style, publicComments }: CommentsProps) => {
   const dispatch = useDispatch();
   const navigation = router;
   const theme = useTheme();
@@ -67,6 +67,11 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
 
   useEffect(() => {
     dispatch(clearComments());
+
+    if (publicComments) {
+      dispatch(addComments(publicComments));
+      return;
+    }
 
     const channel = supabase.channel(`${path}:${mountId}`);
 
@@ -130,7 +135,7 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, limit, path]);
+  }, [dispatch, limit, path, publicComments]);
 
   useEffect(() => {
     if (comments.length) setDownloading(false);
@@ -377,7 +382,7 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
             })}
         </View>
       }
-      {downloading && !comments.length ? (
+      {downloading && !publicComments && !comments.length ? (
         <ActivityIndicator />
       ) : (
         !comments?.length && (

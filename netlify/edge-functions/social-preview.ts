@@ -35,9 +35,11 @@ const SUPABASE_ANON_KEY =
 const LOOKUP_TIMEOUT_MS = 2500;
 
 const fetchPublicBuziness = async (id: string) => {
+  // anon has no table access; this function returns a listing only if its
+  // author made it public (20261003120000_revoke_anon_table_access.sql).
   const url =
-    `${SUPABASE_URL}/rest/v1/buziness` +
-    `?select=id,title,description,images&id=eq.${encodeURIComponent(id)}&limit=1`;
+    `${SUPABASE_URL}/rest/v1/rpc/get_public_buziness` +
+    `?p_id=${encodeURIComponent(id)}`;
   try {
     const res = await fetch(url, {
       headers: {
@@ -48,8 +50,8 @@ const fetchPublicBuziness = async (id: string) => {
       signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS),
     });
     if (!res.ok) return null;
-    const rows = await res.json();
-    return Array.isArray(rows) && rows.length ? rows[0] : null;
+    // The listing as one object, or null when nothing public has this id.
+    return await res.json();
   } catch (error) {
     console.warn("social-preview: could not load biznisz", id, error);
     return null;

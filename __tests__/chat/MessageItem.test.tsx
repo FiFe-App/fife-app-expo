@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
 
 import { MessageItem } from "@/components/chat/MessageItem";
 import { login } from "@/redux/reducers/userReducer";
@@ -67,5 +67,41 @@ describe("MessageItem in a group chat", () => {
 
     expect(screen.getByText("Sziasztok!")).toBeTruthy();
     expect(screen.queryByText("Kovács Anna")).toBeNull();
+  });
+});
+
+describe("MessageItem replies and hearts", () => {
+  const quoted = { ...message("u2"), id: 7, text: "Ki jön holnap?" };
+
+  it("jumps to the quoted message when the quote is tapped", async () => {
+    const onReplyPress = jest.fn();
+    await renderItem({
+      message: { ...message("me"), reply_to: 7 },
+      replyToMessage: quoted,
+      onReplyPress,
+    });
+
+    await fireEvent.press(screen.getByText("Ki jön holnap?"));
+
+    expect(onReplyPress).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not offer a jump when the quoted message was deleted", async () => {
+    await renderItem({ message: { ...message("me"), reply_to: 7 }, replyToDeleted: true });
+
+    expect(screen.getByText("Törölt üzenetre válaszolt")).toBeTruthy();
+    expect(screen.queryByRole("button")).toBeNull();
+  });
+
+  it("counts the hearts when more than one person gave one", async () => {
+    await renderItem({ hearted: true, heartCount: 3 });
+
+    expect(screen.getByText("3")).toBeTruthy();
+  });
+
+  it("shows a single heart without a number", async () => {
+    await renderItem({ hearted: true, heartCount: 1 });
+
+    expect(screen.queryByText("1")).toBeNull();
   });
 });

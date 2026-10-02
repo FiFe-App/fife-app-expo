@@ -43,14 +43,13 @@ export default function Invitation() {
     }
 
     let cancelled = false;
+    // Opened without an account, and anon has no table access: the card comes
+    // from a function that returns just these fields for one id.
     supabase
-      .from("profiles")
-      .select("id, full_name, username, avatar_url")
-      .eq("id", inviterUid)
-      .maybeSingle()
+      .rpc("get_public_profile_card", { p_id: inviterUid })
       .then(({ data }) => {
         if (cancelled) return;
-        setInviter(data ?? null);
+        setInviter(data?.[0] ?? null);
         setLoading(false);
       });
 

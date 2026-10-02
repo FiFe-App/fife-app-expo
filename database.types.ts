@@ -163,6 +163,36 @@ export type Database = {
           },
         ]
       }
+      buziness_tags: {
+        Row: {
+          buziness_id: number
+          tag_id: number
+        }
+        Insert: {
+          buziness_id: number
+          tag_id: number
+        }
+        Update: {
+          buziness_id?: number
+          tag_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buziness_tags_buziness_id_fkey"
+            columns: ["buziness_id"]
+            isOneToOne: false
+            referencedRelation: "buziness"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buziness_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buzinessRecommendations: {
         Row: {
           author: string
@@ -431,6 +461,49 @@ export type Database = {
           },
         ]
       }
+      group_chat_message_hearts: {
+        Row: {
+          created_at: string
+          group_id: string
+          message_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          message_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          message_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_chat_message_hearts_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_chat_message_hearts_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "group_chat_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_chat_message_hearts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_chat_messages: {
         Row: {
           author: string
@@ -536,6 +609,29 @@ export type Database = {
           type?: Database["public"]["Enums"]["contact_type"]
         }
         Relationships: []
+      }
+      interest_tags: {
+        Row: {
+          author: string
+          tag_id: number
+        }
+        Insert: {
+          author: string
+          tag_id: number
+        }
+        Update: {
+          author?: string
+          tag_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interest_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invitations: {
         Row: {
@@ -883,59 +979,6 @@ export type Database = {
         }
         Relationships: []
       }
-      buziness_tags: {
-        Row: {
-          buziness_id: number
-          tag_id: number
-        }
-        Insert: {
-          buziness_id: number
-          tag_id: number
-        }
-        Update: {
-          buziness_id?: number
-          tag_id?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "buziness_tags_buziness_id_fkey"
-            columns: ["buziness_id"]
-            isOneToOne: false
-            referencedRelation: "buziness"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "buziness_tags_tag_id_fkey"
-            columns: ["tag_id"]
-            isOneToOne: false
-            referencedRelation: "tags"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      interest_tags: {
-        Row: {
-          author: string
-          tag_id: number
-        }
-        Insert: {
-          author: string
-          tag_id: number
-        }
-        Update: {
-          author?: string
-          tag_id?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "interest_tags_tag_id_fkey"
-            columns: ["tag_id"]
-            isOneToOne: false
-            referencedRelation: "tags"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       tags: {
         Row: {
           created_at: string
@@ -1103,32 +1146,14 @@ export type Database = {
           query_text: string
         }[]
       }
-      interest_buziness_feed: {
-        Args: {
-          p_bad_boy?: boolean
-          p_ingyen?: boolean
-          p_interests: string[]
-          p_match_threshold?: number
-          p_semantic?: boolean
-          p_skip?: number
-          p_take?: number
-        }
+      get_public_buziness: { Args: { p_id: number }; Returns: Json }
+      get_public_profile_card: {
+        Args: { p_id: string }
         Returns: {
-          author: string
-          created_at: string
-          defaultcontact: number
-          description: string
-          id: number
-          images: string[]
-          ingyen: boolean
-          is_match: boolean
-          lat: number
-          location: unknown
-          long: number
-          radius: number
-          recommendations: number
-          distance: number
-          title: string
+          avatar_url: string
+          full_name: string
+          id: string
+          username: string
         }[]
       }
       hybrid_buziness_search: {
@@ -1166,6 +1191,35 @@ export type Database = {
           title: string
         }[]
       }
+      in_my_world: { Args: { other: string }; Returns: boolean }
+      interest_buziness_feed: {
+        Args: {
+          p_bad_boy?: boolean
+          p_ingyen?: boolean
+          p_interests: string[]
+          p_match_threshold?: number
+          p_semantic?: boolean
+          p_skip?: number
+          p_take?: number
+        }
+        Returns: {
+          author: string
+          created_at: string
+          defaultcontact: number
+          description: string
+          distance: number
+          id: number
+          images: string[]
+          ingyen: boolean
+          is_match: boolean
+          lat: number
+          location: unknown
+          long: number
+          radius: number
+          recommendations: number
+          title: string
+        }[]
+      }
       is_bad_boy: { Args: never; Returns: boolean }
       is_blocked_by: { Args: { other_user: string }; Returns: boolean }
       is_group_chat_member: {
@@ -1173,7 +1227,6 @@ export type Database = {
         Returns: boolean
       }
       is_public_group_chat: { Args: { p_group_id: string }; Returns: boolean }
-      normalize_tag: { Args: { p_tag: string }; Returns: string }
       nearby_buziness: {
         Args: {
           lat: number
@@ -1285,6 +1338,7 @@ export type Database = {
         }[]
       }
       newsletter_unsubscribe: { Args: { p_email: string }; Returns: boolean }
+      normalize_tag: { Args: { p_tag: string }; Returns: string }
       parse_app_version: { Args: { v: string }; Returns: number[] }
       search_tags: {
         Args: { p_limit?: number; p_prefix: string }
