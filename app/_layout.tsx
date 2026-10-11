@@ -38,6 +38,7 @@ import { fetchUnreadCounts } from "@/lib/chat/fetchUnreadCounts";
 import { supabase } from "@/lib/supabase/supabase";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
 import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
+import { cancelFocusNotifications } from "@/lib/notifications/scheduleFocusNotifications";
 import { setStatusBarColor } from "@/redux/reducers/infoReducer";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
 import { useUserSettings } from "@/hooks/useUserSettings";
@@ -110,6 +111,7 @@ function RootContent() {
       if (event === "SIGNED_OUT") {
         // Refresh token expired or explicit sign-out — clear Redux to match
         dispatch(logout());
+        cancelFocusNotifications().catch(() => {});
         dispatch(clearEmotionLogs());
         dispatch(clearDrafts());
         dispatch(clearChatReadState());
@@ -351,6 +353,14 @@ function RootContent() {
                   name="user/get-help"
                   options={{ title: "Segítség kell?" }}
                 />
+                <Stack.Screen
+                  name="focus"
+                  options={{ title: "Fókusz" }}
+                />
+                <Stack.Screen
+                  name="szunet"
+                  options={{ title: "Szünet" }}
+                />
               </Stack.Protected>
               <Stack.Protected guard={!uid}>
 
@@ -400,6 +410,7 @@ function RootContent() {
               !pathname.includes("csatlakozom") &&
               !pathname.includes("meghivo") &&
               !pathname.includes("leiratkozas") &&
+              pathname !== "/szunet" &&
               pathname !== "/biznisz/new" &&
               !pathname.startsWith("/biznisz/edit") && <BottomNavigation />}
           </View>
