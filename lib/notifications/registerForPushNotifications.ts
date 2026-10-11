@@ -2,14 +2,16 @@ import { Platform } from "react-native";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
+import { isTimerNotification } from "./timerNotificationIds";
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
+  handleNotification: async (notification) => ({
     // shouldShowAlert is deprecated and split in two; together they are what it
     // used to mean — a heads-up banner plus an entry in the notification list.
     shouldShowBanner: true,
     shouldShowList: true,
-    shouldPlaySound: true,
+    // The timer screens play their own beep in the foreground.
+    shouldPlaySound: !isTimerNotification(notification.request.identifier),
     shouldSetBadge: false,
   }),
 });

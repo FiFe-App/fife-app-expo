@@ -106,8 +106,8 @@ export default function MeScreen() {
               scrollRef.current?.scrollToEnd({ animated: true })
             }
           />
-          {false && <View style={styles.cardRow}>
-            <Card style={[styles.card, styles.cardSpacing]} theme={{colors: {shadow:"red"}}} onPress={() => {}}>
+          <View style={styles.cardRow}>
+            <Card style={[styles.card, styles.cardSpacing]} onPress={() => router.push("/focus")}>
               <Card.Content style={styles.cardContent}>
                 <Image
                   source={require("@/assets/gifs/focus.gif")}
@@ -117,7 +117,7 @@ export default function MeScreen() {
                 <ThemedText style={styles.cardText}>Fókusz</ThemedText>
               </Card.Content>
             </Card>
-            <Card style={[styles.card, styles.cardSpacing]} onPress={() => {}}>
+            <Card style={styles.card} onPress={() => router.push("/szunet")}>
               <Card.Content style={styles.cardContent}>
                 <Image
                   source={require("@/assets/gifs/black.gif")}
@@ -127,7 +127,7 @@ export default function MeScreen() {
                 <ThemedText style={styles.cardText}>Szünet</ThemedText>
               </Card.Content>
             </Card>
-          </View>}
+          </View>
         </View>
       </ScrollView>
       <Portal>
