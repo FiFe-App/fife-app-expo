@@ -6,60 +6,66 @@ export const LONG_BREAK_MS = 15 * MINUTE;
 /** A long break comes after every this many work blocks. */
 export const WORKS_PER_CYCLE = 4;
 
+export const MIN_ROUNDS = 1;
+export const MAX_ROUNDS = 8;
+export const DEFAULT_ROUNDS = 4;
+
 export type PhaseKind = "work" | "shortBreak" | "longBreak";
 
 export interface Phase {
   kind: PhaseKind;
   /** 0-based position of this phase since the timer was started. */
   index: number;
+  /** 1-based round this phase belongs to (a work block and the break after it). */
+  round: number;
   startsAt: number;
   endsAt: number;
 }
 
-/** Work, break, work, break, … with the last break of a cycle being long. */
-const CYCLE: { kind: PhaseKind; ms: number }[] = Array.from(
-  { length: WORKS_PER_CYCLE },
-  (_, i) => [
-    { kind: "work" as const, ms: WORK_MS },
-    i === WORKS_PER_CYCLE - 1
-      ? { kind: "longBreak" as const, ms: LONG_BREAK_MS }
-      : { kind: "shortBreak" as const, ms: SHORT_BREAK_MS },
-  ],
-).flat();
-const CYCLE_MS = CYCLE.reduce((sum, p) => sum + p.ms, 0);
-
-/**
- * The phase running at `now`, derived from nothing but the start time — so the
- * screen can be closed, the app backgrounded or restarted, and it still lands
- * on the same phase the scheduled notifications assume.
- */
-export function phaseAt(startedAt: number, now: number): Phase {
-  const elapsed = Math.max(0, now - startedAt);
-  const cycles = Math.floor(elapsed / CYCLE_MS);
-  let t = startedAt + cycles * CYCLE_MS;
-  let index = cycles * CYCLE.length;
-  for (const p of CYCLE) {
-    if (now < t + p.ms) return { kind: p.kind, index, startsAt: t, endsAt: t + p.ms };
-    t += p.ms;
-    index++;
-  }
-  // Only reachable on floating-point edge cases: the next cycle's first phase.
-  return { kind: CYCLE[0].kind, index, startsAt: t, endsAt: t + CYCLE[0].ms };
+export function phaseDuration(kind: PhaseKind): number {
+  return kind === "work" ? WORK_MS : kind === "shortBreak" ? SHORT_BREAK_MS : LONG_BREAK_MS;
 }
 
-/** The next `count` phases after the one running at `now`. */
-export function upcomingPhases(startedAt: number, now: number, count: number): Phase[] {
+/** Even phases are work; the break after every fourth work block is long. */
+function kindOf(index: number): PhaseKind {
+  if (index % 2 === 0) return "work";
+  return ((index + 1) / 2) % WORKS_PER_CYCLE === 0 ? "longBreak" : "shortBreak";
+}
+
+/** A round is a work block plus the break after it — except the last, which ends on work. */
+const phaseCount = (rounds: number) => 2 * rounds - 1;
+
+/**
+ * Every phase of a timer started at `startedAt` for `rounds` rounds. Derived
+ * from nothing but those two, so the screen can be closed, the app
+ * backgrounded or restarted, and it still lands on the same phase the
+ * scheduled notifications assume.
+ */
+export function allPhases(startedAt: number, rounds: number): Phase[] {
   const phases: Phase[] = [];
-  let p = phaseAt(startedAt, now);
-  for (let i = 0; i < count; i++) {
-    p = phaseAt(startedAt, p.endsAt);
-    phases.push(p);
+  let t = startedAt;
+  for (let index = 0; index < phaseCount(rounds); index++) {
+    const kind = kindOf(index);
+    const ms = phaseDuration(kind);
+    phases.push({ kind, index, round: Math.floor(index / 2) + 1, startsAt: t, endsAt: t + ms });
+    t += ms;
   }
   return phases;
 }
 
-export function phaseDuration(kind: PhaseKind): number {
-  return kind === "work" ? WORK_MS : kind === "shortBreak" ? SHORT_BREAK_MS : LONG_BREAK_MS;
+/** When the last work block ends. */
+export function endOf(startedAt: number, rounds: number): number {
+  return allPhases(startedAt, rounds).at(-1)!.endsAt;
+}
+
+/** The phase running at `now`, or null once all rounds are done. */
+export function phaseAt(startedAt: number, rounds: number, now: number): Phase | null {
+  return allPhases(startedAt, rounds).find((p) => now < p.endsAt) ?? null;
+}
+
+/** The phases that haven't started yet at `now`. */
+export function upcomingPhases(startedAt: number, rounds: number, now: number): Phase[] {
+  return allPhases(startedAt, rounds).filter((p) => p.startsAt > now);
 }
 
 export function formatRemaining(ms: number): string {

@@ -1,9 +1,12 @@
 import * as Notifications from "expo-notifications";
 import { hasNotificationPermission } from "@/lib/notifications/registerForPushNotifications";
 import {
+  cancelBreakEndNotification,
   cancelFocusNotifications,
+  scheduleBreakEndNotification,
   scheduleFocusNotifications,
 } from "@/lib/notifications/scheduleFocusNotifications";
+import { isTimerNotification } from "@/lib/notifications/timerNotificationIds";
 
 jest.mock("expo-notifications", () => ({
   SchedulableTriggerInputTypes: { DATE: "date" },
@@ -19,35 +22,63 @@ const schedule = Notifications.scheduleNotificationAsync as jest.Mock;
 const cancel = Notifications.cancelScheduledNotificationAsync as jest.Mock;
 const getAll = Notifications.getAllScheduledNotificationsAsync as jest.Mock;
 const hasPermission = hasNotificationPermission as jest.Mock;
+const MIN = 60 * 1000;
 
 beforeEach(() => jest.clearAllMocks());
 
 it("schedules nothing without the OS permission", async () => {
   hasPermission.mockResolvedValue(false);
-  expect(await scheduleFocusNotifications(Date.now())).toBe(false);
+  expect(await scheduleFocusNotifications(Date.now(), 4)).toBe(false);
+  expect(await scheduleBreakEndNotification(Date.now() + MIN)).toBe(false);
   expect(schedule).not.toHaveBeenCalled();
 });
 
-it("schedules every upcoming phase change, the first being the break", async () => {
+it("schedules every phase change of the chosen rounds, then the end", async () => {
   hasPermission.mockResolvedValue(true);
   const start = Date.now();
-  expect(await scheduleFocusNotifications(start)).toBe(true);
+  expect(await scheduleFocusNotifications(start, 3)).toBe(true);
 
-  expect(schedule).toHaveBeenCalledTimes(32);
-  const first = schedule.mock.calls[0][0];
-  expect(first.identifier).toBe("focus-1");
-  expect(first.content).toMatchObject({ title: "Szünet!", data: { url: "/focus" } });
-  expect(first.trigger).toEqual({ type: "date", date: start + 25 * 60 * 1000 });
-  expect(schedule.mock.calls[1][0].content.title).toBe("Vissza a munkához!");
-  expect(schedule.mock.calls[6][0].content.title).toBe("Hosszú szünet!");
+  // 3 rounds: W S W S W → 4 changes + the end.
+  const calls = schedule.mock.calls.map((c) => c[0]);
+  expect(calls).toHaveLength(5);
+  expect(calls[0]).toMatchObject({
+    identifier: "focus-1",
+    content: { title: "Szünet!", data: { url: "/focus" } },
+    trigger: { type: "date", date: start + 25 * MIN },
+  });
+  expect(calls[1].content.title).toBe("Vissza a munkához!");
+  expect(calls[4]).toMatchObject({
+    identifier: "focus-done",
+    content: { title: "Kész!" },
+    trigger: { date: start + (3 * 25 + 2 * 5) * MIN },
+  });
 });
 
-it("cancels only its own notifications", async () => {
+it("schedules the end of a break and cancels it", async () => {
+  hasPermission.mockResolvedValue(true);
+  const endsAt = Date.now() + 15 * MIN;
+  await scheduleBreakEndNotification(endsAt);
+  expect(schedule.mock.calls[0][0]).toMatchObject({
+    identifier: "break-end",
+    trigger: { type: "date", date: endsAt },
+  });
+  cancel.mockClear();
+  await cancelBreakEndNotification();
+  expect(cancel).toHaveBeenCalledWith("break-end");
+});
+
+it("cancels only the focus notifications", async () => {
   getAll.mockResolvedValue([
     { identifier: "focus-1" },
     { identifier: "daily-emotion-reminder" },
-    { identifier: "focus-2" },
+    { identifier: "focus-done" },
   ]);
   await cancelFocusNotifications();
-  expect(cancel.mock.calls.map((c) => c[0])).toEqual(["focus-1", "focus-2"]);
+  expect(cancel.mock.calls.map((c) => c[0])).toEqual(["focus-1", "focus-done"]);
+});
+
+it("recognises the timer notifications, and only those", () => {
+  expect(isTimerNotification("focus-3")).toBe(true);
+  expect(isTimerNotification("break-end")).toBe(true);
+  expect(isTimerNotification("daily-emotion-reminder")).toBe(false);
 });

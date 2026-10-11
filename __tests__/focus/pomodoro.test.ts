@@ -1,4 +1,6 @@
 import {
+  allPhases,
+  endOf,
   formatRemaining,
   LONG_BREAK_MS,
   phaseAt,
@@ -9,36 +11,40 @@ import {
 
 const T0 = 1_000_000;
 const MIN = 60 * 1000;
-const CYCLE = 4 * WORK_MS + 3 * SHORT_BREAK_MS + LONG_BREAK_MS;
 
 describe("phaseAt", () => {
-  it("starts with a 25-minute work block", () => {
-    expect(phaseAt(T0, T0)).toEqual({ kind: "work", index: 0, startsAt: T0, endsAt: T0 + 25 * MIN });
+  it("starts with a 25-minute work block of the first round", () => {
+    expect(phaseAt(T0, 4, T0)).toEqual({
+      kind: "work", index: 0, round: 1, startsAt: T0, endsAt: T0 + 25 * MIN,
+    });
   });
 
   it("switches to a 5-minute break exactly at the end of the work block", () => {
-    expect(phaseAt(T0, T0 + 25 * MIN - 1).kind).toBe("work");
-    expect(phaseAt(T0, T0 + 25 * MIN)).toMatchObject({ kind: "shortBreak", index: 1, endsAt: T0 + 30 * MIN });
-    expect(phaseAt(T0, T0 + 30 * MIN)).toMatchObject({ kind: "work", index: 2 });
+    expect(phaseAt(T0, 4, T0 + 25 * MIN - 1)?.kind).toBe("work");
+    expect(phaseAt(T0, 4, T0 + 25 * MIN)).toMatchObject({ kind: "shortBreak", round: 1, endsAt: T0 + 30 * MIN });
+    expect(phaseAt(T0, 4, T0 + 30 * MIN)).toMatchObject({ kind: "work", round: 2 });
   });
 
-  it("gives a 15-minute break after the fourth work block", () => {
+  it("gives a 15-minute break after the fourth work block when more rounds follow", () => {
     const longStart = T0 + 4 * WORK_MS + 3 * SHORT_BREAK_MS;
-    expect(phaseAt(T0, longStart)).toMatchObject({ kind: "longBreak", index: 7, endsAt: longStart + 15 * MIN });
+    expect(phaseAt(T0, 5, longStart)).toMatchObject({ kind: "longBreak", round: 4, endsAt: longStart + 15 * MIN });
+    expect(phaseAt(T0, 5, longStart + LONG_BREAK_MS)).toMatchObject({ kind: "work", round: 5 });
   });
 
-  it("repeats the cycle indefinitely", () => {
-    expect(phaseAt(T0, T0 + CYCLE)).toMatchObject({ kind: "work", index: 8, startsAt: T0 + CYCLE });
-    expect(phaseAt(T0, T0 + 3 * CYCLE + 26 * MIN)).toMatchObject({ kind: "shortBreak", index: 25 });
+  it("is over after the last round's work block — no trailing break", () => {
+    expect(allPhases(T0, 2).map((p) => p.kind)).toEqual(["work", "shortBreak", "work"]);
+    expect(endOf(T0, 2)).toBe(T0 + 55 * MIN);
+    expect(phaseAt(T0, 2, T0 + 55 * MIN - 1)?.kind).toBe("work");
+    expect(phaseAt(T0, 2, T0 + 55 * MIN)).toBeNull();
+    expect(endOf(T0, 1)).toBe(T0 + WORK_MS);
   });
 });
 
 describe("upcomingPhases", () => {
-  it("lists the phases after the current one, in order", () => {
-    const phases = upcomingPhases(T0, T0 + 10 * MIN, 8);
-    expect(phases.map((p) => p.index)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+  it("lists the phases that haven't started yet, back to back", () => {
+    const phases = upcomingPhases(T0, 4, T0 + 10 * MIN);
     expect(phases.map((p) => p.kind)).toEqual([
-      "shortBreak", "work", "shortBreak", "work", "shortBreak", "work", "longBreak", "work",
+      "shortBreak", "work", "shortBreak", "work", "shortBreak", "work",
     ]);
     phases.slice(1).forEach((p, i) => expect(p.startsAt).toBe(phases[i].endsAt));
   });
