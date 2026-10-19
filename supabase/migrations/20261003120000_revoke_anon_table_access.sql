@@ -179,3 +179,5 @@ GRANT EXECUTE ON FUNCTION public.get_app_version_status(text, text) TO anon;
 -- new tables from being writable by it; new tables are not readable either.
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON TABLES FROM anon;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON SEQUENCES FROM anon;
+
+GRANT SELECT ON "public"."app_versions" TO "anon";

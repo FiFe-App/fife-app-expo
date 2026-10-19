@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { View } from "react-native";
 import { Icon, Surface, Text, TextInput, TouchableRipple } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
@@ -10,14 +10,14 @@ import { useAppTheme } from "@/assets/theme";
 import { ThemedText } from "./ThemedText";
 
 interface ToDoListProps {
-  // Called when the input is focused and the keyboard opens, so a parent
-  // ScrollView can scroll this (bottom-of-content) input above the keyboard.
-  // Needed on edge-to-edge Android, where the window does not resize and a
-  // KeyboardAvoidingView alone cannot reveal an input inside scroll content.
-  onRequestScrollIntoView?: () => void;
+  // Called with the input's container ref when it's focused, so a parent
+  // ScrollView can scroll it above the keyboard. Needed on edge-to-edge
+  // Android, where the window does not resize and a KeyboardAvoidingView
+  // alone cannot reveal an input inside scroll content.
+  onInputFocus?: (containerRef: React.RefObject<View | null>) => void;
 }
 
-export default function ToDoList({ onRequestScrollIntoView }: ToDoListProps) {
+export default function ToDoList({ onInputFocus }: ToDoListProps) {
   const theme = useAppTheme();
   const dispatch = useDispatch();
   const tasks = useSelector((state: RootState) => state.user.tasks) ?? [];
@@ -27,6 +27,7 @@ export default function ToDoList({ onRequestScrollIntoView }: ToDoListProps) {
     tasks.filter((task) => task.checked).map((task) => task.id),
   );
   const [newTitle, setNewTitle] = useState("");
+  const inputContainerRef = useRef<View>(null);
 
   const visibleTasks = tasks.filter((task) => !hiddenIds.includes(task.id));
 
@@ -63,6 +64,27 @@ export default function ToDoList({ onRequestScrollIntoView }: ToDoListProps) {
         }}
         elevation={0}
       >
+        {/* Above the tasks, so a long list never pushes it out of reach. */}
+        <View ref={inputContainerRef}>
+          <TextInput
+            mode="flat"
+            dense
+            label="Új feladat"
+            value={newTitle}
+            onChangeText={setNewTitle}
+            onSubmitEditing={handleAdd}
+            onFocus={() => onInputFocus?.(inputContainerRef)}
+            returnKeyType="done"
+            submitBehavior="submit"
+            style={{
+              backgroundColor: "transparent",
+              marginBottom: visibleTasks.length ? Spacing.xs : 0,
+            }}
+            right={
+              <TextInput.Icon icon="plus" onPress={handleAdd} disabled={!newTitle.trim()} />
+            }
+          />
+        </View>
         {visibleTasks.map((task) => (
           <TouchableRipple
             key={task.id}
@@ -97,26 +119,6 @@ export default function ToDoList({ onRequestScrollIntoView }: ToDoListProps) {
             </View>
           </TouchableRipple>
         ))}
-        <TextInput
-          mode="flat"
-          dense
-          label="Új feladat"
-          value={newTitle}
-          onChangeText={setNewTitle}
-          onSubmitEditing={handleAdd}
-          onFocus={() => {
-            onRequestScrollIntoView?.();
-          }}
-          returnKeyType="done"
-          submitBehavior="submit"
-          style={{
-            backgroundColor: "transparent",
-            marginTop: visibleTasks.length ? Spacing.xs : 0,
-          }}
-          right={
-            <TextInput.Icon icon="plus" onPress={handleAdd} disabled={!newTitle.trim()} />
-          }
-        />
       </Surface>
     </View>
   );

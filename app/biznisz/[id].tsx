@@ -278,7 +278,7 @@ export default function Index() {
               title: "Mentés",
               icon: "pencil",
               onPress: async () => {
-                router.push("/biznisz/edit/" + id);
+                router.push({ pathname: "/biznisz/edit/[editId]", params: { editId: id } });
               },
             },
           ]),
@@ -373,6 +373,9 @@ export default function Index() {
                 lat: cords?.[1],
                 long: cords?.[0],
                 distance: 0,
+                recommendations: data.buzinessRecommendations?.length ?? 0,
+                // Raw JSON strings; parsed into `media` below.
+                images: undefined,
                 authorName: data?.profiles?.full_name || "???",
                 avatarUrl: data?.profiles?.avatar_url,
               });
@@ -831,8 +834,8 @@ export default function Index() {
                         {location && (
                           <IconButton
                             icon="directions"
-                            containerColor={theme.colors.secondary}
-                            iconColor={theme.colors.onSecondary}
+                            containerColor={theme.colors.tertiary}
+                            iconColor={theme.colors.onTertiary}
                             mode="contained"
                             onPress={() =>
                               openMap({

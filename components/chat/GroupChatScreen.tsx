@@ -22,7 +22,7 @@ import { RootState } from "@/redux/store";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { Link, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 import {
   ActivityIndicator,
   Button,
@@ -53,6 +53,7 @@ const LARGE_GAP_THRESHOLD_MS = 60 * 60 * 1000;
 // signed in can read a public group; posting needs a row in
 // group_chat_members, which the "Csatlakozom" button creates.
 export default function GroupChatScreen() {
+  const { height: windowHeight } = useWindowDimensions();
   const dispatch = useDispatch();
   const theme = useTheme();
   const navigation = useNavigation();
@@ -678,8 +679,12 @@ export default function GroupChatScreen() {
         <Modal
           visible={showMembers}
           onDismiss={() => setShowMembers(false)}
-          contentContainerStyle={[styles.membersModal, { backgroundColor: theme.colors.surface }]}
+          contentContainerStyle={[styles.membersModal, { backgroundColor: theme.colors.background }]}
         >
+          {/* Fits its content; only a long member list grows to the cap and
+              scrolls. The cap is in points on a plain View: a percentage on the
+              container is applied twice by Paper's Surface on iOS. */}
+          <View style={{ maxHeight: windowHeight * 0.75 }}>
           <Text variant="titleMedium" style={styles.membersTitle}>
             Tagok ({memberCount})
           </Text>
@@ -712,6 +717,7 @@ export default function GroupChatScreen() {
               )}
             />
           )}
+          </View>
         </Modal>
       </Portal>
 
@@ -782,7 +788,6 @@ const styles = StyleSheet.create({
     margin: Spacing.lg,
     padding: Spacing.md,
     borderRadius: 12,
-    maxHeight: "80%",
   },
   membersTitle: {
     marginBottom: Spacing.sm,

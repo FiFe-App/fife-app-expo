@@ -13,6 +13,7 @@ import { RootState } from "@/redux/store";
 import { CircleType, MediaDataType, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { invokeFunction } from "@/lib/supabase/invokeFunction";
+import { countBucket, trackEvent } from "@/lib/analytics";
 import { router, Stack, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
@@ -236,6 +237,12 @@ export default function BuzinessEditScreen({
           );
           return;
         }
+        trackEvent(editId ? "buziness_updated" : "buziness_created", {
+          free: ingyen,
+          public: isPublic,
+          hasLocation: !!circle?.location,
+          media: countBucket(media.length),
+        });
         // It is on the server now; the draft would only offer it back.
         clearDraft();
         router.navigate("/user");

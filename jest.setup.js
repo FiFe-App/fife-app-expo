@@ -36,6 +36,16 @@ jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock"),
 );
 
+// Ships ESM only; analytics are a no-op in tests anyway (no app key).
+jest.mock("@aptabase/react-native", () => ({
+  __esModule: true,
+  default: { init: jest.fn(), trackEvent: jest.fn(), trackError: jest.fn(), dispose: jest.fn() },
+  init: jest.fn(),
+  trackEvent: jest.fn(),
+  trackError: jest.fn(),
+  dispose: jest.fn(),
+}));
+
 jest.mock("expo-web-browser", () => ({
   maybeCompleteAuthSession: jest.fn(),
   openBrowserAsync: jest.fn(() => Promise.resolve({ type: "opened" })),

@@ -2,7 +2,7 @@ import InfoLayer from "@/components/InfoLayer";
 import { SplashAnimation } from "@/components/SplashAnimation";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { persistor, store } from "@/redux/store";
-import { Stack, usePathname, useRouter, type NativeStackHeaderProps } from "expo-router";
+import { Stack, usePathname, useRouter, useSegments, type NativeStackHeaderProps } from "expo-router";
 import * as Notifications from "expo-notifications";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
@@ -44,7 +44,11 @@ import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAppVersionGate } from "@/hooks/useAppVersionGate";
 import UpdateRequiredScreen from "@/components/version/UpdateRequiredScreen";
 import UpdateAvailableCard from "@/components/version/UpdateAvailableCard";
+import InAppMessageDialog from "@/components/InAppMessageDialog";
 import { emotionAvailable } from "@/constants/emotionTiming";
+import { initAnalytics, screenNameFromSegments, trackEvent } from "@/lib/analytics";
+
+initAnalytics();
 
 // Resets on hard reload (new JS execution), survives React remounts within the same page load
 let splashAlreadyShown = false;
@@ -60,6 +64,7 @@ function HomeHeader({ mode = "biznisz" }: { mode?: SearchMode }) {
 
 function RootContent() {
   const pathname = usePathname();
+  const segments = useSegments();
   const dispatch = useDispatch();
   const deviceColorScheme = useColorScheme(); // Auto-detect device theme
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
@@ -67,6 +72,13 @@ function RootContent() {
   const lastReadAt = useSelector((state: RootState) => state.chat.lastReadAt);
   const { statusBarColor, bottomBarColor } = useSelector((state: RootState) => state.info);
   const hasInitialized = React.useRef(false);
+
+  // Anonymous screen views, by route pattern ("/user/[uid]"), never the
+  // concrete path, which would carry ids.
+  const screenName = screenNameFromSegments(segments);
+  useEffect(() => {
+    trackEvent("screen_view", { screen: screenName, signedIn: !!uid });
+  }, [screenName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // On first load only, mark as initialized
   useEffect(() => {
@@ -274,12 +286,30 @@ function RootContent() {
     );
   }
 
+  // Every tab of the bottom bar leads somewhere only members can open, so a
+  // signed-out visitor on a shared biznisz page gets none of it.
+  const showBottomNav =
+    !!uid && pathname !== "/" && !pathname.includes("projekt") &&
+    !pathname.includes("login") &&
+    !pathname.includes("password") &&
+    !pathname.includes("user/deleted-account") &&
+    !pathname.includes("csatlakozom") &&
+    !pathname.includes("meghivo") &&
+    !pathname.includes("leiratkozas") &&
+    pathname !== "/biznisz/new" &&
+    !pathname.startsWith("/biznisz/edit");
+
   return (
     <PaperProvider theme={theme}>
       <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
       />
-      <SafeAreaView style={{ flex: 1, backgroundColor: statusBarColor || theme.colors.surface }}>
+      {/* The bottom bar pads itself by the bottom inset so its own background
+          fills the home indicator / gesture area; without it the screen does. */}
+      <SafeAreaView
+        edges={showBottomNav ? ["top", "left", "right"] : ["top", "left", "right", "bottom"]}
+        style={{ flex: 1, backgroundColor: statusBarColor || theme.colors.surface }}
+      >
         <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
           <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
             <InfoLayer />
@@ -396,21 +426,10 @@ function RootContent() {
                 onDismiss={versionGate.dismissUpdate}
               />
             )}
-            {/* Every tab of the bottom bar leads somewhere only members can
-                open, so a signed-out visitor on a shared biznisz page gets
-                none of it. */}
-            {!!uid && pathname !== "/" && !pathname.includes("projekt") &&
-              !pathname.includes("login") &&
-              !pathname.includes("password") &&
-              !pathname.includes("user/deleted-account") &&
-              !pathname.includes("csatlakozom") &&
-              !pathname.includes("meghivo") &&
-              !pathname.includes("leiratkozas") &&
-              pathname !== "/biznisz/new" &&
-              !pathname.startsWith("/biznisz/edit") && <BottomNavigation />}
+            {showBottomNav && <BottomNavigation />}
+            {!!uid && <InAppMessageDialog />}
           </View>
         </ThemedView>
-        <View style={{bottom:0,height:30,width:"100%",backgroundColor:theme.colors.elevation.level1,position:"absolute",zIndex:-1}}/>
       </SafeAreaView>
     </PaperProvider>
   );

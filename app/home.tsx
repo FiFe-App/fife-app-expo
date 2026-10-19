@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from "expo-router";
+import { Link, router, useFocusEffect } from "expo-router";
 import BuzinessItem from "@/components/buziness/BuzinessItem";
 import { FiFeRadar } from "@/components/user/FiFeRadar";
 import { ThemedText } from "@/components/ThemedText";
@@ -19,6 +19,7 @@ import InviteCard from "@/components/InviteCard";
 import { useFifeSearch } from "@/hooks/useFifeSearch";
 import { useNearbyBuzinesses } from "@/hooks/useNearbyBuzinesses";
 import { useAppTheme } from "@/assets/theme";
+import { Button } from "@/components/Button";
 
 export default function Index() {
   const { uid, messagingEnabled } = useSelector((state: RootState) => state.user);
@@ -36,6 +37,7 @@ export default function Index() {
     fetchNextPage: fetchNearbyNext,
     loading: buzinessesLoading,
     error: buzinessError,
+    fetched: buzinessesFetched,
   } = useNearbyBuzinesses();
 
   useEffect(() => {
@@ -137,8 +139,18 @@ export default function Index() {
               <BuzinessItem data={buziness} />
             </View>
           ))}
-          {buzinessesLoading && nearbyBuzinesses.length > 0 && (
-            <ActivityIndicator style={{ marginTop: Spacing.md }} />
+          {buzinessesLoading && (
+            <ActivityIndicator style={{ marginTop: nearbyBuzinesses.length ? Spacing.md : 0 }} />
+          )}
+          {buzinessesFetched && !buzinessesLoading && !buzinessError && nearbyBuzinesses.length === 0 && (
+            <View style={{ alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.lg }}>
+              <ThemedText style={{ textAlign: "center" }}>
+                Még nincs biznisz a környékeden.
+              </ThemedText>
+              <Link asChild href="/biznisz/new">
+                <Button mode="contained-tonal">Hirdesd meg te az elsőt!</Button>
+              </Link>
+            </View>
           )}
         </View>
       </ScrollView>

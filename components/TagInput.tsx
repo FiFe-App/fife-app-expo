@@ -28,6 +28,11 @@ interface TagInputProps {
   suggest?: boolean;
 }
 
+/** Same key as public.normalize_tag on the server: lowercase, inner whitespace collapsed. */
+const normalizeTag = (tag: string) => tag.toLowerCase().replace(/\s+/g, " ").trim();
+const hasTag = (list: string[], tag: string) =>
+  list.some((t) => normalizeTag(t) === normalizeTag(tag));
+
 const TagInput = ({
   value,
   onChange,
@@ -60,7 +65,7 @@ const TagInput = ({
   const commitTag = (raw: string) => {
     const trimmed = raw.trim();
     if (!trimmed) return false;
-    if (value.includes(trimmed)) return false;
+    if (hasTag(value, trimmed)) return false;
     onChange([...value, trimmed]);
     return true;
   };
@@ -72,7 +77,7 @@ const TagInput = ({
       const next = [...value];
       for (const p of toCommit) {
         const t = p.trim();
-        if (t && !next.includes(t)) next.push(t);
+        if (t && !hasTag(next, t)) next.push(t);
       }
       onChange(next);
       setDraft(parts[parts.length - 1]);

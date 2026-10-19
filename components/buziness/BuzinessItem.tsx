@@ -114,6 +114,7 @@ const BuzinessItem = memo(({ data, showOptions, preview }: BuzinessItemProps) =>
             </View>
           </View>
           <View style={{ flexWrap: "wrap", flexDirection: "row", gap: Spacing.sm }}>
+            {!!data.authorName && <MetaStat icon="account">{data.authorName}</MetaStat>}
             {recommendations > 0 && <MetaStat icon="account-group">{recommendations} ember ajánlja</MetaStat>}
             {anywhere ? (
               <MetaStat icon="wifi">Bárhol elérhető</MetaStat>

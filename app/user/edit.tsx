@@ -164,13 +164,10 @@ export default function Index() {
     }
     supabase
       .from("profiles")
-      .upsert(
-        {
-          ...profile,
-          id: myUid,
-        },
-        { onConflict: "id" },
-      )
+      // update, not upsert: the row always exists here (it was just loaded),
+      // and an upsert would need every NOT NULL column, full_name included.
+      .update({ ...profile, id: myUid })
+      .eq("id", myUid)
       .then(async (res) => {
         setLoading(false);
         console.log("res", res);
@@ -184,11 +181,13 @@ export default function Index() {
         // grant, so they must be written via a SECURITY DEFINER function
         const { error: locError } = await supabase.rpc(
           "update_my_profile_location",
+          // NULLs clear the location; the generated types cannot express
+          // nullable function arguments.
           {
             lat: userLocation?.location.latitude ?? null,
             long: userLocation?.location.longitude ?? null,
             radius_m: userLocation?.radius ?? null,
-          },
+          } as { lat: number; long: number; radius_m: number },
         );
         if (locError) console.log("location update error", locError);
         // Redux only reads the location back on login/app start, so without
@@ -334,7 +333,8 @@ export default function Index() {
     if (data?.path) {
       const { error: profileError } = await supabase
         .from("profiles")
-        .upsert({ avatar_url: fileName, id: myUid }, { onConflict: "id" });
+        .update({ avatar_url: fileName })
+        .eq("id", myUid);
       if (profileError) console.log("profile upsert error", profileError);
     }
 

@@ -267,6 +267,10 @@ export interface InfoState {
   policiesAccepted: boolean;
   statusBarColor: string | null;
   bottomBarColor: string | null;
+  /** The server-driven feedback dialog (components/InAppMessageDialog.tsx). */
+  inAppMessageVisible: boolean;
+  /** Icon of the menu item that opens it, from the newest in_app_messages row. */
+  inAppMessageOpenIcon: string | null;
 }
 
 export interface LayoutRectangle {

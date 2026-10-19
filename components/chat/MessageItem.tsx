@@ -125,7 +125,7 @@ export function MessageItem({
     },
     their: {
       color: theme.colors.onSurface,
-      backgroundColor: theme.colors.surface
+      backgroundColor: theme.colors.elevation.level3
     }
   };
 
@@ -178,11 +178,13 @@ export function MessageItem({
           )}
         </Pressable>
       )}
-      <View>
+      {/* The width cap lives here, not on the Card: on iOS Paper's Surface
+          passes it to its inner view too, which then caps the content at 80%
+          of the already capped bubble and clips the end of the text. */}
+      <View style={styles.bubble}>
         <Card
           mode="contained"
           style={[
-            styles.card,
             {
               backgroundColor: colors[isMyMessage ? "my" : "their"].backgroundColor
             },
@@ -297,7 +299,7 @@ const styles = StyleSheet.create({
   theirMessageContainer: {
     alignItems: "flex-start",
   },
-  card: {
+  bubble: {
     maxWidth: "80%",
   },
   content: {

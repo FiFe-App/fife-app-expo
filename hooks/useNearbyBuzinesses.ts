@@ -27,6 +27,9 @@ export function useNearbyBuzinesses(take = 5) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  // False until the first fetch settles, so an empty list can be told apart
+  // from one that hasn't loaded yet.
+  const [fetched, setFetched] = useState(false);
 
   // Refs so the scroll-driven fetchNextPage guard stays correct without
   // recreating the callback (and re-binding the scroll handler) on every
@@ -96,6 +99,7 @@ export function useNearbyBuzinesses(take = 5) {
     if (requestId !== requestIdRef.current) return;
     setLoading(false);
     loadingRef.current = false;
+    setFetched(true);
   }, [runSearch, take]);
 
   const fetchNextPage = useCallback(async () => {
@@ -149,5 +153,5 @@ export function useNearbyBuzinesses(take = 5) {
     fetch();
   }, [interestsKey, fetch]);
 
-  return { data, loading, error, hasMore, fetch, fetchNextPage };
+  return { data, loading, error, hasMore, fetched, fetch, fetchNextPage };
 }

@@ -1,7 +1,7 @@
 export default {
   name: "Fife App",
   slug: "fife-app-blodqy3cwbfgnkjv24has",
-  version: "1.3.0",
+  version: "1.4.0",
   orientation: "portrait",
   icon: "./assets/images/Slimey.png",
   scheme: "com.fife.app",
@@ -129,7 +129,8 @@ export default {
     "expo-status-bar",
     "expo-video",
     "expo-web-browser",
-    "expo-asset"
+    "expo-asset",
+    "./plugins/withSceneLifecycle"
   ],
   experiments: {
     typedRoutes: true,

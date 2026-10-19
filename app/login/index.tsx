@@ -89,14 +89,14 @@ export default function Index() {
 
       switch (error.code) {
         case "email_not_confirmed":
-          setError("Nincs megerősítve az email-címed");
+          setError("Nincs megerősítve az email-címed!");
           break;
         case "invalid_credentials":
         case "user_not_found":
-          setError("Helytelen e-mail vagy jelszó");
+          setError("Helytelen e-mail vagy jelszó!");
           break;
         case "too_many_requests":
-          setError("Túl sok próbálkozás. Próbáld később.");
+          setError("Túl sok próbálkozás. Próbáld később!");
           break;
         default:
           setError(error.message);

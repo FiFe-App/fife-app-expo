@@ -23,6 +23,10 @@ const MODEL_VERSION = "gpt-4.1-mini/text-embedding-3-large";
 const MAX_QUERY_LENGTH = 200;
 // The map view asks for every pin with take: -1; that now means "up to MAX_TAKE".
 const MAX_TAKE = 500;
+// Tag ↔ tag similarity (inner product of normalized text-embedding-3-large vectors)
+// above which an interest counts as matching a listing's tag in the home feed. A
+// starting value, not a measured one — tune it against real tag pairs.
+const TAG_MATCH_THRESHOLD = 0.6;
 
 function clampInt(value: unknown, fallback: number, min: number, max: number): number {
   const n = typeof value === "number" && Number.isFinite(value) ? Math.trunc(value) : fallback;
@@ -123,25 +127,20 @@ Deno.serve(async (req) => {
       ).slice(0, MAX_INTERESTS)
     : [];
 
-  // A brand new interest tag has no vector yet, so it can only match literally until
-  // embed-tags catches up. Nudging that function here is what makes the semantic half
-  // start working on the *next* load rather than whenever someone next saves a biznisz.
-  // The lookup is one indexed hit on a small table, and both the check and the invoke are
-  // fire-and-forget: a failure here must not cost the user their feed.
-  if (cleanInterests.length > 0) {
-    // Must match public.normalize_tag: lowercase, collapse inner whitespace, trim.
-    const normalized = cleanInterests.map((t) =>
-      t.toLowerCase().replace(/\s+/g, " ").trim()
-    );
+  // A brand new tag has no vector yet, so it can only match literally until embed-tags
+  // catches up. The check is the same query embed-tags itself works from
+  // (public.tags_pending_embedding), so it only fires when there is something embed-tags
+  // would actually embed — a tag whose only users opted out of AI never is, and checking
+  // for a NULL embedding alone would invoke it on every feed load for nothing. It also
+  // backs up create-buziness's own invoke for listing tags. First page only, and both
+  // the check and the invoke are fire-and-forget: a failure here must not cost the user
+  // their feed.
+  if (!query && skip === 0) {
     supabase
-      .from("tags")
-      .select("id")
-      .in("normalized", normalized)
-      .is("embedding", null)
-      .limit(1)
-      .then(({ data: unembedded }) => {
-        if (unembedded && unembedded.length > 0) {
-          console.log("interest tags without an embedding — invoking embed-tags");
+      .rpc("tags_pending_embedding", { p_limit: 1 })
+      .then(({ data: pending }) => {
+        if (pending && pending.length > 0) {
+          console.log("tags without an embedding — invoking embed-tags");
           return supabase.functions.invoke("embed-tags").then(() => {});
         }
       })
@@ -263,7 +262,12 @@ Deno.serve(async (req) => {
     res = await supabase.rpc("interest_buziness_feed", {
       p_interests: cleanInterests,
       p_semantic: true,
-      p_match_threshold: match_threshold ?? 0.6,
+      // Not the caller's match_threshold: that one is tuned for query ↔ listing
+      // vectors in hybrid_buziness_search, while this compares two short tags.
+      p_match_threshold: TAG_MATCH_THRESHOLD,
+      p_lat: typeof lat === "number" ? lat : null,
+      p_long: typeof long === "number" ? long : null,
+      p_max_distance: typeof maxdistance === "number" && maxdistance > 0 ? maxdistance : null,
       p_ingyen: ingyen || false,
       p_bad_boy: isBadBoy,
       p_skip: skip,
@@ -305,7 +309,26 @@ Deno.serve(async (req) => {
     });
   }
 
-  return new Response(JSON.stringify(res.data), {
+  // Neither search function returns the creator's name, and the list cards show it.
+  // One lookup for the whole page; a failure only costs the names, not the results.
+  const authorIds = [...new Set((res.data ?? []).map((b: { author: string }) => b.author))];
+  const names = new Map<string, string>();
+  if (authorIds.length > 0) {
+    const { data: authors, error: authorsError } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", authorIds);
+    if (authorsError) {
+      console.error("Could not read author names:", authorsError.message);
+    }
+    authors?.forEach((a) => a.full_name && names.set(a.id, a.full_name));
+  }
+  const data = (res.data ?? []).map((b: { author: string }) => ({
+    ...b,
+    authorName: names.get(b.author),
+  }));
+
+  return new Response(JSON.stringify(data), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });

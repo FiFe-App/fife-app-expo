@@ -2,6 +2,7 @@ import ErrorScreen from "@/components/ErrorScreen";
 import { ThemedView } from "@/components/ThemedView";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
+import { trackEvent } from "@/lib/analytics";
 import { RootState } from "@/redux/store";
 import { Link, useFocusEffect, useGlobalSearchParams, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -390,6 +391,7 @@ export default function ChatScreen() {
       if (imagePath)
         await supabase.storage.from(MESSAGE_IMAGES_BUCKET).remove([imagePath]);
     } else if (data) {
+      trackEvent("message_sent", { hasImage: !!imagePath, isReply: !!replyingTo });
       setMessages((prev) => {
         if (prev.some((m) => m.id === data.id)) return prev;
         return [data, ...prev];

@@ -44,11 +44,10 @@ export default function ContactsCard({ contacts, isOwnProfile }: ContactsCardPro
           )}
           <TouchableRipple
             onPress={() => {
-              const link = String(getLinkForContact(contact));
-              console.log(link);
-              
-              if (!link || isOwnProfile && contact.type == "MESSAGE") return; 
-              if (link[0] == "/") {
+              const link = getLinkForContact(contact);
+
+              if (!link || isOwnProfile && contact.type == "MESSAGE") return;
+              if (typeof link === "object" || link.startsWith("/")) {
                 router.push(link);
               } else {
                 Linking.openURL(link).catch(() => {

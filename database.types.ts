@@ -428,6 +428,45 @@ export type Database = {
           },
         ]
       }
+      in_app_messages: {
+        Row: {
+          body: string
+          created_at: string
+          icon: string | null
+          id: number
+          open_icon: string | null
+          primary_label: string | null
+          primary_url: string | null
+          secondary_label: string | null
+          secondary_url: string | null
+          title: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          icon?: string | null
+          id?: number
+          open_icon?: string | null
+          primary_label?: string | null
+          primary_url?: string | null
+          secondary_label?: string | null
+          secondary_url?: string | null
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          icon?: string | null
+          id?: number
+          open_icon?: string | null
+          primary_label?: string | null
+          primary_url?: string | null
+          secondary_label?: string | null
+          secondary_url?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       group_chat_members: {
         Row: {
           group_id: string
@@ -1197,7 +1236,10 @@ export type Database = {
           p_bad_boy?: boolean
           p_ingyen?: boolean
           p_interests: string[]
+          p_lat?: number
+          p_long?: number
           p_match_threshold?: number
+          p_max_distance?: number
           p_semantic?: boolean
           p_skip?: number
           p_take?: number

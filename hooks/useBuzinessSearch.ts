@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loadBuzinesses, removeTrailingDivider, storeBuzinesses, storeBuzinessLoading, storeBuzinessSearchParams, storeBuzinessHasMore } from "@/redux/reducers/buzinessReducer";
 import { invokeFunction } from "@/lib/supabase/invokeFunction";
+import { countBucket, trackEvent } from "@/lib/analytics";
 import { RootState } from "@/redux/store";
 import { CircleType } from "@/redux/store.type";
 import { useMyLocation } from "./useMyLocation";
@@ -105,6 +106,14 @@ export function useBuzinessSearch() {
         return;
       }
 
+      // Never the query itself — only whether there was one.
+      trackEvent("search", {
+        hasQuery: !!effectiveQuery.trim(),
+        type: params?.searchType ?? "list",
+        free: overrides?.ingyen ?? params?.ingyen ?? false,
+        customArea: !!effectiveSearchCircle,
+        results: countBucket(data?.length || 0),
+      });
       dispatch(storeBuzinesses(enrichWithDistance(data || [], myLocationRef.current)));
       dispatch(storeBuzinessHasMore(params?.searchType !== "map" && (data?.length || 0) === PAGE_SIZE));
       dispatch(storeBuzinessLoading(false));

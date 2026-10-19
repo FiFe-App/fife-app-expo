@@ -230,6 +230,24 @@ Deno.serve(async (req)=>{
   const res = await supabase.from("buziness").upsert(row, {
     onConflict: "id"
   }).select().single();
+
+  // The title trigger has just put this listing's tags into public.tags, and a new
+  // one has no vector yet, so it can only match interests literally. Nothing else
+  // embeds listing tags, so kick embed-tags now. Only when the author allows AI: an
+  // opted-out author's tags are not eligible anyway (tags_pending_embedding).
+  // Detached so the save never waits on OpenAI or fails because of it.
+  if (!res.error && aiEnhance) {
+    const task = supabase.functions.invoke("embed-tags").then(
+      ({ error }) => {
+        if (error) console.warn("embed-tags invoke failed", error.message);
+      },
+      (e: unknown) => console.warn("embed-tags invoke failed", e),
+    );
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
+      EdgeRuntime.waitUntil(task);
+    }
+  }
+
   if (!res.error) return new Response(JSON.stringify(res.data), {
     headers: {
       ...corsHeaders,
