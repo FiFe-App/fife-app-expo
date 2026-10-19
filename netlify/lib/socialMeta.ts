@@ -7,10 +7,11 @@
  * that fills the page in, so without this it shows "FiFe App" for every link,
  * including a link to one particular biznisz.
  *
- * The edge function next to this file swaps those defaults for the real ones
- * before the HTML leaves the CDN. Kept free of Deno APIs on purpose so the
- * rewriting can be unit-tested with the rest of the app (see
- * __tests__/social/socialMeta.test.ts).
+ * The edge function in ../edge-functions/social-preview.ts swaps those
+ * defaults for the real ones before the HTML leaves the CDN. Kept free of Deno
+ * APIs on purpose so the rewriting can be unit-tested with the rest of the app
+ * (see __tests__/social/socialMeta.test.ts). It lives outside edge-functions/
+ * because Netlify treats every file there as an edge function of its own.
  */
 
 export interface SocialMeta {

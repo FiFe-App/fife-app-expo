@@ -11,7 +11,7 @@ import {
   injectSocialMeta,
   renderMetaTags,
   truncate,
-} from "@/netlify/edge-functions/socialMeta";
+} from "@/netlify/lib/socialMeta";
 
 const SUPABASE_URL = "https://project.supabase.co";
 const OPTIONS = {

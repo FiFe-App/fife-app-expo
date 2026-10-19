@@ -1,6 +1,6 @@
 import type { Config, Context } from "https://edge.netlify.com";
 
-import { buildBuzinessMeta, injectSocialMeta } from "./socialMeta.ts";
+import { buildBuzinessMeta, injectSocialMeta } from "../lib/socialMeta.ts";
 
 /**
  * Link previews for /biznisz/<id> on fifeapp.hu.
