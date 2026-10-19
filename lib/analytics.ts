@@ -26,6 +26,7 @@ export const initAnalytics = () => {
       // Only needed on web (native reads it from the binary), but keeps the
       // version the dashboard groups by identical on every platform.
       appVersion: Constants.expoConfig?.version,
+      enableCrashReporting: true
     });
     enabled = true;
   } catch (e) {

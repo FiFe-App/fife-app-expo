@@ -239,14 +239,7 @@ export default function Index() {
 
   const onShare = async () => {
     const result = await shareBuziness(id, title);
-    if (result === "copied")
-      dispatch(
-        addSnack({
-          title: data?.public
-            ? "Link a vágólapon"
-            : "Link a vágólapon — egyelőre csak belépve nyílik meg",
-        }),
-      );
+    if (result === "copied") dispatch(addSnack({ title: "Link a vágólapon" }));
     else if (result === "failed")
       dispatch(addSnack({ title: "Nem sikerült megosztani a linket" }));
   };

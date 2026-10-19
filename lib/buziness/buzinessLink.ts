@@ -8,8 +8,8 @@ import { SITE_URL } from "@/lib/siteUrl";
  *
  * It only opens for a signed-out visitor if the author marked the biznisz
  * public (the `public` column and the buziness SELECT policy); otherwise the
- * page asks them to sign in. Sharing is offered either way — a member who gets
- * the link is taken straight to it.
+ * page asks them to sign in. Sharing is therefore only offered for public
+ * bizniszek.
  */
 export const getBuzinessUrl = (id: number | string) => `${SITE_URL}/biznisz/${id}`;
 

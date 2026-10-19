@@ -18,8 +18,8 @@ export function GroupChatListItem({ summary, unread = false }: GroupChatListItem
   const preview = lastMessage
     ? `${lastMessageAuthorName ? `${lastMessageAuthorName}: ` : ""}${lastMessage.text}`
     : isMember
-      ? "Még nincs üzenet — írj elsőként!"
-      : "Nyilvános csoport — csatlakozz!";
+      ? "Még nincs üzenet, írj elsőként!"
+      : "Nyilvános csoport, csatlakozz!";
 
   return (
     <Link asChild href={`/group/${group.id}`}>

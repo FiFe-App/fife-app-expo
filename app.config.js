@@ -1,11 +1,24 @@
 export default {
   name: "Fife App",
   slug: "fife-app-blodqy3cwbfgnkjv24has",
-  version: "1.4.0",
+  version: "1.4.1",
   orientation: "portrait",
   icon: "./assets/images/Slimey.png",
   scheme: "com.fife.app",
   userInterfaceStyle: "automatic",
+  // OTA updates (expo-updates). The fingerprint policy derives the runtime
+  // version from the native project, so an update is only ever delivered to
+  // binaries with the same native code — anything that adds or changes a
+  // native module (or a config plugin) needs a new store build, not `eas update`.
+  runtimeVersion: {
+    policy: "fingerprint"
+  },
+  updates: {
+    url: "https://u.expo.dev/2e78cdad-443d-4685-942d-bfc5e223927b",
+    // Start straight from the cached bundle; a new update downloads in the
+    // background and is applied on the next cold start.
+    fallbackToCacheTimeout: 0
+  },
   splash: {
     image: "./assets/images/Slimey.png",
     resizeMode: "contain",
@@ -123,7 +136,8 @@ export default {
         }
       ],
     "expo-secure-store",
-    "expo-audio",
+    ["expo-audio", { enableBackgroundPlayback: false, recordAudioAndroid: false }],
+    ["expo-image-picker", { cameraPermission: false, microphonePermission: false }],
     "expo-image",
     "expo-router",
     "expo-status-bar",

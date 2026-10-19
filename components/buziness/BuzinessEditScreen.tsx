@@ -600,7 +600,7 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
                   variant="bodyMedium"
                   style={{ color: theme.colors.onSurfaceVariant }}
                 >
-                  A bizniszed bárhonnan elérhető — nincs földrajzi helyhez
+                  A bizniszed interneten elérhető vagyis nincs földrajzi helyhez
                   kötve.
                 </Text>
               )}
@@ -679,7 +679,7 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
                     style={{ color: theme.colors.onSurfaceVariant }}
                   >
                     Ha bekapcsolod, bárki megnézheti ezt a bizniszt a linkkel,
-                    fiók nélkül is — és megoszthatod közösségi oldalakon.
+                    fiók nélkül is. Megoszthatod közösségi oldalakon.
                   </Text>
                 </View>
                 <Switch value={isPublic} onValueChange={setIsPublic} />

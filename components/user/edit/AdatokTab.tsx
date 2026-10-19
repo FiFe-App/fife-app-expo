@@ -102,8 +102,8 @@ export default function AdatokTab({
       <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
         <ThemedText variant="bodyLarge" type="bold">Érdeklődési köröd</ThemedText>
         <ThemedText type="label">
-          Add meg, mi érdekel — ezek alapján rendezzük eléd a bizniszeket a Közösség
-          oldaladon. Elég egy is, és bármikor változtathatsz rajtuk.
+          Témák amik érdekelnek, az ezekbe eső bizniszek ki lesznek emelve a Közösség
+          oldaladon.
         </ThemedText>
         <TagInput
           value={interests}
