@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { supabase } from "@/lib/supabase/supabase";
+import { trackEvent } from "@/lib/analytics";
 import { clearSignupDraft, setSignupDraft } from "@/redux/reducers/appReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
@@ -141,6 +142,7 @@ export default function Index() {
       } else if (data.user) {
         if (data?.user.identities && data.user.identities.length > 0) {
           console.log("Sign-up successful!");
+          trackEvent("sign_up", { invited: !!invitedBy });
           AsyncStorage.setItem("email", email);
           dispatch(clearSignupDraft());
           router.navigate("/csatlakozom/email-ellenorzes");

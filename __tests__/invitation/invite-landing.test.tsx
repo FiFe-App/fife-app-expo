@@ -16,7 +16,7 @@ import {
   __setLocalSearchParams,
   router,
 } from "@/test-utils/mocks/expo-router";
-import { __resetSupabase, __setTableRow } from "@/test-utils/mocks/supabase";
+import { __resetSupabase, supabase } from "@/test-utils/mocks/supabase";
 import { createTestStore, renderWithProviders } from "@/test-utils/renderWithProviders";
 
 const INVITER = {
@@ -26,12 +26,14 @@ const INVITER = {
   avatar_url: "avatar.jpg",
 };
 
+// The page reads the inviter through get_public_profile_card (anon has no
+// table access), which returns the matching row, or none.
 const inviterExists = () => {
-  __setTableRow("profiles", { data: INVITER, error: null });
+  supabase.rpc.mockResolvedValue({ data: [INVITER], error: null });
 };
 
 const inviterMissing = () => {
-  __setTableRow("profiles", { data: null, error: null });
+  supabase.rpc.mockResolvedValue({ data: [], error: null });
 };
 
 beforeEach(() => {
@@ -49,11 +51,14 @@ describe("invitation / landing page", () => {
     expect(
       await screen.findByText("Kovács Anna meghívott a FiFe Appba!"),
     ).toBeOnTheScreen();
+    expect(supabase.rpc).toHaveBeenCalledWith("get_public_profile_card", {
+      p_id: INVITER.id,
+    });
   });
 
   it("falls back to the username when the profile has no full name", async () => {
-    __setTableRow("profiles", {
-      data: { ...INVITER, full_name: null },
+    supabase.rpc.mockResolvedValue({
+      data: [{ ...INVITER, full_name: null }],
       error: null,
     });
 

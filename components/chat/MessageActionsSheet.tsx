@@ -2,19 +2,17 @@ import { Spacing } from "@/constants/spacing";
 import React from "react";
 import { List, Modal, Portal, Surface, useTheme } from "react-native-paper";
 
+// Opened by long-pressing one of your own messages. Replying moved to a swipe
+// (SwipeToReply), so deleting is what is left here.
 interface MessageActionsSheetProps {
   visible: boolean;
   onDismiss: () => void;
-  isOwn: boolean;
-  onReply: () => void;
   onDelete: () => void;
 }
 
 export function MessageActionsSheet({
   visible,
   onDismiss,
-  isOwn,
-  onReply,
   onDelete,
 }: MessageActionsSheetProps) {
   const theme = useTheme();
@@ -41,20 +39,13 @@ export function MessageActionsSheet({
           elevation={4}
         >
           <List.Item
-            title="Válasz"
-            left={(props) => <List.Icon {...props} icon="reply" />}
-            onPress={onReply}
+            title="Törlés"
+            titleStyle={{ color: theme.colors.error }}
+            left={(props) => (
+              <List.Icon {...props} icon="delete" color={theme.colors.error} />
+            )}
+            onPress={onDelete}
           />
-          {isOwn && (
-            <List.Item
-              title="Törlés"
-              titleStyle={{ color: theme.colors.error }}
-              left={(props) => (
-                <List.Icon {...props} icon="delete" color={theme.colors.error} />
-              )}
-              onPress={onDelete}
-            />
-          )}
         </Surface>
       </Modal>
     </Portal>

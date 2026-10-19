@@ -33,18 +33,35 @@ const COLOR = {
 } as const;
 
 // ---------------------------------------------------------------------------
+// Escaping
+// ---------------------------------------------------------------------------
+
+/**
+ * Names, titles and message previews are user-controlled. Interpolated raw,
+ * anyone could inject links or images into a genuine info@fifeapp.hu mail.
+ */
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// ---------------------------------------------------------------------------
 // Copy / i18n
 // ---------------------------------------------------------------------------
 
 const COPY = {
-  greeting:        (name: string | null) => name ? `Szia ${name}!` : "Szia!",
+  greeting:        (name: string | null) => name ? `Szia ${escapeHtml(name)}!` : "Szia!",
   goodbye:         "Legyen szép napod! :)",
   sender:          "Kristóf Ákos, a FiFe Apptól",
   pageTitle:       "FiFe értesítés",
 
   buzinessRec: {
     message:  (authorName: string, buzinessTitle: string) =>
-      `<strong>${authorName}</strong> ajánlja a <strong>${buzinessTitle}</strong> bizniszedet!`,
+      `<strong>${escapeHtml(authorName)}</strong> ajánlja a <strong>${escapeHtml(buzinessTitle)}</strong> bizniszedet!`,
     subtext:  "Nézd meg a bizniszedet, és köszönd meg az ajánlást!",
     cta:      "Biznisz megtekintése",
     ctaUrl:   (id: number | string) => `${HOME_URL}/biznisz/${id}`,
@@ -52,7 +69,7 @@ const COPY = {
 
   profileRec: {
     message:  (authorName: string) =>
-      `<strong>${authorName}</strong> megbízhatónak jelölt téged!`,
+      `<strong>${escapeHtml(authorName)}</strong> megbízhatónak jelölt téged!`,
     subtext:  "Nézd meg a profilját, és viszonozd, ha te is megbízol benne.",
     cta:      "Profil megtekintése",
     ctaUrl:   (authorId: string) => `${HOME_URL}/user/${authorId}`,
@@ -60,7 +77,7 @@ const COPY = {
 
   comment: {
     message:  (authorName: string, buzinessTitle: string) =>
-      `<strong>${authorName}</strong> kommentet írt a <strong>${buzinessTitle}</strong> bizniszedhez!`,
+      `<strong>${escapeHtml(authorName)}</strong> kommentet írt a <strong>${escapeHtml(buzinessTitle)}</strong> bizniszedhez!`,
     subtext:  "Nézd meg és válaszolj neki!",
     cta:      "Biznisz megtekintése",
     ctaUrl:   (id: number | string) => `${HOME_URL}/biznisz/${id}`,
@@ -68,8 +85,8 @@ const COPY = {
 
   message: {
     message:  (senderName: string) =>
-      `<strong>${senderName}</strong> üzenetet küldött neked!`,
-    subtext:  (preview: string) => preview ? `„${preview}"` : "Nézd meg és válaszolj neki!",
+      `<strong>${escapeHtml(senderName)}</strong> üzenetet küldött neked!`,
+    subtext:  (preview: string) => preview ? `„${escapeHtml(preview)}"` : "Nézd meg és válaszolj neki!",
     cta:      "Válasz",
     ctaUrl:   (senderUid: string) => `${HOME_URL}/user/${senderUid}`,
   },

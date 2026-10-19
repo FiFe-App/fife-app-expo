@@ -1,5 +1,6 @@
 import { decryptEmotionLog, encryptEmotionLog } from "@/lib/crypto/emotionLogEncryption";
 import { supabase } from "@/lib/supabase/supabase";
+import { trackEvent } from "@/lib/analytics";
 import { mergeFromServer, markSynced, upsertLog } from "@/redux/reducers/emotionLogsReducer";
 import { RootState } from "@/redux/store";
 import { EmotionLogLocal } from "@/redux/store.type";
@@ -79,6 +80,8 @@ export function useEmotionLog() {
             { onConflict: "author,log_date" }
           );
         dispatch(markSynced(cardTarget.targetDate));
+        // Only that an entry was saved — never the rate or the note.
+        trackEvent("emotion_logged", { hasNote: !!note?.trim() });
       } catch {
         // stays synced: false — will retry on next syncPendingLogs call
       }

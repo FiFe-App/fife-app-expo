@@ -1,5 +1,15 @@
 import { ThemedView } from "@/components/ThemedView";
 import { fetchUserProfile } from "@/lib/auth/fetchUserProfile";
+import {
+  getJoinHref,
+  REDIRECT_PARAM,
+  sanitizeRedirectTarget,
+  takeAttemptedPath,
+} from "@/lib/auth/loginRedirect";
+import {
+  clearRedirectAfterAuth,
+  setRedirectAfterAuth,
+} from "@/redux/reducers/appReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
@@ -29,7 +39,23 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [focusedField, setFocusedField] = useState<"email" | "password" | null>(null);
-  const { "#": hash, redirected_from } = useLocalSearchParams<{ "#": string; redirected_from?: string }>();
+  const { "#": hash, [REDIRECT_PARAM]: redirectedFrom } = useLocalSearchParams<{
+    "#": string;
+    [REDIRECT_PARAM]?: string;
+  }>();
+  // Either the button that sent them here named the page (the parameter), or
+  // the router took the address away when it bounced them off a locked link —
+  // in which case lib/auth/loginRedirect.ts caught it as the app loaded.
+  // Read once, on mount: taking it is what forgets it.
+  const [capturedPath] = useState(() => takeAttemptedPath());
+  const redirectTarget = sanitizeRedirectTarget(redirectedFrom) ?? capturedPath;
+  // Handed to the join wizard as well: somebody who taps "Még nincs fiókom"
+  // is after the same page, and the e-mail confirmation restarts the app in
+  // the middle of it — which no route parameter survives.
+  useEffect(() => {
+    if (redirectTarget) dispatch(setRedirectAfterAuth(redirectTarget));
+  }, [redirectTarget, dispatch]);
+
   const token_data = hash
     ? Object.fromEntries(hash.split("&").map((e) => e.split("=")))
     : null;
@@ -38,8 +64,6 @@ export default function Index() {
   useEffect(() => {
     navigation.setOptions({ "title": "Bejelentkezés" });
     if (token_data) {
-      console.log(token_data);
-
       supabase.auth
         .setSession({
           refresh_token: token_data.refresh_token,
@@ -65,14 +89,14 @@ export default function Index() {
 
       switch (error.code) {
         case "email_not_confirmed":
-          setError("Nincs megerősítve az email-címed");
+          setError("Nincs megerősítve az email-címed!");
           break;
         case "invalid_credentials":
         case "user_not_found":
-          setError("Helytelen e-mail vagy jelszó");
+          setError("Helytelen e-mail vagy jelszó!");
           break;
         case "too_many_requests":
-          setError("Túl sok próbálkozás. Próbáld később.");
+          setError("Túl sok próbálkozás. Próbáld később!");
           break;
         default:
           setError(error.message);
@@ -86,17 +110,14 @@ export default function Index() {
   const getUserData = async (userData: User) => {
     const profile = await fetchUserProfile(userData, dispatch);
     if (profile) {
-      const isValidInternal =
-        typeof redirected_from === "string" &&
-        redirected_from.startsWith("/") &&
-        !redirected_from.startsWith("//") &&
-        !redirected_from.includes(":");
-      router.replace(isValidInternal ? (redirected_from as `/${string}`) : "/");
+      dispatch(clearRedirectAfterAuth());
+      router.replace((redirectTarget ?? "/") as `/${string}`);
     }
   };
 
-  if (uid)
-    return <Redirect href="/" />;
+  // Already signed in — including the case where the session was restored
+  // while this screen was open. The page they were after still applies.
+  if (uid) return <Redirect href={(redirectTarget ?? "/") as `/${string}`} />;
 
   return (
     <ThemedView style={{ flex: 1 }} type="default">
@@ -177,7 +198,7 @@ export default function Index() {
               Bejelentkezés
             </Button>
             <View style={{ flexDirection: "row", justifyContent: "center", flexWrap: "wrap", gap: Spacing.xs }}>
-              <Link href="/csatlakozom" asChild>
+              <Link href={getJoinHref(redirectTarget)} asChild>
                 <Button>Még nincs fiókom</Button>
               </Link>
               <Link href="/user/password-reset" asChild>

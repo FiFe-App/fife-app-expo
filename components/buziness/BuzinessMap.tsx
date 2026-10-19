@@ -102,7 +102,7 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
     <View style={styles.container}>
       <FiFeMap
         ref={mapRef}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         onMapLoaded={(e) => {
           //Alert.alert(JSON.stringify(e));
         }}

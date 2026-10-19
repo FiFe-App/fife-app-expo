@@ -11,6 +11,7 @@ import {
   canOpenUpdate,
   openUpdate,
 } from "@/lib/appVersion/appVersionStatus";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface UpdateAvailableCardProps {
   status: AppVersionStatus;
@@ -27,13 +28,14 @@ export default function UpdateAvailableCard({
   onDismiss,
 }: UpdateAvailableCardProps) {
   const theme = useAppTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Surface
       elevation={2}
       style={{
         position:"absolute",
-        bottom:80,
+        bottom:insets.bottom+80,
         margin: Spacing.sm,
         borderRadius: BorderRadius.lg,
         paddingVertical: Spacing.md,
