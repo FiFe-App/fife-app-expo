@@ -111,7 +111,7 @@ export default function NotificationPrompts() {
       key: "aiEnhance",
       icon: AI_ENHANCE_ICON,
       title: "Egyszerűbb keresés és megtalálhatóság",
-      body: `${AI_ENHANCE_DESCRIPTION} Bármikor átállíthatod a Profil → Beállítások alatt.`,
+      body: `${AI_ENHANCE_DESCRIPTION}`,
       nativeOnly: false,
       available: true,
       answered: prefs.aiAskedAt !== null,

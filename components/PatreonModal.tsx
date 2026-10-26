@@ -7,6 +7,7 @@ import { Button } from "@/components/Button";
 import { Spacing } from "@/constants/spacing";
 import { ThemedView } from "./ThemedView";
 import { Image } from "expo-image";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const PATREON_URL = "https://www.patreon.com/c/fifeapp";
 
@@ -17,6 +18,7 @@ type PatreonModalProps = {
 
 export function PatreonModal({ visible, onDismiss }: PatreonModalProps) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
 
   const handleOpen = async () => {
     if (Platform.OS === "web") {
@@ -33,11 +35,18 @@ export function PatreonModal({ visible, onDismiss }: PatreonModalProps) {
       transparent={false}
       onRequestClose={onDismiss}
     >
-        <ThemedView style={{alignItems: "center",flex:1}}>
+        <ThemedView
+          style={{
+            alignItems: "center",
+            flex: 1,
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+          }}
+        >
             <IconButton
                 icon="close"
                 size={28}
-                style={styles.closeButton}
+                style={[styles.closeButton, { top: insets.top + Spacing.md }]}
                 onPress={onDismiss}
                 iconColor={theme.colors.onBackground}
             />

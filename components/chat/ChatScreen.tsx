@@ -2,8 +2,9 @@ import ErrorScreen from "@/components/ErrorScreen";
 import { ThemedView } from "@/components/ThemedView";
 import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
+import { trackEvent } from "@/lib/analytics";
 import { RootState } from "@/redux/store";
-import { Link, useFocusEffect, useGlobalSearchParams } from "expo-router";
+import { Link, useFocusEffect, useGlobalSearchParams, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,
@@ -13,7 +14,6 @@ import {
   Platform,
 } from "react-native";
 import ProfileImage from "@/components/ProfileImage";
-import { useNavigation } from "@react-navigation/native";
 import { ActivityIndicator, Portal, Text } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { MessageItem } from "./MessageItem";
@@ -34,6 +34,8 @@ import { ReplyPreview } from "./ReplyPreview";
 import { DateSeparator } from "./DateSeparator";
 import { isSameCalendarDay } from "@/lib/functions/formatChatDate";
 import { Spacing } from "@/constants/spacing";
+import { useJumpToMessage } from "@/hooks/useJumpToMessage";
+import { useReplyTargets } from "@/hooks/useReplyTargets";
 
 type Message = Tables<"messages">;
 
@@ -66,7 +68,10 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [otherUser, setOtherUser] = useState<Tables<"profiles"> | null>(null);
+  const [otherUser, setOtherUser] = useState<Pick<
+    Tables<"profiles">,
+    "id" | "full_name" | "username" | "avatar_url"
+  > | null>(null);
   const [otherUserNotFound, setOtherUserNotFound] = useState(false);
   const hasMessagingEnabled = myMessagingEnabledFromRedux ?? false;
   const [otherHasMessagingEnabled, setOtherHasMessagingEnabled] = useState(false);
@@ -82,6 +87,7 @@ export default function ChatScreen() {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const mountId = useRef(Date.now()).current;
   const navigation = useNavigation();
+  const listRef = useRef<FlatList<Message>>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -110,7 +116,7 @@ export default function ChatScreen() {
       setOtherUserNotFound(false);
       supabase
         .from("profiles")
-        .select("*")
+        .select("id, full_name, username, avatar_url")
         .eq("id", currentOtherUid)
         .single()
         .then(({ data, error }) => {
@@ -216,6 +222,32 @@ export default function ChatScreen() {
     if (olderPage.length > 0) setOldestLoadedCreatedAt(olderPage[olderPage.length - 1].created_at);
     setLoadingOlder(false);
   }, [myUid, otherUid, loadingOlder, hasMoreOlder, oldestLoadedCreatedAt]);
+
+  // Everything between the oldest loaded message and `createdAt`, so a quoted
+  // message further back can be scrolled to.
+  const loadThrough = useCallback(async (createdAt: string) => {
+    if (!myUid || !otherUid || !oldestLoadedCreatedAt) return;
+
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .or(`and(author.eq.${myUid},to.eq.${otherUid}),and(author.eq.${otherUid},to.eq.${myUid})`)
+      .gte("created_at", createdAt)
+      .lt("created_at", oldestLoadedCreatedAt)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error loading messages up to the quoted one:", error);
+      return;
+    }
+
+    const olderPage = data || [];
+    setMessages((prev) => {
+      const ids = new Set(prev.map((m) => m.id));
+      return [...prev, ...olderPage.filter((m) => !ids.has(m.id))];
+    });
+    if (olderPage.length > 0) setOldestLoadedCreatedAt(olderPage[olderPage.length - 1].created_at);
+  }, [myUid, otherUid, oldestLoadedCreatedAt]);
 
   // Set up realtime subscription
   useEffect(() => {
@@ -359,6 +391,7 @@ export default function ChatScreen() {
       if (imagePath)
         await supabase.storage.from(MESSAGE_IMAGES_BUCKET).remove([imagePath]);
     } else if (data) {
+      trackEvent("message_sent", { hasImage: !!imagePath, isReply: !!replyingTo });
       setMessages((prev) => {
         if (prev.some((m) => m.id === data.id)) return prev;
         return [data, ...prev];
@@ -432,11 +465,12 @@ export default function ChatScreen() {
     return set;
   }, [messages]);
 
-  const messageById = useMemo(() => {
-    const map = new Map<number, Message>();
-    messages.forEach((m) => map.set(m.id, m));
-    return map;
-  }, [messages]);
+  const replyTarget = useReplyTargets("messages", displayMessages);
+  const { highlightedId, jumpTo, onScrollToIndexFailed } = useJumpToMessage({
+    listRef,
+    items: displayMessages,
+    loadThrough,
+  });
 
   const otherUserLabel = otherUser?.full_name || otherUser?.username || "";
 
@@ -506,12 +540,13 @@ export default function ChatScreen() {
     >
       <ThemedView style={styles.container}>
         <FlatList
+          ref={listRef}
           data={displayMessages}
           inverted
           keyExtractor={(item) => item.id.toString()}
+          onScrollToIndexFailed={onScrollToIndexFailed}
           renderItem={({ item, index }) => {
-            const replyToMessage = item.reply_to ? messageById.get(item.reply_to) ?? null : null;
-            const replyToDeleted = !!item.reply_to && !replyToMessage;
+            const { message: replyToMessage, deleted: replyToDeleted } = replyTarget(item.reply_to);
 
             // displayMessages is newest-first, so the message *older* than this
             // one — the one rendered directly above it — is the next entry in
@@ -544,9 +579,12 @@ export default function ChatScreen() {
                   }
                   hearted={heartedTexts.has(`heart-${item.id}`)}
                   onToggleHeart={() => toggleHeart(item)}
-                  onLongPress={() => setActionsMessage(item)}
+                  onLongPress={item.author === myUid ? () => setActionsMessage(item) : undefined}
+                  onSwipeReply={() => setReplyingTo(item)}
                   replyToMessage={replyToMessage}
                   replyToDeleted={replyToDeleted}
+                  onReplyPress={replyToMessage ? () => jumpTo(replyToMessage) : undefined}
+                  highlighted={highlightedId === item.id}
                   otherUserName={otherUserLabel || undefined}
                 />
               </View>
@@ -602,11 +640,6 @@ export default function ChatScreen() {
       <MessageActionsSheet
         visible={!!actionsMessage}
         onDismiss={() => setActionsMessage(null)}
-        isOwn={actionsMessage?.author === myUid}
-        onReply={() => {
-          setReplyingTo(actionsMessage);
-          setActionsMessage(null);
-        }}
         onDelete={() => {
           if (actionsMessage) deleteMessage(actionsMessage);
           setActionsMessage(null);

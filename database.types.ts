@@ -112,6 +112,7 @@ export type Database = {
           images: string[] | null
           ingyen: boolean
           location: unknown
+          public: boolean
           radius: number | null
           title: string
         }
@@ -126,6 +127,7 @@ export type Database = {
           images?: string[] | null
           ingyen?: boolean
           location?: unknown
+          public?: boolean
           radius?: number | null
           title: string
         }
@@ -140,6 +142,7 @@ export type Database = {
           images?: string[] | null
           ingyen?: boolean
           location?: unknown
+          public?: boolean
           radius?: number | null
           title?: string
         }
@@ -156,6 +159,36 @@ export type Database = {
             columns: ["defaultContact"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buziness_tags: {
+        Row: {
+          buziness_id: number
+          tag_id: number
+        }
+        Insert: {
+          buziness_id: number
+          tag_id: number
+        }
+        Update: {
+          buziness_id?: number
+          tag_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buziness_tags_buziness_id_fkey"
+            columns: ["buziness_id"]
+            isOneToOne: false
+            referencedRelation: "buziness"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buziness_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
             referencedColumns: ["id"]
           },
         ]
@@ -395,6 +428,194 @@ export type Database = {
           },
         ]
       }
+      in_app_messages: {
+        Row: {
+          body: string
+          created_at: string
+          icon: string | null
+          id: number
+          open_icon: string | null
+          primary_label: string | null
+          primary_url: string | null
+          secondary_label: string | null
+          secondary_url: string | null
+          title: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          icon?: string | null
+          id?: number
+          open_icon?: string | null
+          primary_label?: string | null
+          primary_url?: string | null
+          secondary_label?: string | null
+          secondary_url?: string | null
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          icon?: string | null
+          id?: number
+          open_icon?: string | null
+          primary_label?: string | null
+          primary_url?: string | null
+          secondary_label?: string | null
+          secondary_url?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      group_chat_members: {
+        Row: {
+          group_id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_chat_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_chat_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_chat_message_hearts: {
+        Row: {
+          created_at: string
+          group_id: string
+          message_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          message_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          message_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_chat_message_hearts_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_chat_message_hearts_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "group_chat_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_chat_message_hearts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_chat_messages: {
+        Row: {
+          author: string
+          created_at: string
+          group_id: string
+          id: number
+          reply_to: number | null
+          text: string
+        }
+        Insert: {
+          author: string
+          created_at?: string
+          group_id: string
+          id?: never
+          reply_to?: number | null
+          text?: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          group_id?: string
+          id?: never
+          reply_to?: number | null
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_chat_messages_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_chat_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_chat_messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "group_chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_chats: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          title?: string
+        }
+        Relationships: []
+      }
       help_contacts: {
         Row: {
           author: string | null
@@ -427,6 +648,29 @@ export type Database = {
           type?: Database["public"]["Enums"]["contact_type"]
         }
         Relationships: []
+      }
+      interest_tags: {
+        Row: {
+          author: string
+          tag_id: number
+        }
+        Insert: {
+          author: string
+          tag_id: number
+        }
+        Update: {
+          author?: string
+          tag_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interest_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invitations: {
         Row: {
@@ -774,6 +1018,36 @@ export type Database = {
         }
         Relationships: []
       }
+      tags: {
+        Row: {
+          created_at: string
+          embedded_at: string | null
+          embedding: string | null
+          id: number
+          name: string
+          normalized: string
+          usage_count: number
+        }
+        Insert: {
+          created_at?: string
+          embedded_at?: string | null
+          embedding?: string | null
+          id?: number
+          name: string
+          normalized: string
+          usage_count?: number
+        }
+        Update: {
+          created_at?: string
+          embedded_at?: string | null
+          embedding?: string | null
+          id?: number
+          name?: string
+          normalized?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           ai_asked_at: string | null
@@ -786,6 +1060,7 @@ export type Database = {
           encrypted_data: string | null
           home_add_buziness_card_dismissed: boolean
           home_messaging_card_dismissed: boolean
+          interests: string[]
           invite_card_dismissed: boolean
           is_it_safe_dismissed: boolean
           newsletter: boolean
@@ -809,6 +1084,7 @@ export type Database = {
           encrypted_data?: string | null
           home_add_buziness_card_dismissed?: boolean
           home_messaging_card_dismissed?: boolean
+          interests?: string[]
           invite_card_dismissed?: boolean
           is_it_safe_dismissed?: boolean
           newsletter?: boolean
@@ -832,6 +1108,7 @@ export type Database = {
           encrypted_data?: string | null
           home_add_buziness_card_dismissed?: boolean
           home_messaging_card_dismissed?: boolean
+          interests?: string[]
           invite_card_dismissed?: boolean
           is_it_safe_dismissed?: boolean
           newsletter?: boolean
@@ -908,6 +1185,16 @@ export type Database = {
           query_text: string
         }[]
       }
+      get_public_buziness: { Args: { p_id: number }; Returns: Json }
+      get_public_profile_card: {
+        Args: { p_id: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+          username: string
+        }[]
+      }
       hybrid_buziness_search: {
         Args: {
           distance_sort?: number
@@ -943,8 +1230,45 @@ export type Database = {
           title: string
         }[]
       }
+      in_my_world: { Args: { other: string }; Returns: boolean }
+      interest_buziness_feed: {
+        Args: {
+          p_bad_boy?: boolean
+          p_ingyen?: boolean
+          p_interests: string[]
+          p_lat?: number
+          p_long?: number
+          p_match_threshold?: number
+          p_max_distance?: number
+          p_semantic?: boolean
+          p_skip?: number
+          p_take?: number
+        }
+        Returns: {
+          author: string
+          created_at: string
+          defaultcontact: number
+          description: string
+          distance: number
+          id: number
+          images: string[]
+          ingyen: boolean
+          is_match: boolean
+          lat: number
+          location: unknown
+          long: number
+          radius: number
+          recommendations: number
+          title: string
+        }[]
+      }
       is_bad_boy: { Args: never; Returns: boolean }
       is_blocked_by: { Args: { other_user: string }; Returns: boolean }
+      is_group_chat_member: {
+        Args: { p_group_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_public_group_chat: { Args: { p_group_id: string }; Returns: boolean }
       nearby_buziness: {
         Args: {
           lat: number
@@ -1056,7 +1380,30 @@ export type Database = {
         }[]
       }
       newsletter_unsubscribe: { Args: { p_email: string }; Returns: boolean }
+      normalize_tag: { Args: { p_tag: string }; Returns: string }
       parse_app_version: { Args: { v: string }; Returns: number[] }
+      search_tags: {
+        Args: { p_limit?: number; p_prefix: string }
+        Returns: {
+          name: string
+          usage_count: number
+        }[]
+      }
+      sync_buziness_tags: {
+        Args: { p_buziness_id: number; p_tags: string[] }
+        Returns: undefined
+      }
+      sync_interest_tags: {
+        Args: { p_author: string; p_tags: string[] }
+        Returns: undefined
+      }
+      tags_pending_embedding: {
+        Args: { p_limit?: number }
+        Returns: {
+          id: number
+          name: string
+        }[]
+      }
       update_my_profile_location: {
         Args: { lat: number; long: number; radius_m: number }
         Returns: undefined

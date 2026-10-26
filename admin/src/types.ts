@@ -35,3 +35,29 @@ export interface NewsletterInput {
   /** Ezek a címek kimaradnak, bármit is mond a célcsoport. */
   excluded: string[];
 }
+
+/** Az appban megjelenő üzenet — a legújabb sor látszik. */
+export interface InAppMessage {
+  id: number;
+  created_at: string;
+  icon: string | null;
+  /** Az app fejlécében az ablakot megnyitó menüpont ikonja. */
+  open_icon: string | null;
+  title: string;
+  body: string;
+  primary_label: string | null;
+  primary_url: string | null;
+  secondary_label: string | null;
+  secondary_url: string | null;
+}
+
+export interface InAppMessageInput {
+  icon: string;
+  openIcon: string;
+  title: string;
+  body: string;
+  primaryLabel: string;
+  primaryUrl: string;
+  secondaryLabel: string;
+  secondaryUrl: string;
+}

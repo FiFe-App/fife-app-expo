@@ -5,6 +5,7 @@ import nodemailer from "npm:nodemailer@6";
 import {
   buzinessRecommendationHtml,
   commentHtml,
+  escapeHtml,
   htmlToText,
   messageHtml,
   newsletterHtml,
@@ -194,6 +195,8 @@ async function sendNotification(
     subject?: string;
     htmlBuilder?: (recipientName: string | null) => string;
     data?: Record<string, unknown>;
+    /** Skip the email channel (e.g. busy group chats, where mail would be spam). */
+    pushOnly?: boolean;
   } = {},
 ) {
   const prefs = await getNotificationPrefs(supabase, targetUserId);
@@ -203,10 +206,10 @@ async function sendNotification(
   if (prefs.notify_push && prefs.push_token) {
     promises.push(sendPushNotification(prefs.push_token, message, options.data));
   }
-  if (prefs.notify_email && prefs.email) {
+  if (!options.pushOnly && prefs.notify_email && prefs.email) {
     const html = options.htmlBuilder
       ? options.htmlBuilder(prefs.full_name ?? null)
-      : `<p>${message}</p>`;
+      : `<p>${escapeHtml(message)}</p>`;
     promises.push(sendEmailNotificationSafe(prefs.email, options.subject || "FiFe értesítés", html));
   }
   if (promises.length === 0) {
@@ -214,6 +217,63 @@ async function sendNotification(
     return;
   }
   await Promise.all(promises);
+}
+
+// Group chat push notifications are built but not live yet.
+// TODO: flip to true together with enabling the on_group_chat_message_created
+// trigger (see supabase/migrations/20260925120000_add_group_chats.sql).
+const GROUP_CHAT_NOTIFICATIONS_ENABLED = false;
+
+// A member gets at most one push per group within this window, so a lively
+// conversation doesn't buzz everyone's phone for every line.
+const GROUP_CHAT_NOTIFY_WINDOW_MS = 10 * 60 * 1000;
+
+async function notifyGroupChatMembers(
+  supabase: ReturnType<typeof createClient>,
+  record: { id: number; group_id: string; author: string; text: string; created_at: string },
+) {
+  const [groupRes, authorRes, membersRes] = await Promise.all([
+    supabase.from("group_chats").select("title").eq("id", record.group_id).maybeSingle(),
+    supabase.from("profiles").select("full_name").eq("id", record.author).maybeSingle(),
+    supabase
+      .from("group_chat_members")
+      .select("user_id")
+      .eq("group_id", record.group_id)
+      .neq("user_id", record.author),
+  ]);
+
+  const groupTitle = groupRes.data?.title || "Csoport";
+  const senderName = authorRes.data?.full_name || "Valaki";
+  const members = (membersRes.data ?? []) as { user_id: string }[];
+  if (members.length === 0) return;
+
+  // Rate limit per group: if there already was a message in the window before
+  // this one, members were notified recently enough.
+  const cutoff = new Date(
+    new Date(record.created_at).getTime() - GROUP_CHAT_NOTIFY_WINDOW_MS,
+  ).toISOString();
+  const { count } = await supabase
+    .from("group_chat_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("group_id", record.group_id)
+    .gt("created_at", cutoff)
+    .lt("created_at", record.created_at)
+    .limit(1);
+  if (count && count > 0) {
+    console.log(`Rate-limited: group chat notification skipped for ${record.group_id}`);
+    return;
+  }
+
+  const preview = (record.text || "").slice(0, 100);
+  const message = `${groupTitle} – ${senderName}: ${preview}`;
+  await Promise.all(
+    members.map((m) =>
+      sendNotification(supabase, m.user_id, message, {
+        pushOnly: true,
+        data: { url: `/group/${record.group_id}` },
+      }).catch((err) => console.error(`Group notify failed for ${m.user_id}:`, err)),
+    ),
+  );
 }
 
 type NewsletterRecord = {
@@ -500,6 +560,12 @@ Deno.serve(async (req) => {
           });
         }
       }
+    } else if (table === "group_chat_messages") {
+      if (!GROUP_CHAT_NOTIFICATIONS_ENABLED) {
+        console.log("Group chat notifications are disabled — skipping");
+      } else {
+        await notifyGroupChatMembers(supabase, record);
+      }
     } else if (table === "messages") {
       // Notify recipient of a new message, rate-limited to 1 per 60s per sender→recipient pair
       if (typeof record.text === "string" && record.text.startsWith("heart-")) {
@@ -507,18 +573,31 @@ Deno.serve(async (req) => {
       } else if (!record.to || record.to === record.author) {
         // No recipient or self-message — skip
       } else {
-        // Rate-limit: check if there's a recent message from same author→to within last 60s
-        const cutoff = new Date(new Date(record.created_at).getTime() - 3600).toISOString();
-        const { count } = await supabase
-          .from("messages")
-          .select("id", { count: "exact", head: true })
-          .eq("author", record.author)
-          .eq("to", record.to)
-          .gt("created_at", cutoff)
-          .lt("created_at", record.created_at)
-          .limit(1);
+        // Rate-limit: check if there's another message from same author→to within
+        // the last 60s. The window is anchored to server time and excludes this row
+        // by id — created_at is client-writable, so it can't be trusted here.
+        const cutoff = new Date(Date.now() - 60_000).toISOString();
+        const [{ count }, { count: blockedCount }] = await Promise.all([
+          supabase
+            .from("messages")
+            .select("id", { count: "exact", head: true })
+            .eq("author", record.author)
+            .eq("to", record.to)
+            .gt("created_at", cutoff)
+            .neq("id", record.id)
+            .limit(1),
+          supabase
+            .from("blocked_users")
+            .select("id", { count: "exact", head: true })
+            .or(
+              `and(blocker_id.eq.${record.to},blocked_id.eq.${record.author}),` +
+                `and(blocker_id.eq.${record.author},blocked_id.eq.${record.to})`,
+            ),
+        ]);
 
-        if (count && count > 0) {
+        if (blockedCount && blockedCount > 0) {
+          console.log(`Blocked: message notification skipped for ${record.author} → ${record.to}`);
+        } else if (count && count > 0) {
           console.log(`Rate-limited: message notification skipped for ${record.author} → ${record.to}`);
         } else {
           const authorRes = await supabase

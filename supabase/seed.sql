@@ -338,6 +338,43 @@ INSERT INTO "public"."comments" ("id", "created_at", "text", "author", "key", "i
 
 
 --
+-- Data for Name: group_chat_members; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+-- The group itself ("FiFe Chat csoport") is created by the add_group_chats migration.
+
+INSERT INTO "public"."group_chat_members" ("group_id", "user_id", "joined_at") VALUES
+	('6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'b6d1e2c3-4f5a-6b7c-8d9e-0f1a2b3c4d5e', '2026-05-24 08:00:00+00'),
+	('6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'c7e8f9a0-1b2c-3d4e-5f60-7a8b9c0d1e2f', '2026-05-24 08:30:00+00'),
+	('6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'e1e2e3e4-e5e6-4e7e-8e9e-0e1e2e3e4e5e', '2026-05-24 09:15:00+00'),
+	('6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'f1f2f3f4-f5f6-4f7f-8f9f-0f1f2f3f4f5f', '2026-05-24 10:00:00+00'),
+	('6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', '22334455-6677-4889-9001-bbccddeeff11', '2026-05-25 07:45:00+00'),
+	('6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', '55667788-99aa-4bbc-cdd1-eeff00112244', '2026-05-25 12:00:00+00'),
+	('6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', '8899bbcc-ccdd-4eef-f004-112233445577', '2026-05-25 18:20:00+00'),
+	('6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'bbcceeff-ff00-4112-2337-445566778800', '2026-05-26 06:10:00+00');
+
+
+--
+-- Data for Name: group_chat_messages; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO "public"."group_chat_messages" ("id", "group_id", "author", "text", "reply_to", "created_at") OVERRIDING SYSTEM VALUE VALUES
+	(1, '6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'b6d1e2c3-4f5a-6b7c-8d9e-0f1a2b3c4d5e', 'Sziasztok! Örülök, hogy végre van közös csoport 🙌', NULL, '2026-05-24 08:01:00+00'),
+	(2, '6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'c7e8f9a0-1b2c-3d4e-5f60-7a8b9c0d1e2f', 'Szia Marci! Én is, eddig csak privátban tudtunk beszélni.', 1, '2026-05-24 08:31:00+00'),
+	(3, '6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'e1e2e3e4-e5e6-4e7e-8e9e-0e1e2e3e4e5e', 'Hali mindenkinek! Valaki tud jó kerékpárszerelőt a környéken?', NULL, '2026-05-24 09:16:00+00'),
+	(4, '6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'f1f2f3f4-f5f6-4f7f-8f9f-0f1f2f3f4f5f', 'A piac mellett van egy kis műhely, nagyon korrektek.', 3, '2026-05-24 10:02:00+00'),
+	(5, '6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'e1e2e3e4-e5e6-4e7e-8e9e-0e1e2e3e4e5e', 'Köszi Anna, holnap beviszem!', 4, '2026-05-24 10:05:00+00'),
+	(6, '6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', '22334455-6677-4889-9001-bbccddeeff11', 'Sziasztok, új vagyok itt. Mire használjátok leginkább a FiFe-t?', NULL, '2026-05-25 07:46:00+00'),
+	(7, '6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'b6d1e2c3-4f5a-6b7c-8d9e-0f1a2b3c4d5e', 'Én főleg szakembert keresek vele, meg a csütörtöki futásokat szervezem.', 6, '2026-05-25 08:10:00+00'),
+	(8, '6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', '55667788-99aa-4bbc-cdd1-eeff00112244', 'Csütörtökön én is jönnék futni, hánykor indultok?', 7, '2026-05-25 12:01:00+00'),
+	(9, '6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'b6d1e2c3-4f5a-6b7c-8d9e-0f1a2b3c4d5e', '19:00-kor a parkbejárattól 🏃', 8, '2026-05-25 12:15:00+00'),
+	(10, '6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', '8899bbcc-ccdd-4eef-f004-112233445577', 'Hétvégén lesz termelői piac? Friss tojást keresek.', NULL, '2026-05-25 18:21:00+00'),
+	(11, '6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'c7e8f9a0-1b2c-3d4e-5f60-7a8b9c0d1e2f', 'Szombaton reggel 7-től, a templom előtti téren.', 10, '2026-05-25 18:40:00+00'),
+	(12, '6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'bbcceeff-ff00-4112-2337-445566778800', 'Jó reggelt! Valaki tud ajánlani villanyszerelőt? Sürgős lenne.', NULL, '2026-05-26 06:11:00+00'),
+	(13, '6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', 'f1f2f3f4-f5f6-4f7f-8f9f-0f1f2f3f4f5f', 'Nézd meg a térképen, Gábornak elég sok ajánlása van.', 12, '2026-05-26 06:30:00+00'),
+	(14, '6f1e5c2a-0b7d-4c1e-9a53-f1fe00c4a700', '55667788-99aa-4bbc-cdd1-eeff00112244', 'Köszi Anna 😊 Írj privátban Balázs, ma délután ráérek.', 13, '2026-05-26 07:05:00+00');
+
+
+--
 -- Data for Name: messages; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -513,6 +550,13 @@ SELECT pg_catalog.setval('"public"."eventResponses_id_seq"', 1, true);
 --
 
 SELECT pg_catalog.setval('"public"."events_id_seq"', 1, true);
+
+
+--
+-- Name: group_chat_messages_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval(pg_get_serial_sequence('public.group_chat_messages', 'id'), 14, true);
 
 
 --

@@ -20,6 +20,11 @@ function toNumberArray(value: unknown): number[] {
   return value.filter((v): v is number => typeof v === "number");
 }
 
+function toStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((v): v is string => typeof v === "string");
+}
+
 function toStringRecord(value: unknown): Record<string, string> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const result: Record<string, string> = {};
@@ -56,6 +61,11 @@ function serialize(settings: UserSettingsPayload): string {
  * useNotificationPrefs owns those and writes them as the user answers each
  * question. This hook and that one write disjoint column sets.
  *
+ * `interests` is the one column here that is NOT encrypted, because the server has to
+ * read it to rank the community feed. The trigger on public.user_settings turns each
+ * write into the tag dictionary's usage counts, so saving an interest is also what
+ * registers the tag.
+ *
  * Redux stays the read path for the UI — nothing here blocks rendering, and
  * every network failure degrades to "keep using the local values". Conflicts
  * resolve last-write-wins at row granularity: two devices editing the Lusta
@@ -73,6 +83,7 @@ export function useUserSettings() {
   );
   const themePreference = useSelector((state: RootState) => state.user.themePreference);
   const savedBuzinesses = useSelector((state: RootState) => state.user.savedBuzinesses);
+  const interests = useSelector((state: RootState) => state.user.interests);
   const isItSafeDismissed = useSelector((state: RootState) => state.user.isItSafeDismissed);
   const inviteCardDismissed = useSelector((state: RootState) => state.user.inviteCardDismissed);
   const homeAddBuzinessCardDismissed = useSelector(
@@ -91,6 +102,7 @@ export function useUserSettings() {
       previousProfileSearches: previousProfileSearches ?? [],
       themePreference: themePreference ?? DEFAULT_THEME_PREFERENCE,
       savedBuzinesses: savedBuzinesses ?? [],
+      interests: interests ?? [],
       isItSafeDismissed: isItSafeDismissed ?? false,
       inviteCardDismissed: inviteCardDismissed ?? false,
       homeAddBuzinessCardDismissed: homeAddBuzinessCardDismissed ?? false,
@@ -104,6 +116,7 @@ export function useUserSettings() {
       previousProfileSearches,
       themePreference,
       savedBuzinesses,
+      interests,
       isItSafeDismissed,
       inviteCardDismissed,
       homeAddBuzinessCardDismissed,
@@ -146,6 +159,10 @@ export function useUserSettings() {
             nonce: cipher.nonce,
             theme_preference: settings.themePreference,
             saved_buzinesses: settings.savedBuzinesses,
+            // Deliberately outside the encrypted blob: the server reads this column to
+            // build the community feed (public.interest_buziness_feed). Tags, not free
+            // text — see the column comment in the migration.
+            interests: settings.interests,
             is_it_safe_dismissed: settings.isItSafeDismissed,
             invite_card_dismissed: settings.inviteCardDismissed,
             home_add_buziness_card_dismissed: settings.homeAddBuzinessCardDismissed,
@@ -209,6 +226,7 @@ export function useUserSettings() {
         (data.theme_preference as UserSettingsPayload["themePreference"]) ??
         DEFAULT_THEME_PREFERENCE,
       savedBuzinesses: toNumberArray(data.saved_buzinesses),
+      interests: toStringArray(data.interests),
       isItSafeDismissed: data.is_it_safe_dismissed,
       inviteCardDismissed: data.invite_card_dismissed,
       homeAddBuzinessCardDismissed: data.home_add_buziness_card_dismissed,

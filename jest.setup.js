@@ -23,11 +23,28 @@ jest.mock("redux-persist", () => ({
   }),
 }));
 
+// Reanimated and its worklets runtime need the native module at import time;
+// gestures need gesture-handler's native module. Chat bubbles use all three
+// (components/chat/SwipeToReply.tsx), so they are mocked for every test.
+jest.mock("react-native-worklets", () => require("react-native-worklets/src/mock"));
+jest.mock("react-native-reanimated", () => require("react-native-reanimated/mock"));
+require("react-native-gesture-handler/jestSetup");
+
 // Leaf native modules the registration screens touch. They have no behaviour
 // worth exercising in a unit test, but they do need to exist.
 jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock"),
 );
+
+// Ships ESM only; analytics are a no-op in tests anyway (no app key).
+jest.mock("@aptabase/react-native", () => ({
+  __esModule: true,
+  default: { init: jest.fn(), trackEvent: jest.fn(), trackError: jest.fn(), dispose: jest.fn() },
+  init: jest.fn(),
+  trackEvent: jest.fn(),
+  trackError: jest.fn(),
+  dispose: jest.fn(),
+}));
 
 jest.mock("expo-web-browser", () => ({
   maybeCompleteAuthSession: jest.fn(),

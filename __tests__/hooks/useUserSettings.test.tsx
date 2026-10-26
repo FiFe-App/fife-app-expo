@@ -2,7 +2,7 @@ import { act } from "@testing-library/react-native";
 
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { decryptSettings, encryptSettings } from "@/lib/crypto/settingsEncryption";
-import { addPreviousSearch, login } from "@/redux/reducers/userReducer";
+import { addPreviousSearch, login, setInterests } from "@/redux/reducers/userReducer";
 import { __resetSupabase, __setTableRow, supabase } from "@/test-utils/mocks/supabase";
 import {
   createTestStore,
@@ -27,6 +27,7 @@ const serverRow = () => ({
   nonce: "nonce",
   theme_preference: "auto",
   saved_buzinesses: [],
+  interests: [],
   is_it_safe_dismissed: false,
   invite_card_dismissed: false,
   home_add_buziness_card_dismissed: false,
@@ -154,5 +155,81 @@ describe("useUserSettings / pushing", () => {
     const written = upsertCalls().at(-1)?.[0] as Record<string, unknown>;
     expect(written).not.toHaveProperty("previous_profile_searches");
     expect(written.encrypted_data).toBe("cipher");
+  });
+});
+
+describe("useUserSettings / interests", () => {
+  /**
+   * Unlike the mantra and the task list, this column is not inside the encrypted blob:
+   * the server has to read it to rank the community feed. So it has to survive the round
+   * trip as a plain column, and it has to be part of what gets pushed — a value that only
+   * ever lived in redux would rank nothing.
+   */
+  const decryptsToNothing = () =>
+    mockedDecrypt.mockResolvedValue({
+      mantra: undefined,
+      tasks: [],
+      previousSearches: [],
+      previousProfileSearches: [],
+    });
+
+  it("hydrates the interests the server has", async () => {
+    __setTableRow("user_settings", {
+      data: { ...serverRow(), interests: ["kertészet", "kerékpár"] },
+      error: null,
+    });
+    decryptsToNothing();
+
+    const store = createTestStore();
+    store.dispatch(login("me"));
+    await load(store);
+
+    expect(store.getState().user.interests).toEqual(["kertészet", "kerékpár"]);
+  });
+
+  it("pushes a locally added interest as a plain column, not inside the blob", async () => {
+    __setTableRow("user_settings", { data: serverRow(), error: null });
+    decryptsToNothing();
+
+    const store = createTestStore();
+    store.dispatch(login("me"));
+    const { result } = await renderHookWithProviders(() => useUserSettings(), {
+      store,
+    });
+    await act(async () => {
+      await result.current.loadFromServer();
+    });
+    // Loading alone must not write anything back.
+    expect(upsertCalls()).toHaveLength(0);
+
+    await act(async () => {
+      store.dispatch(setInterests(["kertészet"]));
+    });
+    await act(async () => {
+      await result.current.pushToServer();
+    });
+
+    const [payload] = upsertCalls()[0] as [Record<string, unknown>];
+    expect(payload.interests).toEqual(["kertészet"]);
+    // It must be readable by the server, so it cannot have gone into the cipher.
+    expect(mockedEncrypt).not.toHaveBeenCalledWith(
+      "me",
+      expect.objectContaining({ interests: expect.anything() }),
+    );
+  });
+
+  it("treats a row written before the column existed as no interests", async () => {
+    // A row from an older client simply has no key here; a missing value must read as an
+    // empty list rather than blowing up the merge.
+    const olderRow: Record<string, unknown> = { ...serverRow() };
+    delete olderRow.interests;
+    __setTableRow("user_settings", { data: olderRow, error: null });
+    decryptsToNothing();
+
+    const store = createTestStore();
+    store.dispatch(login("me"));
+    await load(store);
+
+    expect(store.getState().user.interests).toEqual([]);
   });
 });
