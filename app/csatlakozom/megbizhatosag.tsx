@@ -1,7 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Image } from "expo-image";
-import { View, Modal, Platform, StyleSheet, Pressable, TextInput } from "react-native";
+import { View, Modal, Platform, StyleSheet, Pressable, type TextInputInstance } from "react-native";
 import { useState, useRef, useCallback } from "react";
 import { Icon, Text } from "react-native-paper";
 import { Button } from "@/components/Button";
@@ -24,7 +24,7 @@ const Megbizhatosag = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [typed, setTyped] = useState("");
-  const textInput = useRef<TextInput>(null);
+  const textInput = useRef<TextInputInstance>(null);
 
   const handleTextInput = (input: string) => {
     if (

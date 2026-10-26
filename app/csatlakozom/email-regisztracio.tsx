@@ -10,7 +10,7 @@ import { Link, Redirect, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { openBrowserAsync } from "expo-web-browser";
 import { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View, type ScrollViewInstance } from "react-native";
 
 import { makeRedirectUri } from "expo-auth-session";
 import { Button, Checkbox, HelperText, Icon, TextInput as PaperTextInput } from "react-native-paper";
@@ -52,7 +52,7 @@ export default function Index() {
   const [error, setError] = useState<string | undefined>();
   const [existingAccount, setExistingAccount] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
   const nameRef = useRef<{ focus: () => void } | null>(null);
   const usernameRef = useRef<{ focus: () => void } | null>(null);
   const emailRef = useRef<{ focus: () => void } | null>(null);

@@ -52,7 +52,7 @@ import {
   useGlobalSearchParams,
 } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View, type ScrollViewInstance } from "react-native";
 import openMap from "react-native-open-maps";
 import {
   ActivityIndicator,
@@ -223,7 +223,7 @@ export default function Index() {
   const [commentsCount, setCommentsCount] = useState<number>();
   const isNew = data?.created_at && new Date().getTime() - new Date(data.created_at).getTime() < 1000 * 60 * 60 * 24 * 10;
 
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const [tab, setTab] = useState<"overview" | "reviews">("overview");
   // Height of the (non-sticky) header block. Since it sits at y=0, its height
   // equals the sticky tab bar's scroll offset. Measuring the header instead of

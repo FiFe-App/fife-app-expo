@@ -27,6 +27,13 @@ jest.mock("redux-persist", () => ({
 // gestures need gesture-handler's native module. Chat bubbles use all three
 // (components/chat/SwipeToReply.tsx), so they are mocked for every test.
 jest.mock("react-native-worklets", () => require("react-native-worklets/src/mock"));
+// Reanimated 4.7's mock still boots the real module, whose initializer hands
+// a CSS event handler to the JS fallback — which throws, by design, since CSS
+// animations only exist natively. Nothing under test animates through CSS.
+jest.mock("react-native-reanimated/src/css/native/proxy", () => ({
+  ...jest.requireActual("react-native-reanimated/src/css/native/proxy"),
+  setCSSEventHandler: () => {},
+}));
 jest.mock("react-native-reanimated", () => require("react-native-reanimated/mock"));
 require("react-native-gesture-handler/jestSetup");
 
@@ -45,6 +52,41 @@ jest.mock("@aptabase/react-native", () => ({
   trackError: jest.fn(),
   dispose: jest.fn(),
 }));
+
+// Not part of React Native's Jest environment, but the app uses it on native
+// since React Native 0.88 removed InteractionManager (hooks/useLastRoute.ts).
+global.requestIdleCallback ??= (callback) =>
+  setTimeout(() => callback({ didTimeout: false, timeRemaining: () => 50 }), 1);
+global.cancelIdleCallback ??= (id) => clearTimeout(id);
+
+// jest-expo's generic native-module mock returns nothing usable from
+// `addListener`, and expo-notifications 58 subscribes a default foreground
+// handler at import time, then removes that subscription the moment the app
+// sets its own handler (lib/notifications/registerForPushNotifications.ts).
+jest.mock("expo-notifications/build/NotificationsHandlerModule", () => ({
+  __esModule: true,
+  default: {
+    addListener: () => ({ remove: () => {} }),
+    handleNotificationAsync: jest.fn(),
+    removeListeners: () => {},
+  },
+}));
+
+// jest-expo mocks `react-native/asset-registry`, which is where the asset
+// transformer registers every required image and font. Since React Native
+// 0.88, expo-asset reads `AssetRegistry` from `react-native` itself, which is
+// backed by this private module instead — real and empty under Jest, so every
+// icon font lookup threw "missing from the asset registry". Point it at the
+// same mock so both sides agree.
+jest.mock("react-native/src/private/assets/AssetRegistry", () => {
+  const registry = jest.requireMock("react-native/asset-registry");
+  return {
+    AssetRegistry: {
+      registerAsset: (asset) => registry.registerAsset(asset),
+      getAssetByID: (id) => registry.getAssetByID(id),
+    },
+  };
+});
 
 jest.mock("expo-web-browser", () => ({
   maybeCompleteAuthSession: jest.fn(),

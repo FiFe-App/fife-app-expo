@@ -595,7 +595,7 @@ export default function ChatScreen() {
           onEndReached={loadOlderMessages}
           onEndReachedThreshold={0.5}
           ListFooterComponent={
-            loadingOlder ? <ActivityIndicator style={styles.loadingOlder} /> : null
+            loadingOlder ? <ActivityIndicator style={styles.loadingOlder} /> : undefined
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>

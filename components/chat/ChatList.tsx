@@ -174,7 +174,7 @@ export default function ChatList() {
       <FlatList
         data={chats}
         keyExtractor={(item) => item.otherUser.id}
-        ListHeaderComponent={groupChatsHeader || null}
+        ListHeaderComponent={groupChatsHeader || undefined}
         renderItem={({ item }) => (
           <ChatListItem
             otherUser={item.otherUser}

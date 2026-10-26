@@ -99,7 +99,7 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
         <ThemedText style={{ alignSelf: "center" }}>
           Válassz környéket a kereséshez
         </ThemedText>
-      ) : null,
+      ) : undefined,
     [loading, searchCircle, myLocation],
   );
 

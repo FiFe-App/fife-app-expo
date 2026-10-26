@@ -1,6 +1,6 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { AppState, type AppStateStatus } from "react-native";
-import { usePreventRemove } from "@react-navigation/native";
+import { usePreventRemove } from "expo-router";
 
 import BreakScreen from "@/app/szunet";
 import {
@@ -11,8 +11,10 @@ import { renderWithProviders } from "@/test-utils/renderWithProviders";
 
 const mockBeep = jest.fn();
 jest.mock("@/hooks/useBeep", () => ({ useBeep: () => mockBeep }));
-jest.mock("expo-router", () => require("@/test-utils/mocks/expo-router"));
-jest.mock("@react-navigation/native", () => ({ usePreventRemove: jest.fn() }));
+jest.mock("expo-router", () => ({
+  ...jest.requireActual("@/test-utils/mocks/expo-router"),
+  usePreventRemove: jest.fn(),
+}));
 jest.mock("@/lib/notifications/registerForPushNotifications", () => ({
   ensureNotificationPermission: jest.fn().mockResolvedValue(true),
 }));

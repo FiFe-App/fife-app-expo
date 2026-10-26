@@ -142,7 +142,7 @@ export default function SearchScreen() {
                 Írd be egy fife nevét vagy @felhasználónevét.
               </ThemedText>
             </View>
-          ) : null
+          ) : undefined
         }
         renderItem={({ item }) => {
           if (item.kind === "section") {

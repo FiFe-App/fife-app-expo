@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
-import { ImageSourcePropType, View } from "react-native";
-import { Image } from "expo-image";
+import { View } from "react-native";
+import { Image, type ImageProps } from "expo-image";
 import { Button as PaperButton, Dialog, IconButton, Portal } from "react-native-paper";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -22,7 +22,7 @@ export function useNow(active: boolean) {
 
 interface Props {
   time: string;
-  image: ImageSourcePropType;
+  image: ImageProps["source"];
   /** Shown in a dialog from the "i" button in the corner. */
   info: { title: string; text: string };
   /** A quiet line under the timer, e.g. which round is running. */

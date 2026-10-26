@@ -1,6 +1,6 @@
 import { Spacing } from "@/constants/spacing";
 import { useRef, useState } from "react";
-import { Image, View } from "react-native";
+import { Image, View, type ViewInstance } from "react-native";
 import { Button, Card, IconButton, TextInput, TouchableRipple } from "react-native-paper";
 import { ThemedText } from "@/components/ThemedText";
 import { useEmotionLog } from "@/hooks/useEmotionLog";
@@ -13,7 +13,7 @@ interface EmotionCheckCardProps {
   // Called with the note input's container ref when it's focused, so a
   // parent ScrollView can scroll it above the keyboard. See ToDoList's
   // onInputFocus for the same need on "Új feladat".
-  onNoteFocus?: (containerRef: React.RefObject<View | null>) => void;
+  onNoteFocus?: (containerRef: React.RefObject<ViewInstance | null>) => void;
 }
 
 export default function EmotionCheckCard({ onNoteFocus }: EmotionCheckCardProps) {
@@ -30,7 +30,7 @@ function EmotionCheckCardInner({ onNoteFocus }: EmotionCheckCardProps) {
   const todayLog = logs.find((l) => l.log_date === targetDate);
   const [selectedRate, setSelectedRate] = useState<number | null>(null);
   const [note, setNote] = useState("");
-  const noteContainerRef = useRef<View>(null);
+  const noteContainerRef = useRef<ViewInstance>(null);
 
   const showForm = shouldShowCard && !todayLog;
 

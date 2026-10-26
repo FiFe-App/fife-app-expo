@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AppState, BackHandler } from "react-native";
-import { usePreventRemove } from "@react-navigation/native";
-import { router, Stack } from "expo-router";
+import { router, Stack, usePreventRemove } from "expo-router";
 import { Button } from "@/components/Button";
 import CenteredTimer, { useNow } from "@/components/focus/CenteredTimer";
 import { useBeep } from "@/hooks/useBeep";

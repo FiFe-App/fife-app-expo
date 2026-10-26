@@ -1,6 +1,6 @@
 import { specifyTutorialStepLayout } from "@/redux/reducers/tutorialReducer";
 import { useEffect, useRef, useState } from "react";
-import { Dimensions, View } from "react-native";
+import { Dimensions, type ViewInstance } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import type { ViewProps } from "react-native";
 import React, { use } from "react";
@@ -17,7 +17,7 @@ const Measure = ({ children, name, ...viewProps }: MeasureProps) => {
   return children;
   
   const dimensions = Dimensions.get("window");
-  const childRef = useRef<View>(null);
+  const childRef = useRef<ViewInstance>(null);
   const dispatch = useDispatch();
   const tutorialContext = use(TutorialContext);
   const handleNext = tutorialContext?.handleNextTutorialStep;

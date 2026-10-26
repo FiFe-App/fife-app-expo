@@ -16,7 +16,7 @@ import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
 import { Link, Redirect, router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View, type ScrollViewInstance } from "react-native";
 import { TextInput } from "react-native-paper";
 import { Spacing } from "@/constants/spacing";
 import { useDispatch, useSelector } from "react-redux";
@@ -32,7 +32,7 @@ export default function Index() {
   const dispatch = useDispatch();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const passwordRef = useRef<any>(null);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

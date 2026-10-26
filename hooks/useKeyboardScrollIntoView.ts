@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Keyboard, NativeScrollEvent, NativeSyntheticEvent, Platform, ScrollView, View } from "react-native";
+import { Keyboard, NativeScrollEvent, NativeSyntheticEvent, Platform, type ScrollViewInstance, type ViewInstance } from "react-native";
 import { Spacing } from "@/constants/spacing";
 
 // Edge-to-edge Android does not resize the window for the keyboard, so a
@@ -9,9 +9,9 @@ import { Spacing } from "@/constants/spacing";
 // keyboard's final position. iOS is left alone — its ScrollView already
 // reveals the focused input via automaticallyAdjustKeyboardInsets.
 export function useKeyboardScrollIntoView() {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const scrollOffsetY = useRef(0);
-  const focusedInputRef = useRef<React.RefObject<View | null> | null>(null);
+  const focusedInputRef = useRef<React.RefObject<ViewInstance | null> | null>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export function useKeyboardScrollIntoView() {
   // Pass to a TextInput's onFocus (wrapped so it receives the ref of the
   // View surrounding that input) to have it scrolled into view once the
   // keyboard finishes opening.
-  const registerFocusedInput = useCallback((containerRef: React.RefObject<View | null>) => {
+  const registerFocusedInput = useCallback((containerRef: React.RefObject<ViewInstance | null>) => {
     focusedInputRef.current = containerRef;
   }, []);
 

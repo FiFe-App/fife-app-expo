@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { View } from "react-native";
+import { View, type ViewInstance } from "react-native";
 import { Icon, Surface, Text, TextInput, TouchableRipple } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -14,7 +14,7 @@ interface ToDoListProps {
   // ScrollView can scroll it above the keyboard. Needed on edge-to-edge
   // Android, where the window does not resize and a KeyboardAvoidingView
   // alone cannot reveal an input inside scroll content.
-  onInputFocus?: (containerRef: React.RefObject<View | null>) => void;
+  onInputFocus?: (containerRef: React.RefObject<ViewInstance | null>) => void;
 }
 
 export default function ToDoList({ onInputFocus }: ToDoListProps) {
@@ -27,7 +27,7 @@ export default function ToDoList({ onInputFocus }: ToDoListProps) {
     tasks.filter((task) => task.checked).map((task) => task.id),
   );
   const [newTitle, setNewTitle] = useState("");
-  const inputContainerRef = useRef<View>(null);
+  const inputContainerRef = useRef<ViewInstance>(null);
 
   const visibleTasks = tasks.filter((task) => !hiddenIds.includes(task.id));
 
