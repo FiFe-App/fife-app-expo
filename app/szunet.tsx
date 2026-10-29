@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { AppState, BackHandler } from "react-native";
 import { router, Stack, usePreventRemove } from "expo-router";
-import { Button } from "@/components/Button";
-import CenteredTimer, { useNow } from "@/components/focus/CenteredTimer";
+import CenteredTimer, { useNow, useTimerPalette } from "@/components/focus/CenteredTimer";
+import KeepAwake from "@/components/focus/KeepAwake";
+import PillButton from "@/components/focus/PillButton";
 import { useBeep } from "@/hooks/useBeep";
 import { formatRemaining } from "@/lib/focus/pomodoro";
 import { ensureNotificationPermission } from "@/lib/notifications/registerForPushNotifications";
@@ -85,24 +86,32 @@ export default function BreakScreen() {
   // The header (and its back button) is only there while no break is running.
   const header = <Stack.Screen options={{ headerShown: !running, gestureEnabled: !running }} />;
   const image = require("@/assets/gifs/black.gif");
+  const neutral = useTimerPalette("neutral");
 
   if (endsAt === null) {
     return (
-      <CenteredTimer time="00:00" image={image} info={INFO}>
+      <CenteredTimer time="00:00" image={image} info={INFO} message="Mennyi időre állsz meg?">
         {header}
         {DURATIONS_MIN.map((min) => (
-          <Button key={min} mode="text" onPress={() => start(min)}>
-            {`${min} perc`}
-          </Button>
+          <PillButton key={min} label={`${min} perc`} palette={neutral} onPress={() => start(min)} />
         ))}
       </CenteredTimer>
     );
   }
 
+  if (finished) {
+    return (
+      <CenteredTimer time={formatRemaining(0)} image={image} info={INFO} stage="fading" message="Jól esett?">
+        {header}
+        <PillButton label="Kész" variant="filled" palette={neutral} onPress={leave} />
+      </CenteredTimer>
+    );
+  }
+
   return (
-    <CenteredTimer time={formatRemaining(remaining)} image={image} info={INFO}>
+    <CenteredTimer time={formatRemaining(remaining)} image={image} info={INFO} tone="rest" stage="breathing">
       {header}
-      {finished && <Button mode="text" onPress={leave}>Kész</Button>}
+      <KeepAwake />
     </CenteredTimer>
   );
 }

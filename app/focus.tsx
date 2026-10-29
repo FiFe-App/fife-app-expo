@@ -2,8 +2,10 @@ import { useEffect, useRef } from "react";
 import { View } from "react-native";
 import { IconButton } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { Button } from "@/components/Button";
-import CenteredTimer, { useNow } from "@/components/focus/CenteredTimer";
+import CenteredTimer, { useNow, useTimerPalette } from "@/components/focus/CenteredTimer";
+import KeepAwake from "@/components/focus/KeepAwake";
+import PillButton from "@/components/focus/PillButton";
+import RoundDots from "@/components/focus/RoundDots";
 import { ThemedText } from "@/components/ThemedText";
 import { useBeep } from "@/hooks/useBeep";
 import {
@@ -72,6 +74,8 @@ export default function FocusScreen() {
   };
 
   const image = require("@/assets/gifs/focus.gif");
+  const tone = phase === null ? "neutral" : phase.kind === "work" ? "work" : "rest";
+  const palette = useTimerPalette(tone);
 
   if (startedAt === null) {
     return (
@@ -83,15 +87,19 @@ export default function FocusScreen() {
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <IconButton
               icon="minus"
+              size={28}
+              iconColor={palette.text}
               accessibilityLabel="Kevesebb kör"
               disabled={rounds <= MIN_ROUNDS}
               onPress={() => dispatch(setRounds(rounds - 1))}
             />
-            <ThemedText type="defaultSemiBold" style={{ minWidth: 64, textAlign: "center" }}>
+            <ThemedText style={{ minWidth: 88, textAlign: "center", fontSize: 20, lineHeight: 26, fontFamily: "RedHatText-Medium", color: palette.text }}>
               {`${rounds} kör`}
             </ThemedText>
             <IconButton
               icon="plus"
+              size={28}
+              iconColor={palette.text}
               accessibilityLabel="Több kör"
               disabled={rounds >= MAX_ROUNDS}
               onPress={() => dispatch(setRounds(rounds + 1))}
@@ -99,25 +107,33 @@ export default function FocusScreen() {
           </View>
         }
       >
-        <Button mode="text" onPress={start}>Indítás</Button>
+        <PillButton label="Indítás" variant="filled" palette={palette} onPress={start} />
       </CenteredTimer>
     );
   }
 
   if (finished || !phase) {
     return (
-      <CenteredTimer time={formatRemaining(0)} image={image} info={INFO} caption="Ügyes voltál!">
-        <Button mode="text" onPress={stop}>Kész</Button>
+      <CenteredTimer time={formatRemaining(0)} image={image} info={INFO} message="Ügyes voltál!">
+        <PillButton label="Kész" variant="filled" palette={palette} onPress={stop} />
       </CenteredTimer>
     );
   }
 
-  const caption =
-    phase.kind === "work" ? `${phase.round}/${rounds}. kör` : `Szünet · ${phase.round}/${rounds}`;
+  const working = phase.kind === "work";
 
   return (
-    <CenteredTimer time={formatRemaining(phase.endsAt - now)} image={image} info={INFO} caption={caption}>
-      <Button mode="text" onPress={stop}>Leállítás</Button>
+    <CenteredTimer
+      time={formatRemaining(phase.endsAt - now)}
+      image={image}
+      info={INFO}
+      tone={tone}
+      stage={working ? "warm" : "breathing"}
+      caption={working ? `${phase.round}/${rounds}. kör` : `Szünet · ${phase.round}/${rounds}`}
+      picker={working && <RoundDots round={phase.round} rounds={rounds} fill={palette.timer} outline={palette.outline} />}
+    >
+      <KeepAwake />
+      <PillButton label="Leállítás" palette={palette} onPress={stop} />
     </CenteredTimer>
   );
 }
