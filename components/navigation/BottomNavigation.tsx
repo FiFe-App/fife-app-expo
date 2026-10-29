@@ -169,10 +169,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   divider: {
-    width: StyleSheet.hairlineWidth * 2,
-    alignSelf: "stretch",
-    marginVertical: Spacing.sm,
-    marginHorizontal: Spacing.lg,
+    width: 1,
+    height: 36,
+    alignSelf: "center",
+    marginHorizontal: Spacing.md,
   },
   avatar: {
     width: 28,

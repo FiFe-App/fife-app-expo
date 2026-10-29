@@ -261,6 +261,8 @@ export default function RequestScreen() {
               <Comments
                 path={"request/" + data.id}
                 placeholder={mine ? "Válaszolj…" : "Tudsz segíteni? Írj hozzászólást!"}
+                closed={solved}
+                closedText="A kérés megoldódott, ezért új hozzászólást már nem lehet írni."
               />
             </View>
           </ScrollView>
