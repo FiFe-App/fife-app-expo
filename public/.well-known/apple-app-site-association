@@ -3,12 +3,12 @@
     "apps": [],
     "details": [
       {
-        "appID": "REPLACE_WITH_APPLE_TEAM_ID.com.fife.app",
+        "appID": "BRWA92BF9J",
         "paths": ["/user/password-reset", "/user/password-reset/*"]
       }
     ]
   },
   "webcredentials": {
-    "apps": ["REPLACE_WITH_APPLE_TEAM_ID.com.fife.app"]
+    "apps": ["BRWA92BF9J"]
   }
 }
