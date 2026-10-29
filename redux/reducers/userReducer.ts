@@ -1,5 +1,5 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { NotificationPrefs, SearchMode, TaskItem, UserSettingsPayload, UserState } from "../store.type";
+import { NotificationPrefs, ReminderPreset, SearchMode, SubTask, TaskItem, UserSettingsPayload, UserState } from "../store.type";
 import { DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
 
 type SearchHistoryKey = "previousSearches" | "previousProfileSearches";
@@ -69,6 +69,114 @@ const userReducer = createSlice({
     toggleTask: (state, { payload }: PayloadAction<string>) => {
       state.tasks = (state.tasks ?? []).map((task) =>
         task.id === payload ? { ...task, checked: !task.checked } : task,
+      );
+    },
+    updateTaskTitle: (
+      state,
+      { payload }: PayloadAction<{ id: string; title: string }>,
+    ) => {
+      const title = payload.title.trim();
+      if (!title) return;
+      state.tasks = (state.tasks ?? []).map((task) =>
+        task.id === payload.id ? { ...task, title } : task,
+      );
+    },
+    deleteTask: (state, { payload }: PayloadAction<string>) => {
+      state.tasks = (state.tasks ?? []).filter((task) => task.id !== payload);
+    },
+    addSubtask: (
+      state,
+      { payload }: PayloadAction<{ taskId: string; subtask: SubTask }>,
+    ) => {
+      state.tasks = (state.tasks ?? []).map((task) =>
+        task.id === payload.taskId
+          ? {
+              ...task,
+              subtasks: [...(task.subtasks ?? []), payload.subtask],
+              // A new open step means the task is no longer finished.
+              checked: false,
+            }
+          : task,
+      );
+    },
+    toggleSubtask: (
+      state,
+      { payload }: PayloadAction<{ taskId: string; subtaskId: string }>,
+    ) => {
+      state.tasks = (state.tasks ?? []).map((task) => {
+        if (task.id !== payload.taskId) return task;
+        const subtasks = (task.subtasks ?? []).map((sub) =>
+          sub.id === payload.subtaskId ? { ...sub, checked: !sub.checked } : sub,
+        );
+        // Finishing the last step finishes the task, and reopening one reopens it.
+        return {
+          ...task,
+          subtasks,
+          checked: subtasks.length > 0 && subtasks.every((sub) => sub.checked),
+        };
+      });
+    },
+    deleteSubtask: (
+      state,
+      { payload }: PayloadAction<{ taskId: string; subtaskId: string }>,
+    ) => {
+      state.tasks = (state.tasks ?? []).map((task) =>
+        task.id === payload.taskId
+          ? {
+              ...task,
+              subtasks: (task.subtasks ?? []).filter(
+                (sub) => sub.id !== payload.subtaskId,
+              ),
+            }
+          : task,
+      );
+    },
+    /** `remindAt: null` clears the reminder. */
+    setTaskReminder: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{ id: string; remindAt: string | null; preset?: ReminderPreset }>,
+    ) => {
+      state.tasks = (state.tasks ?? []).map((task) => {
+        if (task.id !== payload.id) return task;
+        const { remindAt: _at, remindPreset: _preset, ...rest } = task;
+        return payload.remindAt
+          ? { ...rest, remindAt: payload.remindAt, remindPreset: payload.preset }
+          : rest;
+      });
+    },
+    /**
+     * Drops reminders whose time has passed: the notification has fired, so
+     * the task should stop showing a reminder it no longer has. The snooze
+     * count stays — it is history, not a pending reminder. Leaves state
+     * untouched when nothing expired, so it can run often without producing a
+     * new tasks array (and a settings sync) each time.
+     */
+    clearExpiredTaskReminders: (state, { payload: now }: PayloadAction<string>) => {
+      const nowMs = new Date(now).getTime();
+      const isExpired = (task: TaskItem) =>
+        !!task.remindAt && new Date(task.remindAt).getTime() <= nowMs;
+      if (!(state.tasks ?? []).some(isExpired)) return;
+      state.tasks = (state.tasks ?? []).map((task) => {
+        if (!isExpired(task)) return task;
+        const { remindAt: _at, remindPreset: _preset, ...rest } = task;
+        return rest;
+      });
+    },
+    snoozeTask: (
+      state,
+      { payload }: PayloadAction<{ id: string; remindAt: string; preset?: ReminderPreset }>,
+    ) => {
+      state.tasks = (state.tasks ?? []).map((task) =>
+        task.id === payload.id
+          ? {
+              ...task,
+              remindAt: payload.remindAt,
+              remindPreset: payload.preset,
+              snoozeCount: (task.snoozeCount ?? 0) + 1,
+            }
+          : task,
       );
     },
     setLocationError: (state, { payload }: PayloadAction<string | null>) => {
@@ -189,6 +297,14 @@ export const {
   setMantra,
   addTask,
   toggleTask,
+  updateTaskTitle,
+  deleteTask,
+  addSubtask,
+  toggleSubtask,
+  deleteSubtask,
+  setTaskReminder,
+  snoozeTask,
+  clearExpiredTaskReminders,
   setUserData,
   setLocationError,
   setThemePreference,

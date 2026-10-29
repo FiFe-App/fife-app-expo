@@ -15,10 +15,30 @@ export interface EmotionLogsState {
   logs: EmotionLogLocal[];
 }
 
+export type ReminderPreset = "hour" | "evening" | "tomorrow" | "weekend" | "minute";
+
+export interface SubTask {
+  id: string;
+  title: string;
+  checked: boolean;
+}
+
+/**
+ * Tasks live inside the encrypted user_settings blob, so every field added
+ * after the first release is optional: older clients rewrite the blob without
+ * it, and rehydrated state from before it existed has none.
+ */
 export interface TaskItem {
   id: string;
   title: string;
   checked: boolean;
+  subtasks?: SubTask[];
+  /** ISO time of the reminder notification, if one is set. */
+  remindAt?: string;
+  /** Which quick-pick set the reminder, so its chip can show as chosen. */
+  remindPreset?: ReminderPreset;
+  /** How many times the reminder was pushed back. */
+  snoozeCount?: number;
 }
 
 export interface NotificationPrefs {
