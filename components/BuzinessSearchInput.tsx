@@ -4,6 +4,7 @@ import {
   storeBuzinessSearchParams
 } from "@/redux/reducers/buzinessReducer";
 import { storeUserSearchParams } from "@/redux/reducers/usersReducer";
+import { storeRequestSearchText } from "@/redux/reducers/requestsReducer";
 import { RootState } from "@/redux/store";
 import { SearchMode } from "@/redux/store.type";
 import { Icon, TouchableRipple } from "react-native-paper";
@@ -24,16 +25,24 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
   // buziness query behind /biznisz's "Találatok: …" header, and vice versa.
   const buzinessText = useSelector((state: RootState) => state.buziness.searchParams?.text ?? "");
   const fifeText = useSelector((state: RootState) => state.users.userSearchParams?.text ?? "");
-  const searchText = mode === "fife" ? fifeText : buzinessText;
+  const requestText = useSelector((state: RootState) => state.requests.searchText);
+  const searchText =
+    mode === "fife" ? fifeText : mode === "kerelem" ? requestText : buzinessText;
   const [inputText, setInputText] = useState(searchText);
   const [focused, setFocused] = useState(autoFocus);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const greeting = mode === "fife"
     ? "Keress fifékre (név vagy @felhasználónév)..."
-    : "Keress bizniszekre...";
+    : mode === "kerelem"
+      ? "Keress kérések között..."
+      : "Keress bizniszekre...";
 
   const storeText = useCallback((text: string) => {
+    if (mode === "kerelem") {
+      dispatch(storeRequestSearchText(text));
+      return;
+    }
     dispatch(mode === "fife"
       ? storeUserSearchParams({ text })
       : storeBuzinessSearchParams({ text }));

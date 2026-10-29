@@ -102,6 +102,12 @@ export interface UserState {
    */
   previousProfileSearches?: string[];
   /**
+   * Recent kérések searches. Kept on this device only: unlike the two lists
+   * above it is not part of the user_settings blob, so it is optional for the
+   * same persisted-slice reason and never overwritten by a settings sync.
+   */
+  previousRequestSearches?: string[];
+  /**
    * `updated_at` of the user_settings row this state was last hydrated from or
    * pushed to. Undefined means "never synced with the server on this device".
    */
@@ -142,8 +148,8 @@ export type User = Tables<"profiles"> & {
     profileRecommendations?: { count: number }[];
   };
 
-/** Which of the two searches the search screen is currently driving. */
-export type SearchMode = "biznisz" | "fife";
+/** Which of the searches the search screen is currently driving. */
+export type SearchMode = "biznisz" | "fife" | "kerelem";
 
 /**
  * A profile row as returned by the name/username search.

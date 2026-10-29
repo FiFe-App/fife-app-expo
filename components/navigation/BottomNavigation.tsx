@@ -25,7 +25,11 @@ const BottomNavigation = () => {
 
   const profilActive = segment[0]?.includes("user");
   const meActive = segment[0] === "me";
-  const usActive = segment[0]?.includes("home") || segment[0]?.includes("fifeRadar") || segment[0]?.includes("search");
+  const usActive =
+    segment[0]?.includes("home") ||
+    segment[0]?.includes("fifeRadar") ||
+    segment[0]?.includes("search") ||
+    segment[0] === "kerelmek";
   const chatActive = segment[0]?.includes("chat") || segment[0] === "group";
   const lastNavTime = useRef(0);
 
@@ -91,6 +95,15 @@ const BottomNavigation = () => {
           </View>
         </TouchableRipple>
       </Measure>
+      {/* The two community tabs (Üzenetek, Közösség) and the two personal ones (Otthon,
+          Profilod) are separate groups: a vertical rule and a wider gap say so. */}
+      <View
+        testID="bottom-nav-divider"
+        style={[
+          styles.divider,
+          { backgroundColor: theme.colors.outlineVariant },
+        ]}
+      />
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/me")}>
           <View style={{ alignItems: "center" }}>
             {showIcon && <Icon
@@ -154,6 +167,12 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     alignItems: "center",
     justifyContent: "center",
+  },
+  divider: {
+    width: StyleSheet.hairlineWidth * 2,
+    alignSelf: "stretch",
+    marginVertical: Spacing.sm,
+    marginHorizontal: Spacing.lg,
   },
   avatar: {
     width: 28,

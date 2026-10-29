@@ -297,6 +297,7 @@ function RootContent() {
     !pathname.includes("meghivo") &&
     !pathname.includes("leiratkozas") &&
     pathname !== "/biznisz/new" &&
+    pathname !== "/kerelmek/new" &&
     !pathname.startsWith("/biznisz/edit");
 
   return (
@@ -333,6 +334,18 @@ function RootContent() {
                 <Stack.Screen
                   name="biznisz/index"
                   options={{ title: "Bizniszek keresése" }}
+                />
+                <Stack.Screen
+                  name="kerelmek/index"
+                  options={{ header: () => <HomeHeader mode="kerelem" /> }}
+                />
+                <Stack.Screen
+                  name="kerelmek/new"
+                  options={{ title: "Új kérés" }}
+                />
+                <Stack.Screen
+                  name="kerelmek/[id]"
+                  options={{ title: "Kérés" }}
                 />
 
                 <Stack.Screen

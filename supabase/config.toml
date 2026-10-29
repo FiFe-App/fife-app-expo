@@ -39,6 +39,13 @@ default_pool_size = 20
 # Maximum number of client connections allowed.
 max_client_conn = 100
 
+[db.seed]
+# If enabled, seeds the database after migrations during a db reset.
+enabled = true
+# Specifies an ordered list of seed files to load during db reset.
+# seed_requests.sql refers to the profiles created by seed.sql, so it must run after it.
+sql_paths = ["./seed.sql", "./seed_requests.sql"]
+
 [realtime]
 enabled = true
 # Bind realtime via either IPv4 or IPv6. (default: IPv4)

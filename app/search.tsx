@@ -6,6 +6,7 @@ import { useAppTheme } from "@/assets/theme";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 import { storeBuzinesses, storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { storeUserSearchParams } from "@/redux/reducers/usersReducer";
+import { storeRequestSearchText } from "@/redux/reducers/requestsReducer";
 import { addPreviousSearch, removeFromPreviousSearches } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { SearchMode } from "@/redux/store.type";
@@ -25,25 +26,38 @@ type ListItem =
 const MODES: { key: SearchMode; label: string; icon: string }[] = [
   { key: "biznisz", label: "Bizniszek", icon: "briefcase-outline" },
   { key: "fife", label: "Fifék", icon: "account" },
+  { key: "kerelem", label: "Kérések", icon: "hand-heart-outline" },
 ];
+
+const isMode = (value: string | undefined): value is SearchMode =>
+  MODES.some((m) => m.key === value);
 
 export default function SearchScreen() {
   const theme = useAppTheme();
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const params = useLocalSearchParams<{ mode?: string }>();
-  const [mode, setMode] = useState<SearchMode>(params.mode === "fife" ? "fife" : "biznisz");
+  const [mode, setMode] = useState<SearchMode>(isMode(params.mode) ? params.mode : "biznisz");
 
   const buzinessText = useSelector((state: RootState) => state.buziness.searchParams?.text ?? "");
   const fifeText = useSelector((state: RootState) => state.users.userSearchParams?.text ?? "");
-  const searchText = mode === "fife" ? fifeText : buzinessText;
+  const requestText = useSelector((state: RootState) => state.requests.searchText);
+  const searchText =
+    mode === "fife" ? fifeText : mode === "kerelem" ? requestText : buzinessText;
   // Each mode keeps its own history: a name you looked up is not a biznisz query.
   const previousBuzinessSearches = useSelector((state: RootState) => state.user.previousSearches);
   const previousProfileSearches = useSelector(
     (state: RootState) => state.user.previousProfileSearches,
   );
+  const previousRequestSearches = useSelector(
+    (state: RootState) => state.user.previousRequestSearches,
+  );
   const previousSearches =
-    mode === "fife" ? previousProfileSearches : previousBuzinessSearches;
+    mode === "fife"
+      ? previousProfileSearches
+      : mode === "kerelem"
+        ? previousRequestSearches
+        : previousBuzinessSearches;
 
   const suggestions = useSearchSuggestions(searchText, mode === "biznisz");
 
@@ -51,6 +65,11 @@ export default function SearchScreen() {
     const trimmed = query.trim();
     if (!trimmed) return;
     dispatch(addPreviousSearch({ query: trimmed, mode }));
+    if (mode === "kerelem") {
+      dispatch(storeRequestSearchText(trimmed));
+      router.replace("/kerelmek");
+      return;
+    }
     if (mode === "fife") {
       dispatch(storeUserSearchParams({ text: trimmed, skip: 0 }));
       router.replace("/fifeRadar");
@@ -133,13 +152,15 @@ export default function SearchScreen() {
         keyExtractor={(item, i) => item.kind + (item.kind === "section" ? item.label : item.query) + i}
         keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
-          mode === "fife" ? (
+          mode === "fife" || mode === "kerelem" ? (
             <View style={{ padding: Spacing.lg }}>
               <ThemedText
                 variant="labelMedium"
                 style={{ color: theme.colors.onSurfaceVariant, textAlign: "center" }}
               >
-                Írd be egy fife nevét vagy @felhasználónevét.
+                {mode === "fife"
+                  ? "Írd be egy fife nevét vagy @felhasználónevét."
+                  : "Írd be, mit keresel a kérések között: címet, leírást vagy kulcsszót."}
               </ThemedText>
             </View>
           ) : null

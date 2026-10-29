@@ -25,7 +25,8 @@ export type ReportTargetType =
   | "message"
   | "group_message"
   | "biznisz"
-  | "comment";
+  | "comment"
+  | "request";
 
 interface ReportContentModalProps {
   show: boolean;
@@ -48,6 +49,7 @@ const targetNouns: Record<ReportTargetType, string> = {
   group_message: "ezt az üzenetet",
   biznisz: "ezt a bizniszt",
   comment: "ezt a kommentet",
+  request: "ezt a kérést",
 };
 
 const reportReasons = [

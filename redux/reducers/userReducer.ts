@@ -2,17 +2,23 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { NotificationPrefs, ReminderPreset, SearchMode, SubTask, TaskItem, UserSettingsPayload, UserState } from "../store.type";
 import { DEFAULT_THEME_PREFERENCE } from "@/assets/theme";
 
-type SearchHistoryKey = "previousSearches" | "previousProfileSearches";
+type SearchHistoryKey =
+  | "previousSearches"
+  | "previousProfileSearches"
+  | "previousRequestSearches";
 
 /** Newest first, deduped, per list. */
 const MAX_PREVIOUS_SEARCHES = 10;
 
 /**
- * The two searches keep separate histories — a fife's name must never surface
+ * The searches keep separate histories — a fife's name must never surface
  * as a biznisz suggestion, and vice versa.
  */
-const searchHistoryKey = (mode: SearchMode): SearchHistoryKey =>
-  mode === "fife" ? "previousProfileSearches" : "previousSearches";
+const searchHistoryKey = (mode: SearchMode): SearchHistoryKey => {
+  if (mode === "fife") return "previousProfileSearches";
+  if (mode === "kerelem") return "previousRequestSearches";
+  return "previousSearches";
+};
 
 const initialState: UserState = {
   uid: undefined,
