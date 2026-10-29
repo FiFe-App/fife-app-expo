@@ -10,6 +10,12 @@ export interface CommentsProps {
    * read the comments table, so nothing is queried or subscribed to.
    */
   publicComments?: Comment[];
+  /**
+   * Read-only: the comments stay visible (and reportable / deletable by their authors) but the
+   * input is replaced by `closedText`. Used under a solved request.
+   */
+  closed?: boolean;
+  closedText?: string;
 }
 
 export interface Comment extends Tables<"comments"> {

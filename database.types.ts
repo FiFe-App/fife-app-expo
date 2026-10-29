@@ -1027,6 +1027,56 @@ export type Database = {
         }
         Relationships: []
       }
+      requests: {
+        Row: {
+          author: string
+          created_at: string
+          description: string
+          id: number
+          images: string[]
+          location: unknown
+          radius: number | null
+          solved_at: string | null
+          status: string
+          tags: string[]
+          title: string
+        }
+        Insert: {
+          author: string
+          created_at?: string
+          description?: string
+          id?: number
+          images?: string[]
+          location?: unknown
+          radius?: number | null
+          solved_at?: string | null
+          status?: string
+          tags?: string[]
+          title: string
+        }
+        Update: {
+          author?: string
+          created_at?: string
+          description?: string
+          id?: number
+          images?: string[]
+          location?: unknown
+          radius?: number | null
+          solved_at?: string | null
+          status?: string
+          tags?: string[]
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requests_author_fkey"
+            columns: ["author"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           created_at: string
@@ -1391,6 +1441,35 @@ export type Database = {
       newsletter_unsubscribe: { Args: { p_email: string }; Returns: boolean }
       normalize_tag: { Args: { p_tag: string }; Returns: string }
       parse_app_version: { Args: { v: string }; Returns: number[] }
+      requests_feed: {
+        Args: {
+          p_lat?: number
+          p_long?: number
+          p_query?: string
+          p_scope?: string
+          p_skip?: number
+          p_take?: number
+        }
+        Returns: {
+          author: string
+          author_avatar: string | null
+          author_name: string | null
+          comment_count: number
+          created_at: string
+          description: string
+          distance: number | null
+          id: number
+          images: string[]
+          is_match: boolean
+          lat: number | null
+          long: number | null
+          radius: number | null
+          solved_at: string | null
+          status: string
+          tags: string[]
+          title: string
+        }[]
+      }
       search_tags: {
         Args: { p_limit?: number; p_prefix: string }
         Returns: {

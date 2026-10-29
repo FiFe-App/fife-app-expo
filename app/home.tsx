@@ -1,6 +1,7 @@
 import { Link, router, useFocusEffect } from "expo-router";
 import BuzinessItem from "@/components/buziness/BuzinessItem";
 import { FiFeRadar } from "@/components/user/FiFeRadar";
+import RequestsForYou from "@/components/requests/RequestsForYou";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Spacing } from "@/constants/spacing";
@@ -71,8 +72,9 @@ export default function Index() {
 
   if (!uid) return null;
 
-  // Index of the "Bizniszek" header among the ScrollView's children.
-  const stickyHeaderIndex = 1;
+  // Index of the "Bizniszek" header among the ScrollView's children: the requests strip and
+  // the FiFe Radar come before it.
+  const stickyHeaderIndex = 2;
 
   return (
     <ThemedView style={{ flex: 1, minHeight: 0 }} type="default">
@@ -88,6 +90,7 @@ export default function Index() {
         }}
         scrollEventThrottle={200}
       >
+        <RequestsForYou />
         <FiFeRadar
           data={data}
           load={fetchNextPage}
