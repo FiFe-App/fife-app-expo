@@ -48,7 +48,7 @@ export default function BreakScreen() {
   };
 
   // Back gesture, header back and router calls from elsewhere.
-  usePreventRemove(running, () => {});
+  //usePreventRemove(running, () => {});
 
   // Android hardware back.
   useEffect(() => {
