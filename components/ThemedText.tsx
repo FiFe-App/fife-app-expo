@@ -3,7 +3,9 @@ import { StyleSheet } from "react-native";
 
 import {   Text, type TextProps } from "react-native-paper";
 
-export type ThemedTextProps = TextProps<Text> & {
+// The ref of paper's Text and of react-native's Text no longer line up under
+// the strict React Native types, and nothing passes a ref to ThemedText.
+export type ThemedTextProps = Omit<TextProps<Text>, "ref"> & {
   type?:
   | "default"
   | "title"

@@ -11,6 +11,7 @@ import {
   ScrollView,
   StyleSheet,
   View,
+  type ViewInstance,
 } from "react-native";
 import { Checkbox, Text } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
@@ -33,7 +34,7 @@ const Register = () => {
   const [text, setText] = useState(policiesAccepted ? textToType : "");
   const [ageConfirmed, setAgeConfirmed] = useState(policiesAccepted);
   const { scrollRef, keyboardHeight, handleScroll, registerFocusedInput } = useKeyboardScrollIntoView();
-  const phraseContainerRef = useRef<View>(null);
+  const phraseContainerRef = useRef<ViewInstance>(null);
   const handleTextInput = (input: string) => {
     if (
       textToType.slice(0, input.length).toLowerCase().replaceAll(" ", "") ===

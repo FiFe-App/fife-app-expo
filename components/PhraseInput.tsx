@@ -1,7 +1,7 @@
 import { useAppTheme } from "@/assets/theme";
 import { Spacing } from "@/constants/spacing";
 import { useRef } from "react";
-import { Platform, Pressable, StyleSheet, Text, TextInput } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, TextInput, type TextInputInstance } from "react-native";
 
 interface Props {
   phrase: string;
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export const PhraseInput = ({ phrase, value, onChangeText, onFocus }: Props) => {
-  const ref = useRef<TextInput>(null);
+  const ref = useRef<TextInputInstance>(null);
   const { colors } = useAppTheme();
 
   return (

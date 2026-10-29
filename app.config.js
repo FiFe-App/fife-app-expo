@@ -156,8 +156,7 @@ export default {
     "expo-status-bar",
     "expo-video",
     "expo-web-browser",
-    "expo-asset",
-    "./plugins/withSceneLifecycle"
+    "expo-asset"
   ],
   experiments: {
     typedRoutes: true,

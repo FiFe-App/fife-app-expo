@@ -13,7 +13,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { emotionAvailable } from "@/constants/emotionTiming";
 import { clearOptions, setInAppMessageVisible, setOptions, showDialog } from "@/redux/reducers/infoReducer";
 import { dismissedIsItSafe } from "@/redux/reducers/userReducer";
-import { Link, useFocusEffect } from "expo-router";
+import { Link, router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 import { Button } from "@/components/Button";
 import { useAppTheme } from "@/assets/theme";
@@ -98,9 +98,13 @@ export default function MeScreen() {
           </Link>
           <NotificationPrompts />
           {emotionAvailable && <EmotionCheckCard onNoteFocus={registerFocusedInput} />}
-          <ToDoList onInputFocus={registerFocusedInput} />
-          {false && <View style={styles.cardRow}>
-            <Card style={[styles.card, styles.cardSpacing]} theme={{colors: {shadow:"red"}}} onPress={() => {}}>
+          <ToDoList
+            onRequestScrollIntoView={() =>
+              scrollRef.current?.scrollToEnd({ animated: true })
+            }
+          />
+          <View style={styles.cardRow}>
+            <Card style={[styles.card, styles.cardSpacing]} onPress={() => router.push("/focus")}>
               <Card.Content style={styles.cardContent}>
                 <Image
                   source={require("@/assets/gifs/focus.gif")}
@@ -110,7 +114,7 @@ export default function MeScreen() {
                 <ThemedText style={styles.cardText}>Fókusz</ThemedText>
               </Card.Content>
             </Card>
-            <Card style={[styles.card, styles.cardSpacing]} onPress={() => {}}>
+            <Card style={styles.card} onPress={() => router.push("/szunet")}>
               <Card.Content style={styles.cardContent}>
                 <Image
                   source={require("@/assets/gifs/black.gif")}
@@ -120,7 +124,7 @@ export default function MeScreen() {
                 <ThemedText style={styles.cardText}>Szünet</ThemedText>
               </Card.Content>
             </Card>
-          </View>}
+          </View>
         </View>
       </ScrollView>
     </ThemedView>
