@@ -16,7 +16,8 @@ import { supabase } from "@/lib/supabase/supabase";
 import { User } from "@supabase/auth-js";
 import { Link, Redirect, router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import { Platform, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { TextInput } from "react-native-paper";
 import { Spacing } from "@/constants/spacing";
 import { useDispatch, useSelector } from "react-redux";
@@ -123,7 +124,7 @@ export default function Index() {
     <ThemedView style={{ flex: 1 }} type="default">
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior="padding"
         keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}
         enabled
       >

@@ -28,6 +28,7 @@ import getLinkForContact from "@/lib/functions/getLinkForContact";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import typeToIcon from "@/lib/functions/typeToIcon";
 import { shareBuziness } from "@/lib/buziness/buzinessLink";
+import ReportContentModal from "@/components/user/ReportContentModal";
 import {
   fetchPublicBuziness,
   PublicRecommendation,
@@ -52,7 +53,8 @@ import {
   useGlobalSearchParams,
 } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from "react-native";
+import { Platform, ScrollView, useWindowDimensions, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import openMap from "react-native-open-maps";
 import {
   ActivityIndicator,
@@ -191,6 +193,7 @@ export default function Index() {
     { author: string; avatar_url: string | null }[]
   >([]);
   const [showRecommendsModal, setShowRecommendsModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   // Signed-out visitors only: what get_public_buziness returned, handed to the
   // comments and recommendations views instead of letting them query.
   const [publicComments, setPublicComments] = useState<Comment[] | null>(null);
@@ -276,6 +279,16 @@ export default function Index() {
             },
           ]),
         );
+      } else if (myUid) {
+        dispatch(
+          setOptions([
+            {
+              title: "Jelentés",
+              icon: "alert-octagon",
+              onPress: () => setShowReportModal(true),
+            },
+          ]),
+        );
       } else {
         dispatch(clearOptions());
       }
@@ -283,7 +296,7 @@ export default function Index() {
       return () => {
         dispatch(clearOptions());
       };
-    }, [dispatch, id, myBuziness]),
+    }, [dispatch, id, myBuziness, myUid]),
   );
 
   useFocusEffect(
@@ -460,7 +473,7 @@ export default function Index() {
           neither platform double-compensates. */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior="height"
+        behavior="padding"
         enabled={Platform.OS === "android"}
       >
       <ThemedView style={{ flex: 1 }}>
@@ -870,6 +883,19 @@ export default function Index() {
               )}
             </View>
           </ScrollView>
+        )}
+        {!!myUid && !myBuziness && !!data && (
+          <Portal>
+            <ReportContentModal
+              show={showReportModal}
+              setShow={setShowReportModal}
+              targetType="biznisz"
+              targetId={id}
+              reportedUserId={data.author}
+              label={title ?? ""}
+              excerpt={[title, data.description].filter(Boolean).join("\n")}
+            />
+          </Portal>
         )}
         {!!title && (
           <Portal>

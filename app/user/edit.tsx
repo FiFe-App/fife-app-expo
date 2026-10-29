@@ -28,7 +28,8 @@ import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { KeyboardAvoidingView, ScrollView, View, Platform } from "react-native";
+import { ScrollView, View, Platform } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { Button, IconButton, Surface } from "react-native-paper";
 import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 import { useDispatch, useSelector } from "react-redux";
@@ -354,7 +355,7 @@ export default function Index() {
             enabled per-OS so neither platform double-compensates. */}
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior="height"
+          behavior="padding"
           enabled={Platform.OS === "android"}
         >
 

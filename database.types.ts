@@ -998,7 +998,10 @@ export type Database = {
           description: string
           id: number
           reason: string
-          reported_profile_id: string
+          reported_profile_id: string | null
+          target_excerpt: string | null
+          target_id: string | null
+          target_type: string
         }
         Insert: {
           author: string
@@ -1006,7 +1009,10 @@ export type Database = {
           description: string
           id?: number
           reason: string
-          reported_profile_id: string
+          reported_profile_id?: string | null
+          target_excerpt?: string | null
+          target_id?: string | null
+          target_type?: string
         }
         Update: {
           author?: string
@@ -1014,7 +1020,10 @@ export type Database = {
           description?: string
           id?: number
           reason?: string
-          reported_profile_id?: string
+          reported_profile_id?: string | null
+          target_excerpt?: string | null
+          target_id?: string | null
+          target_type?: string
         }
         Relationships: []
       }

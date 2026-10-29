@@ -30,6 +30,11 @@ jest.mock("react-native-worklets", () => require("react-native-worklets/src/mock
 jest.mock("react-native-reanimated", () => require("react-native-reanimated/mock"));
 require("react-native-gesture-handler/jestSetup");
 
+// Native keyboard tracking; the library ships its own test double.
+jest.mock("react-native-keyboard-controller", () =>
+  require("react-native-keyboard-controller/jest"),
+);
+
 // Leaf native modules the registration screens touch. They have no behaviour
 // worth exercising in a unit test, but they do need to exist.
 jest.mock("@react-native-async-storage/async-storage", () =>

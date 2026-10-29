@@ -12,8 +12,9 @@ import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
-import { Button, Modal, Surface, TextInput } from "react-native-paper";
+import { ScrollView, View } from "react-native";
+import { KeyboardAwareModal } from "@/components/KeyboardAwareModal";
+import { Button, Surface, TextInput } from "react-native-paper";
 import { Dropdown } from "react-native-paper-dropdown";
 import { useSelector } from "react-redux";
 
@@ -83,10 +84,7 @@ const AddHelpContactDialog = ({ show, setShow }: AddHelpContactDialogProps) => {
   };
 
   return (
-    <Modal visible={show} onDismiss={handleDismiss}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
+    <KeyboardAwareModal visible={show} onDismiss={handleDismiss}>
         <ThemedView
           style={{
             padding: Spacing.xl,
@@ -197,8 +195,7 @@ const AddHelpContactDialog = ({ show, setShow }: AddHelpContactDialogProps) => {
             </ScrollView>
           )}
         </ThemedView>
-      </KeyboardAvoidingView>
-    </Modal>
+    </KeyboardAwareModal>
   );
 };
 

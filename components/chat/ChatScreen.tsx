@@ -4,15 +4,15 @@ import { Tables } from "@/database.types";
 import { supabase } from "@/lib/supabase/supabase";
 import { trackEvent } from "@/lib/analytics";
 import { RootState } from "@/redux/store";
-import { Link, useFocusEffect, useGlobalSearchParams, useNavigation } from "expo-router";
+import { Link, router, useFocusEffect, useGlobalSearchParams, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,
   View,
   StyleSheet,
-  KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import ProfileImage from "@/components/ProfileImage";
 import { ActivityIndicator, Portal, Text } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
@@ -28,7 +28,8 @@ import { MessagingDisabledCard } from "./MessagingDisabledCard";
 import { setMessagingEnabled } from "@/redux/reducers/userReducer";
 import { fetchMessagingEnabled } from "@/lib/chat/messagingContact";
 import { setOptions, clearOptions } from "@/redux/reducers/infoReducer";
-import ReportProfileModal from "@/components/user/ReportProfileModal";
+import ReportContentModal from "@/components/user/ReportContentModal";
+import BlockUserModal from "@/components/user/BlockUserModal";
 import { MessageActionsSheet } from "./MessageActionsSheet";
 import { ReplyPreview } from "./ReplyPreview";
 import { DateSeparator } from "./DateSeparator";
@@ -84,6 +85,8 @@ export default function ChatScreen() {
   const [pendingImage, setPendingImage] =
     useState<ExpoImagePicker.ImagePickerAsset | null>(null);
   const [actionsMessage, setActionsMessage] = useState<Message | null>(null);
+  const [reportedMessage, setReportedMessage] = useState<Message | null>(null);
+  const [showBlockModal, setShowBlockModal] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const mountId = useRef(Date.now()).current;
   const navigation = useNavigation();
@@ -535,7 +538,7 @@ export default function ChatScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.keyboardAvoiding}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior="padding"
       keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 34}
     >
       <ThemedView style={styles.container}>
@@ -579,7 +582,7 @@ export default function ChatScreen() {
                   }
                   hearted={heartedTexts.has(`heart-${item.id}`)}
                   onToggleHeart={() => toggleHeart(item)}
-                  onLongPress={item.author === myUid ? () => setActionsMessage(item) : undefined}
+                  onLongPress={() => setActionsMessage(item)}
                   onSwipeReply={() => setReplyingTo(item)}
                   replyToMessage={replyToMessage}
                   replyToDeleted={replyToDeleted}
@@ -628,11 +631,34 @@ export default function ChatScreen() {
 
       {!!otherUid && (
         <Portal>
-          <ReportProfileModal
+          <ReportContentModal
             show={showReportModal}
             setShow={setShowReportModal}
+            reportedUserId={otherUid}
+            label={otherUserLabel}
+          />
+        </Portal>
+      )}
+
+      {!!otherUid && (
+        <Portal>
+          <ReportContentModal
+            show={!!reportedMessage}
+            setShow={(show) => {
+              if (!show) setReportedMessage(null);
+            }}
+            targetType="message"
+            targetId={reportedMessage?.id}
+            reportedUserId={otherUid}
+            label={otherUserLabel}
+            excerpt={reportedMessage?.text}
+          />
+          <BlockUserModal
+            show={showBlockModal}
+            setShow={setShowBlockModal}
             profileId={otherUid}
             profileName={otherUserLabel}
+            onBlocked={() => router.back()}
           />
         </Portal>
       )}
@@ -640,10 +666,30 @@ export default function ChatScreen() {
       <MessageActionsSheet
         visible={!!actionsMessage}
         onDismiss={() => setActionsMessage(null)}
-        onDelete={() => {
-          if (actionsMessage) deleteMessage(actionsMessage);
-          setActionsMessage(null);
-        }}
+        onDelete={
+          actionsMessage && actionsMessage.author === myUid
+            ? () => {
+                deleteMessage(actionsMessage);
+                setActionsMessage(null);
+              }
+            : undefined
+        }
+        onReport={
+          actionsMessage && actionsMessage.author !== myUid
+            ? () => {
+                setReportedMessage(actionsMessage);
+                setActionsMessage(null);
+              }
+            : undefined
+        }
+        onBlock={
+          actionsMessage && actionsMessage.author !== myUid
+            ? () => {
+                setShowBlockModal(true);
+                setActionsMessage(null);
+              }
+            : undefined
+        }
       />
     </KeyboardAvoidingView>
   );
