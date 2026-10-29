@@ -25,8 +25,9 @@ export default {
     backgroundColor: "#fff5e0"
   },
   ios: {
-    supportsTablet: true,
+    supportsTablet: false,
     bundleIdentifier: "com.fife.app",
+    appleTeamId: "BRWA92BF9J",
     associatedDomains: [
       "applinks:fifeapp.hu",
       "webcredentials:fifeapp.hu"
@@ -135,9 +136,21 @@ export default {
           "imageWidth": 80
         }
       ],
-    "expo-secure-store",
+    ["expo-location", {
+      locationWhenInUsePermission:
+        "A FiFe a helyzeted alapján mutatja a környékbeli embereket és bizniszeket, és így jelölheted ki a környékedet a térképen. A pontos helyed más felhasználók nem látják.",
+      locationAlwaysAndWhenInUsePermission: false,
+      locationAlwaysPermission: false,
+      isIosBackgroundLocationEnabled: false
+    }],
+    ["expo-image-picker", {
+      photosPermission:
+        "A FiFe a kiválasztott fotókhoz fér hozzá, hogy profilképet, kommenthez- vagy a bizniszedhez tartozó képeket tölthess fel.",
+      cameraPermission: false,
+      microphonePermission: false
+    }],
     ["expo-audio", { enableBackgroundPlayback: false, recordAudioAndroid: false }],
-    ["expo-image-picker", { cameraPermission: false, microphonePermission: false }],
+    "expo-secure-store",
     "expo-image",
     "expo-router",
     "expo-status-bar",
