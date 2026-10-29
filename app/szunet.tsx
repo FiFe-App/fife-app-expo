@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { AppState, BackHandler } from "react-native";
-import { router, Stack, usePreventRemove } from "expo-router";
+import { AppState } from "react-native";
+import { router } from "expo-router";
 import CenteredTimer, { useNow, useTimerPalette } from "@/components/focus/CenteredTimer";
 import KeepAwake from "@/components/focus/KeepAwake";
 import PillButton from "@/components/focus/PillButton";
 import { useBeep } from "@/hooks/useBeep";
-import { formatRemaining } from "@/lib/focus/pomodoro";
+import { minutesLeft } from "@/lib/focus/pomodoro";
 import { ensureNotificationPermission } from "@/lib/notifications/registerForPushNotifications";
 import {
   cancelBreakEndNotification,
@@ -13,12 +13,19 @@ import {
 } from "@/lib/notifications/scheduleFocusNotifications";
 
 const DURATIONS_MIN = [15, 30, 60];
+/** The breathing cue helps find the rhythm, then gets out of the way. */
+const CUE_FOR_MS = 60 * 1000;
+
+const INTRO =
+  "Tegyél le mindent egy kicsit. A kör lassan nő és csökken: " +
+  "amikor nő, lélegezz be, amikor csökken, fújd ki. " +
+  "Ha letelt az idő, egy pittyanás jelez.";
 
 const INFO = {
   title: "Hogyan működik a Szünet?",
   text:
     "Válaszd ki, mennyi ideig pihensz: 15, 30 vagy 60 perc.\n\n" +
-    "A szünet alatt az app bezár: nem tudsz más oldalra lépni. " +
+    "Ha végeztél, a Kész vagyok gombbal bármikor befejezheted. " +
     "Ha átváltasz egy másik alkalmazásra, a szünet véget ér.\n\n" +
     "Amikor letelik, pittyanás és értesítés jelez.",
 };
@@ -26,9 +33,8 @@ const INFO = {
 const leave = () => (router.canGoBack() ? router.back() : router.replace("/me"));
 
 /**
- * A break the user is locked into: once started there is no header, no bottom
- * navigation, and back does nothing until the time is up. Switching to another
- * app ends it.
+ * A break of 15, 30 or 60 minutes. It can be ended any time with "Kész
+ * vagyok"; switching to another app ends it too.
  */
 export default function BreakScreen() {
   const [endsAt, setEndsAt] = useState<number | null>(null);
@@ -47,16 +53,6 @@ export default function BreakScreen() {
       console.warn("Could not schedule the break notification:", err);
     }
   };
-
-  // Back gesture, header back and router calls from elsewhere.
-  //usePreventRemove(running, () => {});
-
-  // Android hardware back.
-  useEffect(() => {
-    if (!running) return;
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => true);
-    return () => sub.remove();
-  }, [running]);
 
   // Leaving the app ends the break. "inactive" (iOS control centre, incoming
   // call banner) is not leaving.
@@ -83,15 +79,18 @@ export default function BreakScreen() {
     cancelBreakEndNotification().catch(() => {});
   }, []);
 
-  // The header (and its back button) is only there while no break is running.
-  const header = <Stack.Screen options={{ headerShown: !running, gestureEnabled: !running }} />;
   const image = require("@/assets/gifs/black.gif");
   const neutral = useTimerPalette("neutral");
+  const rest = useTimerPalette("rest");
+
+  const done = () => {
+    cancelBreakEndNotification().catch(() => {});
+    leave();
+  };
 
   if (endsAt === null) {
     return (
-      <CenteredTimer time="00:00" image={image} info={INFO} message="Mennyi időre állsz meg?">
-        {header}
+      <CenteredTimer title="Szünet" image={image} info={INFO} intro={INTRO} message="Mennyi időre állsz meg?">
         {DURATIONS_MIN.map((min) => (
           <PillButton key={min} label={`${min} perc`} palette={neutral} onPress={() => start(min)} />
         ))}
@@ -101,16 +100,30 @@ export default function BreakScreen() {
 
   if (finished) {
     return (
-      <CenteredTimer time={formatRemaining(0)} image={image} info={INFO} stage="fading" message="Jól esett?">
-        {header}
-        <PillButton label="Kész" variant="filled" palette={neutral} onPress={leave} />
-      </CenteredTimer>
+      <CenteredTimer
+        title="Szünet"
+        time="Letelt"
+        image={image}
+        info={INFO}
+        stage="fading"
+        message="Jól esett?"
+        footer={<PillButton label="Kész" variant="filled" palette={neutral} onPress={leave} />}
+      />
     );
   }
 
   return (
-    <CenteredTimer time={formatRemaining(remaining)} image={image} info={INFO} tone="rest" stage="breathing">
-      {header}
+    <CenteredTimer
+      title="Szünet"
+      time={`${minutesLeft(remaining)} perc`}
+      caption="van hátra"
+      image={image}
+      info={INFO}
+      tone="rest"
+      stage="breathing"
+      cueForMs={CUE_FOR_MS}
+      footer={<PillButton label="Kész vagyok" variant="filled" palette={rest} onPress={done} />}
+    >
       <KeepAwake />
     </CenteredTimer>
   );

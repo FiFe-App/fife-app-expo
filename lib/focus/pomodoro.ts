@@ -74,3 +74,11 @@ export function formatRemaining(ms: number): string {
   const s = total % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
+
+/**
+ * Whole minutes left, rounded up: "10" stays on screen until 9 minutes are
+ * left, and the last minute reads "1" rather than "0".
+ */
+export function minutesLeft(ms: number): number {
+  return Math.max(0, Math.ceil(ms / 60000));
+}

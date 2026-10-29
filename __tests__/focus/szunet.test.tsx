@@ -1,6 +1,6 @@
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { AppState, type AppStateStatus } from "react-native";
-import { usePreventRemove } from "expo-router";
+import { router } from "expo-router";
 
 import { useKeepAwake } from "expo-keep-awake";
 
@@ -26,10 +26,7 @@ jest.mock("@/components/focus/BreathingHalo", () => ({
   default: () => null,
 }));
 jest.mock("@/hooks/useBeep", () => ({ useBeep: () => mockBeep }));
-jest.mock("expo-router", () => ({
-  ...jest.requireActual("@/test-utils/mocks/expo-router"),
-  usePreventRemove: jest.fn(),
-}));
+jest.mock("expo-router", () => require("@/test-utils/mocks/expo-router"));
 jest.mock("@/lib/notifications/registerForPushNotifications", () => ({
   ensureNotificationPermission: jest.fn().mockResolvedValue(true),
 }));
@@ -38,12 +35,13 @@ jest.mock("@/lib/notifications/scheduleFocusNotifications", () => ({
   cancelBreakEndNotification: jest.fn().mockResolvedValue(undefined),
 }));
 
-const preventRemove = usePreventRemove as jest.Mock;
+const { __setPathname } = jest.requireMock("expo-router");
 
 let appStateListener: ((s: AppStateStatus) => void) | undefined;
 beforeEach(() => {
   jest.useFakeTimers();
   jest.clearAllMocks();
+  __setPathname("/szunet");
   appStateListener = undefined;
   jest.spyOn(AppState, "addEventListener").mockImplementation((_type, listener) => {
     appStateListener = listener as (s: AppStateStatus) => void;
@@ -52,14 +50,12 @@ beforeEach(() => {
 });
 afterEach(() => jest.useRealTimers());
 
-const lastPreventRemove = () => preventRemove.mock.calls.at(-1)?.[0];
-
-it("offers 15, 30 and 60 minutes and explains itself", async () => {
+it("says what is about to happen and offers 15, 30 and 60 minutes", async () => {
   await renderWithProviders(<BreakScreen />);
+  expect(screen.getByText(/amikor nő, lélegezz be, amikor csökken, fújd ki/)).toBeTruthy();
   expect(screen.getByText("15 perc")).toBeTruthy();
   expect(screen.getByText("30 perc")).toBeTruthy();
   expect(screen.getByText("60 perc")).toBeTruthy();
-  expect(lastPreventRemove()).toBe(false);
   expect(screen.getByText("Mennyi időre állsz meg?")).toBeTruthy();
   expect(useKeepAwake).not.toHaveBeenCalled();
 
@@ -67,41 +63,65 @@ it("offers 15, 30 and 60 minutes and explains itself", async () => {
   expect(screen.getByText("Hogyan működik a Szünet?")).toBeTruthy();
 });
 
-it("locks the user in until the time is up, then beeps", async () => {
-  await renderWithProviders(<BreakScreen />);
+it("counts down in whole minutes, drops the cue after a minute, then beeps", async () => {
+  const { store } = await renderWithProviders(<BreakScreen />);
   const before = Date.now();
   await fireEvent.press(screen.getByText("15 perc"));
 
-  expect(screen.getByText("15:00")).toBeTruthy();
+  expect(screen.getByText("15 perc")).toBeTruthy();
+  expect(screen.getByText("van hátra")).toBeTruthy();
+  expect(screen.queryByText("30 perc")).toBeNull();
   expect(screen.getByText(BREATH_IN_TEXT, HIDDEN)).toBeTruthy();
   expect(useKeepAwake).toHaveBeenCalled();
-  expect(screen.queryByText("30 perc")).toBeNull();
-  expect(lastPreventRemove()).toBe(true);
   expect((scheduleBreakEndNotification as jest.Mock).mock.calls[0][0]).toBeGreaterThanOrEqual(before + 15 * 60 * 1000);
+  // The status bar and gesture area take the break's blue too.
+  expect(store.getState().info.screenTint).toEqual({ path: "/szunet", color: "#eaf5fb" });
+
+  await act(async () => {
+    jest.advanceTimersByTime(60 * 1000);
+  });
+  expect(screen.getByText("14 perc")).toBeTruthy();
+  expect(screen.queryByText(BREATH_IN_TEXT, HIDDEN)).toBeNull();
+  expect(screen.queryByText("és ki…", HIDDEN)).toBeNull();
   expect(mockBeep).not.toHaveBeenCalled();
 
   await act(async () => {
-    jest.advanceTimersByTime(15 * 60 * 1000);
+    jest.advanceTimersByTime(14 * 60 * 1000);
   });
-  expect(screen.getByText("00:00")).toBeTruthy();
-  expect(screen.getByText("Kész")).toBeTruthy();
+  expect(screen.getByText("Letelt")).toBeTruthy();
   expect(screen.getByText("Jól esett?")).toBeTruthy();
-  expect(screen.queryByText(BREATH_IN_TEXT, HIDDEN)).toBeNull();
-  expect(lastPreventRemove()).toBe(false);
   expect(mockBeep).toHaveBeenCalledTimes(1);
+
+  await fireEvent.press(screen.getByText("Kész"));
+  expect(router.back).toHaveBeenCalled();
+});
+
+it("can be ended any time with Kész vagyok", async () => {
+  await renderWithProviders(<BreakScreen />);
+  await fireEvent.press(screen.getByText("30 perc"));
+  await fireEvent.press(screen.getByText("Kész vagyok"));
+  expect(cancelBreakEndNotification).toHaveBeenCalled();
+  expect(router.back).toHaveBeenCalled();
+  expect(mockBeep).not.toHaveBeenCalled();
 });
 
 it("ends the break, silently, when the user switches apps", async () => {
   await renderWithProviders(<BreakScreen />);
   await fireEvent.press(screen.getByText("30 perc"));
-  expect(screen.getByText("30:00")).toBeTruthy();
+  expect(screen.getByText("van hátra")).toBeTruthy();
 
   await act(async () => appStateListener?.("inactive"));
-  expect(screen.getByText("30:00")).toBeTruthy();
+  expect(screen.getByText("van hátra")).toBeTruthy();
 
   await act(async () => appStateListener?.("background"));
-  expect(screen.getByText("15 perc")).toBeTruthy();
-  expect(lastPreventRemove()).toBe(false);
+  expect(screen.getByText("Mennyi időre állsz meg?")).toBeTruthy();
   expect(cancelBreakEndNotification).toHaveBeenCalled();
   expect(mockBeep).not.toHaveBeenCalled();
+});
+
+it("gives the colour of the bars back when it is left", async () => {
+  const { store, unmount } = await renderWithProviders(<BreakScreen />);
+  expect(store.getState().info.screenTint?.path).toBe("/szunet");
+  await act(async () => unmount());
+  expect(store.getState().info.screenTint).toBeNull();
 });

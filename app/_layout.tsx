@@ -72,7 +72,7 @@ function RootContent() {
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
   const { uid, messagingEnabled } = useSelector((state: RootState) => state.user);
   const lastReadAt = useSelector((state: RootState) => state.chat.lastReadAt);
-  const { statusBarColor, bottomBarColor } = useSelector((state: RootState) => state.info);
+  const { statusBarColor, bottomBarColor, screenTint } = useSelector((state: RootState) => state.info);
   const hasInitialized = React.useRef(false);
 
   // Anonymous screen views, by route pattern ("/user/[uid]"), never the
@@ -300,8 +300,12 @@ function RootContent() {
     !pathname.includes("meghivo") &&
     !pathname.includes("leiratkozas") &&
     pathname !== "/szunet" &&
+    pathname !== "/focus" &&
     pathname !== "/biznisz/new" &&
     !pathname.startsWith("/biznisz/edit");
+
+  // Only for the screen that set it — see InfoState.screenTint.
+  const tint = screenTint?.path === pathname ? screenTint.color : null;
 
   return (
     <PaperProvider theme={theme}>
@@ -312,9 +316,9 @@ function RootContent() {
           fills the home indicator / gesture area; without it the screen does. */}
       <SafeAreaView
         edges={showBottomNav ? ["top", "left", "right"] : ["top", "left", "right", "bottom"]}
-        style={{ flex: 1, backgroundColor: statusBarColor || theme.colors.surface }}
+        style={{ flex: 1, backgroundColor: tint || statusBarColor || theme.colors.surface }}
       >
-        <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
+        <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: tint || theme.colors.background }}>
           <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
             <InfoLayer />
 

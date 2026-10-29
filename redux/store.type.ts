@@ -267,6 +267,13 @@ export interface InfoState {
   policiesAccepted: boolean;
   statusBarColor: string | null;
   bottomBarColor: string | null;
+  /**
+   * A screen's own background, painted edge to edge — under the status bar
+   * and the gesture area too (the Fókusz/Szünet timers). Tied to the path
+   * that set it: the store is persisted, and a tint left behind by a killed
+   * app must not colour some other screen after the restart.
+   */
+  screenTint: { path: string; color: string } | null;
   /** The server-driven feedback dialog (components/InAppMessageDialog.tsx). */
   inAppMessageVisible: boolean;
   /** Icon of the menu item that opens it, from the newest in_app_messages row. */

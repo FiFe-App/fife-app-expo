@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { View } from "react-native";
 import { IconButton } from "react-native-paper";
+import { router } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import CenteredTimer, { useNow, useTimerPalette } from "@/components/focus/CenteredTimer";
 import KeepAwake from "@/components/focus/KeepAwake";
@@ -23,6 +24,11 @@ import {
 } from "@/lib/notifications/scheduleFocusNotifications";
 import { setRounds, startFocus, stopFocus } from "@/redux/reducers/focusReducer";
 import { RootState } from "@/redux/store";
+
+const INTRO =
+  "25 perc figyelem egy dologra, aztán 5 perc pihenő – ez egy kör. " +
+  "Minden váltásnál pittyanás jelez, akkor is, ha közben kilépsz. " +
+  "A szünetekben egy kék kör segít lélegezni.";
 
 const INFO = {
   title: "Hogyan működik a Fókusz?",
@@ -73,6 +79,12 @@ export default function FocusScreen() {
     cancelFocusNotifications().catch(() => {});
   };
 
+  const done = () => {
+    stop();
+    if (router.canGoBack()) router.back();
+    else router.replace("/me");
+  };
+
   const image = require("@/assets/gifs/focus.gif");
   const tone = phase === null ? "neutral" : phase.kind === "work" ? "work" : "rest";
   const palette = useTimerPalette(tone);
@@ -80,9 +92,11 @@ export default function FocusScreen() {
   if (startedAt === null) {
     return (
       <CenteredTimer
+        title="Fókusz"
         time={formatRemaining(WORK_MS)}
         image={image}
         info={INFO}
+        intro={INTRO}
         picker={
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <IconButton
@@ -114,9 +128,14 @@ export default function FocusScreen() {
 
   if (finished || !phase) {
     return (
-      <CenteredTimer time={formatRemaining(0)} image={image} info={INFO} message="Ügyes voltál!">
-        <PillButton label="Kész" variant="filled" palette={palette} onPress={stop} />
-      </CenteredTimer>
+      <CenteredTimer
+        title="Fókusz"
+        time={formatRemaining(0)}
+        image={image}
+        info={INFO}
+        message="Ügyes voltál!"
+        footer={<PillButton label="Kész" variant="filled" palette={palette} onPress={done} />}
+      />
     );
   }
 
@@ -124,6 +143,7 @@ export default function FocusScreen() {
 
   return (
     <CenteredTimer
+      title="Fókusz"
       time={formatRemaining(phase.endsAt - now)}
       image={image}
       info={INFO}
@@ -131,9 +151,9 @@ export default function FocusScreen() {
       stage={working ? "warm" : "breathing"}
       caption={working ? `${phase.round}/${rounds}. kör` : `Szünet · ${phase.round}/${rounds}`}
       picker={working && <RoundDots round={phase.round} rounds={rounds} fill={palette.timer} outline={palette.outline} />}
+      footer={<PillButton label="Kész vagyok" variant="filled" palette={palette} onPress={done} />}
     >
       <KeepAwake />
-      <PillButton label="Leállítás" palette={palette} onPress={stop} />
     </CenteredTimer>
   );
 }
