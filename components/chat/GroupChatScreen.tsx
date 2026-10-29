@@ -22,7 +22,8 @@ import { RootState } from "@/redux/store";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { Link, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, useWindowDimensions, View } from "react-native";
+import { FlatList, Platform, StyleSheet, useWindowDimensions, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import {
   ActivityIndicator,
   Button,
@@ -35,6 +36,8 @@ import {
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { MyAppbar } from "../MyAppBar";
+import BlockUserModal from "../user/BlockUserModal";
+import ReportContentModal from "../user/ReportContentModal";
 import { DateSeparator } from "./DateSeparator";
 import { MessageActionsSheet } from "./MessageActionsSheet";
 import { MessageInput } from "./MessageInput";
@@ -83,6 +86,8 @@ export default function GroupChatScreen() {
   const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null);
   const [replyingTo, setReplyingTo] = useState<GroupChatMessage | null>(null);
   const [actionsMessage, setActionsMessage] = useState<GroupChatMessage | null>(null);
+  const [reportedMessage, setReportedMessage] = useState<GroupChatMessage | null>(null);
+  const [blockCandidateId, setBlockCandidateId] = useState<string | null>(null);
   // message id → ids of the users who hearted it
   const [hearts, setHearts] = useState<Map<number, Set<string>>>(new Map());
   const listRef = useRef<FlatList<GroupChatMessage>>(null);
@@ -568,7 +573,7 @@ export default function GroupChatScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.keyboardAvoiding}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior="padding"
       keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 34}
     >
       <ThemedView style={styles.container}>
@@ -606,7 +611,7 @@ export default function GroupChatScreen() {
                   hearted={heartCount > 0}
                   heartCount={heartCount}
                   onToggleHeart={() => toggleHeart(item)}
-                  onLongPress={item.author === myUid ? () => setActionsMessage(item) : undefined}
+                  onLongPress={() => setActionsMessage(item)}
                   onSwipeReply={isMember ? () => setReplyingTo(item) : undefined}
                   replyToMessage={replyToMessage}
                   replyToDeleted={replyToDeleted}
@@ -721,13 +726,60 @@ export default function GroupChatScreen() {
         </Modal>
       </Portal>
 
+      <Portal>
+        <ReportContentModal
+          show={!!reportedMessage}
+          setShow={(show) => {
+            if (!show) setReportedMessage(null);
+          }}
+          targetType="group_message"
+          targetId={reportedMessage?.id}
+          reportedUserId={reportedMessage?.author ?? null}
+          label={reportedMessage ? nameOf(reportedMessage.author) : ""}
+          excerpt={reportedMessage?.text}
+        />
+        <BlockUserModal
+          show={!!blockCandidateId}
+          setShow={(show) => {
+            if (!show) setBlockCandidateId(null);
+          }}
+          profileId={blockCandidateId ?? ""}
+          profileName={blockCandidateId ? nameOf(blockCandidateId) : ""}
+          onBlocked={() => {
+            if (blockCandidateId)
+              setBlockedIds((prev) => new Set(prev).add(blockCandidateId));
+            setBlockCandidateId(null);
+          }}
+        />
+      </Portal>
+
       <MessageActionsSheet
         visible={!!actionsMessage}
         onDismiss={() => setActionsMessage(null)}
-        onDelete={() => {
-          if (actionsMessage) deleteMessage(actionsMessage);
-          setActionsMessage(null);
-        }}
+        onDelete={
+          actionsMessage && actionsMessage.author === myUid
+            ? () => {
+                deleteMessage(actionsMessage);
+                setActionsMessage(null);
+              }
+            : undefined
+        }
+        onReport={
+          actionsMessage && actionsMessage.author !== myUid
+            ? () => {
+                setReportedMessage(actionsMessage);
+                setActionsMessage(null);
+              }
+            : undefined
+        }
+        onBlock={
+          actionsMessage && actionsMessage.author !== myUid
+            ? () => {
+                setBlockCandidateId(actionsMessage.author);
+                setActionsMessage(null);
+              }
+            : undefined
+        }
       />
     </KeyboardAvoidingView>
   );

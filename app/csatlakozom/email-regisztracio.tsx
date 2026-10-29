@@ -10,7 +10,8 @@ import { Link, Redirect, router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { openBrowserAsync } from "expo-web-browser";
 import { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View, type ScrollViewInstance } from "react-native";
+import { Platform, ScrollView, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 import { makeRedirectUri } from "expo-auth-session";
 import { Button, Checkbox, HelperText, Icon, TextInput as PaperTextInput } from "react-native-paper";
@@ -52,7 +53,7 @@ export default function Index() {
   const [error, setError] = useState<string | undefined>();
   const [existingAccount, setExistingAccount] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const scrollViewRef = useRef<ScrollViewInstance>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
   const nameRef = useRef<{ focus: () => void } | null>(null);
   const usernameRef = useRef<{ focus: () => void } | null>(null);
   const emailRef = useRef<{ focus: () => void } | null>(null);
@@ -177,7 +178,7 @@ export default function Index() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, minHeight: 0 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior="padding"
       keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
     >
       <ThemedView style={{ flex: 1, minHeight: 0, padding: Spacing.lg, paddingTop: Spacing.xxxl, paddingBottom: 60 }}>
@@ -321,7 +322,7 @@ export default function Index() {
                 status={acceptConditions ? "checked" : "unchecked"}
               />
               <ThemedText variant="labelLarge" style={{ flex: 1, flexWrap: "wrap" }} onPress={() => toggleAcceptConditions()}>
-                {"Elolvastam és elfogadom a "}
+                {"Elolvastam és elfogadom a sértő tartalommal és bántalmazó felhasználókkal szembeni nulla toleranciát kimondó "}
                 <ThemedText
                   variant="labelLarge"
                   type="link"
@@ -340,6 +341,12 @@ export default function Index() {
                 {"."}          
               </ThemedText>
             </View>
+            <HelperText type="info" style={{ paddingHorizontal: 0 }}>
+              A FiFe-n nulla tolerancia van a sértő, bántó vagy törvénybe ütköző
+              tartalommal és a bántalmazó felhasználókkal szemben. A jelentéseket
+              24 órán belül kivizsgáljuk, a tartalmat eltávolítjuk, a szabályszegő
+              felhasználót pedig kizárjuk.
+            </HelperText>
           </View>
         </ScrollView>
         <View style={{ maxWidth: 400, width: "100%" }}>

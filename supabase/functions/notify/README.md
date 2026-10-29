@@ -10,6 +10,8 @@ Handles all transactional notifications for FiFe. Triggered by database webhooks
 | `profileRecommendations` | Recommended profile |
 | `comments` (key `buziness/{id}`) | Buziness owner |
 | `messages` | Message recipient |
+| `reports` | The operator (`ADMIN_NOTIFY_EMAIL` / `ADMIN_USER_ID`) — a new report of a profile, message, biznisz or comment |
+| `profiles` | The operator — a new sign-up (the profile row is created with the auth user, before email confirmation) |
 | `newsletters` | The issue's audience — subscribers or every registered user — or an explicit address list. See [Newsletter](#newsletter) |
 
 ## Architecture
@@ -354,6 +356,8 @@ SELECT * FROM private.notify_recent_calls(20);
 | `SMTP_USER` | `supabase secrets set` | SMTP username/email |
 | `SMTP_PASS` | `supabase secrets set` | SMTP password |
 | `SMTP_FROM` | `supabase secrets set` | From address (e.g. `info@fifeapp.hu`) |
+| `ADMIN_NOTIFY_EMAIL` | `supabase secrets set` | Where new-report and new-sign-up alerts are mailed. Unset (and no `ADMIN_USER_ID`) = alerts are skipped |
+| `ADMIN_USER_ID` | `supabase secrets set` (optional) | Operator's user id; also gets a push alert, subject to their notification prefs |
 | `NEWSLETTER_SECRET` | `supabase secrets set` (optional) | HMAC key for unsubscribe links. Defaults to the service role key. Changing it invalidates links in already-sent mails |
 | `FUNCTIONS_BASE_URL` | `supabase secrets set` (optional) | Base URL used to build unsubscribe links. Defaults to `$SUPABASE_URL/functions/v1` |
 | `NEWSLETTER_BATCH_SIZE` | `supabase secrets set` (optional) | Mails per batch, default `10` |

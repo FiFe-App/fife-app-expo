@@ -457,6 +457,86 @@ async function sendNewsletter(
   }
 }
 
+// Operator alerts (new reports, new sign-ups). The recipient is configuration,
+// not a user row: ADMIN_NOTIFY_EMAIL gets a mail, and ADMIN_USER_ID — if the
+// operator also has the app — gets a push through their own notification prefs.
+const adminNotifyEmail = Deno.env.get("ADMIN_NOTIFY_EMAIL") || "";
+const adminUserId = Deno.env.get("ADMIN_USER_ID") || "";
+
+async function notifyAdmin(
+  supabase: ReturnType<typeof createClient>,
+  subject: string,
+  lines: Array<[label: string, value: string | null | undefined]>,
+  data?: Record<string, unknown>,
+) {
+  if (!adminNotifyEmail && !adminUserId) {
+    console.log("Admin alert skipped — set ADMIN_NOTIFY_EMAIL (and/or ADMIN_USER_ID)");
+    return;
+  }
+  const rows = lines.filter(([, v]) => v);
+  const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#363024;">
+    <h2 style="margin:0 0 16px 0;">${escapeHtml(subject)}</h2>
+    ${rows
+      .map(([k, v]) => `<p style="margin:0 0 8px 0;"><strong>${escapeHtml(k)}:</strong> ${escapeHtml(String(v))}</p>`)
+      .join("")}
+  </div>`;
+
+  const jobs: Promise<unknown>[] = [];
+  if (adminNotifyEmail) jobs.push(sendEmailNotificationSafe(adminNotifyEmail, subject, html));
+  if (adminUserId) {
+    const prefs = await getNotificationPrefs(supabase, adminUserId);
+    if (prefs.notify_push && prefs.push_token) {
+      jobs.push(sendPushNotification(prefs.push_token, subject, data));
+    }
+  }
+  await Promise.all(jobs);
+}
+
+const REPORT_TARGET_LABELS: Record<string, string> = {
+  profile: "profil",
+  message: "üzenet",
+  group_message: "csoportos üzenet",
+  biznisz: "biznisz",
+  comment: "komment",
+};
+
+async function notifyAdminOfReport(supabase: ReturnType<typeof createClient>, record: Record<string, any>) {
+  const ids = [record.author, record.reported_profile_id].filter(Boolean);
+  const { data: people } = await supabase.from("profiles").select("id, full_name").in("id", ids);
+  const nameOf = (id?: string) => people?.find((p: { id: string }) => p.id === id)?.full_name || id || "ismeretlen";
+  const targetType = record.target_type || "profile";
+  const targetLabel = REPORT_TARGET_LABELS[targetType] || targetType;
+
+  await notifyAdmin(
+    supabase,
+    `Új feljelentés: ${record.reported_profile_id ? nameOf(record.reported_profile_id) : targetLabel}`,
+    [
+      ["Feljelentő", nameOf(record.author)],
+      ["Feljelentett felhasználó", record.reported_profile_id ? nameOf(record.reported_profile_id) : null],
+      ["Mit", targetLabel + (record.target_id ? ` (#${record.target_id})` : "")],
+      ["Ok", record.reason],
+      ["Leírás", record.description],
+      ["Tartalom", record.target_excerpt],
+    ],
+    { url: record.reported_profile_id ? `/user/${record.reported_profile_id}` : "/" },
+  );
+}
+
+async function notifyAdminOfSignup(supabase: ReturnType<typeof createClient>, record: Record<string, any>) {
+  // profiles has no email column; it lives on the auth user.
+  const { data } = await supabase.auth.admin.getUserById(record.id);
+  await notifyAdmin(
+    supabase,
+    "Új regisztráció",
+    [
+      ["Név", record.full_name],
+      ["Felhasználónév", record.username],
+      ["Email", data?.user?.email],
+    ],
+    { url: `/user/${record.id}` },
+  );
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -560,6 +640,10 @@ Deno.serve(async (req) => {
           });
         }
       }
+    } else if (table === "reports") {
+      await notifyAdminOfReport(supabase, record);
+    } else if (table === "profiles") {
+      await notifyAdminOfSignup(supabase, record);
     } else if (table === "group_chat_messages") {
       if (!GROUP_CHAT_NOTIFICATIONS_ENABLED) {
         console.log("Group chat notifications are disabled — skipping");

@@ -37,6 +37,8 @@ import { addSnack } from "@/redux/reducers/infoReducer";
 import { getLoginHref } from "@/lib/auth/loginRedirect";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
+import ReportContentModal from "../user/ReportContentModal";
+import BlockUserModal from "../user/BlockUserModal";
 
 const Comments = ({ path, placeholder, limit = 10, style, publicComments }: CommentsProps) => {
   const dispatch = useDispatch();
@@ -63,6 +65,9 @@ const Comments = ({ path, placeholder, limit = 10, style, publicComments }: Comm
   } | null>(null);
 
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
+  const [reportedComment, setReportedComment] = useState<Comment | null>(null);
+  const [blockCandidate, setBlockCandidate] = useState<Comment | null>(null);
+  const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
 
   const mountId = useRef(Date.now()).current;
 
@@ -141,6 +146,22 @@ const Comments = ({ path, placeholder, limit = 10, style, publicComments }: Comm
   useEffect(() => {
     if (comments.length) setDownloading(false);
   }, [comments]);
+
+  // Comments from people you blocked are hidden.
+  useEffect(() => {
+    if (!uid) return;
+    supabase
+      .from("blocked_users")
+      .select("blocked_id")
+      .eq("blocker_id", uid)
+      .then(({ data }) =>
+        setBlockedIds(new Set((data ?? []).map((b) => b.blocked_id))),
+      );
+  }, [uid]);
+
+  const visibleComments = comments.filter(
+    (comment) => !comment.author || !blockedIds.has(comment.author),
+  );
 
   const closeMenu = () => setMenuAnchor(null);
 
@@ -295,8 +316,8 @@ const Comments = ({ path, placeholder, limit = 10, style, publicComments }: Comm
     >
       {
         <View style={{ paddingBottom: 10, flex:1, minHeight: 200 }}>
-          {!!comments.length &&
-            comments.map((comment, ind) => {
+          {!!visibleComments.length &&
+            visibleComments.map((comment, ind) => {
               return (
                 <View
                   key={"comment" + ind}
@@ -305,7 +326,7 @@ const Comments = ({ path, placeholder, limit = 10, style, publicComments }: Comm
                     alignItems: "flex-start",
                     gap: Spacing.sm,
                     paddingVertical: Spacing.md,
-                    borderBottomWidth: ind < comments.length - 1 ? 1 : 0,
+                    borderBottomWidth: ind < visibleComments.length - 1 ? 1 : 0,
                     borderBottomColor: theme.colors.outlineVariant,
                   }}
                 >
@@ -454,14 +475,53 @@ const Comments = ({ path, placeholder, limit = 10, style, publicComments }: Comm
                 />
               )}
               <Menu.Item
-                onPress={() => { }}
-                title="Problémám van ezzel a kommenttel."
-                leadingIcon="alert"
-                disabled
+                onPress={() => {
+                  setReportedComment(menuAnchor.comment);
+                  setMenuAnchor(null);
+                }}
+                title="Jelentés"
+                leadingIcon="alert-octagon"
               />
+              {!!menuAnchor?.comment?.author && (
+                <Menu.Item
+                  onPress={() => {
+                    setBlockCandidate(menuAnchor.comment);
+                    setMenuAnchor(null);
+                  }}
+                  title="Felhasználó letiltása"
+                  leadingIcon="account-cancel"
+                />
+              )}
             </>
           ))}
       </Menu>
+
+      <Portal>
+        <ReportContentModal
+          show={!!reportedComment}
+          setShow={(show) => {
+            if (!show) setReportedComment(null);
+          }}
+          targetType="comment"
+          targetId={reportedComment?.id}
+          reportedUserId={reportedComment?.author ?? null}
+          label={reportedComment?.profiles?.full_name ?? ""}
+          excerpt={reportedComment?.text}
+        />
+        <BlockUserModal
+          show={!!blockCandidate}
+          setShow={(show) => {
+            if (!show) setBlockCandidate(null);
+          }}
+          profileId={blockCandidate?.author ?? ""}
+          profileName={blockCandidate?.profiles?.full_name ?? "Ez a felhasználó"}
+          onBlocked={() => {
+            const blockedId = blockCandidate?.author;
+            if (blockedId) setBlockedIds((prev) => new Set(prev).add(blockedId));
+            setBlockCandidate(null);
+          }}
+        />
+      </Portal>
 
       {selectedComment?.image && (
         <Portal>

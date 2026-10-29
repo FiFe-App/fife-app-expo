@@ -69,7 +69,7 @@ export default function ToDoList({ onInputFocus }: ToDoListProps) {
           <TextInput
             mode="flat"
             dense
-            label="Új feladat"
+            label="Mit szeretnél végre elvégezni?"
             value={newTitle}
             onChangeText={setNewTitle}
             onSubmitEditing={handleAdd}

@@ -7,7 +7,6 @@ import * as Notifications from "expo-notifications";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
 import { View, StatusBar, useColorScheme, Platform, AppState } from "react-native";
-import * as NavigationBar from "expo-navigation-bar";
 import { PaperProvider } from "react-native-paper";
 import { Provider, useSelector, useDispatch } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -15,6 +14,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { getTheme } from "@/assets/theme";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import Piazzolla from "@/assets/fonts/Piazzolla.ttf";
 import PiazzollaRegular from "@/assets/fonts/Piazzolla-Regular.ttf";
 import PiazzollaLight from "@/assets/fonts/Piazzolla-Light.ttf";
@@ -474,17 +474,23 @@ export default function RootLayout() {
     return (
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: bgColor }}>
         <SafeAreaProvider>
-          <Provider store={store}>
-            <PersistGate loading={null} persistor={persistor}>
-              <RootContent />
-              {!splashDone && initialPathname === "/" && (
-                <SplashAnimation onFinished={() => {
-                  splashAlreadyShown = true;
-                  setSplashDone(true);
-                }} />
-              )}
-            </PersistGate>
-          </Provider>
+          {/* Tracks the keyboard natively on both platforms, so every
+              KeyboardAvoidingView (imported from react-native-keyboard-controller,
+              not react-native) and KeyboardAwareModal works the same, edge-to-edge
+              Android included. */}
+          <KeyboardProvider>
+            <Provider store={store}>
+              <PersistGate loading={null} persistor={persistor}>
+                <RootContent />
+                {!splashDone && initialPathname === "/" && (
+                  <SplashAnimation onFinished={() => {
+                    splashAlreadyShown = true;
+                    setSplashDone(true);
+                  }} />
+                )}
+              </PersistGate>
+            </Provider>
+          </KeyboardProvider>
         </SafeAreaProvider>
       </GestureHandlerRootView>
     );

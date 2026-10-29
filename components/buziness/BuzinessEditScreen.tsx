@@ -16,7 +16,8 @@ import { invokeFunction } from "@/lib/supabase/invokeFunction";
 import { countBucket, trackEvent } from "@/lib/analytics";
 import { router, Stack, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import {
   Dialog,
   HelperText,
@@ -446,7 +447,7 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
       <ThemedView style={{ flex: 1 }}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior="padding"
         >
         <ScrollView
           style={{ flex: 1 }}
