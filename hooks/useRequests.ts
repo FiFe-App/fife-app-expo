@@ -56,7 +56,11 @@ export function useRequests(take = 10) {
         p_skip: skip,
         p_take: take,
       });
-      if (rpcError) throw new Error("Sajnos hiba történt, próbáld meg később");
+      if (rpcError) {
+        // The screen only gets the friendly text; the real reason belongs in the log.
+        console.error("requests_feed failed:", rpcError);
+        throw new Error("Sajnos hiba történt, próbáld meg később");
+      }
       return (rows ?? []) as RequestItem[];
     },
     [getLocation, take],
