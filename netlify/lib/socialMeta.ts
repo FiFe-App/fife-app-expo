@@ -106,7 +106,7 @@ export const buildBuzinessMeta = (
       : "Nézd meg ezt a bizniszt a FiFe Appon!";
 
   return {
-    title: `${name} – ${SITE_NAME}`,
+    title: `${name} - ${SITE_NAME}`,
     description,
     url: `${options.siteUrl.replace(/\/$/, "")}/biznisz/${row.id}`,
     image:

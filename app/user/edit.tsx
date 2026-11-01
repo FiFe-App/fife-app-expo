@@ -281,7 +281,7 @@ export default function Index() {
     await uploadThumbnail(original.publicUrl, fileName);
   };
 
-  // Every avatar is shown small (28–100pt) almost everywhere, so a downscaled
+  // Every avatar is shown small (28-100pt) almost everywhere, so a downscaled
   // copy is uploaded next to the original and used for those. A failure here is
   // not fatal: ProfileImage falls back to the original.
   const uploadThumbnail = async (uri: string, fileName: string) => {

@@ -12,6 +12,7 @@ import { useAppTheme } from "@/assets/theme";
 import BreathingHalo from "./BreathingHalo";
 import BreathingCue from "./BreathingCue";
 import { getTimerPalette, type TimerTone, type TonePalette } from "./timerPalette";
+import { BorderRadius } from "@/constants/borderRadius";
 
 /** The current time, re-rendering every second while `active`. */
 export function useNow(active: boolean) {
@@ -153,12 +154,12 @@ export default function CenteredTimer({
         <View style={{ width: 260, height: 260, alignItems: "center", justifyContent: "center" }}>
           {stage === "breathing" && <BreathingHalo color={palette.accent} dark={dark} />}
           {stage === "warm" && (
-            <View style={{ position: "absolute", width: 196, height: 196, borderRadius: 98, backgroundColor: palette.accent, opacity: dark ? 0.7 : 0.55 }} />
+            <View style={{ position: "absolute", width: 250, height: 250, borderRadius: 250, backgroundColor: palette.accent, opacity: dark ? 0.7 : 0.55 }} />
           )}
           {stage === "fading" && (
             <View style={{ position: "absolute", width: 180, height: 180, borderRadius: 90, backgroundColor: getTimerPalette(dark).rest.accent, opacity: 0.18 }} />
           )}
-          <Image source={image} style={{ width: 140, height: 140, borderRadius: 70 }} contentFit="cover" />
+          <Image source={image} style={{ width: 140, height: 140, borderRadius: BorderRadius.xl }} contentFit="cover" />
         </View>
         {!!intro && (
           <ThemedText style={{ fontSize: 17, lineHeight: 25, color: palette.muted, textAlign: "center", maxWidth: 340 }}>

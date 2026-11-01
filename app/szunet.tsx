@@ -17,9 +17,8 @@ const DURATIONS_MIN = [15, 30, 60];
 const CUE_FOR_MS = 60 * 1000;
 
 const INTRO =
-  "Tegyél le mindent egy kicsit. A kör lassan nő és csökken: " +
-  "amikor nő, lélegezz be, amikor csökken, fújd ki. " +
-  "Ha letelt az idő, egy pittyanás jelez.";
+  "Megteheted, hogy mindent leteszel egy kicsit." +
+  "Állj meg egy fél-egy órára, jót fog tenni:)";
 
 const INFO = {
   title: "Hogyan működik a Szünet?",
@@ -79,7 +78,7 @@ export default function BreakScreen() {
     cancelBreakEndNotification().catch(() => {});
   }, []);
 
-  const image = require("@/assets/gifs/black.gif");
+  const image = require("@/assets/gifs/sleep.gif");
   const neutral = useTimerPalette("neutral");
   const rest = useTimerPalette("rest");
 

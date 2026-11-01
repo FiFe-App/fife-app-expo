@@ -26,14 +26,14 @@ import { setRounds, startFocus, stopFocus } from "@/redux/reducers/focusReducer"
 import { RootState } from "@/redux/store";
 
 const INTRO =
-  "25 perc figyelem egy dologra, aztán 5 perc pihenő – ez egy kör. " +
+  "25 perc figyelem egy dologra, aztán 5 perc pihenő - ez egy kör. " +
   "Minden váltásnál pittyanás jelez, akkor is, ha közben kilépsz. " +
   "A szünetekben egy kék kör segít lélegezni.";
 
 const INFO = {
   title: "Hogyan működik a Fókusz?",
   text:
-    "A Pomodoro-technikán alapul: 25 perc koncentrált munka, utána 5 perc szünet – ez egy kör. " +
+    "A Pomodoro-technikán alapul: 25 perc koncentrált munka, utána 5 perc szünet - ez egy kör. " +
     "Minden negyedik kör után 15 perc hosszabb pihenő jár.\n\n" +
     "Válaszd ki, hány kört szeretnél, és indítsd el. Minden váltáskor pittyanás és értesítés jelez, " +
     "akkor is, ha közben bezárod az appot.",

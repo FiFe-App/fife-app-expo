@@ -1,4 +1,4 @@
-# Adatkezelési Tájékoztató – FiFe App mobilalkalmazás
+# Adatkezelési Tájékoztató - FiFe App mobilalkalmazás
 
 Hatályos: 2026. augusztus 28.
 
@@ -153,15 +153,15 @@ Az adatfeldolgozók kizárólag az Adatkezelő utasításai alapján kezelhetik 
 
 Az alkalmazás az alábbi adatfeldolgozókat veszi igénybe:
 
-* **Supabase Inc.** – autentikáció, adatbázis, fájltárolás
+* **Supabase Inc.** - autentikáció, adatbázis, fájltárolás
   ([adatvédelmi szabályzat](https://supabase.com/privacy))
-* **Expo (Expo Go / EAS – Expo Inc.)** – push értesítések küldése
+* **Expo (Expo Go / EAS - Expo Inc.)** - push értesítések küldése
   ([adatvédelmi szabályzat](https://expo.dev/privacy))
-* **Google LLC (Google Maps Platform)** – térképszolgáltatás és helyadatok megjelenítése
+* **Google LLC (Google Maps Platform)** - térképszolgáltatás és helyadatok megjelenítése
   ([adatvédelmi szabályzat](https://policies.google.com/privacy))
-* **Apple Inc. (Apple Push Notification Service)** – push értesítések iOS eszközökre
+* **Apple Inc. (Apple Push Notification Service)** - push értesítések iOS eszközökre
   ([adatvédelmi szabályzat](https://www.apple.com/legal/privacy/))
-* **OpenAI Ireland Ltd. / OpenAI, L.L.C.** – a bizniszhirdetések szövegének és a keresési
+* **OpenAI Ireland Ltd. / OpenAI, L.L.C.** - a bizniszhirdetések szövegének és a keresési
   kifejezéseknek a feldolgozása, hogy a keresés pontosabb találatokat adjon
   ([adatvédelmi szabályzat](https://openai.com/policies/privacy-policy))
 
@@ -263,7 +263,7 @@ Amennyiben a felhasználó úgy véli, hogy személyes adatainak kezelése sért
 
 ### Nemzeti Adatvédelmi és Információszabadság Hatóság (NAIH)
 
-Cím: 1055 Budapest, Falk Miksa utca 9–11.
+Cím: 1055 Budapest, Falk Miksa utca 9-11.
 
 Weboldal: [https://www.naih.hu](https://www.naih.hu)
 

@@ -98,11 +98,6 @@ export default function MeScreen() {
           </Link>
           <NotificationPrompts />
           {emotionAvailable && <EmotionCheckCard onNoteFocus={registerFocusedInput} />}
-          <ToDoList
-            onRequestScrollIntoView={() =>
-              scrollRef.current?.scrollToEnd({ animated: true })
-            }
-          />
           <View style={styles.cardRow}>
             <Card style={[styles.card, styles.cardSpacing]} onPress={() => router.push("/focus")}>
               <Card.Content style={styles.cardContent}>
@@ -117,7 +112,7 @@ export default function MeScreen() {
             <Card style={styles.card} onPress={() => router.push("/szunet")}>
               <Card.Content style={styles.cardContent}>
                 <Image
-                  source={require("@/assets/gifs/black.gif")}
+                  source={require("@/assets/gifs/sleep.gif")}
                   style={styles.cardImage}
                   resizeMode="contain"
                 />
@@ -125,6 +120,11 @@ export default function MeScreen() {
               </Card.Content>
             </Card>
           </View>
+          <ToDoList
+            onRequestScrollIntoView={() =>
+              scrollRef.current?.scrollToEnd({ animated: true })
+            }
+          />
         </View>
       </ScrollView>
     </ThemedView>
@@ -134,7 +134,6 @@ export default function MeScreen() {
 const styles = StyleSheet.create({
   cardRow: {
     flexDirection: "row",
-    marginTop: Spacing.md,
   },
   card: {
     flex: 1,
