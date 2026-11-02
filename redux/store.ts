@@ -49,8 +49,9 @@ export const rootReducer = combineReducers({
 export type RootReducer = ReturnType<typeof rootReducer>;
 
 const persistedReducer = persistReducer<RootReducer, AnyAction>(
-  // `info` is persisted separately, by the nested config above.
-  { key: "root", storage: AsyncStorage, blacklist: ["info"] },
+  // `info` is persisted separately, by the nested config above. `requests` is a search box
+  // and a bottom sheet: coming back from a kill to an open sheet would be a surprise.
+  { key: "root", storage: AsyncStorage, blacklist: ["info", "requests"] },
   rootReducer,
 );
 export const store = configureStore({

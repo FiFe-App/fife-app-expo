@@ -1,7 +1,7 @@
 import { useAppTheme } from "@/assets/theme";
 import { Spacing } from "@/constants/spacing";
 import { useRequests } from "@/hooks/useRequests";
-import { storeRequestSearchText } from "@/redux/reducers/requestsReducer";
+import { openRequestComposer, storeRequestSearchText } from "@/redux/reducers/requestsReducer";
 import { RootState } from "@/redux/store";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
@@ -58,7 +58,7 @@ export const RequestsForYou = () => {
         <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
           <Pressable
             testID="requests-new"
-            onPress={() => router.push("/kerelmek/new")}
+            onPress={() => dispatch(openRequestComposer())}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="Új kérés"
@@ -93,7 +93,7 @@ export const RequestsForYou = () => {
           <ThemedText style={{ textAlign: "center" }}>
             Nincs kérés a környékeden.
           </ThemedText>
-          <Button mode="contained-tonal" onPress={() => router.push("/kerelmek/new")}>
+          <Button mode="contained-tonal" onPress={() => dispatch(openRequestComposer())}>
             Kérj te valamit
           </Button>
         </View>

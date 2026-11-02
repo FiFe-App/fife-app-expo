@@ -6,6 +6,7 @@ import {
   removeFromPreviousSearches,
 } from "@/redux/reducers/userReducer";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { storeRequestSearchText } from "@/redux/reducers/requestsReducer";
 import { SearchMode } from "@/redux/store.type";
 import {
   __resetRouter,
@@ -84,6 +85,34 @@ describe("search screen modes", () => {
     expect(store.getState().buziness.searchParams?.text).toBe("kerítés");
     expect(history(store).kerelem).toEqual(["fúrógép"]);
     expect(history(store).biznisz).toEqual([]);
+  });
+
+  it("offers a new request with the typed text in kérések mode", async () => {
+    __setLocalSearchParams({ mode: "kerelem" });
+    const store = createTestStore();
+    store.dispatch(storeRequestSearchText("  fúrógép kell "));
+    await renderWithProviders(<SearchScreen />, { store });
+
+    await fireEvent.press(screen.getByTestId("search-new-request"));
+
+    expect(store.getState().requests.composer).toEqual({
+      open: true,
+      initialTitle: "fúrógép kell",
+    });
+  });
+
+  it("offers no new request while nothing is typed, or in the other modes", async () => {
+    const store = createTestStore();
+    store.dispatch(storeRequestSearchText("fúrógép"));
+    await renderWithProviders(<SearchScreen />, { store });
+    // biznisz mode is the default
+    expect(screen.queryByTestId("search-new-request")).toBeNull();
+
+    await fireEvent.press(screen.getByTestId("search-mode-kerelem"));
+    expect(screen.getByTestId("search-new-request")).toBeTruthy();
+
+    store.dispatch(storeRequestSearchText(""));
+    await waitFor(() => expect(screen.queryByTestId("search-new-request")).toBeNull());
   });
 
   it("starts in kérések mode when asked to", async () => {

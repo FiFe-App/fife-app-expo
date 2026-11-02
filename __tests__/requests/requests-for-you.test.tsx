@@ -38,14 +38,25 @@ describe("RequestsForYou (community screen strip)", () => {
     );
   });
 
+  it("opens the new-request sheet from the + button", async () => {
+    supabase.rpc.mockResolvedValue({ data: [], error: null });
+    const store = signedIn();
+    await renderWithProviders(<RequestsForYou />, { store });
+
+    await fireEvent.press(screen.getByTestId("requests-new"));
+
+    expect(store.getState().requests.composer.open).toBe(true);
+  });
+
   it("invites the user to ask when there is nothing nearby", async () => {
     supabase.rpc.mockResolvedValue({ data: [], error: null });
-    await renderWithProviders(<RequestsForYou />, { store: signedIn() });
+    const store = signedIn();
+    await renderWithProviders(<RequestsForYou />, { store });
 
     await waitFor(() => expect(screen.getByText("Nincs kérés a környékeden.")).toBeTruthy());
     await fireEvent.press(screen.getByText("Kérj te valamit"));
 
-    expect(router.push).toHaveBeenCalledWith("/kerelmek/new");
+    expect(store.getState().requests.composer).toEqual({ open: true, initialTitle: "" });
   });
 
   it("opens the full list from Mind, without a leftover search", async () => {

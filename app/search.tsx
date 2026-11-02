@@ -6,7 +6,7 @@ import { useAppTheme } from "@/assets/theme";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 import { storeBuzinesses, storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { storeUserSearchParams } from "@/redux/reducers/usersReducer";
-import { storeRequestSearchText } from "@/redux/reducers/requestsReducer";
+import { openRequestComposer, storeRequestSearchText } from "@/redux/reducers/requestsReducer";
 import { addPreviousSearch, removeFromPreviousSearches } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { SearchMode } from "@/redux/store.type";
@@ -147,6 +147,30 @@ export default function SearchScreen() {
           );
         })}
       </ThemedView>
+      {mode === "kerelem" && !!searchText.trim() && (
+        // Nobody asked for this yet? The typed text becomes the title of a new request.
+        <Pressable
+          testID="search-new-request"
+          onPress={() => dispatch(openRequestComposer(searchText))}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            gap: Spacing.md,
+            paddingHorizontal: Spacing.lg,
+            paddingVertical: Spacing.md,
+            backgroundColor: pressed ? theme.colors.surfaceVariant : "transparent",
+          })}
+        >
+          <Icon source="plus-circle-outline" size={22} color={theme.colors.primary} />
+          <ThemedText
+            type="bold"
+            numberOfLines={1}
+            style={{ flex: 1, color: theme.colors.primary }}
+          >
+            Új kérés: „{searchText.trim()}”
+          </ThemedText>
+        </Pressable>
+      )}
       <FlatList
         data={listData}
         keyExtractor={(item, i) => item.kind + (item.kind === "section" ? item.label : item.query) + i}

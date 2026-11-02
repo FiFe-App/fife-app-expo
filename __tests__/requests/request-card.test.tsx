@@ -14,7 +14,15 @@ jest.mock("@/lib/supabase/supabase", () => require("@/test-utils/mocks/supabase"
 // have: it opens only some of the time. This stand-in renders the items whenever `visible`.
 jest.mock("react-native-paper", () => {
   const actual = jest.requireActual("react-native-paper");
-  const Menu = ({ visible, anchor, children }: any) => (
+  const Menu = ({
+    visible,
+    anchor,
+    children,
+  }: {
+    visible: boolean;
+    anchor: React.ReactNode;
+    children: React.ReactNode;
+  }) => (
     <>
       {anchor}
       {visible ? children : null}

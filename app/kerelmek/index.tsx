@@ -7,9 +7,9 @@ import { BorderRadius } from "@/constants/borderRadius";
 import { Spacing } from "@/constants/spacing";
 import { useRequests } from "@/hooks/useRequests";
 import { REQUEST_SCOPES, RequestScope } from "@/lib/requests/types";
-import { storeRequestSearchText } from "@/redux/reducers/requestsReducer";
+import { openRequestComposer, storeRequestSearchText } from "@/redux/reducers/requestsReducer";
 import { RootState } from "@/redux/store";
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, View } from "react-native";
 import { ActivityIndicator, Chip, FAB, Icon } from "react-native-paper";
@@ -178,8 +178,14 @@ export default function RequestsScreen() {
               <ThemedText style={{ textAlign: "center", color: theme.colors.onSurfaceVariant }}>
                 {text.hint}
               </ThemedText>
-              <Button mode="contained-tonal" onPress={() => router.push("/kerelmek/new")}>
-                Új kérés
+              <Button
+                testID="requests-empty-new"
+                mode="contained-tonal"
+                onPress={() =>
+                  dispatch(openRequestComposer(isSearching ? searchText : undefined))
+                }
+              >
+                {isSearching ? "Új kérés ezzel a szöveggel" : "Új kérés"}
               </Button>
             </View>
           ) : null
@@ -190,7 +196,7 @@ export default function RequestsScreen() {
         testID="requests-fab"
         icon="plus"
         label="Új kérés"
-        onPress={() => router.push("/kerelmek/new")}
+        onPress={() => dispatch(openRequestComposer(isSearching ? searchText : undefined))}
         style={{ position: "absolute", right: Spacing.lg, bottom: Spacing.lg }}
       />
     </ThemedView>

@@ -255,3 +255,4 @@ Korlátok, amiket a tervezésnél figyelembe kell venni:
 - **Komment megoldott kérésnél**: a terv szerint olvasható, a mező zárt (`Comments` `closed` prop).
 - **Bottom nav**: 1 px × 36 px vonal, a két oldalán 12 px margó.
 - **Szűrők sorrendje**: Mind (alapértelmezett), Neked, Saját, Megoldott.
+- **Új kérés**: nem külön oldal, hanem bottom sheet (`NewRequestSheet`, a gyökérben egyszer felcsatolva, `openRequestComposer()`-rel nyitható). Egyetlen cím-input; a leírás, képek, hely és kulcsszavak a lecsukott "További részletek" accordionban vannak. Három karakter cím elég a beküldéshez. A keresésben ("Kérések" mód) a beírt szövegből "Új kérés: „…”" sor nyitja meg a sheetet kitöltött címmel; a találati listán a FAB és az üres állapot gombja is átviszi a keresett szöveget.
