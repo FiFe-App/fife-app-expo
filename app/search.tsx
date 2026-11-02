@@ -4,17 +4,16 @@ import { ThemedText } from "@/components/ThemedText";
 import { Spacing } from "@/constants/spacing";
 import { useAppTheme } from "@/assets/theme";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
-import { storeBuzinesses, storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
-import { storeUserSearchParams } from "@/redux/reducers/usersReducer";
-import { addPreviousSearch, removeFromPreviousSearches } from "@/redux/reducers/userReducer";
+import { removeFromPreviousSearches } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { SearchMode } from "@/redux/store.type";
-import { router, useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams, useNavigation } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, View } from "react-native";
 import { Chip, Icon } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { MyAppbar } from "@/components/MyAppBar";
+import { runSearch } from "@/lib/search/runSearch";
 import { BorderRadius } from "@/constants/borderRadius";
 
 type ListItem =
@@ -48,17 +47,7 @@ export default function SearchScreen() {
   const suggestions = useSearchSuggestions(searchText, mode === "biznisz");
 
   const handleSearch = useCallback((query: string) => {
-    const trimmed = query.trim();
-    if (!trimmed) return;
-    dispatch(addPreviousSearch({ query: trimmed, mode }));
-    if (mode === "fife") {
-      dispatch(storeUserSearchParams({ text: trimmed, skip: 0 }));
-      router.replace("/fifeRadar");
-      return;
-    }
-    dispatch(storeBuzinessSearchParams({ text: trimmed }));
-    dispatch(storeBuzinesses([]));
-    router.replace("/biznisz");
+    runSearch(dispatch, query, mode, "replace");
   }, [dispatch, mode]);
 
   useEffect(() => {
