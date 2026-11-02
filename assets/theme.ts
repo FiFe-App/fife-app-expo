@@ -251,6 +251,8 @@ export const modeTokens = {
       surface: "#E4DCFF",
       surfaceVariant: "#EFEAFF",
       tertiaryContainer: "#E4DCFF",
+      secondaryContainer: "#E4DCFF",
+      onSecondaryContainer: "#2A1F5C",
       outlineVariant: "#CFC4F2",
       elevation: {
         level0: "transparent",
@@ -268,6 +270,8 @@ export const modeTokens = {
       surface: "#2A2447",
       surfaceVariant: "#352E57",
       tertiaryContainer: "#3A3166",
+      secondaryContainer: "#3A3166",
+      onSecondaryContainer: "#E4DCFF",
       outlineVariant: "#4A4270",
       elevation: {
         level0: "rgba(0, 0, 0, 0.00)",
@@ -282,14 +286,18 @@ export const modeTokens = {
 } as const;
 
 const buildMiTheme = (base: MyTheme, isDark: boolean): MyTheme => {
-  const { accent, background, surface, surfaceVariant, tertiaryContainer, outlineVariant, elevation } =
-    modeTokens.mi[isDark ? "dark" : "light"];
+  const {
+    accent, background, surface, surfaceVariant, tertiaryContainer,
+    secondaryContainer, onSecondaryContainer, outlineVariant, elevation,
+  } = modeTokens.mi[isDark ? "dark" : "light"];
   return {
     ...base,
     colors: {
       ...base.colors,
       tertiary: accent,
       tertiaryContainer,
+      secondaryContainer,
+      onSecondaryContainer,
       background,
       surface,
       surfaceVariant,

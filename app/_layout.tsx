@@ -268,7 +268,9 @@ function RootContent() {
     (userThemePreference === "auto" && deviceColorScheme === "dark");
   // Én (private) and Mi (community) each get their own palette, so the user
   // can always tell which side of the app they are on.
-  const appMode = modeForPath(pathname);
+  // Signed out (login, registration, a shared biznisz page) the app keeps its
+  // original look — the login wall is not part of either side.
+  const appMode = uid ? modeForPath(pathname) : "en";
   const theme = getTheme(isDarkMode, appMode);
 
   useEffect(() => {

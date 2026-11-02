@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View } from "react-native";
-import { Chip, Icon, TextInput, ThemeProvider, useTheme } from "react-native-paper";
+import { Icon, TextInput, ThemeProvider, TouchableRipple, useTheme } from "react-native-paper";
 import { useDispatch } from "react-redux";
 
 import { getTheme, useAppTheme } from "@/assets/theme";
@@ -11,6 +11,11 @@ import { BorderRadius } from "@/constants/borderRadius";
 import { Spacing } from "@/constants/spacing";
 import { runSearch } from "@/lib/search/runSearch";
 import type { SearchMode } from "@/redux/store.type";
+
+const MODES: { key: SearchMode; label: string; icon: string }[] = [
+  { key: "biznisz", label: "Bizniszek", icon: "briefcase-outline" },
+  { key: "fife", label: "Fifék", icon: "account" },
+];
 
 interface LustaSearchSheetProps {
   visible: boolean;
@@ -47,6 +52,12 @@ function SheetContent({ onDismiss }: { onDismiss: () => void }) {
   const dispatch = useDispatch();
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<SearchMode>("biznisz");
+
+  const chipStyle = (selected: boolean) => ({
+    borderWidth: 2,
+    borderColor: selected ? theme.colors.tertiary : theme.colors.outlineVariant,
+    backgroundColor: selected ? theme.colors.tertiaryContainer : theme.colors.elevation.level1,
+  });
 
   const submit = () => {
     if (runSearch(dispatch, query, mode, "navigate")) onDismiss();
@@ -123,24 +134,24 @@ function SheetContent({ onDismiss }: { onDismiss: () => void }) {
       />
 
       <View style={{ flexDirection: "row", gap: Spacing.sm }}>
-        <Chip
-          selected={mode === "biznisz"}
-          showSelectedCheck={false}
-          icon="briefcase-outline"
-          onPress={() => setMode("biznisz")}
-          accessibilityState={{ selected: mode === "biznisz" }}
-        >
-          Bizniszek
-        </Chip>
-        <Chip
-          selected={mode === "fife"}
-          showSelectedCheck={false}
-          icon="account"
-          onPress={() => setMode("fife")}
-          accessibilityState={{ selected: mode === "fife" }}
-        >
-          Fifék
-        </Chip>
+        {MODES.map(({ key, label, icon }) => {
+          const selected = mode === key;
+          return (
+            <TouchableRipple
+              key={key}
+              onPress={() => setMode(key)}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              borderless
+              style={[chipStyle(selected), { borderRadius: BorderRadius.full }]}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.xs, height: 38, paddingHorizontal: Spacing.md }}>
+                <Icon source={icon} size={18} color={theme.colors.onSurface} />
+                <ThemedText type={selected ? "bold" : "default"}>{label}</ThemedText>
+              </View>
+            </TouchableRipple>
+          );
+        })}
       </View>
 
       {mode === "biznisz" && (
