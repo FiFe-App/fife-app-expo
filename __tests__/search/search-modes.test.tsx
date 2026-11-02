@@ -6,6 +6,7 @@ import {
   removeFromPreviousSearches,
 } from "@/redux/reducers/userReducer";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { storeRequestSearchText } from "@/redux/reducers/requestsReducer";
 import { SearchMode } from "@/redux/store.type";
 import {
   __resetRouter,
@@ -36,6 +37,7 @@ const withRecentSearch = (query: string, mode: SearchMode = "biznisz") =>
 const history = (store: TestStore) => ({
   biznisz: store.getState().user.previousSearches,
   fife: store.getState().user.previousProfileSearches,
+  kerelem: store.getState().user.previousRequestSearches,
 });
 
 beforeEach(() => {
@@ -68,6 +70,59 @@ describe("search screen modes", () => {
     expect(store.getState().users.userSearchParams?.text).toBe("Pista");
     // The two searches are distinct: this must be left alone.
     expect(store.getState().buziness.searchParams?.text).toBe("kerítés");
+  });
+
+  it("sends a kérések search to the requests list without touching the other queries", async () => {
+    const store = withRecentSearch("fúrógép", "kerelem");
+    store.dispatch(storeBuzinessSearchParams({ text: "kerítés" }));
+    await renderWithProviders(<SearchScreen />, { store });
+
+    await fireEvent.press(screen.getByTestId("search-mode-kerelem"));
+    await fireEvent.press(screen.getByText("fúrógép"));
+
+    expect(router.replace).toHaveBeenCalledWith("/kerelmek");
+    expect(store.getState().requests.searchText).toBe("fúrógép");
+    expect(store.getState().buziness.searchParams?.text).toBe("kerítés");
+    expect(history(store).kerelem).toEqual(["fúrógép"]);
+    expect(history(store).biznisz).toEqual([]);
+  });
+
+  it("offers a new request with the typed text in kérések mode", async () => {
+    __setLocalSearchParams({ mode: "kerelem" });
+    const store = createTestStore();
+    store.dispatch(storeRequestSearchText("  fúrógép kell "));
+    await renderWithProviders(<SearchScreen />, { store });
+
+    await fireEvent.press(screen.getByTestId("search-new-request"));
+
+    expect(store.getState().requests.composer).toEqual({
+      open: true,
+      initialTitle: "fúrógép kell",
+    });
+  });
+
+  it("offers no new request while nothing is typed, or in the other modes", async () => {
+    const store = createTestStore();
+    store.dispatch(storeRequestSearchText("fúrógép"));
+    await renderWithProviders(<SearchScreen />, { store });
+    // biznisz mode is the default
+    expect(screen.queryByTestId("search-new-request")).toBeNull();
+
+    await fireEvent.press(screen.getByTestId("search-mode-kerelem"));
+    expect(screen.getByTestId("search-new-request")).toBeTruthy();
+
+    store.dispatch(storeRequestSearchText(""));
+    await waitFor(() => expect(screen.queryByTestId("search-new-request")).toBeNull());
+  });
+
+  it("starts in kérések mode when asked to", async () => {
+    __setLocalSearchParams({ mode: "kerelem" });
+    const store = withRecentSearch("fúrógép", "kerelem");
+    await renderWithProviders(<SearchScreen />, { store });
+
+    await fireEvent.press(screen.getByText("fúrógép"));
+
+    expect(router.replace).toHaveBeenCalledWith("/kerelmek");
   });
 
   it("starts in fifék mode when opened from the radar", async () => {

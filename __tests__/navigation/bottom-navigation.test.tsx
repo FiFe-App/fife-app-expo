@@ -51,6 +51,12 @@ describe("BottomNavigation", () => {
     expect(router.navigate).toHaveBeenCalledWith("/chats");
   });
 
+  it("separates the community tabs from the personal ones with a divider", async () => {
+    await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
+
+    expect(screen.getByTestId("bottom-nav-divider")).toBeTruthy();
+  });
+
   it("shows the unread messages badge", async () => {
     const store = signedInStore();
     store.dispatch(setMessagingEnabled(true));

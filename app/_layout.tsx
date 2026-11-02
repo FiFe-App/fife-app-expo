@@ -1,6 +1,7 @@
 import InfoLayer from "@/components/InfoLayer";
 import { SplashAnimation } from "@/components/SplashAnimation";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
+import NewRequestSheet from "@/components/requests/NewRequestSheet";
 import { persistor, store } from "@/redux/store";
 import { Stack, usePathname, useRouter, useSegments, type NativeStackHeaderProps } from "expo-router";
 import * as Notifications from "expo-notifications";
@@ -313,6 +314,7 @@ function RootContent() {
         <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
           <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
             <InfoLayer />
+            <NewRequestSheet />
 
             <Stack
               screenOptions={{ header: (props: NativeStackHeaderProps) => <MyAppbar title={props.options.title} /> }}
@@ -333,6 +335,14 @@ function RootContent() {
                 <Stack.Screen
                   name="biznisz/index"
                   options={{ title: "Bizniszek keresése" }}
+                />
+                <Stack.Screen
+                  name="kerelmek/index"
+                  options={{ header: () => <HomeHeader mode="kerelem" /> }}
+                />
+                <Stack.Screen
+                  name="kerelmek/[id]"
+                  options={{ title: "Kérés" }}
                 />
 
                 <Stack.Screen

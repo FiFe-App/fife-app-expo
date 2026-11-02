@@ -16,10 +16,13 @@ const FakeSearchInput = ({ mode = "biznisz" }: { mode?: SearchMode }) => {
   // Both selectors always run — only which one is displayed depends on mode.
   const buzinessText = useSelector((state: RootState) => state.buziness.searchParams?.text ?? "");
   const fifeText = useSelector((state: RootState) => state.users.userSearchParams?.text ?? "");
-  const searchText = mode === "fife" ? fifeText : buzinessText;
+  const requestText = useSelector((state: RootState) => state.requests.searchText);
+  const searchText =
+    mode === "fife" ? fifeText : mode === "kerelem" ? requestText : buzinessText;
 
   const greeting = useMemo(() => {
     if (mode === "fife") return "Keress fifékre...";
+    if (mode === "kerelem") return "Keress kérések között...";
     const greetings = ["Üdv a FiFe Appban!", "Mire van szükséged?", "Keress bizniszekre..."];
     return greetings[Math.floor(Math.random() * greetings.length)];
   }, [mode]);

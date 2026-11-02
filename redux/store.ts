@@ -11,6 +11,7 @@ import usersReducer from "./reducers/usersReducer";
 import appReducer from "./reducers/appReducer";
 import emotionLogsSlice from "./reducers/emotionLogsReducer";
 import chatReducer from "./reducers/chatReducer";
+import requestsReducer from "./reducers/requestsReducer";
 
 /**
  * `info` holds what is on screen right now: open dialogs, the loading overlay,
@@ -41,14 +42,16 @@ export const rootReducer = combineReducers({
   tutorial: tutorialReducer.reducer,
   app: appReducer.reducer,
   chat: chatReducer,
+  requests: requestsReducer.reducer,
   emotionLogs: emotionLogsSlice.reducer,
 });
 
 export type RootReducer = ReturnType<typeof rootReducer>;
 
 const persistedReducer = persistReducer<RootReducer, AnyAction>(
-  // `info` is persisted separately, by the nested config above.
-  { key: "root", storage: AsyncStorage, blacklist: ["info"] },
+  // `info` is persisted separately, by the nested config above. `requests` is a search box
+  // and a bottom sheet: coming back from a kill to an open sheet would be a surprise.
+  { key: "root", storage: AsyncStorage, blacklist: ["info", "requests"] },
   rootReducer,
 );
 export const store = configureStore({
