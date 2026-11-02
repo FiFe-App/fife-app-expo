@@ -48,6 +48,8 @@ import InAppMessageDialog from "@/components/InAppMessageDialog";
 import { emotionAvailable } from "@/constants/emotionTiming";
 import { initAnalytics, screenNameFromSegments, trackEvent } from "@/lib/analytics";
 import { modeForPath } from "@/lib/mode/appMode";
+import { useAppLock } from "@/hooks/useAppLock";
+import AppLockScreen from "@/components/AppLockScreen";
 
 initAnalytics();
 
@@ -95,6 +97,10 @@ function RootContent() {
   useLastRoute();
   const { loadFromServer: loadSettings } = useUserSettings();
   const versionGate = useAppVersionGate();
+  // The app-zár guards a signed-in user's own pages; signed out there is
+  // nothing private to hide, and the login wall stays as it is.
+  const appLockEnabled = useSelector((state: RootState) => state.app.appLockEnabled);
+  const appLock = useAppLock(!!appLockEnabled && !!uid);
 
   // Manage Supabase token auto-refresh and offline sync on foreground
   useEffect(() => {
@@ -434,6 +440,7 @@ function RootContent() {
             {!!uid && <InAppMessageDialog />}
           </View>
         </ThemedView>
+        {appLock.locked && <AppLockScreen onUnlock={appLock.unlock} />}
       </SafeAreaView>
     </PaperProvider>
   );

@@ -66,6 +66,13 @@ export interface AppState {
    * beginning — see hooks/useLastRoute.ts.
    */
   lastRoute: { path: string; at: string } | null;
+  /**
+   * App-zár: ask for the fingerprint / face / the phone's own PIN when the app
+   * is opened. A setting of this device, not of the account, so it lives here:
+   * it never goes to the server and logging out leaves it as it is. See
+   * hooks/useAppLock.ts.
+   */
+  appLockEnabled: boolean;
 }
 
 const initialState: AppState = {
@@ -76,6 +83,7 @@ const initialState: AppState = {
   redirectAfterAuth: null,
   buzinessDrafts: {},
   lastRoute: null,
+  appLockEnabled: false,
 };
 
 const appReducer = createSlice({
@@ -150,6 +158,9 @@ const appReducer = createSlice({
     clearLastRoute: (state) => {
       state.lastRoute = null;
     },
+    setAppLockEnabled: (state, { payload }: PayloadAction<boolean>) => {
+      state.appLockEnabled = payload;
+    },
   },
 });
 
@@ -168,6 +179,7 @@ export const {
   clearBuzinessDraft,
   setLastRoute,
   clearLastRoute,
+  setAppLockEnabled,
 } = appReducer.actions;
 
 export default appReducer;
