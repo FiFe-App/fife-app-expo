@@ -47,6 +47,7 @@ import UpdateAvailableCard from "@/components/version/UpdateAvailableCard";
 import InAppMessageDialog from "@/components/InAppMessageDialog";
 import { emotionAvailable } from "@/constants/emotionTiming";
 import { initAnalytics, screenNameFromSegments, trackEvent } from "@/lib/analytics";
+import { modeForPath } from "@/lib/mode/appMode";
 
 initAnalytics();
 
@@ -259,14 +260,17 @@ function RootContent() {
   const isDarkMode =
     userThemePreference === "dark" ||
     (userThemePreference === "auto" && deviceColorScheme === "dark");
-  const theme = getTheme(isDarkMode);
+  // Én (private) and Mi (community) each get their own palette, so the user
+  // can always tell which side of the app they are on.
+  const appMode = modeForPath(pathname);
+  const theme = getTheme(isDarkMode, appMode);
 
   useEffect(() => {
     if (pathname.includes("csatlakozom") || pathname=="/")
       dispatch(setStatusBarColor(theme.colors.background));
     else
       dispatch(setStatusBarColor(theme.colors.surface));
-  }, [isDarkMode, theme.colors.background, bottomBarColor, dispatch, pathname]);
+  }, [isDarkMode, theme.colors.background, theme.colors.surface, bottomBarColor, dispatch, pathname]);
 
   // A blocked build never reaches the router: an old client talking to a
   // backend it no longer matches is exactly what the gate exists to stop.

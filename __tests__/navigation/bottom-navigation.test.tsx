@@ -60,4 +60,63 @@ describe("BottomNavigation", () => {
 
     expect(screen.getByText("5")).toBeTruthy();
   });
+
+  it("shows the Mi tabs on a community route", async () => {
+    await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
+
+    expect(screen.getByText("Közösség")).toBeTruthy();
+    expect(screen.getByText("Keresés")).toBeTruthy();
+    expect(screen.getByText("Profilod")).toBeTruthy();
+    expect(screen.queryByText("Otthon")).toBeNull();
+    expect(screen.queryByText("Segítség")).toBeNull();
+  });
+
+  it("shows the Én tabs on a private route", async () => {
+    __setPathname("/me");
+    await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
+
+    expect(screen.getByText("Otthon")).toBeTruthy();
+    expect(screen.getByText("Segítség")).toBeTruthy();
+    expect(screen.queryByText("Közösség")).toBeNull();
+    expect(screen.queryByText("Profilod")).toBeNull();
+  });
+
+  it("keeps the messages tab out of the Én side", async () => {
+    __setPathname("/me");
+    const store = signedInStore();
+    store.dispatch(setMessagingEnabled(true));
+    await renderWithProviders(<BottomNavigation />, { store });
+
+    expect(screen.queryByText("Üzenetek")).toBeNull();
+  });
+
+  it("switches from Én to the first Mi tab", async () => {
+    __setPathname("/me");
+    await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
+
+    fireEvent.press(screen.getByLabelText("Váltás Mi módra (közösség)"));
+
+    expect(router.navigate).toHaveBeenCalledWith("/home");
+  });
+
+  it("switches from Mi to the first Én tab", async () => {
+    __setPathname("/chats");
+    await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
+
+    fireEvent.press(screen.getByLabelText("Váltás Én módra (privát)"));
+
+    expect(router.navigate).toHaveBeenCalledWith("/me");
+  });
+
+  it("treats the help page as Én, not as the profile tab", async () => {
+    __setPathname("/user/get-help");
+    await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
+
+    const selected = screen
+      .getAllByRole("tab")
+      .filter((t) => t.props.accessibilityState?.selected);
+    expect(selected).toHaveLength(1);
+    expect(screen.getByText("Segítség")).toBeTruthy();
+    expect(screen.queryByText("Profilod")).toBeNull();
+  });
 });
