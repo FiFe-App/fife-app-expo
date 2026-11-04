@@ -7,6 +7,7 @@ import {
   cancelDailyEmotionReminder,
   syncDailyEmotionReminder,
 } from "@/lib/notifications/scheduleDailyEmotionReminder";
+import { requestNotificationPermissionIfUnasked } from "@/lib/notifications/registerForPushNotifications";
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 
@@ -45,6 +46,15 @@ export function useDailyEmotionReminder() {
       return;
     }
     if (!hydrated) return;
+
+    // The preference can arrive already on — turned on on another phone — on a
+    // device that has never shown the OS prompt. Ask here, before scheduling,
+    // or the reminder can never be delivered on this phone.
+    if (enabled) {
+      await requestNotificationPermissionIfUnasked().catch((err) =>
+        console.warn("Could not request the notification permission:", err),
+      );
+    }
 
     const status = await syncDailyEmotionReminder(enabled);
 

@@ -47,6 +47,23 @@ export async function ensureNotificationPermission(): Promise<boolean> {
   return status === "granted";
 }
 
+/**
+ * Ask for the OS grant only if this device has never been asked.
+ *
+ * For a preference that is already on when it reaches a device — set on the
+ * old phone, now signing in on a new one. Nobody toggles anything there, so
+ * the prompt that setPref shows never comes, and the reminder waited forever
+ * for a grant that was never requested. Once the user has answered (either
+ * way) the status is no longer "undetermined" and this stays quiet, so it is
+ * safe to call on every foreground: a "no" is not asked again.
+ */
+export async function requestNotificationPermissionIfUnasked(): Promise<void> {
+  if (Platform.OS === "web" || !Device.isDevice) return;
+  const { status } = await Notifications.getPermissionsAsync();
+  if (status !== "undetermined") return;
+  await Notifications.requestPermissionsAsync();
+}
+
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
   const granted = await ensureNotificationPermission();
   if (!granted) return null;

@@ -22,6 +22,7 @@ jest.mock("expo-notifications", () => ({
 }));
 jest.mock("@/lib/notifications/registerForPushNotifications", () => ({
   hasNotificationPermission: jest.fn(async () => true),
+  requestNotificationPermissionIfUnasked: jest.fn(async () => {}),
 }));
 // Computed from Platform.OS at import time; the reminder is a native feature
 // and these tests are about its logic, not about which platform runs them.
@@ -33,7 +34,10 @@ jest.mock("@/constants/emotionTiming", () => ({
 import * as Notifications from "expo-notifications";
 
 import { useDailyEmotionReminder } from "@/hooks/useDailyEmotionReminder";
-import { hasNotificationPermission } from "@/lib/notifications/registerForPushNotifications";
+import {
+  hasNotificationPermission,
+  requestNotificationPermissionIfUnasked,
+} from "@/lib/notifications/registerForPushNotifications";
 import {
   getReminderDiagnostics,
   nextReminderTime,
@@ -52,6 +56,7 @@ const scheduled = Notifications.scheduleNotificationAsync as jest.Mock;
 const cancelled = Notifications.cancelScheduledNotificationAsync as jest.Mock;
 const listScheduled = Notifications.getAllScheduledNotificationsAsync as jest.Mock;
 const permission = hasNotificationPermission as jest.Mock;
+const askIfUnasked = requestNotificationPermissionIfUnasked as jest.Mock;
 
 const reminderIsOnTheDevice = () =>
   listScheduled.mockResolvedValue([{ identifier: "daily-emotion-reminder" }]);
@@ -188,6 +193,29 @@ describe("useDailyEmotionReminder", () => {
     });
 
     await waitFor(() => expect(scheduled).toHaveBeenCalledTimes(2));
+  });
+
+  it("asks for the OS permission when the preference arrives already on", async () => {
+    // Signing in on a new phone: the switch was turned on on the old one, so
+    // this device has never shown the prompt.
+    await renderHookWithProviders(() => useDailyEmotionReminder(), {
+      store: storeWith({ emotionDailyPrompt: true }),
+    });
+
+    await waitFor(() => expect(askIfUnasked).toHaveBeenCalled());
+    // Asked before scheduling, so a "yes" is used on this same pass.
+    expect(askIfUnasked.mock.invocationCallOrder[0]).toBeLessThan(
+      permission.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("does not ask for the permission when the preference is off", async () => {
+    await renderHookWithProviders(() => useDailyEmotionReminder(), {
+      store: storeWith({ emotionDailyPrompt: false }),
+    });
+
+    await waitFor(() => expect(cancelled).toHaveBeenCalled());
+    expect(askIfUnasked).not.toHaveBeenCalled();
   });
 
   it("tells the user when the switch is on but the OS will deliver nothing", async () => {
