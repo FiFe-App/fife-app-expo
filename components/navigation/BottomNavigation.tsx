@@ -23,8 +23,8 @@ const textVariant = "labelMedium";
 /**
  * The bottom bar of both sides of the app. The Én/Mi switch sits in the
  * middle; the tabs around it belong to whichever side the current route is on
- * (see lib/mode/appMode.ts) — Én: Otthon, Napló, Segítség; Mi: Közösség,
- * Keresés, Üzenetek, Profilod.
+ * (see lib/mode/appMode.ts) — Én: Otthon, Napló, Segítség, Beállítások;
+ * Mi: Környékem, Keresés, Üzenetek, Profilod.
  */
 const BottomNavigation = () => {
   const segment = useSegments();
@@ -93,17 +93,23 @@ const BottomNavigation = () => {
   const enLeft = (
     <>
       {tab("Otthon", "/me", meActive, iconFor(meActive, "home-variant", "home-variant-outline"))}
-      {/* The journal is native-only, like the card that fills it. */}
       {emotionAvailable &&
-        tab("Napló", "/user/emotion-history", naploActive, iconFor(naploActive, "notebook", "notebook-outline", normalSize - 2))}
+        tab("Napló", "/user/emotion-history", naploActive, iconFor(naploActive, "calendar-month", "calendar-month-outline", normalSize - 2))}
     </>
   );
-  const enRight = tab("Segítség", "/user/get-help", helpActive, iconFor(helpActive, "lifebuoy", "lifebuoy", normalSize - 2));
+  const enRight = (
+    <>
+      {tab("Segítség", "/user/get-help", helpActive, iconFor(helpActive, "lifebuoy", "lifebuoy", normalSize - 2))}
+      {/* The settings live on the profile page, a Mi route: once there the
+          bar shows the Mi side, so this tab is never the active one. */}
+      {tab("Beállítások", "/user/edit?tab=beallitasok", false, iconFor(false, "cog", "cog-outline", normalSize - 2))}
+    </>
+  );
 
   const miLeft = (
     <>
       <Measure name="home">
-        {tab("Közösség", "/home", usActive, iconFor(usActive, "account-group", "account-group-outline"))}
+        {tab("Környékem", "/home", usActive, iconFor(usActive, "map-marker-radius", "map-marker-radius-outline"))}
       </Measure>
       {tab("Keresés", "/search", searchActive, iconFor(searchActive, "magnify", "magnify", normalSize - 2))}
     </>

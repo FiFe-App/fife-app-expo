@@ -37,7 +37,7 @@ describe("BottomNavigation", () => {
     await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
 
     expect(screen.queryByText("Üzenetek")).toBeNull();
-    expect(screen.getByText("Közösség")).toBeTruthy();
+    expect(screen.getByText("Környékem")).toBeTruthy();
   });
 
   it("opens the chat list from the messages tab once messaging is on", async () => {
@@ -64,7 +64,7 @@ describe("BottomNavigation", () => {
   it("shows the Mi tabs on a community route", async () => {
     await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
 
-    expect(screen.getByText("Közösség")).toBeTruthy();
+    expect(screen.getByText("Környékem")).toBeTruthy();
     expect(screen.getByText("Keresés")).toBeTruthy();
     expect(screen.getByText("Profilod")).toBeTruthy();
     expect(screen.queryByText("Otthon")).toBeNull();
@@ -77,7 +77,7 @@ describe("BottomNavigation", () => {
 
     expect(screen.getByText("Otthon")).toBeTruthy();
     expect(screen.getByText("Segítség")).toBeTruthy();
-    expect(screen.queryByText("Közösség")).toBeNull();
+    expect(screen.queryByText("Környékem")).toBeNull();
     expect(screen.queryByText("Profilod")).toBeNull();
   });
 
@@ -118,5 +118,15 @@ describe("BottomNavigation", () => {
     expect(selected).toHaveLength(1);
     expect(screen.getByText("Segítség")).toBeTruthy();
     expect(screen.queryByText("Profilod")).toBeNull();
+  });
+
+  it("shows the journal and a settings tab on the Én side", async () => {
+    __setPathname("/me");
+    await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
+
+    expect(screen.getByText("Napló")).toBeTruthy();
+    fireEvent.press(screen.getByText("Beállítások"));
+
+    expect(router.navigate).toHaveBeenCalledWith("/user/edit?tab=beallitasok");
   });
 });
