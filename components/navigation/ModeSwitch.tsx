@@ -1,10 +1,12 @@
 import { StyleSheet, View } from "react-native";
 import { TouchableRipple } from "react-native-paper";
+import { SvgXml } from "react-native-svg";
 
 import { modeTokens, useAppTheme } from "@/assets/theme";
 import { BorderRadius } from "@/constants/borderRadius";
 import type { AppMode } from "@/lib/mode/appMode";
 import { ThemedText } from "../ThemedText";
+import { enModeIcon, miModeIcon } from "./modeIcons";
 
 interface ModeSwitchProps {
   mode: AppMode;
@@ -25,46 +27,80 @@ export default function ModeSwitch({ mode, onSwitch }: ModeSwitchProps) {
   const inactiveText = mode === "en" ? "#CFC4FF" : "#FDEDC8";
   const activeText = theme.dark ? "#FFFFFF" : "#1F1B16";
 
-  const half = (side: AppMode, label: string) => {
+  const half = (side: AppMode, label: string, onSwitch: ()=>void) => {
     const active = side === mode;
     return (
-      <View style={[styles.half, active && { backgroundColor: activeBg }]}>
-        <ThemedText
-          type="bold"
-          style={{ color: active ? activeText : inactiveText, fontSize: 15 }}
-        >
-          {label}
-        </ThemedText>
-      </View>
+      <TouchableRipple 
+        accessibilityRole="switch"
+        accessibilityState={{ checked: mode === "mi" }}
+        accessibilityLabel={
+          mode === "en"
+            ? "Váltás Mi módra (közösség)"
+            : "Váltás Én módra (privát)"
+        }
+        testID="mode-switch"
+        borderless
+          onPress={()=>{
+            if (!active) onSwitch();}
+          }
+        style={[styles.half, active && { backgroundColor: activeBg }]}>
+        <View style={styles.halfContent}>
+          <SvgXml
+            xml={side === "en" ? enModeIcon : miModeIcon}
+            height={24}
+            width={side === "en" ? 24 : 30}
+          />
+          <ThemedText
+            type="bold"
+            style={{
+              color: active ? activeText : inactiveText,
+              fontSize: 13,
+              lineHeight: 16,
+            }}
+          >
+            {label}
+          </ThemedText>
+        </View>
+      </TouchableRipple>
     );
   };
 
   return (
-    <TouchableRipple
-      onPress={onSwitch}
-      accessibilityRole="switch"
-      accessibilityState={{ checked: mode === "mi" }}
-      accessibilityLabel={
-        mode === "en"
-          ? "Váltás Mi módra (közösség)"
-          : "Váltás Én módra (privát)"
-      }
-      borderless
-      style={[styles.pill, { backgroundColor: pillBg }]}
-      testID="mode-switch"
-    >
-      <View style={styles.row}>
-        {half("en", "Én")}
-        {half("mi", "Mi")}
+    <>
+    <View style={{width:20}}/>  
+    <View style={[styles.anchor,{bottom: 25}]} pointerEvents="box-none">
+      <View
+        style={[styles.pill, { backgroundColor: pillBg }]}
+      >
+        <View style={styles.row}>
+          {half("en", "Én",onSwitch)}
+          {half("mi", "Mi",onSwitch)}
+        </View>
       </View>
-    </TouchableRipple>
-  );
+    </View>
+  
+    </>);
 }
 
 const styles = StyleSheet.create({
+  anchor: {
+    position: "absolute",
+    zIndex:10,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    shadowColor: "black",
+    shadowOpacity: 1,
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowRadius: 4,
+    elevation: 3,
+  },
   pill: {
-    width: 128,
-    height: 48,
+    width: 124,
+    height: 42,
     borderRadius: BorderRadius.full,
     padding: 4,
     alignSelf: "center",
@@ -72,6 +108,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flex: 1,
+    gap: 4,
     flexDirection: "row",
   },
   half: {
@@ -79,5 +116,10 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
     alignItems: "center",
     justifyContent: "center",
+  },
+  halfContent: {
+    alignItems: "center",
+    flexDirection:"row",
+    gap: 2,
   },
 });

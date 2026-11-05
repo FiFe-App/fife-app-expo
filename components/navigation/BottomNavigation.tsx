@@ -15,6 +15,7 @@ import ProfileImage from "../ProfileImage";
 import ModeSwitch from "./ModeSwitch";
 import { MODE_HOME, modeForPath, otherMode } from "@/lib/mode/appMode";
 import { emotionAvailable } from "@/constants/emotionTiming";
+import { BorderRadius } from "@/constants/borderRadius";
 
 const selectedSize = 28;
 const normalSize = 28;
@@ -109,7 +110,7 @@ const BottomNavigation = () => {
   const miLeft = (
     <>
       <Measure name="home">
-        {tab("Környékem", "/home", usActive, iconFor(usActive, "map-marker-radius", "map-marker-radius-outline"))}
+        {tab("Környék", "/home", usActive, iconFor(usActive, "map-marker-radius", "map-marker-radius-outline"))}
       </Measure>
       {tab("Keresés", "/search", searchActive, iconFor(searchActive, "magnify", "magnify", normalSize - 2))}
     </>
@@ -192,6 +193,7 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
+    borderRadius: BorderRadius.md,
     padding: Spacing.sm,
     alignItems: "center",
     justifyContent: "center",
