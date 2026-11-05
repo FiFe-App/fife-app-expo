@@ -36,15 +36,20 @@ const allAsksAnswered = {
   aiAskedAt: "2026-08-01T10:00:00.000Z",
 };
 
-/** Columns of the last `user_settings` update, for the asks that write one. */
+/** Columns of the last `user_settings` write, for the asks that make one. */
 const lastPrefsUpdate = () => {
   const written = supabase.from.mock.results
     .map((r, i) => ({ table: supabase.from.mock.calls[i][0], builder: r.value }))
-    .filter(({ builder }) => (builder.update as jest.Mock).mock.calls.length > 0);
+    .filter(({ builder }) => (builder.upsert as jest.Mock).mock.calls.length > 0);
   const last = written[written.length - 1];
   expect(last.table).toBe("user_settings");
-  const updateCalls = (last.builder.update as jest.Mock).mock.calls;
-  return updateCalls[updateCalls.length - 1][0];
+  // Written with `upsert` so a missing settings row is created rather than
+  // silently swallowing the write; `author` identifies the row, not a column
+  // the caller meant to set.
+  const upsertCalls = (last.builder.upsert as jest.Mock).mock.calls;
+  const { author, ...columns } = upsertCalls[upsertCalls.length - 1][0];
+  expect(author).toBeTruthy();
+  return columns;
 };
 
 const storeWith = (prefs: Partial<typeof DEFAULT_NOTIFICATION_PREFS>): TestStore => {

@@ -70,17 +70,13 @@ describe("business-search: listing without a query", () => {
     expect(titlesOf(await readBody(res))).toContain(normalBuziness.title);
   });
 
-  // Marked `failing` because the listing branch embeds the author profile
-  // *without* `!inner`, and PostgREST applies such a filter to the embedded rows
-  // rather than to the parent — so ghost ("bad_boy") businesses are expected to
-  // leak into a normal user's listing. The hybrid-search branch has no such
-  // problem: it filters inside the RPC.
-  //
-  // If this reports "passed even though it was supposed to fail", the embed does
-  // filter parents on this PostgREST version — drop `.failing` and keep it as a
-  // regression test. If it fails as expected, the fix is one word in
-  // business-search/index.ts: `profiles!buziness_author_fkey1!inner(bad_boy)`.
-  it.failing("hides businesses from the ghost world", async () => {
+  // This used to be `it.failing`: the listing branch embedded the author profile
+  // *without* `!inner`, and PostgREST applies such a filter to the embedded rows rather
+  // than to the parent, so ghost ("bad_boy") businesses leaked into a normal user's
+  // listing. The branch is now public.interest_buziness_feed, which joins profiles for
+  // real inside the RPC — the same way the hybrid-search branch always did — so the leak
+  // is gone and this is a plain regression test again.
+  it("hides businesses from the ghost world", async () => {
     const res = await invokeFunction("business-search", {
       token: searcher.accessToken,
       body: { take: 50 },
@@ -110,6 +106,104 @@ describe("business-search: listing without a query", () => {
 
     expect(res.status).toBe(200);
     expect((await readBody(res)) as unknown[]).toHaveLength(1);
+  });
+});
+
+describe("business-search: interest-driven listing", () => {
+  let searcher: { id: string; accessToken: string };
+  let gardening: { id: number; title: string };
+  let unrelated: { id: number; title: string };
+
+  beforeAll(async () => {
+    searcher = await data.createUser();
+    // Seeded oldest-first so plain "created_at DESC" would put `unrelated` on top. That
+    // is what makes the reordering below visible rather than coincidental.
+    gardening = await data.seedBuziness(searcher.id, {
+      title: `${TEST_MARKER}kertész $ kertészet $ metszés`,
+    });
+    unrelated = await data.seedBuziness(searcher.id, {
+      title: `${TEST_MARKER}autószerelő $ autószerelés`,
+    });
+  });
+
+  it("keeps the plain newest-first order when there are no interests", async () => {
+    const res = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: { take: 50, interests: [] },
+    });
+
+    expect(res.status).toBe(200);
+    const titles = titlesOf(await readBody(res));
+    expect(titles.indexOf(unrelated.title)).toBeLessThan(titles.indexOf(gardening.title));
+  });
+
+  it("sorts the matching listings to the front", async () => {
+    const res = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: { take: 50, interests: ["kertészet"] },
+    });
+
+    expect(res.status).toBe(200);
+    const titles = titlesOf(await readBody(res));
+    expect(titles.indexOf(gardening.title)).toBeLessThan(titles.indexOf(unrelated.title));
+  });
+
+  it("never empties the list — the non-matching ones still follow", async () => {
+    const res = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: { take: 50, interests: [`${TEST_MARKER}nothing-matches-this`] },
+    });
+
+    expect(res.status).toBe(200);
+    const titles = titlesOf(await readBody(res));
+    expect(titles).toContain(gardening.title);
+    expect(titles).toContain(unrelated.title);
+  });
+
+  it("ORs the tags rather than ANDing them", async () => {
+    // The whole point of interests: two unrelated tags must both pull their own topic
+    // forward, not narrow the result to listings that match both.
+    const res = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: { take: 50, interests: ["kertészet", "autószerelés"] },
+    });
+
+    expect(res.status).toBe(200);
+    const titles = titlesOf(await readBody(res));
+    expect(titles.slice(0, 2)).toEqual(
+      expect.arrayContaining([gardening.title, unrelated.title]),
+    );
+  });
+
+  it("pages without repeating or dropping a listing", async () => {
+    const page = async (skip: number) =>
+      titlesOf(
+        await readBody(
+          await invokeFunction("business-search", {
+            token: searcher.accessToken,
+            body: { take: 1, skip, interests: ["kertészet"] },
+          }),
+        ),
+      );
+
+    const [first] = await page(0);
+    const [second] = await page(1);
+
+    expect(first).toBe(gardening.title);
+    expect(second).not.toBe(first);
+  });
+
+  it("treats a tag containing query syntax as literal text", async () => {
+    // The tags are user input and go straight into a pgroonga query, where OR and
+    // parentheses are operators. An unescaped one would either error or quietly widen
+    // the match.
+    const res = await invokeFunction("business-search", {
+      token: searcher.accessToken,
+      body: { take: 50, interests: ["kertészet OR autószerelés) \""] },
+    });
+
+    expect(res.status).toBe(200);
+    expect(titlesOf(await readBody(res))).toContain(gardening.title);
   });
 });
 

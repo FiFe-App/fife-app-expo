@@ -1,14 +1,23 @@
 import { Tables } from "@/database.types";
+import { Link } from "expo-router";
 import getMessagePreview from "@/lib/functions/getMessagePreview";
 import { RootState } from "@/redux/store";
 import React, { useEffect, useRef } from "react";
-import { View, StyleSheet } from "react-native";
+import { Pressable, View, StyleSheet } from "react-native";
 import { Card, Icon, Text, useTheme } from "react-native-paper";
 import { useSelector } from "react-redux";
+import ProfileImage from "../ProfileImage";
 import SupabaseImage from "../SupabaseImage";
 import UrlText from "../UrlText";
+import { SwipeToReply } from "./SwipeToReply";
 
-type Message = Tables<"messages">;
+// The fields both 1:1 messages and group chat messages have.
+type Message = Pick<Tables<"messages">, "id" | "author" | "created_at" | "text" | "reply_to"> & {
+  image?: string | null;
+};
+type AuthorProfile = Pick<Tables<"profiles">, "id" | "full_name" | "username" | "avatar_url">;
+
+const AUTHOR_AVATAR_SIZE = 32;
 
 const DOUBLE_TAP_DELAY = 250;
 
@@ -17,26 +26,53 @@ interface MessageItemProps {
   selected: boolean;
   onPress: () => void;
   hearted: boolean;
+  /** Group chats: how many people hearted it; shown next to the heart when more than one. */
+  heartCount?: number;
   onToggleHeart: () => void;
-  onLongPress: () => void;
+  /** Opens the message's actions; leave it out when there are none to offer. */
+  onLongPress?: () => void;
+  /** Swiping the message right starts a reply to it; leave it out where replying is not possible. */
+  onSwipeReply?: () => void;
   replyToMessage?: Message | null;
   replyToDeleted?: boolean;
+  /** Tapping the quoted message jumps to it. */
+  onReplyPress?: () => void;
+  /** Briefly marks the message a jump landed on. */
+  highlighted?: boolean;
   otherUserName?: string;
+  /**
+   * Group chats: the message's author. When given, other people's messages get
+   * the author's profile picture next to them.
+   */
+  author?: AuthorProfile | null;
+  /**
+   * Group chats: first message of a run from the same author — shows the
+   * name and picture; the rest of the run only keeps the picture's space.
+   */
+  showAuthor?: boolean;
 }
 export function MessageItem({
   message,
   selected,
   onPress,
   hearted,
+  heartCount,
   onToggleHeart,
   onLongPress,
+  onSwipeReply,
   replyToMessage,
   replyToDeleted,
+  onReplyPress,
+  highlighted = false,
   otherUserName,
+  author,
+  showAuthor = false,
 }: MessageItemProps) {
   const theme = useTheme();
   const { uid } = useSelector((state: RootState) => state.user);
   const isMyMessage = message.author === uid;
+  const withAuthor = author !== undefined && !isMyMessage;
+  const authorName = author?.full_name || author?.username || "Ismeretlen";
 
   const tapTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didLongPressRef = useRef(false);
@@ -70,7 +106,7 @@ export function MessageItem({
       tapTimeout.current = null;
     }
     didLongPressRef.current = true;
-    onLongPress();
+    onLongPress?.();
   };
 
   // Show short time if not selected, full timestamp if selected
@@ -89,29 +125,41 @@ export function MessageItem({
     },
     their: {
       color: theme.colors.onSurface,
-      backgroundColor: theme.colors.surface
+      backgroundColor: theme.colors.elevation.level3
     }
   };
 
-  return (
+  const content = (
     <View
       style={[
         styles.container,
         isMyMessage ? styles.myMessageContainer : styles.theirMessageContainer,
+        withAuthor && styles.withAuthorContainer,
+        highlighted && { backgroundColor: theme.colors.secondaryContainer },
+        highlighted && styles.highlighted,
       ]}
     >
+      {withAuthor && showAuthor && (
+        <Text
+          variant="labelSmall"
+          numberOfLines={1}
+          style={[styles.authorName, { color: theme.colors.onSurfaceVariant }]}
+        >
+          {authorName}
+        </Text>
+      )}
       {(replyToMessage || replyToDeleted) && (
-        <View style={styles.replyContainer}>
+        <Pressable
+          style={styles.replyContainer}
+          onPress={onReplyPress}
+          disabled={!replyToMessage || !onReplyPress}
+          accessibilityRole={replyToMessage && onReplyPress ? "button" : undefined}
+          accessibilityHint={replyToMessage && onReplyPress ? "Ugrás az eredeti üzenethez" : undefined}
+        >
           <View style={[styles.replyBar, { backgroundColor: theme.colors.primary }]} />
           {replyToMessage ? (
             <View style={{ flex: 1 }}>
-              <Text
-                variant="labelSmall"
-                style={{ color: theme.colors.onSurfaceVariant, fontWeight: "bold" }}
-                numberOfLines={1}
-              >
-                {replyToMessage.author === uid ? "Te" : otherUserName ?? ""}
-              </Text>
+
               <Text
                 variant="bodySmall"
                 numberOfLines={1}
@@ -128,13 +176,15 @@ export function MessageItem({
               Törölt üzenetre válaszolt
             </Text>
           )}
-        </View>
+        </Pressable>
       )}
-      <View>
+      {/* The width cap lives here, not on the Card: on iOS Paper's Surface
+          passes it to its inner view too, which then caps the content at 80%
+          of the already capped bubble and clips the end of the text. */}
+      <View style={styles.bubble}>
         <Card
           mode="contained"
           style={[
-            styles.card,
             {
               backgroundColor: colors[isMyMessage ? "my" : "their"].backgroundColor
             },
@@ -170,6 +220,11 @@ export function MessageItem({
             ]}
           >
             <Icon source="heart" size={14} color="#e0245e" />
+            {!!heartCount && heartCount > 1 && (
+              <Text variant="labelSmall" style={[styles.heartCount, { color: theme.colors.onSurface }]}>
+                {heartCount}
+              </Text>
+            )}
           </View>
         )}
       </View>
@@ -183,6 +238,32 @@ export function MessageItem({
       )}
     </View>
   );
+
+  const row = !withAuthor ? content : (
+    <View style={styles.authorRow}>
+      {showAuthor && author ? (
+        <Link href={`/user/${author.id}`} asChild>
+          <Pressable accessibilityRole="link" accessibilityLabel={authorName}>
+            <ProfileImage
+              uid={author.id}
+              avatar_url={author.avatar_url}
+              size={AUTHOR_AVATAR_SIZE}
+              style={styles.authorAvatar}
+            />
+          </Pressable>
+        </Link>
+      ) : (
+        <View style={styles.authorAvatarPlaceholder} />
+      )}
+      {content}
+    </View>
+  );
+
+  return (
+    <SwipeToReply enabled={!!onSwipeReply} onReply={() => onSwipeReply?.()}>
+      {row}
+    </SwipeToReply>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -190,13 +271,35 @@ const styles = StyleSheet.create({
     marginVertical: 4,
     marginHorizontal: 8,
   },
+  withAuthorContainer: {
+    flex: 1,
+    marginLeft: 4,
+  },
+  authorRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginLeft: 8,
+  },
+  authorAvatar: {
+    width: AUTHOR_AVATAR_SIZE,
+    height: AUTHOR_AVATAR_SIZE,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  authorAvatarPlaceholder: {
+    width: AUTHOR_AVATAR_SIZE,
+  },
+  authorName: {
+    marginLeft: 4,
+    marginBottom: 2,
+  },
   myMessageContainer: {
     alignItems: "flex-end",
   },
   theirMessageContainer: {
     alignItems: "flex-start",
   },
-  card: {
+  bubble: {
     maxWidth: "80%",
   },
   content: {
@@ -230,6 +333,8 @@ const styles = StyleSheet.create({
   },
   heartBadge: {
     position: "absolute",
+    flexDirection: "row",
+    alignItems: "center",
     bottom: -8,
     borderRadius: 10,
     padding: 2,
@@ -238,5 +343,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 2,
     shadowOffset: { width: 0, height: 1 },
+  },
+  heartCount: {
+    marginLeft: 2,
+    marginRight: 2,
+  },
+  highlighted: {
+    borderRadius: 12,
   },
 });

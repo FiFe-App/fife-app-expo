@@ -143,7 +143,7 @@ export const lightTheme: MyTheme = {
       nature: "#0F995D",
       onNature: "#ffffff",
       error: "#ba1a1a",
-      onError: "#ffffff",
+      onError: "#0b0202",
       errorContainer: "#ffdad6",
       onErrorContainer: "#410002",
       background: "#FFFCF5",

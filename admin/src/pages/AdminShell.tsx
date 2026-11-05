@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { AppShell, Button, Group, Tabs, Title } from "@mantine/core";
-import { IconAlertTriangle, IconMail, IconUsers } from "@tabler/icons-react";
+import { IconAlertTriangle, IconMail, IconMessage, IconUsers } from "@tabler/icons-react";
 
 import { logout } from "../api";
+import { InAppMessagesPage } from "./InAppMessagesPage";
 import { NewslettersPage } from "./NewslettersPage";
 import { ReportsPage, type ReportedUserFilter } from "./ReportsPage";
 import { UsersPage } from "./UsersPage";
 
-const TABS = ["hirlevelek", "felhasznalok", "feljelentesek"] as const;
+const TABS = ["hirlevelek", "app-uzenet", "felhasznalok", "feljelentesek"] as const;
 type Tab = (typeof TABS)[number];
 
 // Az aktív fül a URL hash-ben él, így frissítés után is ott marad, és
@@ -48,6 +49,9 @@ export function AdminShell({ onLoggedOut }: { onLoggedOut: () => void }) {
                 <Tabs.Tab value="hirlevelek" leftSection={<IconMail size={16} />}>
                   Hírlevelek
                 </Tabs.Tab>
+                <Tabs.Tab value="app-uzenet" leftSection={<IconMessage size={16} />}>
+                  App üzenet
+                </Tabs.Tab>
                 <Tabs.Tab value="felhasznalok" leftSection={<IconUsers size={16} />}>
                   Felhasználók
                 </Tabs.Tab>
@@ -65,6 +69,7 @@ export function AdminShell({ onLoggedOut }: { onLoggedOut: () => void }) {
 
       <AppShell.Main bg="#fff5e0">
         {tab === "hirlevelek" && <NewslettersPage onLoggedOut={onLoggedOut} />}
+        {tab === "app-uzenet" && <InAppMessagesPage onLoggedOut={onLoggedOut} />}
         {tab === "felhasznalok" && (
           <UsersPage
             onLoggedOut={onLoggedOut}

@@ -24,8 +24,8 @@ interface MediaViewProps {
   media: MediaDataType;
   /** Width of the tile. Audio cards stretch to it, image/video fill it. */
   width: number;
-  /** Height of the image / video tile. Audio cards size themselves. */
-  height: number;
+  /** Height of the image / video tile. Audio cards size themselves, so it is optional for them. */
+  height?: number;
   borderRadius?: number;
   style?: StyleProp<ViewStyle>;
 }
@@ -158,7 +158,7 @@ const MediaView = ({
         <VideoMediaView
           uri={media.url}
           width={width}
-          height={height}
+          height={height ?? width}
           borderRadius={borderRadius}
         />
       </View>

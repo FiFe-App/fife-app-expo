@@ -9,6 +9,7 @@ import {
 import { RootState } from "@/redux/store";
 import { CommentsState, UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
+import { trackEvent } from "@/lib/analytics";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -33,10 +34,13 @@ import UrlText from "../UrlText";
 import { Comment, CommentsProps } from "./comments.types";
 import { ThemedText } from "../ThemedText";
 import { addSnack } from "@/redux/reducers/infoReducer";
+import { getLoginHref } from "@/lib/auth/loginRedirect";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
+import ReportContentModal from "../user/ReportContentModal";
+import BlockUserModal from "../user/BlockUserModal";
 
-const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
+const Comments = ({ path, placeholder, limit = 10, style, publicComments }: CommentsProps) => {
   const dispatch = useDispatch();
   const navigation = router;
   const theme = useTheme();
@@ -61,11 +65,19 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
   } | null>(null);
 
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
+  const [reportedComment, setReportedComment] = useState<Comment | null>(null);
+  const [blockCandidate, setBlockCandidate] = useState<Comment | null>(null);
+  const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
 
   const mountId = useRef(Date.now()).current;
 
   useEffect(() => {
     dispatch(clearComments());
+
+    if (publicComments) {
+      dispatch(addComments(publicComments));
+      return;
+    }
 
     const channel = supabase.channel(`${path}:${mountId}`);
 
@@ -129,11 +141,27 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, limit, path]);
+  }, [dispatch, limit, path, publicComments]);
 
   useEffect(() => {
     if (comments.length) setDownloading(false);
   }, [comments]);
+
+  // Comments from people you blocked are hidden.
+  useEffect(() => {
+    if (!uid) return;
+    supabase
+      .from("blocked_users")
+      .select("blocked_id")
+      .eq("blocker_id", uid)
+      .then(({ data }) =>
+        setBlockedIds(new Set((data ?? []).map((b) => b.blocked_id))),
+      );
+  }, [uid]);
+
+  const visibleComments = comments.filter(
+    (comment) => !comment.author || !blockedIds.has(comment.author),
+  );
 
   const closeMenu = () => setMenuAnchor(null);
 
@@ -142,7 +170,6 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
       mediaTypes: ExpoImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
-      base64: true,
     }).catch((error) => {
       console.log(error);
     });
@@ -163,9 +190,8 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
         })
         .select()
         .then(async ({ data, error }) => {
-          setLoading(false);
-
           if (error) {
+            setLoading(false);
             console.error("Error posting comment:", error);
             dispatch(
               addSnack({
@@ -178,6 +204,7 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
           }
 
           if (data && data.length > 0) {
+            trackEvent("comment_posted", { hasImage: !!image });
             dispatch(
               addComment({
                 ...data[0],
@@ -191,6 +218,8 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
             }
           }
 
+          // Only now: sending again while the image uploads would post twice.
+          setLoading(false);
           setText("");
         })
         .catch((error) => {
@@ -205,46 +234,35 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
     }
   };
   const uploadImage = async (storagePath: string, key: number) => {
-    if (!image || !image.fileName) return;
+    if (!image) return;
+    // iOS leaves fileName null for edited picks and under limited photo
+    // access, so fall back to the cached file's own name.
+    const fileName = image.fileName || image.uri.split("/").pop() || `${Date.now()}.jpg`;
 
-    console.log("path: " + storagePath + "/" + key + "/" + image.fileName);
-
-    const response = await fetch(image.uri);
-    const blob = await response.blob();
-    const arrayBuffer = await new Response(blob).arrayBuffer();
-    const upload = await supabase.storage
+    const arrayBuffer = await (await fetch(image.uri)).arrayBuffer();
+    const { data, error } = await supabase.storage
       .from("comments")
-      .upload(storagePath + "/" + key + "/" + image.fileName, arrayBuffer, {
-        contentType: image.mimeType,
+      .upload(storagePath + "/" + key + "/" + fileName, arrayBuffer, {
+        contentType: image.mimeType ?? "image/jpeg",
         upsert: false,
-      })
-      .then(async ({ data, error }) => {
-        const path = data?.path;
-        supabase
-          .from("comments")
-          .update({ image: path })
-          .eq("id", key)
-          .then(({ data, error }) => {
-            if (error) {
-              console.log(
-                "DB update with image error, on " +
-                storagePath +
-                "/" +
-                key +
-                "/image",
-                error,
-              );
-              return error;
-            }
-            console.log("DB update with image success", key);
-            return image;
-          });
-      })
-      .catch((error) => {
-        return error;
       });
+    if (error || !data?.path) {
+      console.error("Comment image upload error:", error);
+      dispatch(addSnack({ title: "A kép feltöltése nem sikerült." }));
+      return;
+    }
 
-    return upload;
+    const { error: updateError } = await supabase
+      .from("comments")
+      .update({ image: data.path })
+      .eq("id", key);
+    if (updateError) {
+      console.error("Comment image DB update error:", updateError);
+      dispatch(addSnack({ title: "A kép feltöltése nem sikerült." }));
+      return;
+    }
+    // Show it straight away instead of waiting for the realtime UPDATE.
+    dispatch(editComment({ id: key, image: data.path } as Comment));
   };
   const showCommentMenu = (event: GestureResponderEvent, comment: Comment) => {
     const { nativeEvent } = event;
@@ -298,8 +316,8 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
     >
       {
         <View style={{ paddingBottom: 10, flex:1, minHeight: 200 }}>
-          {!!comments.length &&
-            comments.map((comment, ind) => {
+          {!!visibleComments.length &&
+            visibleComments.map((comment, ind) => {
               return (
                 <View
                   key={"comment" + ind}
@@ -308,7 +326,7 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
                     alignItems: "flex-start",
                     gap: Spacing.sm,
                     paddingVertical: Spacing.md,
-                    borderBottomWidth: ind < comments.length - 1 ? 1 : 0,
+                    borderBottomWidth: ind < visibleComments.length - 1 ? 1 : 0,
                     borderBottomColor: theme.colors.outlineVariant,
                   }}
                 >
@@ -323,11 +341,18 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
                     >
                       <Pressable
                         onPress={() => {
-                          if (comment?.author)
-                            navigation.navigate({
-                              pathname: "/user/[uid]",
-                              params: { uid: comment.author },
-                            });
+                          if (!comment?.author) return;
+                          // A profile is members-only: a signed-out reader of a
+                          // public page gets the login screen, and lands on the
+                          // profile once they are in.
+                          navigation.navigate(
+                            uid
+                              ? {
+                                  pathname: "/user/[uid]",
+                                  params: { uid: comment.author },
+                                }
+                              : getLoginHref(`/user/${comment.author}`),
+                          );
                         }}
                       >
                         <ThemedText style={{ fontWeight: "bold", fontSize: 14 }}>
@@ -369,7 +394,7 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
             })}
         </View>
       }
-      {downloading && !comments.length ? (
+      {downloading && !publicComments && !comments.length ? (
         <ActivityIndicator />
       ) : (
         !comments?.length && (
@@ -450,14 +475,53 @@ const Comments = ({ path, placeholder, limit = 10, style }: CommentsProps) => {
                 />
               )}
               <Menu.Item
-                onPress={() => { }}
-                title="Problémám van ezzel a kommenttel."
-                leadingIcon="alert"
-                disabled
+                onPress={() => {
+                  setReportedComment(menuAnchor.comment);
+                  setMenuAnchor(null);
+                }}
+                title="Jelentés"
+                leadingIcon="alert-octagon"
               />
+              {!!menuAnchor?.comment?.author && (
+                <Menu.Item
+                  onPress={() => {
+                    setBlockCandidate(menuAnchor.comment);
+                    setMenuAnchor(null);
+                  }}
+                  title="Felhasználó letiltása"
+                  leadingIcon="account-cancel"
+                />
+              )}
             </>
           ))}
       </Menu>
+
+      <Portal>
+        <ReportContentModal
+          show={!!reportedComment}
+          setShow={(show) => {
+            if (!show) setReportedComment(null);
+          }}
+          targetType="comment"
+          targetId={reportedComment?.id}
+          reportedUserId={reportedComment?.author ?? null}
+          label={reportedComment?.profiles?.full_name ?? ""}
+          excerpt={reportedComment?.text}
+        />
+        <BlockUserModal
+          show={!!blockCandidate}
+          setShow={(show) => {
+            if (!show) setBlockCandidate(null);
+          }}
+          profileId={blockCandidate?.author ?? ""}
+          profileName={blockCandidate?.profiles?.full_name ?? "Ez a felhasználó"}
+          onBlocked={() => {
+            const blockedId = blockCandidate?.author;
+            if (blockedId) setBlockedIds((prev) => new Set(prev).add(blockedId));
+            setBlockCandidate(null);
+          }}
+        />
+      </Portal>
 
       {selectedComment?.image && (
         <Portal>

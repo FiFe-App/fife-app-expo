@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from "expo-router";
+import { Link, router, useFocusEffect } from "expo-router";
 import BuzinessItem from "@/components/buziness/BuzinessItem";
 import { FiFeRadar } from "@/components/user/FiFeRadar";
 import { ThemedText } from "@/components/ThemedText";
@@ -11,7 +11,7 @@ import { clearOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { useCallback, useEffect } from "react";
 import { Pressable, View } from "react-native";
-import { Icon } from "react-native-paper";
+import { Divider, Icon } from "react-native-paper";
 import { ScrollView } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,6 +19,7 @@ import InviteCard from "@/components/InviteCard";
 import { useFifeSearch } from "@/hooks/useFifeSearch";
 import { useNearbyBuzinesses } from "@/hooks/useNearbyBuzinesses";
 import { useAppTheme } from "@/assets/theme";
+import { Button } from "@/components/Button";
 
 export default function Index() {
   const { uid, messagingEnabled } = useSelector((state: RootState) => state.user);
@@ -36,6 +37,7 @@ export default function Index() {
     fetchNextPage: fetchNearbyNext,
     loading: buzinessesLoading,
     error: buzinessError,
+    fetched: buzinessesFetched,
   } = useNearbyBuzinesses();
 
   useEffect(() => {
@@ -105,7 +107,7 @@ export default function Index() {
         >
           <View style={{ flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
             <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>
-              {searchCircle ? "Közeli" : "Budapesti"} Bizniszek
+              {searchCircle ? "Közeli" : "Budapesti"} Bizniszek neked
             </ThemedText>
             <Icon size={18} color={theme.colors.secondary} source="map-marker" />
             <Pressable onPress={()=>router.push("/search")} style={{ flex:1, flexDirection: "row", alignItems: "center", justifyContent:"flex-end", gap: Spacing.xs }}>
@@ -127,11 +129,28 @@ export default function Index() {
               key={buziness.id}
               style={{ marginBottom: index === nearbyBuzinesses.length - 1 ? 0 : Spacing.sm }}
             >
+              {/* Where the interest matches end and the rest of the feed begins. */}
+              {!buziness.is_match && index > 0 && nearbyBuzinesses[index - 1].is_match && (
+                <View>
+                  <ThemedText type="label">Egyéb bizniszek a környéken</ThemedText>
+                  <Divider style={{ marginVertical: Spacing.sm }} />
+                </View>
+              )}
               <BuzinessItem data={buziness} />
             </View>
           ))}
-          {buzinessesLoading && nearbyBuzinesses.length > 0 && (
-            <ActivityIndicator style={{ marginTop: Spacing.md }} />
+          {buzinessesLoading && (
+            <ActivityIndicator style={{ marginTop: nearbyBuzinesses.length ? Spacing.md : 0 }} />
+          )}
+          {buzinessesFetched && !buzinessesLoading && !buzinessError && nearbyBuzinesses.length === 0 && (
+            <View style={{ alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.lg }}>
+              <ThemedText style={{ textAlign: "center" }}>
+                Még nincs biznisz a környékeden.
+              </ThemedText>
+              <Link asChild href="/biznisz/new">
+                <Button mode="contained-tonal">Hirdesd meg te az elsőt!</Button>
+              </Link>
+            </View>
           )}
         </View>
       </ScrollView>

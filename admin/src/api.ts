@@ -1,6 +1,8 @@
 import type {
   AdminReport,
   AdminUser,
+  InAppMessage,
+  InAppMessageInput,
   Newsletter,
   NewsletterAudience,
   NewsletterInput,
@@ -120,4 +122,26 @@ export async function fetchReports(filters: ReportFilters): Promise<Page<AdminRe
   if (!res.ok) throw new Error(await parseErrorBody(res));
   const data = await res.json();
   return { items: data.reports, total: data.total, page: data.page, pageSize: data.pageSize };
+}
+
+export async function fetchInAppMessage(): Promise<InAppMessage | null> {
+  const res = await fetch("/api/in-app-messages", { credentials: "same-origin" });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  const data = await res.json();
+  return (data.message ?? null) as InAppMessage | null;
+}
+
+/** Új sort ír — az app minden felhasználónál automatikusan feldobja. */
+export async function createInAppMessage(input: InAppMessageInput): Promise<InAppMessage> {
+  const res = await fetch("/api/in-app-messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify(input),
+  });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  const data = await res.json();
+  return data.message as InAppMessage;
 }

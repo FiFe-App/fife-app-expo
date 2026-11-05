@@ -1,9 +1,12 @@
 import { ThemedView } from "@/components/ThemedView";
+import { getLoginHref } from "@/lib/auth/loginRedirect";
 import { supabase } from "@/lib/supabase/supabase";
+import { RootState } from "@/redux/store";
 import { router, useGlobalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { Text } from "react-native-paper";
+import { useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 
 export default function UsernameRedirect() {
@@ -11,10 +14,17 @@ export default function UsernameRedirect() {
   const [status, setStatus] = useState<"loading" | "not-found" | "redirected">("loading");
   const usernameParam = typeof raw === "string" ? raw : String(raw || "");
   const username = usernameParam.startsWith("@") ? usernameParam.slice(1) : usernameParam;
+  const myUid = useSelector((state: RootState) => state.user.uid);
 
   useEffect(() => {
     const go = async () => {
       if (!username) { setStatus("not-found"); return; }
+      // Profiles are for members only (and anon cannot read them): sign in
+      // first, then the login screen brings the visitor back here.
+      if (!myUid) {
+        router.replace(getLoginHref(`/${usernameParam}`));
+        return;
+      }
       const { data, error } = await supabase
         .from("profiles")
         .select("id, username")
@@ -33,7 +43,7 @@ export default function UsernameRedirect() {
       }
     };
     go();
-  }, [username]);
+  }, [username, usernameParam, myUid]);
 
   return (
     <ThemedView style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: Spacing.lg }}>

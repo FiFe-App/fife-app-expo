@@ -150,7 +150,12 @@ export function useNotificationPrefs() {
       if (!uid) return;
       const now = new Date().toISOString();
       dispatch(patchNotificationPrefs(askedField(key, now)));
-      await supabase.from("user_settings").update(askedColumn(key, now)).eq("author", uid);
+      // Upsert, not update: a user whose settings row is somehow missing would
+      // have every preference written into nothing, silently — 0 rows updated
+      // is not an error.
+      await supabase
+        .from("user_settings")
+        .upsert({ author: uid, ...askedColumn(key, now) }, { onConflict: "author" });
     },
     [uid, dispatch],
   );
@@ -193,13 +198,17 @@ export function useNotificationPrefs() {
           ...(askable ? askedField(key, now) : {}),
         }),
       );
-      await supabase
-        .from("user_settings")
-        .update({
+      // Upsert rather than update: `update` on a row that is not there writes
+      // nothing and reports no error, which is a preference that appears to
+      // stick until the next start reads the server again.
+      await supabase.from("user_settings").upsert(
+        {
+          author: uid,
           ...prefColumn(key, stored),
           ...(askable ? askedColumn(key, now) : {}),
-        })
-        .eq("author", uid);
+        },
+        { onConflict: "author" },
+      );
 
       if (key === "notifyPush" && stored) {
         const token = await registerForPushNotificationsAsync();

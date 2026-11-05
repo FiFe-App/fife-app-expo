@@ -4,12 +4,11 @@ import { PhraseInput } from "@/components/PhraseInput";
 import { acceptPolicies } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
-  KeyboardAvoidingView,
   Linking,
-  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   View,
 } from "react-native";
@@ -18,6 +17,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { CSAE_URL } from "@/constants/legal";
 import { useAppTheme } from "@/assets/theme";
+import { useKeyboardScrollIntoView } from "@/hooks/useKeyboardScrollIntoView";
+
+// Room for the wizard's Vissza / Tovább row, which floats over the bottom of
+// the page (see app/csatlakozom/_layout.tsx).
+const NAV_ROW_HEIGHT = 96;
 
 const Register = () => {
   const dispatch = useDispatch();
@@ -28,6 +32,8 @@ const Register = () => {
   const textToType = "Nem leszek rosszindulatú";
   const [text, setText] = useState(policiesAccepted ? textToType : "");
   const [ageConfirmed, setAgeConfirmed] = useState(policiesAccepted);
+  const { scrollRef, keyboardHeight, handleScroll, registerFocusedInput } = useKeyboardScrollIntoView();
+  const phraseContainerRef = useRef<View>(null);
   const handleTextInput = (input: string) => {
     if (
       textToType.slice(0, input.length).toLowerCase().replaceAll(" ", "") ===
@@ -58,13 +64,25 @@ const Register = () => {
   );
 
   return (
-    <ThemedView style={{ flex: 1, minHeight: 0, padding: Spacing.sm, paddingTop: Spacing.xxxl, paddingBottom: 60 }}>
-      <KeyboardAvoidingView
-        style={{ flex: 1, minHeight: 0 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 24}
+    // The whole page scrolls, so the phrase input can be brought above the
+    // keyboard on any screen size instead of squeezing the guidelines away.
+    // iOS does that itself through automaticallyAdjustKeyboardInsets; the
+    // hook does it on edge-to-edge Android, where the window doesn't resize.
+    <ThemedView style={{ flex: 1 }}>
+      <ScrollView
+        ref={scrollRef}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        contentContainerStyle={{
+          flexGrow: 1,
+          padding: Spacing.sm,
+          paddingTop: Spacing.xxxl,
+          paddingBottom: keyboardHeight || NAV_ROW_HEIGHT,
+        }}
       >
-        <View style={{ flex: 1, minHeight: 0 }}>
+        <View style={{ flex: 1 }}>
           <ThemedText type="title" style={{ marginBottom: Spacing.lg }}>
             Ha szeretnél csatlakozni ehhez a közösséghez, be kell tartanod az
             irányelveinket:
@@ -80,14 +98,14 @@ const Register = () => {
               </Text>
             ))}
           </View>
-      </View>
-      <View style={{ backgroundColor: theme.colors.background }}>
+        </View>
         <Pressable
           style={styles.ageCheckbox}
           onPress={() => setAgeConfirmed((v) => !v)}
         >
-          <Checkbox
-        
+          {/* The Android variant on every platform: the iOS one draws nothing
+              while unchecked, so there's no box to show what to tap. */}
+          <Checkbox.Android
             status={ageConfirmed ? "checked" : "unchecked"}
             onPress={() => setAgeConfirmed((v) => !v)}
           />
@@ -99,22 +117,22 @@ const Register = () => {
           onPress={() => Linking.openURL(CSAE_URL)}
           style={{ marginTop: Spacing.sm }}
         >
-          <Text style={[styles.csaeLink,{color: theme.colors.tertiary}]}>
+          <Text style={[styles.csaeLink, { color: theme.colors.tertiary }]}>
             Gyermekvédelmi irányelvek (CSAE) megtekintése
           </Text>
         </Pressable>
-          <View style={{ marginVertical: Spacing.xl }}>
-            <ThemedText>
-              Ha be fogod tartani ezeket, gépeld be a következő szöveget:
-            </ThemedText>
-            <PhraseInput
-              phrase={textToType}
-              value={text}
-              onChangeText={handleTextInput}
-            />
-          </View>
-      </View>
-    </KeyboardAvoidingView>
+        <View ref={phraseContainerRef} style={{ marginVertical: Spacing.xl }}>
+          <ThemedText>
+            Ha be fogod tartani ezeket, gépeld be a következő szöveget:
+          </ThemedText>
+          <PhraseInput
+            phrase={textToType}
+            value={text}
+            onChangeText={handleTextInput}
+            onFocus={() => registerFocusedInput(phraseContainerRef)}
+          />
+        </View>
+      </ScrollView>
     </ThemedView>
   );
 };

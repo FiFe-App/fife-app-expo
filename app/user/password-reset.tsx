@@ -8,7 +8,8 @@ import {
   describeAuthRedirectError,
   getAuthRedirectTokens,
 } from "@/lib/auth/authRedirectParams";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { TextInput, Text, Card } from "react-native-paper";
 import { Link } from "expo-router";
 import { theme } from "@/assets/theme";
@@ -102,7 +103,7 @@ export default function PasswordResetScreen() {
     <ThemedView style={{ flex: 1 }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior="padding"
       >
         <ScrollView
           contentContainerStyle={{ padding: Spacing.lg, flexGrow: 1 }}

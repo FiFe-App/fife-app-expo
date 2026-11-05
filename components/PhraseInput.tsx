@@ -7,9 +7,10 @@ interface Props {
   phrase: string;
   value: string;
   onChangeText: (text: string) => void;
+  onFocus?: () => void;
 }
 
-export const PhraseInput = ({ phrase, value, onChangeText }: Props) => {
+export const PhraseInput = ({ phrase, value, onChangeText, onFocus }: Props) => {
   const ref = useRef<TextInput>(null);
   const { colors } = useAppTheme();
 
@@ -32,6 +33,7 @@ export const PhraseInput = ({ phrase, value, onChangeText }: Props) => {
         cursorColor={colors.onBackground}
         value={value}
         onChangeText={onChangeText}
+        onFocus={onFocus}
         multiline
         submitBehavior="submit"
         scrollEnabled={false}

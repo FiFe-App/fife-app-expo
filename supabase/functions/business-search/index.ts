@@ -20,6 +20,18 @@ const corsHeaders = {
 };
 
 const MODEL_VERSION = "gpt-4.1-mini/text-embedding-3-large";
+const MAX_QUERY_LENGTH = 200;
+// The map view asks for every pin with take: -1; that now means "up to MAX_TAKE".
+const MAX_TAKE = 500;
+// Tag ↔ tag similarity (inner product of normalized text-embedding-3-large vectors)
+// above which an interest counts as matching a listing's tag in the home feed. A
+// starting value, not a measured one — tune it against real tag pairs.
+const TAG_MATCH_THRESHOLD = 0.6;
+
+function clampInt(value: unknown, fallback: number, min: number, max: number): number {
+  const n = typeof value === "number" && Number.isFinite(value) ? Math.trunc(value) : fallback;
+  return Math.min(Math.max(n, min), max);
+}
 
 async function hashQuery(normalized: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(normalized));
@@ -92,7 +104,48 @@ Deno.serve(async (req) => {
   }
   const aiEnhance: boolean = settings?.ai_enhance ?? false;
 
-  const { query, skip, take, lat, long, maxdistance, ingyen, match_threshold, fts_weight, semantic_weight, score_sort, distance_sort, recommendation_sort } = await req.json();
+  const body = await req.json();
+  const { lat, long, maxdistance, ingyen, match_threshold, fts_weight, semantic_weight, score_sort, distance_sort, recommendation_sort, interests } = body;
+  // Every unique query costs an OpenAI call, and `take: -1` used to reach the
+  // SQL as LIMIT NULL (the whole table) — bound what a caller can ask for.
+  const query: string = typeof body.query === "string" ? body.query.slice(0, MAX_QUERY_LENGTH) : "";
+  const skip = clampInt(body.skip, 0, 0, Number.MAX_SAFE_INTEGER);
+  const take = body.take === -1 ? MAX_TAKE : clampInt(body.take, 20, 1, MAX_TAKE);
+
+  // The tags are user text and go straight into a pgroonga query, so they are trimmed,
+  // de-duplicated and capped here before the database ever sees them. MAX_INTERESTS is
+  // about keeping that query bounded, not about the user's settings.
+  const MAX_INTERESTS = 20;
+  const cleanInterests: string[] = Array.isArray(interests)
+    ? Array.from(
+        new Set(
+          interests
+            .filter((t: unknown): t is string => typeof t === "string")
+            .map((t: string) => t.trim())
+            .filter((t: string) => t.length > 0),
+        ),
+      ).slice(0, MAX_INTERESTS)
+    : [];
+
+  // A brand new tag has no vector yet, so it can only match literally until embed-tags
+  // catches up. The check is the same query embed-tags itself works from
+  // (public.tags_pending_embedding), so it only fires when there is something embed-tags
+  // would actually embed — a tag whose only users opted out of AI never is, and checking
+  // for a NULL embedding alone would invoke it on every feed load for nothing. It also
+  // backs up create-buziness's own invoke for listing tags. First page only, and both
+  // the check and the invoke are fire-and-forget: a failure here must not cost the user
+  // their feed.
+  if (!query && skip === 0) {
+    supabase
+      .rpc("tags_pending_embedding", { p_limit: 1 })
+      .then(({ data: pending }) => {
+        if (pending && pending.length > 0) {
+          console.log("tags without an embedding — invoking embed-tags");
+          return supabase.functions.invoke("embed-tags").then(() => {});
+        }
+      })
+      .then(undefined, (e: unknown) => console.warn("embed-tags nudge failed", e));
+  }
 
   // Generate (or retrieve cached) embedding for the user's query.
   //
@@ -134,6 +187,7 @@ Deno.serve(async (req) => {
         temperature: 0,
         instructions: embedding_instructions,
         input: query,
+        max_output_tokens: 500,
       });
       const embedding_text = completion.output_text;
       console.log("embedding input", embedding_text);
@@ -174,8 +228,8 @@ Deno.serve(async (req) => {
   if (query && query.length > 0) {
   // Call hybrid_search Postgres function via RPC
     res = await supabase.rpc("hybrid_buziness_search", {
-      skip: skip || 0,
-      take: take || 20,
+      skip,
+      take,
       lat: lat || 0,
       long: long || 0,
       max_distance: maxdistance || 0,
@@ -195,22 +249,34 @@ Deno.serve(async (req) => {
       filter_bad_boy: isBadBoy,
     });
   } else {
-    console.log("no query, normal search");
+    console.log("no query, interest feed");
 
-    // Join profiles to filter by the same bad_boy world as the caller
-    let q = supabase
-      .from("buziness")
-      .select("*, recommendations: buzinessRecommendations!buzinessRecommendations_buziness_id_fkey(count), author_profile: profiles!buziness_author_fkey1(bad_boy)")
-      .eq("author_profile.bad_boy", isBadBoy);
-    if (ingyen) q = q.eq("ingyen", true);
-    res = await q
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .range(skip || 0, (skip || 0) + (take < 1 ? 20 : take) - 1);
+    // The community screen's opening list. With no interests this is byte-for-byte the
+    // old "created_at DESC, id DESC" page; with interests, the matching listings sort to
+    // the front and the rest follow, so the list never comes back empty and skip-based
+    // paging stays deterministic. See the migration for why the semantic half compares
+    // tag to tag rather than against buziness.embedding.
+    //
+    // No OpenAI call happens on this path: every vector it needs is precomputed in
+    // public.tags by the embed-tags function.
+    res = await supabase.rpc("interest_buziness_feed", {
+      p_interests: cleanInterests,
+      p_semantic: true,
+      // Not the caller's match_threshold: that one is tuned for query ↔ listing
+      // vectors in hybrid_buziness_search, while this compares two short tags.
+      p_match_threshold: TAG_MATCH_THRESHOLD,
+      p_lat: typeof lat === "number" ? lat : null,
+      p_long: typeof long === "number" ? long : null,
+      p_max_distance: typeof maxdistance === "number" && maxdistance > 0 ? maxdistance : null,
+      p_ingyen: ingyen || false,
+      p_bad_boy: isBadBoy,
+      p_skip: skip,
+      p_take: take,
+    });
   }
   if (res.error) {
     console.error("search rpc error", res.error);
-    return new Response(JSON.stringify({ error: res.error.message }), {
+    return new Response(JSON.stringify({ error: "Search failed" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
@@ -237,12 +303,32 @@ Deno.serve(async (req) => {
       lat,
       long,
       filter_ingyen: ingyen || false,
-      skip: skip || 0,
-      take: take || 20,
+      interests: cleanInterests,
+      skip,
+      take,
     });
   }
 
-  return new Response(JSON.stringify(res.data), {
+  // Neither search function returns the creator's name, and the list cards show it.
+  // One lookup for the whole page; a failure only costs the names, not the results.
+  const authorIds = [...new Set((res.data ?? []).map((b: { author: string }) => b.author))];
+  const names = new Map<string, string>();
+  if (authorIds.length > 0) {
+    const { data: authors, error: authorsError } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", authorIds);
+    if (authorsError) {
+      console.error("Could not read author names:", authorsError.message);
+    }
+    authors?.forEach((a) => a.full_name && names.set(a.id, a.full_name));
+  }
+  const data = (res.data ?? []).map((b: { author: string }) => ({
+    ...b,
+    authorName: names.get(b.author),
+  }));
+
+  return new Response(JSON.stringify(data), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });

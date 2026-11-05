@@ -15,6 +15,7 @@ import { logout, setThemePreference } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
+import { invokeFunction } from "@/lib/supabase/invokeFunction";
 import { router } from "expo-router";
 import { openBrowserAsync } from "expo-web-browser";
 import { useState } from "react";
@@ -35,6 +36,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { useAppTheme } from "@/assets/theme";
 import { emotionAvailable } from "@/constants/emotionTiming";
+import ReminderStatusLine from "@/components/notifications/ReminderStatusLine";
 
 export default function BeallitasokTab() {
   const theme = useAppTheme();
@@ -79,7 +81,7 @@ export default function BeallitasokTab() {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke("delete-user", {
+      const { data, error } = await invokeFunction("delete-user", {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -148,6 +150,11 @@ export default function BeallitasokTab() {
               onValueChange={(v) => { setPref("emotionDailyPrompt", v); }}
             />
           </View>
+        )}
+        {/* Only while it is supposed to be on: the switch saying "on" and the
+            phone staying quiet is the whole problem this line exists for. */}
+        {emotionAvailable && Platform.OS !== "web" && prefs.emotionDailyPrompt && (
+          <ReminderStatusLine />
         )}
         <Divider />
         {Platform.OS !== "web" && (

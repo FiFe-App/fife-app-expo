@@ -1,19 +1,33 @@
 export default {
   name: "Fife App",
   slug: "fife-app-blodqy3cwbfgnkjv24has",
-  version: "1.3.0",
+  version: "1.4.1",
   orientation: "portrait",
   icon: "./assets/images/Slimey.png",
   scheme: "com.fife.app",
   userInterfaceStyle: "automatic",
+  // OTA updates (expo-updates). The fingerprint policy derives the runtime
+  // version from the native project, so an update is only ever delivered to
+  // binaries with the same native code — anything that adds or changes a
+  // native module (or a config plugin) needs a new store build, not `eas update`.
+  runtimeVersion: {
+    policy: "fingerprint"
+  },
+  updates: {
+    url: "https://u.expo.dev/2e78cdad-443d-4685-942d-bfc5e223927b",
+    // Start straight from the cached bundle; a new update downloads in the
+    // background and is applied on the next cold start.
+    fallbackToCacheTimeout: 0
+  },
   splash: {
     image: "./assets/images/Slimey.png",
     resizeMode: "contain",
     backgroundColor: "#fff5e0"
   },
   ios: {
-    supportsTablet: true,
+    supportsTablet: false,
     bundleIdentifier: "com.fife.app",
+    appleTeamId: "BRWA92BF9J",
     associatedDomains: [
       "applinks:fifeapp.hu",
       "webcredentials:fifeapp.hu"
@@ -122,7 +136,28 @@ export default {
           "imageWidth": 80
         }
       ],
-    "expo-secure-store"
+    ["expo-location", {
+      locationWhenInUsePermission:
+        "A FiFe a helyzeted alapján mutatja a környékbeli embereket és bizniszeket, és így jelölheted ki a környékedet a térképen. A pontos helyed más felhasználók nem látják.",
+      locationAlwaysAndWhenInUsePermission: false,
+      locationAlwaysPermission: false,
+      isIosBackgroundLocationEnabled: false
+    }],
+    ["expo-image-picker", {
+      photosPermission:
+        "A FiFe a kiválasztott fotókhoz fér hozzá, hogy profilképet, kommenthez- vagy a bizniszedhez tartozó képeket tölthess fel.",
+      cameraPermission: false,
+      microphonePermission: false
+    }],
+    ["expo-audio", { enableBackgroundPlayback: false, recordAudioAndroid: false }],
+    "expo-secure-store",
+    "expo-image",
+    "expo-router",
+    "expo-status-bar",
+    "expo-video",
+    "expo-web-browser",
+    "expo-asset",
+    "./plugins/withSceneLifecycle"
   ],
   experiments: {
     typedRoutes: true,

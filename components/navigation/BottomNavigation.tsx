@@ -1,7 +1,8 @@
-import { Route, router, usePathname, useSegments } from "expo-router";
+import { Href, router, usePathname, useSegments } from "expo-router";
 import { Image } from "expo-image";
 import { useRef, useCallback } from "react";
 import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Badge, Icon, TouchableRipple } from "react-native-paper";
 import { ThemedText } from "../ThemedText";
 import { useSelector } from "react-redux";
@@ -17,6 +18,7 @@ const BottomNavigation = () => {
   const segment = useSegments();
   const pathname = usePathname();
   const theme = useAppTheme();
+  const insets = useSafeAreaInsets();
   const { uid, userData, messagingEnabled } = useSelector((state: RootState) => state.user);
   const unreadCounts = useSelector((state: RootState) => state.chat.unreadCounts);
   const avatarUrl = userData?.avatar_url;
@@ -24,10 +26,10 @@ const BottomNavigation = () => {
   const profilActive = segment[0]?.includes("user");
   const meActive = segment[0] === "me";
   const usActive = segment[0]?.includes("home") || segment[0]?.includes("fifeRadar") || segment[0]?.includes("search");
-  const chatActive = segment[0]?.includes("chat");
+  const chatActive = segment[0]?.includes("chat") || segment[0] === "group";
   const lastNavTime = useRef(0);
 
-  const navigateTo = useCallback((path: Route) => {
+  const navigateTo = useCallback((path: Href) => {
     const now = Date.now();
     if (now - lastNavTime.current < 300) return;
     // Skip if already on the exact same route
@@ -47,7 +49,7 @@ const BottomNavigation = () => {
   const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
 
   return (
-    <ThemedView type="card" style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level1, zIndex:1, padding: Spacing.sm }}>
+    <ThemedView type="card" style={{ flexDirection: "row", backgroundColor: theme.colors.elevation.level1, zIndex:1, paddingBottom: insets.bottom }}>
       {/* Messaging is opt-in, so the entry point only exists once it's on. */}
       {messagingEnabled && (
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/chats")}>
@@ -92,7 +94,7 @@ const BottomNavigation = () => {
         <TouchableRipple style={{ ...styles.button }} onPress={() => navigateTo("/me")}>
           <View style={{ alignItems: "center" }}>
             {showIcon && <Icon
-              source={meActive ? "home" : "home-outline"}
+              source={meActive ? "home-variant" : "home-variant-outline"}
               size={meActive ? selectedSize : normalSize}
               color={meActive ? theme.colors.secondary : undefined}
             />}

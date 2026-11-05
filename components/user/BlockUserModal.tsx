@@ -2,9 +2,8 @@ import { supabase } from "@/lib/supabase/supabase";
 import { Spacing } from "@/constants/spacing";
 import { useState } from "react";
 import { View } from "react-native";
-import { Button, Modal } from "react-native-paper";
-import { ThemedText } from "../ThemedText";
-import { ThemedView } from "../ThemedView";
+import { Button, Modal, Text, useTheme } from "react-native-paper";
+import { ModalCard, modalContainerStyle } from "@/components/ModalCard";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
@@ -27,6 +26,7 @@ const BlockUserModal = ({
   const { uid: myUid }: UserState = useSelector(
     (state: RootState) => state.user,
   );
+  const theme = useTheme();
   const [loading, setLoading] = useState(false);
 
   const handleBlock = async () => {
@@ -46,17 +46,30 @@ const BlockUserModal = ({
   };
 
   return (
-    <Modal visible={show} onDismiss={() => !loading && setShow(false)}>
-      <ThemedView style={{ padding: Spacing.xl, margin: Spacing.xxxl, gap: Spacing.lg }}>
-        <ThemedText type="subtitle">Blokkolod ezt a felhasználót?</ThemedText>
-        <ThemedText>{profileName} nem fogja látni a profilodat, te sem az övét.</ThemedText>
-        <View style={{ flexDirection: "row", gap: Spacing.sm }}>
-          <Button
-            mode="outlined"
-            onPress={() => setShow(false)}
-            disabled={loading}
-            style={{ flex: 1 }}
-          >
+    <Modal
+      visible={show}
+      onDismiss={() => !loading && setShow(false)}
+      contentContainerStyle={modalContainerStyle}
+    >
+      <ModalCard style={{ gap: Spacing.sm }}>
+        <Text variant="titleMedium">Letiltod ezt a felhasználót?</Text>
+        <Text
+          variant="bodyMedium"
+          style={{ color: theme.colors.onSurfaceVariant }}
+        >
+          {profileName ? `${profileName} nem` : "A felhasználó nem"} fogja látni
+          a profilodat, te sem az övét, és az üzenetei, kommentjei sem
+          jelennek meg számodra.
+        </Text>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "flex-end",
+            gap: Spacing.sm,
+            marginTop: Spacing.sm,
+          }}
+        >
+          <Button onPress={() => setShow(false)} disabled={loading}>
             Mégse
           </Button>
           <Button
@@ -64,13 +77,13 @@ const BlockUserModal = ({
             onPress={handleBlock}
             loading={loading}
             disabled={loading}
-            style={{ flex: 1 }}
-            buttonColor="#c0392b"
+            buttonColor={theme.colors.error}
+            textColor={theme.colors.onError}
           >
-            Blokkolás
+            Letiltás
           </Button>
         </View>
-      </ThemedView>
+      </ModalCard>
     </Modal>
   );
 };

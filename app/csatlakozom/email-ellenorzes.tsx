@@ -6,7 +6,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { makeRedirectUri } from "expo-auth-session";
 import { useEffect, useState } from "react";
-import { KeyboardAvoidingView, Platform, View } from "react-native";
+import { View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { Button, TextInput } from "react-native-paper";
 import { useDispatch } from "react-redux";
 import { Spacing } from "@/constants/spacing";
@@ -106,7 +107,7 @@ export default function Index() {
     <ThemedView style={{ flex: 1, padding: Spacing.lg }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior="padding"
       >
       <View style={{ justifyContent: "center", marginBottom: Spacing.lg }}></View>
       <View

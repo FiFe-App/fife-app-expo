@@ -15,7 +15,7 @@ export default function VersionFooter() {
   return (
     <View style={{ alignItems: "center", gap: Spacing.xs, paddingBottom: Spacing.xxl }}>
       <ThemedText type="label" style={{ opacity: 0.6 }}>
-        {`FiFe App ${currentVersion ?? "— ismeretlen verzió"}`}
+        {`FiFe App ${currentVersion ?? "- ismeretlen verzió"}`}
       </ThemedText>
     </View>
   );

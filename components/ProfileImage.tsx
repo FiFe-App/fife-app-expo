@@ -15,7 +15,7 @@ interface ProfileImageProps {
   style?: StyleProp<ImageStyle>;
   size?: number;
   resizeMode?: ImageContentFit | undefined;
-  propxLoading?: boolean;
+  propLoading?: boolean;
   modal?: boolean;
 }
 

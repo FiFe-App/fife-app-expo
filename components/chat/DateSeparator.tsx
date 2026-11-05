@@ -16,7 +16,7 @@ export function DateSeparator({ date }: DateSeparatorProps) {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.pill, { backgroundColor: theme.colors.surfaceVariant }]}>
+      <View style={[styles.pill]}>
         <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
           {formatDateSeparator(date)}
         </Text>

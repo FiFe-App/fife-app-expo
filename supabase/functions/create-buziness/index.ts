@@ -15,6 +15,11 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
 };
+
+// Generous limits: well above any real listing, far below abuse.
+const MAX_TITLE_LENGTH = 1000;
+const MAX_DESCRIPTION_LENGTH = 10000;
+
 Deno.serve(async (req)=>{
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -65,6 +70,18 @@ Deno.serve(async (req)=>{
     });
   }
   buziness.title = titleSegments.join(" $ ");
+
+  // Both are sent to OpenAI on every save; unbounded input is unbounded cost.
+  if (
+    buziness.title.length > MAX_TITLE_LENGTH ||
+    (buziness.description != null &&
+      (typeof buziness.description !== "string" || buziness.description.length > MAX_DESCRIPTION_LENGTH))
+  ) {
+    return new Response(JSON.stringify({ error: "Title or description is too long" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
+  }
   
   // Validate that user has at least one contact before proceeding
   if (!supabaseServiceRoleKey) {
@@ -167,7 +184,8 @@ Deno.serve(async (req)=>{
       model: "gpt-4.1-mini",
       temperature: 0.3,
       instructions: embedding_instructions,
-      input
+      input,
+      max_output_tokens: 1000,
     });
 
     embedding_text = completion.output_text;
@@ -190,6 +208,10 @@ Deno.serve(async (req)=>{
     title: buziness.title,
     description: buziness.description,
     ingyen: buziness.ingyen,
+    // The author's own choice: a public biznisz can be opened with a link by
+    // anyone, with no account (see the buziness SELECT policy). Coerced so a
+    // truthy string from an older client cannot turn sharing on by accident.
+    public: buziness.public === undefined ? undefined : buziness.public === true,
     location: buziness.location,
     defaultContact: buziness.defaultContact,
     radius: buziness.radius,
@@ -208,6 +230,24 @@ Deno.serve(async (req)=>{
   const res = await supabase.from("buziness").upsert(row, {
     onConflict: "id"
   }).select().single();
+
+  // The title trigger has just put this listing's tags into public.tags, and a new
+  // one has no vector yet, so it can only match interests literally. Nothing else
+  // embeds listing tags, so kick embed-tags now. Only when the author allows AI: an
+  // opted-out author's tags are not eligible anyway (tags_pending_embedding).
+  // Detached so the save never waits on OpenAI or fails because of it.
+  if (!res.error && aiEnhance) {
+    const task = supabase.functions.invoke("embed-tags").then(
+      ({ error }) => {
+        if (error) console.warn("embed-tags invoke failed", error.message);
+      },
+      (e: unknown) => console.warn("embed-tags invoke failed", e),
+    );
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
+      EdgeRuntime.waitUntil(task);
+    }
+  }
+
   if (!res.error) return new Response(JSON.stringify(res.data), {
     headers: {
       ...corsHeaders,

@@ -6,14 +6,14 @@ import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { fetchUserProfile } from "@/lib/auth/fetchUserProfile";
 import { recordInvitation } from "@/lib/invitations/recordInvitation";
-import { clearInvitedBy } from "@/redux/reducers/appReducer";
+import { clearInvitedBy, clearRedirectAfterAuth } from "@/redux/reducers/appReducer";
 import {
   describeAuthRedirectError,
   getAuthRedirectTokens,
 } from "@/lib/auth/authRedirectParams";
 import { useAuthRedirectParams } from "@/hooks/useAuthRedirectParams";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import { ActivityIndicator, Button, Icon } from "react-native-paper";
@@ -26,6 +26,12 @@ export default function Index() {
   const dispatch = useDispatch();
   const { uid }: UserState = useSelector((state: RootState) => state.user);
   const invitedBy = useSelector((state: RootState) => state.app.invitedBy);
+  // Set when a members-only link sent this visitor to register (see
+  // lib/auth/loginRedirect.ts). Registration is what unlocks it, so this is
+  // where they finally get there.
+  const redirectAfterAuth = useSelector(
+    (state: RootState) => state.app.redirectAfterAuth,
+  );
   const params = useAuthRedirectParams();
 
   // Both are keyed on the parsed params, which are themselves memoised on the
@@ -90,6 +96,14 @@ export default function Index() {
       cancelled = true;
     };
   }, [dispatch, invitedBy, uid]);
+
+  useEffect(() => {
+    if (!uid || !redirectAfterAuth) return;
+    // Cleared first: the target is good for one arrival, and this screen stays
+    // mounted for a beat while the router moves away.
+    dispatch(clearRedirectAfterAuth());
+    router.replace(redirectAfterAuth as `/${string}`);
+  }, [uid, redirectAfterAuth, dispatch]);
 
   // Derived rather than held in state: both the route params and the restored
   // session can land after the first render, and an error latched on that first

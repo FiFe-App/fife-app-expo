@@ -3,7 +3,7 @@ import ProfileImage from "@/components/ProfileImage";
 import { ThemedView } from "@/components/ThemedView";
 import MyBuzinesses from "@/components/user/MyBuzinesses";
 import RecommendationsModal from "@/components/user/RecommendationsModal";
-import ReportProfileModal from "@/components/user/ReportProfileModal";
+import ReportContentModal from "@/components/user/ReportContentModal";
 import BlockUserModal from "@/components/user/BlockUserModal";
 import { Tables } from "@/database.types";
 import elapsedTime from "@/lib/functions/elapsedTime";
@@ -371,11 +371,11 @@ export default function UserPage() {
             uid={uid}
             name={data.full_name}
           />
-          <ReportProfileModal
+          <ReportContentModal
             show={showReportModal}
             setShow={setShowReportModal}
-            profileId={uid}
-            profileName={data.full_name}
+            reportedUserId={uid}
+            label={data.full_name}
           />
           <BlockUserModal
             show={showBlockModal}

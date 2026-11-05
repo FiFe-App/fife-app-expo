@@ -6,32 +6,29 @@ import ToDoList from "@/components/ToDoList";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { RootState } from "@/redux/store";
-import { Image, Linking, ScrollView, StyleSheet, View } from "react-native";
-import { Button as PaperButton, Card, Dialog, Icon, Portal, Surface, TouchableRipple } from "react-native-paper";
+import { Image, ScrollView, StyleSheet, View } from "react-native";
+import { Card, Icon, Surface, TouchableRipple } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "@/components/ThemedText";
 import { emotionAvailable } from "@/constants/emotionTiming";
-import { clearOptions, setOptions, showDialog } from "@/redux/reducers/infoReducer";
+import { clearOptions, setInAppMessageVisible, setOptions, showDialog } from "@/redux/reducers/infoReducer";
 import { dismissedIsItSafe } from "@/redux/reducers/userReducer";
-import { Link, router, useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { Link, useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import { Button } from "@/components/Button";
 import { useAppTheme } from "@/assets/theme";
 import { useKeyboardScrollIntoView } from "@/hooks/useKeyboardScrollIntoView";
-import ProfileImage from "@/components/ProfileImage";
 
-// Hardcoded until there's a real "contact the developer" profile to look up.
-const FEEDBACK_CHAT_UID = "e53e948e-debe-44c1-852b-e94c29ffcb9b";
-const FEEDBACK_IMAGE_URL = "https://pdzuvfkkrhtrrrcckwzj.supabase.co/storage/v1/object/public/avatars/e53e948e-debe-44c1-852b-e94c29ffcb9b/thumb_72741788-5d7d-42fd-a6f9-8eef7d1f20bb.jpg";
-const FEEDBACK_EMAIL = "akos@fifeapp.hu";
+/** Until the newest in_app_messages row has loaded, or when it sets none. */
+const DEFAULT_OPEN_ICON = "message-draw";
 
 export default function MeScreen() {
   const { uid, isItSafeDismissed } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const { scrollRef, keyboardHeight, handleScroll, registerFocusedInput } = useKeyboardScrollIntoView();
   const theme = useAppTheme();
+  const openIcon = useSelector((state: RootState) => state.info.inAppMessageOpenIcon) ?? DEFAULT_OPEN_ICON;
   const isItSafeButtonText = `Ez a hely biztonságos${isItSafeDismissed ? "." : "?"}`;
-  const [feedbackDialogVisible, setFeedbackDialogVisible] = useState(false);
 
   const showIsItSafeDialog = ()=>{
     dispatch(showDialog({
@@ -50,8 +47,8 @@ export default function MeScreen() {
       dispatch(
         setOptions([
           {
-            icon: "message-draw",
-            onPress: () => setFeedbackDialogVisible(true),
+            icon: openIcon,
+            onPress: () => dispatch(setInAppMessageVisible(true)),
             title: "Visszajelzés",
           },
         ]),
@@ -59,7 +56,7 @@ export default function MeScreen() {
       return () => {
         dispatch(clearOptions());
       };
-    }, [dispatch]),
+    }, [dispatch, openIcon]),
   );
 
   if (!uid) return null;
@@ -101,11 +98,7 @@ export default function MeScreen() {
           </Link>
           <NotificationPrompts />
           {emotionAvailable && <EmotionCheckCard onNoteFocus={registerFocusedInput} />}
-          <ToDoList
-            onRequestScrollIntoView={() =>
-              scrollRef.current?.scrollToEnd({ animated: true })
-            }
-          />
+          <ToDoList onInputFocus={registerFocusedInput} />
           {false && <View style={styles.cardRow}>
             <Card style={[styles.card, styles.cardSpacing]} theme={{colors: {shadow:"red"}}} onPress={() => {}}>
               <Card.Content style={styles.cardContent}>
@@ -130,43 +123,6 @@ export default function MeScreen() {
           </View>}
         </View>
       </ScrollView>
-      <Portal>
-        <Dialog visible={feedbackDialogVisible} onDismiss={() => setFeedbackDialogVisible(false)}>
-          <Dialog.Title style={{ textAlign: "center" }}>Mondd el a véleményed!</Dialog.Title>
-          <Dialog.Content style={{gap:Spacing.md}}>
-            <ProfileImage avatar_url={FEEDBACK_IMAGE_URL} uid={FEEDBACK_CHAT_UID} size={100} style={{height:100,width:100,borderRadius:BorderRadius.lg}} />
-            <ThemedText>
-              Szia, Kristóf Ákos vagyok, a FiFe App fejlesztője. Írj nekem nyugodtan személyes üzenetet, vagy küldj egy emailt:) Visszaírok!
-            </ThemedText>
-          </Dialog.Content>
-          {/* Dialog.Actions force-injects compact={true} onto its children;
-              @/components/Button's compact styling caps height at 12px
-              (never exercised elsewhere in the app, since nothing else
-              passes compact manually), which clipped these to nothing.
-              Plain react-native-paper Button, as every other Dialog here
-              already uses, doesn't have that problem. */}
-          <Dialog.Actions style={{ flexWrap: "wrap", justifyContent: "flex-end" }}>
-            <PaperButton
-              onPress={() => {
-                setFeedbackDialogVisible(false);
-                router.push({ pathname: "/chat/[uid]", params: { uid: FEEDBACK_CHAT_UID } });
-              }}
-              mode="contained"
-            >
-              Üzenetet írok
-            </PaperButton>
-            <PaperButton
-              mode="contained-tonal"
-              onPress={() => {
-                setFeedbackDialogVisible(false);
-                Linking.openURL(`mailto:${FEEDBACK_EMAIL}`);
-              }}
-            >
-              Emailt írok
-            </PaperButton>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
     </ThemedView>
   );
 }

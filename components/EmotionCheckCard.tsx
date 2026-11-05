@@ -12,8 +12,7 @@ import { Link } from "expo-router";
 interface EmotionCheckCardProps {
   // Called with the note input's container ref when it's focused, so a
   // parent ScrollView can scroll it above the keyboard. See ToDoList's
-  // onRequestScrollIntoView for the same need on "Új feladat" — this input
-  // isn't at the bottom of scroll content, so it needs its own position.
+  // onInputFocus for the same need on "Új feladat".
   onNoteFocus?: (containerRef: React.RefObject<View | null>) => void;
 }
 

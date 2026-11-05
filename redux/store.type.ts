@@ -15,10 +15,30 @@ export interface EmotionLogsState {
   logs: EmotionLogLocal[];
 }
 
+export type ReminderPreset = "hour" | "evening" | "tomorrow" | "weekend" | "minute";
+
+export interface SubTask {
+  id: string;
+  title: string;
+  checked: boolean;
+}
+
+/**
+ * Tasks live inside the encrypted user_settings blob, so every field added
+ * after the first release is optional: older clients rewrite the blob without
+ * it, and rehydrated state from before it existed has none.
+ */
 export interface TaskItem {
   id: string;
   title: string;
   checked: boolean;
+  subtasks?: SubTask[];
+  /** ISO time of the reminder notification, if one is set. */
+  remindAt?: string;
+  /** Which quick-pick set the reminder, so its chip can show as chosen. */
+  remindPreset?: ReminderPreset;
+  /** How many times the reminder was pushed back. */
+  snoozeCount?: number;
 }
 
 export interface NotificationPrefs {
@@ -66,6 +86,13 @@ export interface UserState {
   locationError: string | null;
   themePreference: "light" | "dark" | "auto";
   savedBuzinesses: number[];
+  /**
+   * Interest tags, in the same shape a biznisz gives its own: a plain string list.
+   * They steer the opening biznisz list on the community screen. Optional like its
+   * neighbours below because redux-persist rehydrates this slice without a migration,
+   * so an older persisted blob simply has no key here.
+   */
+  interests?: string[];
   previousSearches: string[];
   /**
    * Recent fifék searches, kept apart from `previousSearches` so a name never
@@ -102,6 +129,7 @@ export interface UserSettingsPayload {
   previousProfileSearches: string[];
   themePreference: "light" | "dark" | "auto";
   savedBuzinesses: number[];
+  interests: string[];
   isItSafeDismissed: boolean;
   inviteCardDismissed: boolean;
   homeAddBuzinessCardDismissed: boolean;
@@ -176,6 +204,8 @@ export interface BuzinessSearchItemInterface {
   distance?: number;
   relevance: number;
   buzinessRecommendations: { author: string }[];
+  /** Only on the interest feed: whether the listing matches the user's interests. */
+  is_match?: boolean;
 }
 export interface BuzinessItemInterface {
   id: number;
@@ -192,6 +222,8 @@ export interface BuzinessItemInterface {
   recommendations: number | { count: number }[];
   created_at?: string;
   ingyen?: boolean;
+  /** The author let anyone open this biznisz with a link, without an account. */
+  public?: boolean;
 }
 export interface EventItemInterface extends Tables<"events"> {
   lat: number | null;
@@ -255,6 +287,10 @@ export interface InfoState {
   policiesAccepted: boolean;
   statusBarColor: string | null;
   bottomBarColor: string | null;
+  /** The server-driven feedback dialog (components/InAppMessageDialog.tsx). */
+  inAppMessageVisible: boolean;
+  /** Icon of the menu item that opens it, from the newest in_app_messages row. */
+  inAppMessageOpenIcon: string | null;
 }
 
 export interface LayoutRectangle {

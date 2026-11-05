@@ -80,3 +80,140 @@ megkérdezi a `get_app_version_status` függvényt. Ha a hívás hibázik vagy
 nincs sor az adott platformra, az app **nem** blokkol: a kapu udvariassági
 kérés a felhasználó felé, a tényleges jogosultságokat továbbra is az RLS és
 az edge functionök tartják be.
+
+## Nyilvános bizniszek és a link előnézete
+
+Egy biznisz alapból csak belépve látszik. A szerkesztőben a **Megosztható
+link** kapcsoló írja a `buziness.public` oszlopot; ha be van kapcsolva, a
+`/biznisz/<id>` oldal fiók nélkül is megnyílik. Ezt nem a kliens dönti el,
+hanem a SELECT policy: az anon kulcs csak a `public = true` sorokat látja
+(lásd `supabase/migrations/20260908120000_add_buziness_public.sql`).
+
+A belépés nélküli látogatónak nem jelenik meg az alsó menü, az ajánlás és a
+mentés gomb, és az „Üzenet" elérhetőség sem — helyette a Csatlakozom gomb.
+
+A weboldal minden URL-en ugyanazt az `index.html`-t szolgálja ki, ezért a
+Facebook (Messenger, WhatsApp, Slack) crawlere magától mindig az app
+általános előnézetét látná. Ezt a `netlify/edge-functions/social-preview.ts`
+javítja: a CDN-en megnézi a biznisz adatait az anon kulccsal, és beírja a
+címét, leírását és első képét a HTML fejlécébe. Az alapértelmezett tagek
+(`app/+html.tsx`) és a hozzájuk tartozó kép (`public/og-image.png`) maradnak
+minden más oldalra.
+
+A Supabase címét és anon kulcsát a Netlify környezeti változóiból olvassa
+(`EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`); ha nincsenek
+beállítva, a produkciós projekt nyilvános értékeivel dolgozik.
+
+### Belépés utáni visszairányítás
+
+Ha valaki kilépve nyit meg egy csak tagoknak szóló linket (`/chats`,
+`/user/<id>`, …), a router a belépés képernyőre teszi, és a cím elveszne. Ezt
+a `lib/auth/loginRedirect.ts` őrzi meg: weben a bundle betöltésekor olvassa ki
+a címet (még mielőtt a router átírná), mobilon a megnyitó deep linkből. A
+belépés után a login képernyő oda navigál tovább, nem a főoldalra.
+
+Az appon belüli, zárt oldalra mutató gombok maguk viszik a célt:
+`getLoginHref("/user/abc")` → `/login?redirected_from=/user/abc`. A cél mindig
+csak appon belüli útvonal lehet (`sanitizeRedirectTarget`), így külső URL-re
+nem lehet kicsalni a felhasználót belépés után.
+
+A regisztráció is ugyanezt a célt viszi: a `/csatlakozom` folyamat a
+`redirectAfterAuth` mezőben (app slice, `invitedBy` mintájára) teszi el, mert a
+megerősítő e-mail újraindítja az appot, amit egyetlen route paraméter sem élne
+túl. Az utolsó lépés (`elso-lepesek`) a sikeres regisztráció után oda navigál.
+
+
+## Napi hangulat-emlékeztető (esti értesítés)
+
+Az esti "Hogy vagy?" értesítés **a telefonon ütemezett** helyi értesítés, nem a
+szerver küldi. Ezért magától is eltűnhet: app frissítés, másik telefonra
+visszaállítás, "adatok törlése", vagy ha az értesítési engedélyt visszavonják
+és újra megadják.
+
+Korábban csak belépéskor lett beütemezve, így ha egyszer eltűnt, a bejelentkezve
+maradó felhasználó soha nem kapta vissza. Most a `hooks/useDailyEmotionReminder.ts`
+tartja karban: minden előtérbe hozáskor és a beállítás változásakor ellenőrzi,
+hogy ott van-e még, és csak akkor ütemez újra, ha tényleg hiányzik. Kilépéskor
+törli — a következő ember, aki kézbe veszi a telefont, ne kapjon kérdést egy
+másik fiók nevében.
+
+Két további csapda, amit ugyanez a kör javít:
+
+- az ütemezés törlése már csak azután történik, hogy tudjuk: van OS-engedély
+  (korábban egy sikertelen engedély-ellenőrzés kitörölte a működő emlékeztetőt,
+  és nem tett a helyére semmit);
+- ha a kapcsoló be van kapcsolva, de az OS-engedély hiányzik, a felhasználó
+  kap egy figyelmeztetést (eddig csak a konzolra ment egy warning).
+
+Androidon saját értesítési csatornán (`daily-emotion-reminder`) érkezik.
+
+**Miért ütemezünk újra minden indításnál?** Mert a "már be van ütemezve"
+ellenőrzés nem azt méri, amit gondolnánk: az `getAllScheduledNotificationsAsync`
+az expo-notifications *saját* mentett kéréslistáját olvassa
+(`SharedPreferencesNotificationsStore`), nem a rendszer AlarmManager-ében élő
+ébresztőt. Force stop, "gyorsítótár törlése" vagy egy OEM takarító app elviheti
+az ébresztőt úgy, hogy a kérés ott marad — ilyenkor az app azt hiszi, minden
+rendben, és soha nem ütemez újra. Az ébresztő újra beállítása ingyen van, ezért
+mindig megtörténik.
+
+**Ha mégsem jön az értesítés**, a Profil → Beállítások alatt a kapcsoló alatt
+ott van az igazság: van-e OS engedély, ki van-e kapcsolva a csatorna, be van-e
+ütemezve, és mikor jön a következő. A "Teszt értesítés" gomb 10 másodperc múlva
+küld egyet ugyanazon a csatornán — ha az megjön, de az esti nem, akkor a telefon
+dobja el az ébresztőt (energiagazdálkodás), és a megoldás szerveroldali push
+lenne, nem helyi ütemezés.
+
+A beállítások írása `upsert` (nem `update`): ha valakinek valamiért nincs
+`user_settings` sora, az `update` nulla sort írt volna — hiba nélkül —, és a
+beállítás csak a következő indításig tűnt volna mentettnek.
+
+
+## Újraindulás után ott folytatjuk, ahol abbahagytad
+
+Androidon a rendszer bármikor felszabadíthatja a háttérben lévő appot, ezért a
+visszaváltás sokszor nem folytatás, hanem hideg indítás: splash, majd az app
+eleje. Magát a folyamat kilövését nem tudjuk megakadályozni — azt viszont igen,
+hogy ne számítson:
+
+- `hooks/useLastRoute.ts` megjegyzi, melyik képernyőn volt a felhasználó, és a
+  következő hideg indításnál (ha az app a saját kezdőképernyőjén indul, tehát
+  nem deep linkről) oda navigál vissza. 24 óránál régebbi állapotot már nem
+  állít vissza, és weben egyáltalán nem fut: ott a címsor az igazság.
+  Óvatosságból: megvárja, amíg a router elindul (előtte navigálni kivételt dob,
+  ami indításkor szó nélkül kilövi az appot), a navigálás előtt törli a tárolt
+  útvonalat (így egy problémás képernyő nem tud végtelen indítás–összeomlás
+  kört csinálni), és a biznisz szerkesztőt szándékosan nem állítja vissza — az
+  a legnehezebb képernyő (térkép, médiaválasztó), és nem szerencsés vele
+  kezdeni egy hideg indítást. Nem is veszik el vele semmi: a begépelt tartalmat
+  a piszkozat őrzi.
+- A splash animáció (kb. 9 másodperc) belépett felhasználónak már nem játszik
+  le — a webes build eddig is kihagyta, most a telefon is. Aki be van lépve,
+  annak ez nem márkaélmény, hanem várakozás.
+
+## Űrlap-piszkozatok (biznisz szerkesztő)
+
+A biznisz szerkesztőbe gépelt tartalom eddig csak a képernyő state-jében élt,
+így az app újraindulásakor elveszett. Mostantól a `hooks/useBuzinessDraft.ts`
+menti (redux-persist, a gépelés után ~0,6 mp-cel, nem minden leütésnél), külön
+kulcson az új (`new`) és a szerkesztett bizniszek (`<id>`) alatt.
+
+Megnyitáskor a szerkesztő előbb betölti a szerverről a bizniszt, és csak utána
+teszi rá a piszkozatot — így a mentetlen gépelés nem vész el, az olyan
+piszkozat viszont, ami csak megismétli a szerveren lévő állapotot, szó nélkül
+törlődik. Ha tényleg volt mentetlen változás, a felhasználó kap egy
+"Folytathatod, ahol abbahagytad." üzenetet "Elvetem" gombbal. Sikeres mentés
+után a piszkozat törlődik. A médiafájlok szándékosan nem részei: azok eszközön
+lévő fájlok, saját feltöltési folyamattal. A lemezről visszaolvasott piszkozat
+nem megbízható adat (írhatta régebbi verzió, félbeszakadhatott a mentés), ezért
+a hook ellenőrzi és szükség esetén eldobja, mielőtt a szerkesztő megkapná.
+
+## Mi nem marad meg újraindítás után
+
+Az `info` slice azt tartja, ami épp a képernyőn van: nyitott dialógusok, a
+"Kérlek várj" overlay, snackbarok, az appbar menüje — mindegyikben callback
+függvényekkel, amik nem élik túl a lemezre írást. Ezeket eddig a redux-persist
+mentette, így egy háttérben kilőtt app úgy jött vissza, hogy volt benne egy
+dialógus, aminek a gombja nem csinál semmit, vagy — a legrosszabb — egy
+elbocsáthatatlan betöltő overlay egy feltöltésről, ami az appal együtt ért
+véget. Mostantól az `info`-ból csak a `policiesAccepted` és a
+`notificationToken` marad meg (`redux/store.ts`).
