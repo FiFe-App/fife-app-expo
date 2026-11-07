@@ -32,6 +32,7 @@ import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 type UserInfo = Partial<Tables<"profiles">>;
 type Tab = "bizniszeim" | "adatok" | "beallitasok";
@@ -346,7 +347,7 @@ export default function Index() {
 
   if (myUid)
     return (
-      <ThemedView style={{ flex: 1, paddingBottom: Spacing.xxl }}>
+      <ThemedView style={{ flex: 1, paddingBottom: MODE_SWITCH_CLEARANCE }}>
         {/* iOS uses the ScrollView's automaticallyAdjustKeyboardInsets; this app
             is edge-to-edge on Android where that prop is a no-op and the window
             does not resize, so Android needs an active KeyboardAvoidingView.

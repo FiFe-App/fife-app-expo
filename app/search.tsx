@@ -14,6 +14,7 @@ import { Chip, Icon } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { MyAppbar } from "@/components/MyAppBar";
 import { runSearch } from "@/lib/search/runSearch";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 import { BorderRadius } from "@/constants/borderRadius";
 
 type ListItem =
@@ -121,6 +122,7 @@ export default function SearchScreen() {
         data={listData}
         keyExtractor={(item, i) => item.kind + (item.kind === "section" ? item.label : item.query) + i}
         keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: MODE_SWITCH_CLEARANCE }}
         ListEmptyComponent={
           mode === "fife" ? (
             <View style={{ padding: Spacing.lg }}>

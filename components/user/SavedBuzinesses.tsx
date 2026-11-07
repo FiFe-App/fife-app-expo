@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 import BuzinessItem from "../buziness/BuzinessItem";
 import { ThemedText } from "../ThemedText";
 import { Spacing } from "@/constants/spacing";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 interface SavedBuzinessesProps {
   uid: string;
@@ -56,7 +57,7 @@ const SavedBuzinesses = ({ uid }: SavedBuzinessesProps) => {
 
   return (
     <SafeAreaView style={{ flex: 1, padding: Spacing.xs }}>
-      <ScrollView contentContainerStyle={{ gap: Spacing.sm, flex: 1 }}>
+      <ScrollView contentContainerStyle={{ gap: Spacing.sm, flexGrow: 1, paddingBottom: MODE_SWITCH_CLEARANCE }}>
         {loading ? (
           <View style={{ flex: 1, justifyContent: "center" }}>
             <ActivityIndicator />

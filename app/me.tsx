@@ -16,12 +16,14 @@ import { Link, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 import { useKeyboardScrollIntoView } from "@/hooks/useKeyboardScrollIntoView";
 import { useAppTheme } from "@/assets/theme";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 /** Until the newest in_app_messages row has loaded, or when it sets none. */
 const DEFAULT_OPEN_ICON = "message-draw";
 
 export default function MeScreen() {
   const { uid } = useSelector((state: RootState) => state.user);
+  const savedCount = useSelector((state: RootState) => state.user.savedBuzinesses?.length ?? 0);
   const dispatch = useDispatch();
   const theme = useAppTheme();
   const { scrollRef, keyboardHeight, handleScroll, registerFocusedInput } = useKeyboardScrollIntoView();
@@ -51,7 +53,7 @@ export default function MeScreen() {
         ref={scrollRef}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        contentContainerStyle={{ gap: Spacing.md, paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: keyboardHeight }}
+        contentContainerStyle={{ gap: Spacing.md, paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: keyboardHeight + MODE_SWITCH_CLEARANCE }}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
       >
@@ -76,6 +78,12 @@ export default function MeScreen() {
               >
                 <Icon source="archive-outline" size={24} color={theme.colors.tertiary} />
                 <ThemedText style={{ flex: 1 }} type="defaultSemiBold">Elmentett bizniszek</ThemedText>
+                <ThemedText
+                  accessibilityLabel={`${savedCount} elmentett biznisz`}
+                  style={{ color: theme.colors.onSurfaceVariant }}
+                >
+                  {savedCount} db
+                </ThemedText>
                 <Icon source="chevron-right" size={20} color={theme.colors.outline} />
               </Surface>
             </TouchableRipple>

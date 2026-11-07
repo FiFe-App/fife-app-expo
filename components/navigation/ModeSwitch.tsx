@@ -70,6 +70,8 @@ export default function ModeSwitch({ mode, onSwitch }: ModeSwitchProps) {
   return (
     <>
     <View style={{width:20}}/>  
+    {/* Reaches above the bar: screens keep MODE_SWITCH_CLEARANCE
+        (constants/layout.ts) free under their content because of it. */}
     <View style={[styles.anchor,{bottom: 25}]} pointerEvents="box-none">
       <View
         style={[styles.pill, { backgroundColor: pillBg }]}
