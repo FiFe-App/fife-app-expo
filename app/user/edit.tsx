@@ -16,17 +16,14 @@ import createThumbnail from "@/lib/functions/createThumbnail";
 import getUploadData from "@/lib/functions/getUploadData";
 import { supabase } from "@/lib/supabase/supabase";
 import { useMyBuzinesses } from "@/hooks/useMyBuzinesses";
+import { useLogout } from "@/hooks/useLogout";
 import { addSnack, showLoading, hideLoading, setOptions, clearOptions } from "@/redux/reducers/infoReducer";
-import { setName, setUserData, setLocation, logout } from "@/redux/reducers/userReducer";
-import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
-import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
-import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
-import { clearChatReadState, clearDrafts } from "@/redux/reducers/chatReducer";
+import { setName, setUserData, setLocation } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { ScrollView, View, Platform } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -35,6 +32,7 @@ import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 type UserInfo = Partial<Tables<"profiles">>;
 type Tab = "bizniszeim" | "adatok" | "beallitasok";
@@ -50,8 +48,19 @@ export default function Index() {
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | undefined>(undefined);
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [userLocation, setUserLocation] = useState<CircleType | undefined>();
-  const [activeTab, setActiveTab] = useState<Tab>(TAB_ORDER[0]);
+  // `?tab=beallitasok` opens straight on that tab — the Én side's
+  // "Beállítások" menu item links here.
+  const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
+  const initialTab: Tab = TAB_ORDER.includes(tabParam as Tab) ? (tabParam as Tab) : TAB_ORDER[0];
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+  // Follow a new ?tab= while the screen stays mounted (the tabs remount by key).
+  const [appliedTab, setAppliedTab] = useState<Tab>(initialTab);
+  if (appliedTab !== initialTab) {
+    setAppliedTab(initialTab);
+    setActiveTab(initialTab);
+  }
   const dispatch = useDispatch();
+  const signOut = useLogout();
   const { buzinesses, loading: buzinessesLoading } = useMyBuzinesses(myUid);
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -128,17 +137,7 @@ export default function Index() {
           },
           {
             icon: "exit-run",
-            onPress: async () => {
-              await supabase.auth.signOut();
-              dispatch(logout());
-              dispatch(clearBuziness());
-              dispatch(clearTutorialState());
-              dispatch(clearBuzinessSearchParams());
-              dispatch(clearEmotionLogs());
-              dispatch(clearDrafts());
-              dispatch(clearChatReadState());
-              router.navigate("/");
-            },
+            onPress: signOut,
             title: "Kijelentkezés",
           },
         ]),
@@ -146,7 +145,7 @@ export default function Index() {
       return () => {
         dispatch(clearOptions());
       };
-    }, [dispatch, myUid]),
+    }, [dispatch, myUid, signOut]),
   );
 
   const save = useCallback(async () => {
@@ -348,7 +347,7 @@ export default function Index() {
 
   if (myUid)
     return (
-      <ThemedView style={{ flex: 1, paddingBottom: Spacing.xxl }}>
+      <ThemedView style={{ flex: 1, paddingBottom: MODE_SWITCH_CLEARANCE }}>
         {/* iOS uses the ScrollView's automaticallyAdjustKeyboardInsets; this app
             is edge-to-edge on Android where that prop is a no-op and the window
             does not resize, so Android needs an active KeyboardAvoidingView.
@@ -367,7 +366,10 @@ export default function Index() {
               tab bar has nothing to size against and never shows up. */}
           <View style={{ flex: 1 }}>
             <TabsProvider
-              defaultIndex={0}
+              // defaultIndex only counts on mount: a new ?tab= while this
+              // screen is already open has to remount the tabs to take effect.
+              key={initialTab}
+              defaultIndex={TAB_ORDER.indexOf(initialTab)}
               onChangeIndex={(index) => setActiveTab(TAB_ORDER[index])}
             >
               <Tabs style={{}}>
