@@ -8,6 +8,7 @@ import { addTask, setTaskReminder, toggleTask } from "@/redux/reducers/userReduc
 import { cancelTaskReminder } from "@/lib/notifications/scheduleTaskReminder";
 import { useExpireTaskReminders } from "@/hooks/useExpireTaskReminders";
 import TaskModal from "./TaskModal";
+import LustaSearchSheet from "./LustaSearchSheet";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
@@ -33,6 +34,7 @@ export default function ToDoList({ onInputFocus }: ToDoListProps) {
   );
   const [newTitle, setNewTitle] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [helpSearchOpen, setHelpSearchOpen] = useState(false);
   const inputContainerRef = useRef<View>(null);
 
   const handleToggle = (task: TaskItem) => {
@@ -161,7 +163,15 @@ export default function ToDoList({ onInputFocus }: ToDoListProps) {
         })}
       </Surface>
       <Portal>
-        <TaskModal taskId={selectedId} onDismiss={() => setSelectedId(null)} />
+        <TaskModal
+          taskId={selectedId}
+          onDismiss={() => setSelectedId(null)}
+          onAskForHelp={() => {
+            setSelectedId(null);
+            setHelpSearchOpen(true);
+          }}
+        />
+        <LustaSearchSheet visible={helpSearchOpen} onDismiss={() => setHelpSearchOpen(false)} />
       </Portal>
     </View>
   );

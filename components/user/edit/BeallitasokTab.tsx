@@ -6,7 +6,9 @@ import {
 import { LEGAL_DOCUMENTS } from "@/constants/legal";
 import { useInviteLink } from "@/hooks/useInviteLink";
 import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
-import { addSnack } from "@/redux/reducers/infoReducer";
+import { addSnack, showDialog } from "@/redux/reducers/infoReducer";
+import { setAppLockEnabled } from "@/redux/reducers/appReducer";
+import { authenticateOwner, deviceLockAvailable } from "@/lib/appLock";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { clearChatReadState, clearDrafts } from "@/redux/reducers/chatReducer";
 import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
@@ -45,12 +47,36 @@ export default function BeallitasokTab() {
     (state: RootState) => state.user,
   );
   const { prefs, setPref, hydrated: prefsHydrated } = useNotificationPrefs();
+  const appLockEnabled = useSelector((state: RootState) => !!state.app.appLockEnabled);
+  const [appLockBusy, setAppLockBusy] = useState(false);
   const { copyInviteLink } = useInviteLink();
 
   const [themeMenuVisible, setThemeMenuVisible] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [confirmEmail, setConfirmEmail] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Both ways need the owner to prove it: switching on checks the lock really
+  // opens on this phone, switching off stops somebody else from just doing so.
+  const toggleAppLock = async (next: boolean) => {
+    if (appLockBusy) return;
+    setAppLockBusy(true);
+    try {
+      if (next && !(await deviceLockAvailable())) {
+        dispatch(showDialog({
+          title: "Nincs képernyőzár a telefonodon",
+          text: "Az app-zárhoz előbb állíts be ujjlenyomatot, arcfelismerést vagy PIN-kódot a telefonod beállításaiban.",
+          submitText: "Rendben",
+          onSubmit: () => {},
+        }));
+        return;
+      }
+      const ok = await authenticateOwner(next ? "App-zár bekapcsolása" : "App-zár kikapcsolása");
+      if (ok) dispatch(setAppLockEnabled(next));
+    } finally {
+      setAppLockBusy(false);
+    }
+  };
 
   const handleDeleteProfile = () => {
     setConfirmEmail("");
@@ -257,6 +283,20 @@ export default function BeallitasokTab() {
             onValueChange={(v) => { setPref("aiEnhance", v); }}
           />
         </View>
+        {Platform.OS !== "web" && (
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <View style={{ flex: 1 }}>
+              <ThemedText>App-zár</ThemedText>
+              <ThemedText type="label">Ujjlenyomat, arc vagy PIN megnyitáskor. Ez a beállítás csak ezen a telefonon él.</ThemedText>
+            </View>
+            <Switch
+              accessibilityLabel="App-zár"
+              value={appLockEnabled}
+              disabled={appLockBusy}
+              onValueChange={toggleAppLock}
+            />
+          </View>
+        )}
       </View>
       <Divider />
       {/* Until now these were only reachable from the registration flow, so a

@@ -7,40 +7,23 @@ import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { RootState } from "@/redux/store";
 import { Image, ScrollView, StyleSheet, View } from "react-native";
-import { Card, Icon, Surface, TouchableRipple } from "react-native-paper";
+import { Card } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "@/components/ThemedText";
 import { emotionAvailable } from "@/constants/emotionTiming";
-import { clearOptions, setInAppMessageVisible, setOptions, showDialog } from "@/redux/reducers/infoReducer";
-import { dismissedIsItSafe } from "@/redux/reducers/userReducer";
-import { Link, useFocusEffect } from "expo-router";
+import { clearOptions, setInAppMessageVisible, setOptions } from "@/redux/reducers/infoReducer";
+import { useFocusEffect } from "expo-router";
 import { useCallback } from "react";
-import { Button } from "@/components/Button";
-import { useAppTheme } from "@/assets/theme";
 import { useKeyboardScrollIntoView } from "@/hooks/useKeyboardScrollIntoView";
 
 /** Until the newest in_app_messages row has loaded, or when it sets none. */
 const DEFAULT_OPEN_ICON = "message-draw";
 
 export default function MeScreen() {
-  const { uid, isItSafeDismissed } = useSelector((state: RootState) => state.user);
+  const { uid } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const { scrollRef, keyboardHeight, handleScroll, registerFocusedInput } = useKeyboardScrollIntoView();
-  const theme = useAppTheme();
   const openIcon = useSelector((state: RootState) => state.info.inAppMessageOpenIcon) ?? DEFAULT_OPEN_ICON;
-  const isItSafeButtonText = `Ez a hely biztonságos${isItSafeDismissed ? "." : "?"}`;
-
-  const showIsItSafeDialog = ()=>{
-    dispatch(showDialog({
-      title: "Igen, ez egy biztonságos hely.",
-      text: "Ez a te saját oldalad, az itt megadott adataidat titkosítva tároljuk és senki nem férhet hozzájuk.",
-      submitText: "Rendben",
-      //dismissable: false,
-      onSubmit: () => {
-        dispatch(dismissedIsItSafe());
-      },
-    }));
-  };
 
   useFocusEffect(
     useCallback(() => {
@@ -72,30 +55,6 @@ export default function MeScreen() {
       >
         <Mantra />
         <View style={{ gap: Spacing.sm }}>
-          <Button 
-            mode={isItSafeDismissed ? "text" : "contained-tonal"} 
-            onPress={showIsItSafeDialog}>
-              {isItSafeButtonText}
-          </Button>
-          <Link asChild href="/user/get-help">
-            <TouchableRipple>
-              <Surface
-                elevation={1}
-                style={{
-                  borderRadius: BorderRadius.lg,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: Spacing.md,
-                  paddingVertical: Spacing.md,
-                  paddingHorizontal: Spacing.lg,
-                }}
-              >
-                <Icon source="lifebuoy" size={24} color={theme.colors.primary} />
-                <ThemedText style={{ flex: 1 }} type="defaultSemiBold">Segítség kell?</ThemedText>
-                <Icon source="chevron-right" size={20} color={theme.colors.outline} />
-              </Surface>
-            </TouchableRipple>
-          </Link>
           <NotificationPrompts />
           {emotionAvailable && <EmotionCheckCard onNoteFocus={registerFocusedInput} />}
           <ToDoList onInputFocus={registerFocusedInput} />

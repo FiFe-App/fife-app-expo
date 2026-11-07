@@ -105,7 +105,7 @@ export default function Index() {
             backgroundColor: theme.colors.background
           }}
         >
-          <View style={{ flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
+          <View style={{ flex: 1, flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
             <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>
               {searchCircle ? "Közeli" : "Budapesti"} Bizniszek neked
             </ThemedText>

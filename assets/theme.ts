@@ -229,8 +229,90 @@ export const darkTheme: MyTheme = {
   fonts: configureFonts({ config: fontConfig }),
 };
 
-// Helper function to get theme based on preference
-export const getTheme = (isDark: boolean): MD3Theme => {
+export type AppMode = "en" | "mi";
+
+/**
+ * The two worlds of the app share one token set. Én (the private side: Otthon,
+ * Napló, Segítség) is the app's original cream palette, so it needs no
+ * overrides; Mi (the community side) is lavender, so the user can always tell
+ * which side they are on. Only the grounds and the accent move — buttons stay
+ * black/gold on both sides.
+ */
+export const modeTokens = {
+  en: {
+    light: { switchActive: "#FDEBC8", accent: "#C8361F" },
+    dark: { switchActive: "#4d4738", accent: "#FF5C42" },
+  },
+  mi: {
+    light: {
+      switchActive: "#E4DCFF",
+      accent: "#4B2FB8",
+      background: "#F6F3FF",
+      surface: "#E4DCFF",
+      surfaceVariant: "#EFEAFF",
+      tertiaryContainer: "#E4DCFF",
+      secondaryContainer: "#E4DCFF",
+      onSecondaryContainer: "#2A1F5C",
+      outlineVariant: "#CFC4F2",
+      elevation: {
+        level0: "transparent",
+        level1: "hsla(252, 100%, 99%, 1.00)",
+        level2: "hsla(252, 100%, 97%, 1.00)",
+        level3: "hsla(252, 100%, 95%, 1.00)",
+        level4: "hsla(252, 100%, 93%, 1.00)",
+        level5: "hsla(252, 100%, 91%, 1.00)",
+      },
+    },
+    dark: {
+      switchActive: "#3A3166",
+      accent: "#CFC4FF",
+      background: "#1C1830",
+      surface: "#2A2447",
+      surfaceVariant: "#352E57",
+      tertiaryContainer: "#3A3166",
+      secondaryContainer: "#3A3166",
+      onSecondaryContainer: "#E4DCFF",
+      outlineVariant: "#4A4270",
+      elevation: {
+        level0: "rgba(0, 0, 0, 0.00)",
+        level1: "rgba(42, 36, 71, 1.00)",
+        level2: "rgba(49, 42, 80, 1.00)",
+        level3: "rgba(56, 48, 89, 1.00)",
+        level4: "rgba(63, 54, 98, 1.00)",
+        level5: "rgba(70, 60, 107, 1.00)",
+      },
+    },
+  },
+} as const;
+
+const buildMiTheme = (base: MyTheme, isDark: boolean): MyTheme => {
+  const {
+    accent, background, surface, surfaceVariant, tertiaryContainer,
+    secondaryContainer, onSecondaryContainer, outlineVariant, elevation,
+  } = modeTokens.mi[isDark ? "dark" : "light"];
+  return {
+    ...base,
+    colors: {
+      ...base.colors,
+      tertiary: accent,
+      tertiaryContainer,
+      secondaryContainer,
+      onSecondaryContainer,
+      background,
+      surface,
+      surfaceVariant,
+      outlineVariant,
+      elevation: { ...elevation },
+    },
+  };
+};
+
+export const miLightTheme = buildMiTheme(lightTheme, false);
+export const miDarkTheme = buildMiTheme(darkTheme, true);
+
+// Helper function to get theme based on preference and the side of the app
+export const getTheme = (isDark: boolean, mode: AppMode = "en"): MD3Theme => {
+  if (mode === "mi") return isDark ? miDarkTheme : miLightTheme;
   return isDark ? darkTheme : lightTheme;
 };
 

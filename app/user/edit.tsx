@@ -26,7 +26,7 @@ import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { ScrollView, View, Platform } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -50,7 +50,17 @@ export default function Index() {
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | undefined>(undefined);
   const [locationMenuVisible, setLocationMenuVisible] = useState(false);
   const [userLocation, setUserLocation] = useState<CircleType | undefined>();
-  const [activeTab, setActiveTab] = useState<Tab>(TAB_ORDER[0]);
+  // `?tab=beallitasok` opens straight on that tab — the Én side's
+  // "Beállítások" menu item links here.
+  const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
+  const initialTab: Tab = TAB_ORDER.includes(tabParam as Tab) ? (tabParam as Tab) : TAB_ORDER[0];
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+  // Follow a new ?tab= while the screen stays mounted (the tabs remount by key).
+  const [appliedTab, setAppliedTab] = useState<Tab>(initialTab);
+  if (appliedTab !== initialTab) {
+    setAppliedTab(initialTab);
+    setActiveTab(initialTab);
+  }
   const dispatch = useDispatch();
   const { buzinesses, loading: buzinessesLoading } = useMyBuzinesses(myUid);
   const contactEditRef = useRef<{
@@ -367,7 +377,10 @@ export default function Index() {
               tab bar has nothing to size against and never shows up. */}
           <View style={{ flex: 1 }}>
             <TabsProvider
-              defaultIndex={0}
+              // defaultIndex only counts on mount: a new ?tab= while this
+              // screen is already open has to remount the tabs to take effect.
+              key={initialTab}
+              defaultIndex={TAB_ORDER.indexOf(initialTab)}
               onChangeIndex={(index) => setActiveTab(TAB_ORDER[index])}
             >
               <Tabs style={{}}>
