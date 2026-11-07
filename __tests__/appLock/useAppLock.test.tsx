@@ -94,7 +94,7 @@ describe("useAppLock", () => {
   });
 
   it("unlocks when the lock is switched off", async () => {
-    const { result, rerender } = await renderHook(({ on }) => useAppLock(on), {
+    const { result, rerender } = await renderHook(({ on }: { on: boolean }) => useAppLock(on), {
       initialProps: { on: true },
     });
     expect(result.current.locked).toBe(true);

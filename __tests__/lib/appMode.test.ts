@@ -8,6 +8,7 @@ describe("modeForPath", () => {
     ["/me/", "en"],
     ["/user/emotion-history", "en"],
     ["/user/get-help", "en"],
+    ["/beallitasok", "en"],
     ["/home", "mi"],
     ["/search", "mi"],
     ["/chats", "mi"],

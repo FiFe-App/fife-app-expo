@@ -3,32 +3,27 @@ import {
   AI_ENHANCE_DESCRIPTION,
   AI_ENHANCE_LABEL,
 } from "@/constants/aiEnhance";
-import { LEGAL_DOCUMENTS } from "@/constants/legal";
 import { useInviteLink } from "@/hooks/useInviteLink";
 import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
-import { addSnack, showDialog } from "@/redux/reducers/infoReducer";
-import { setAppLockEnabled } from "@/redux/reducers/appReducer";
-import { authenticateOwner, deviceLockAvailable } from "@/lib/appLock";
+import { addSnack } from "@/redux/reducers/infoReducer";
 import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { clearChatReadState, clearDrafts } from "@/redux/reducers/chatReducer";
 import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
 import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
-import { logout, setThemePreference } from "@/redux/reducers/userReducer";
+import { logout } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState } from "@/redux/store.type";
 import { supabase } from "@/lib/supabase/supabase";
 import { invokeFunction } from "@/lib/supabase/invokeFunction";
-import { router } from "expo-router";
-import { openBrowserAsync } from "expo-web-browser";
+import { Link, router } from "expo-router";
 import { useState } from "react";
-import { Platform, TouchableWithoutFeedback, View, Text } from "react-native";
+import { View, Text } from "react-native";
 import {
   Button,
   Dialog,
   Divider,
   HelperText,
   Icon,
-  Menu,
   Portal,
   Switch,
   TextInput,
@@ -37,46 +32,20 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
 import { useAppTheme } from "@/assets/theme";
-import { emotionAvailable } from "@/constants/emotionTiming";
-import ReminderStatusLine from "@/components/notifications/ReminderStatusLine";
+import { BorderRadius } from "@/constants/borderRadius";
 
 export default function BeallitasokTab() {
   const theme = useAppTheme();
   const dispatch = useDispatch();
-  const { userData, themePreference }: UserState = useSelector(
+  const { userData }: UserState = useSelector(
     (state: RootState) => state.user,
   );
   const { prefs, setPref, hydrated: prefsHydrated } = useNotificationPrefs();
-  const appLockEnabled = useSelector((state: RootState) => !!state.app.appLockEnabled);
-  const [appLockBusy, setAppLockBusy] = useState(false);
   const { copyInviteLink } = useInviteLink();
 
-  const [themeMenuVisible, setThemeMenuVisible] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [confirmEmail, setConfirmEmail] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
-
-  // Both ways need the owner to prove it: switching on checks the lock really
-  // opens on this phone, switching off stops somebody else from just doing so.
-  const toggleAppLock = async (next: boolean) => {
-    if (appLockBusy) return;
-    setAppLockBusy(true);
-    try {
-      if (next && !(await deviceLockAvailable())) {
-        dispatch(showDialog({
-          title: "Nincs képernyőzár a telefonodon",
-          text: "Az app-zárhoz előbb állíts be ujjlenyomatot, arcfelismerést vagy PIN-kódot a telefonod beállításaiban.",
-          submitText: "Rendben",
-          onSubmit: () => {},
-        }));
-        return;
-      }
-      const ok = await authenticateOwner(next ? "App-zár bekapcsolása" : "App-zár kikapcsolása");
-      if (ok) dispatch(setAppLockEnabled(next));
-    } finally {
-      setAppLockBusy(false);
-    }
-  };
 
   const handleDeleteProfile = () => {
     setConfirmEmail("");
@@ -164,37 +133,6 @@ export default function BeallitasokTab() {
       <Divider />
       <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
         <ThemedText variant="bodyLarge" type="bold">Értesítések</ThemedText>
-
-        {emotionAvailable && Platform.OS !== "web" && (
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <View style={{ flex: 1 }}>
-              <ThemedText>Hangulatnapló</ThemedText>
-              <ThemedText type="label">Minden este megkérdezem, milyen napod volt és naptárban követheted a jegyzeteidet, hangulatodat.</ThemedText>
-            </View>
-            <Switch
-              value={prefs.emotionDailyPrompt}
-              onValueChange={(v) => { setPref("emotionDailyPrompt", v); }}
-            />
-          </View>
-        )}
-        {/* Only while it is supposed to be on: the switch saying "on" and the
-            phone staying quiet is the whole problem this line exists for. */}
-        {emotionAvailable && Platform.OS !== "web" && prefs.emotionDailyPrompt && (
-          <ReminderStatusLine />
-        )}
-        <Divider />
-        {Platform.OS !== "web" && (
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <View style={{ flex: 1 }}>
-              <ThemedText>Push értesítések</ThemedText>
-              <ThemedText type="label">Ajánlások, kommentek és üzenetek a telefonodon</ThemedText>
-            </View>
-            <Switch
-              value={prefs.notifyPush}
-              onValueChange={(v) => { setPref("notifyPush", v); }}
-            />
-          </View>
-        )}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <View style={{ flex: 1 }}>
             <ThemedText>Email értesítések</ThemedText>
@@ -215,63 +153,13 @@ export default function BeallitasokTab() {
             onValueChange={(v) => { setPref("newsletter", v); }}
           />
         </View>
+        <ThemedText type="label">
+          A push értesítések és a hangulatnapló esti kérdése az Én oldal beállításai között vannak.
+        </ThemedText>
       </View>
       <Divider />
       <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
-        <ThemedText variant="bodyLarge" type="bold">Egyéb</ThemedText>
-        <Menu
-          visible={themeMenuVisible}
-          onDismiss={() => setThemeMenuVisible(false)}
-          anchor={
-            <TouchableWithoutFeedback
-              onPress={() => setThemeMenuVisible(true)}
-              accessible={true}
-              accessibilityLabel="Téma kiválasztása"
-            >
-              <View>
-                <TextInput
-                  mode="outlined"
-                  label="Téma"
-                  value={
-                    themePreference === "auto"
-                      ? "Automatikus"
-                      : themePreference === "dark"
-                        ? "Sötét"
-                        : "Világos"
-                  }
-                  right={<TextInput.Icon icon="chevron-down" />}
-                  editable={false}
-                  pointerEvents="none"
-                />
-              </View>
-            </TouchableWithoutFeedback>
-          }
-        >
-          <Menu.Item
-            onPress={() => {
-              dispatch(setThemePreference("auto"));
-              setThemeMenuVisible(false);
-            }}
-            title="Automatikus"
-            leadingIcon={themePreference === "auto" ? "check" : undefined}
-          />
-          <Menu.Item
-            onPress={() => {
-              dispatch(setThemePreference("light"));
-              setThemeMenuVisible(false);
-            }}
-            title="Világos"
-            leadingIcon={themePreference === "light" ? "check" : undefined}
-          />
-          <Menu.Item
-            onPress={() => {
-              dispatch(setThemePreference("dark"));
-              setThemeMenuVisible(false);
-            }}
-            title="Sötét"
-            leadingIcon={themePreference === "dark" ? "check" : undefined}
-          />
-        </Menu>
+        <ThemedText variant="bodyLarge" type="bold">Keresés</ThemedText>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <View style={{ flex: 1 }}>
             <ThemedText>{AI_ENHANCE_LABEL}</ThemedText>
@@ -283,44 +171,25 @@ export default function BeallitasokTab() {
             onValueChange={(v) => { setPref("aiEnhance", v); }}
           />
         </View>
-        {Platform.OS !== "web" && (
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <View style={{ flex: 1 }}>
-              <ThemedText>App-zár</ThemedText>
-              <ThemedText type="label">Ujjlenyomat, arc vagy PIN megnyitáskor. Ez a beállítás csak ezen a telefonon él.</ThemedText>
-            </View>
-            <Switch
-              accessibilityLabel="App-zár"
-              value={appLockEnabled}
-              disabled={appLockBusy}
-              onValueChange={toggleAppLock}
-            />
-          </View>
-        )}
       </View>
       <Divider />
-      {/* Until now these were only reachable from the registration flow, so a
-          member who had already signed up could not read them again. */}
-      <View style={{ paddingVertical: Spacing.lg, gap: Spacing.xs }}>
-        <ThemedText variant="bodyLarge" type="bold">Jogi dokumentumok</ThemedText>
-        {LEGAL_DOCUMENTS.map((document) => (
+      {/* The phone's own settings (theme, app-zár, push, legal documents,
+          signing out) live on the Én side — see app/beallitasok.tsx. */}
+      <View style={{ paddingVertical: Spacing.lg }}>
+        <Link href="/beallitasok" asChild>
           <TouchableRipple
-            key={document.url}
-            onPress={() => openBrowserAsync(document.url)}
+            accessibilityRole="link"
+            style={{ borderRadius: BorderRadius.lg, backgroundColor: theme.colors.secondaryContainer }}
           >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: Spacing.sm,
-                paddingVertical: Spacing.sm,
-              }}
-            >
-              <ThemedText style={{ flex: 1 }}>{document.label}</ThemedText>
-              <Icon source="open-in-new" size={16} color={theme.colors.onSurfaceVariant} />
+            <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.md, padding: Spacing.lg }}>
+              <View style={{ flex: 1 }}>
+                <ThemedText type="defaultSemiBold">Én oldal beállításai</ThemedText>
+                <ThemedText type="label">téma, app-zár, push, esti kérdés, jogi dokumentumok</ThemedText>
+              </View>
+              <Icon source="chevron-right" size={20} color={theme.colors.onSurfaceVariant} />
             </View>
           </TouchableRipple>
-        ))}
+        </Link>
       </View>
       <Divider style={{ marginTop: 16, marginBottom: 16 }} />
       <View style={{ gap: 8, paddingBottom: 32 }}>

@@ -5,10 +5,11 @@ import type { AppMode } from "@/assets/theme";
 export type { AppMode };
 
 /**
- * The private side of the app: the user's own home, mood journal and help.
+ * The private side of the app: the user's own home, mood journal, help and
+ * this phone's settings.
  * Everything else — community, search, messages, profiles, biznisz — is Mi.
  */
-const EN_PATHS = ["/me", "/user/emotion-history", "/user/get-help"] as const;
+const EN_PATHS = ["/me", "/user/emotion-history", "/user/get-help", "/beallitasok"] as const;
 
 /** Where the Én/Mi switch lands on each side: that side's first tab. */
 export const MODE_HOME: Record<AppMode, "/me" | "/home"> = {

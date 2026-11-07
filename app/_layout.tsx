@@ -388,6 +388,10 @@ function RootContent() {
                   name="user/get-help"
                   options={{ title: "Segítség kell?" }}
                 />
+                <Stack.Screen
+                  name="beallitasok"
+                  options={{ title: "Ezen a telefonon" }}
+                />
               </Stack.Protected>
               <Stack.Protected guard={!uid}>
 

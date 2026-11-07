@@ -31,14 +31,16 @@ export default function ModeSwitch({ mode, onSwitch }: ModeSwitchProps) {
     const active = side === mode;
     return (
       <TouchableRipple 
-        accessibilityRole="switch"
-        accessibilityState={{ checked: mode === "mi" }}
+        accessibilityRole="button"
+        accessibilityState={{ selected: active }}
+        // Each half is its own button now, so each needs its own label: the
+        // inactive one switches, the active one only says where you are.
         accessibilityLabel={
-          mode === "en"
-            ? "Váltás Mi módra (közösség)"
-            : "Váltás Én módra (privát)"
+          active
+            ? side === "en" ? "Én mód (aktív)" : "Mi mód (aktív)"
+            : side === "mi" ? "Váltás Mi módra (közösség)" : "Váltás Én módra (privát)"
         }
-        testID="mode-switch"
+        testID={`mode-switch-${side}`}
         borderless
           onPress={()=>{
             if (!active) onSwitch();}

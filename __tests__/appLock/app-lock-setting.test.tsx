@@ -14,7 +14,7 @@ jest.mock("@/lib/appLock", () => ({
   deviceLockAvailable: jest.fn(),
 }));
 
-import BeallitasokTab from "@/components/user/edit/BeallitasokTab";
+import EnSettings from "@/components/settings/EnSettings";
 import { authenticateOwner, deviceLockAvailable } from "@/lib/appLock";
 import { setAppLockEnabled } from "@/redux/reducers/appReducer";
 import { login } from "@/redux/reducers/userReducer";
@@ -28,7 +28,7 @@ const setup = async (enabled = false) => {
   const store = createTestStore();
   store.dispatch(login("me"));
   store.dispatch(setAppLockEnabled(enabled));
-  await renderWithProviders(<BeallitasokTab />, { store });
+  await renderWithProviders(<EnSettings />, { store });
   return store;
 };
 

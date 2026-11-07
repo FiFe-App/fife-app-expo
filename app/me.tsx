@@ -7,14 +7,15 @@ import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { RootState } from "@/redux/store";
 import { Image, ScrollView, StyleSheet, View } from "react-native";
-import { Card } from "react-native-paper";
+import { Card, Icon, Surface, TouchableRipple } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "@/components/ThemedText";
 import { emotionAvailable } from "@/constants/emotionTiming";
 import { clearOptions, setInAppMessageVisible, setOptions } from "@/redux/reducers/infoReducer";
-import { useFocusEffect } from "expo-router";
+import { Link, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 import { useKeyboardScrollIntoView } from "@/hooks/useKeyboardScrollIntoView";
+import { useAppTheme } from "@/assets/theme";
 
 /** Until the newest in_app_messages row has loaded, or when it sets none. */
 const DEFAULT_OPEN_ICON = "message-draw";
@@ -22,6 +23,7 @@ const DEFAULT_OPEN_ICON = "message-draw";
 export default function MeScreen() {
   const { uid } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
+  const theme = useAppTheme();
   const { scrollRef, keyboardHeight, handleScroll, registerFocusedInput } = useKeyboardScrollIntoView();
   const openIcon = useSelector((state: RootState) => state.info.inAppMessageOpenIcon) ?? DEFAULT_OPEN_ICON;
 
@@ -58,6 +60,26 @@ export default function MeScreen() {
           <NotificationPrompts />
           {emotionAvailable && <EmotionCheckCard onNoteFocus={registerFocusedInput} />}
           <ToDoList onInputFocus={registerFocusedInput} />
+          {/* A Mi page, linked from home because people keep coming back to it. */}
+          <Link asChild href="/user/saved-buzinesses">
+            <TouchableRipple accessibilityRole="link" style={{ borderRadius: BorderRadius.lg }}>
+              <Surface
+                elevation={1}
+                style={{
+                  borderRadius: BorderRadius.lg,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: Spacing.md,
+                  paddingVertical: Spacing.md,
+                  paddingHorizontal: Spacing.lg,
+                }}
+              >
+                <Icon source="archive-outline" size={24} color={theme.colors.tertiary} />
+                <ThemedText style={{ flex: 1 }} type="defaultSemiBold">Elmentett bizniszek</ThemedText>
+                <Icon source="chevron-right" size={20} color={theme.colors.outline} />
+              </Surface>
+            </TouchableRipple>
+          </Link>
           {false && <View style={styles.cardRow}>
             <Card style={[styles.card, styles.cardSpacing]} theme={{colors: {shadow:"red"}}} onPress={() => {}}>
               <Card.Content style={styles.cardContent}>

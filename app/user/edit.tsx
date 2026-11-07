@@ -16,12 +16,9 @@ import createThumbnail from "@/lib/functions/createThumbnail";
 import getUploadData from "@/lib/functions/getUploadData";
 import { supabase } from "@/lib/supabase/supabase";
 import { useMyBuzinesses } from "@/hooks/useMyBuzinesses";
+import { useLogout } from "@/hooks/useLogout";
 import { addSnack, showLoading, hideLoading, setOptions, clearOptions } from "@/redux/reducers/infoReducer";
-import { setName, setUserData, setLocation, logout } from "@/redux/reducers/userReducer";
-import { clearBuziness, clearBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
-import { clearTutorialState } from "@/redux/reducers/tutorialReducer";
-import { clearEmotionLogs } from "@/redux/reducers/emotionLogsReducer";
-import { clearChatReadState, clearDrafts } from "@/redux/reducers/chatReducer";
+import { setName, setUserData, setLocation } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { UserState, CircleType } from "@/redux/store.type";
 import { PostgrestSingleResponse } from "@supabase/supabase-js";
@@ -62,6 +59,7 @@ export default function Index() {
     setActiveTab(initialTab);
   }
   const dispatch = useDispatch();
+  const signOut = useLogout();
   const { buzinesses, loading: buzinessesLoading } = useMyBuzinesses(myUid);
   const contactEditRef = useRef<{
     saveContacts: () => Promise<
@@ -138,17 +136,7 @@ export default function Index() {
           },
           {
             icon: "exit-run",
-            onPress: async () => {
-              await supabase.auth.signOut();
-              dispatch(logout());
-              dispatch(clearBuziness());
-              dispatch(clearTutorialState());
-              dispatch(clearBuzinessSearchParams());
-              dispatch(clearEmotionLogs());
-              dispatch(clearDrafts());
-              dispatch(clearChatReadState());
-              router.navigate("/");
-            },
+            onPress: signOut,
             title: "Kijelentkezés",
           },
         ]),
@@ -156,7 +144,7 @@ export default function Index() {
       return () => {
         dispatch(clearOptions());
       };
-    }, [dispatch, myUid]),
+    }, [dispatch, myUid, signOut]),
   );
 
   const save = useCallback(async () => {

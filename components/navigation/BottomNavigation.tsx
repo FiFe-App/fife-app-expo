@@ -41,6 +41,7 @@ const BottomNavigation = () => {
   const meActive = pathname === "/me";
   const naploActive = pathname.startsWith("/user/emotion-history");
   const helpActive = pathname.startsWith("/user/get-help");
+  const settingsActive = pathname.startsWith("/beallitasok");
   const usActive = first.includes("home") || first.includes("fifeRadar");
   const searchActive = first === "search" || pathname === "/biznisz";
   const chatActive = first.includes("chat") || first === "group";
@@ -101,9 +102,7 @@ const BottomNavigation = () => {
   const enRight = (
     <>
       {tab("Segítség", "/user/get-help", helpActive, iconFor(helpActive, "lifebuoy", "lifebuoy", normalSize - 2))}
-      {/* The settings live on the profile page, a Mi route: once there the
-          bar shows the Mi side, so this tab is never the active one. */}
-      {tab("Beállítások", "/user/edit?tab=beallitasok", false, iconFor(false, "cog", "cog-outline", normalSize - 2))}
+      {tab("Beállítások", "/beallitasok", settingsActive, iconFor(settingsActive, "cog", "cog-outline", normalSize - 2))}
     </>
   );
 
