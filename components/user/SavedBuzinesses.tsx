@@ -2,13 +2,16 @@ import { supabase } from "@/lib/supabase/supabase";
 import { BuzinessSearchItemInterface } from "@/redux/store.type";
 import { RootState } from "@/redux/store";
 import { useEffect, useState } from "react";
-import { SafeAreaView, ScrollView, View } from "react-native";
-import { ActivityIndicator, Text } from "react-native-paper";
+import { Pressable, SafeAreaView, ScrollView, View } from "react-native";
+import { ActivityIndicator, Icon, Text } from "react-native-paper";
 import { useSelector } from "react-redux";
 import BuzinessItem from "../buziness/BuzinessItem";
 import { ThemedText } from "../ThemedText";
 import { Spacing } from "@/constants/spacing";
 import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
+import { router } from "expo-router";
+import { ThemedView } from "../ThemedView";
+import { useAppTheme } from "@/assets/theme";
 
 interface SavedBuzinessesProps {
   uid: string;
@@ -18,6 +21,7 @@ const SavedBuzinesses = ({ uid }: SavedBuzinessesProps) => {
   const { savedBuzinesses, uid: myUid } = useSelector(
     (state: RootState) => state.user
   );
+  const theme = useAppTheme();
   const [buzinesses, setBuzinesses] = useState<BuzinessSearchItemInterface[]>(
     []
   );
@@ -56,8 +60,27 @@ const SavedBuzinesses = ({ uid }: SavedBuzinessesProps) => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, padding: Spacing.xs }}>
-      <ScrollView contentContainerStyle={{ gap: Spacing.sm, flexGrow: 1, paddingBottom: MODE_SWITCH_CLEARANCE }}>
+      <ScrollView 
+
+        stickyHeaderIndices={[0]}
+      contentContainerStyle={{ gap: Spacing.sm, flexGrow: 1, paddingBottom: MODE_SWITCH_CLEARANCE }}>
+        <ThemedView
+          style={{
+            paddingHorizontal: Spacing.lg,
+            paddingVertical: Spacing.sm,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between", 
+            backgroundColor: theme.colors.background
+          }}
+        >
+          <View style={{ flex: 1, flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
+            <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>
+              Elmentett bizniszeid
+            </ThemedText>
+            <Icon size={18} color={theme.colors.secondary} source="bookmark" />
+          </View>
+        </ThemedView>
         {loading ? (
           <View style={{ flex: 1, justifyContent: "center" }}>
             <ActivityIndicator />
@@ -81,7 +104,6 @@ const SavedBuzinesses = ({ uid }: SavedBuzinessesProps) => {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
   );
 };
 

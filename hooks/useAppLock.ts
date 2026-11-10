@@ -44,7 +44,7 @@ export function useAppLock(active: boolean) {
     if (prompting.current) return false;
     prompting.current = true;
     try {
-      const ok = await authenticateOwner("FiFe feloldása");
+      const ok = await authenticateOwner("FiFe App feloldása");
       if (ok) setLocked(false);
       return ok;
     } finally {

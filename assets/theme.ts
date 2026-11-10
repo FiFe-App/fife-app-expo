@@ -146,7 +146,7 @@ export const lightTheme: MyTheme = {
       onError: "#0b0202",
       errorContainer: "#ffdad6",
       onErrorContainer: "#410002",
-      background: "#FFFCF5",
+      background: "#FFF8EE",
       onBackground: "#1e1b16",
       surface: "#ffedc8ff",
       onSurface: "#1e1b16",
@@ -247,7 +247,7 @@ export const modeTokens = {
     light: {
       switchActive: "#E4DCFF",
       accent: "#4B2FB8",
-      background: "#F6F3FF",
+      background: "#faf8ff",
       surface: "#E4DCFF",
       surfaceVariant: "#EFEAFF",
       tertiaryContainer: "#E4DCFF",

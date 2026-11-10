@@ -110,6 +110,18 @@ export default function ToDoList({ onInputFocus }: ToDoListProps) {
               key={task.id}
               style={{ flexDirection: "row", alignItems: "center", gap: Spacing.xs }}
             >
+              <TouchableRipple
+                onPress={() => handleToggle(task)}
+                accessibilityLabel={task.checked ? "Visszanyitás" : "Kipipálás"}
+                borderless
+                style={{ borderRadius: BorderRadius.xl, padding: Spacing.xs }}
+              >
+                <Icon
+                  source={task.checked ? "check-circle" : "checkbox-blank-circle-outline"}
+                  size={24}
+                  color={task.checked ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                />
+              </TouchableRipple>
               {/* The row opens the task; only the icon ticks it off. */}
               <TouchableRipple
                 onPress={() => setSelectedId(task.id)}
@@ -145,18 +157,6 @@ export default function ToDoList({ onInputFocus }: ToDoListProps) {
                     <Icon source="bell-outline" size={16} color={theme.colors.onSurfaceVariant} />
                   )}
                 </View>
-              </TouchableRipple>
-              <TouchableRipple
-                onPress={() => handleToggle(task)}
-                accessibilityLabel={task.checked ? "Visszanyitás" : "Kipipálás"}
-                borderless
-                style={{ borderRadius: BorderRadius.xl, padding: Spacing.xs }}
-              >
-                <Icon
-                  source={task.checked ? "check-circle" : "checkbox-blank-circle-outline"}
-                  size={24}
-                  color={task.checked ? theme.colors.primary : theme.colors.onSurfaceVariant}
-                />
               </TouchableRipple>
             </View>
           );

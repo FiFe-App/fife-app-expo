@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import React from "react";
 
 import BottomNavigation from "@/components/navigation/BottomNavigation";
@@ -96,7 +96,49 @@ describe("BottomNavigation", () => {
 
     fireEvent.press(screen.getByLabelText("Váltás Mi módra (közösség)"));
 
-    expect(router.navigate).toHaveBeenCalledWith("/home");
+    // The navigation starts a frame after the switch has painted.
+    await waitFor(() => expect(router.navigate).toHaveBeenCalledWith("/home"));
+  });
+
+  it("flips the switch and tabs at once, before the route has changed", async () => {
+    __setPathname("/me");
+    await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
+
+    await fireEvent.press(screen.getByLabelText("Váltás Mi módra (közösség)"));
+
+    // Same route still, yet the control already shows the Mi side.
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Mi mód (aktív)")).toBeTruthy();
+    expect(screen.getByText("Környék")).toBeTruthy();
+    expect(screen.queryByText("Otthon")).toBeNull();
+    await waitFor(() => expect(router.navigate).toHaveBeenCalledWith("/home"));
+  });
+
+  it("does not drop the switch when a tab was tapped just before", async () => {
+    __setPathname("/me");
+    await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
+
+    // Within the 300 ms tap throttle of the tabs.
+    await fireEvent.press(screen.getByText("Beállítások"));
+    await fireEvent.press(screen.getByLabelText("Váltás Mi módra (közösség)"));
+
+    await waitFor(() => expect(router.navigate).toHaveBeenCalledWith("/home"));
+  });
+
+  it("goes back to the route's side when the route moves elsewhere", async () => {
+    __setPathname("/me");
+    const { rerender } = await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
+
+    await fireEvent.press(screen.getByLabelText("Váltás Mi módra (közösség)"));
+    expect(screen.getByLabelText("Mi mód (aktív)")).toBeTruthy();
+
+    // The route ends up on another Én page (back gesture, deep link, ...)
+    // instead of the Mi side: the switch must not stay on Mi.
+    __setPathname("/user/get-help");
+    await rerender(<BottomNavigation />);
+
+    expect(screen.getByLabelText("Én mód (aktív)")).toBeTruthy();
+    expect(screen.queryByText("Környék")).toBeNull();
   });
 
   it("switches from Mi to the first Én tab", async () => {
@@ -105,7 +147,7 @@ describe("BottomNavigation", () => {
 
     fireEvent.press(screen.getByLabelText("Váltás Én módra (privát)"));
 
-    expect(router.navigate).toHaveBeenCalledWith("/me");
+    await waitFor(() => expect(router.navigate).toHaveBeenCalledWith("/me"));
   });
 
   it("treats the help page as Én, not as the profile tab", async () => {

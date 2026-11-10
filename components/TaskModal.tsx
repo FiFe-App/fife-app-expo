@@ -348,7 +348,7 @@ export default function TaskModal({ taskId, onDismiss, onAskForHelp }: TaskModal
               </View>
             ) : (
               <View style={{ gap: Spacing.sm }}>
-                {onAskForHelp && (
+                {false && onAskForHelp && (
                   <Button
                     mode="outlined"
                     icon="account-search-outline"

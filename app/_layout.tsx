@@ -327,7 +327,14 @@ function RootContent() {
             <InfoLayer />
 
             <Stack
-              screenOptions={{ header: (props: NativeStackHeaderProps) => <MyAppbar title={props.options.title} /> }}
+              screenOptions={{
+                header: (props: NativeStackHeaderProps) => <MyAppbar title={props.options.title} />,
+                // Screens left behind in the stack stop re-rendering until they
+                // are shown again. Without it every one of them re-renders when
+                // the Én/Mi theme flips, which is most of what makes the
+                // switch slow once both sides have been visited.
+                freezeOnBlur: true,
+              }}
             >
               <Stack.Protected guard={!!uid}>
                 <Stack.Screen
