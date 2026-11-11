@@ -3,6 +3,7 @@ import { isAuthenticated } from "./_lib/auth";
 import { getSupabaseAdmin } from "./_lib/supabase";
 
 const PAGE_SIZE = 50;
+const MAX_PAGE = 10_000;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function json(statusCode: number, body: unknown) {
@@ -17,7 +18,8 @@ function parseBadBoy(value: string | undefined): boolean | null {
 }
 
 async function list(params: Record<string, string | undefined>) {
-  const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
+  // Felső korlát: egy elírt / túl nagy szám különben integer túlcsordulást okoz az OFFSET-ben.
+  const page = Math.min(MAX_PAGE, Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1));
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase.rpc("admin_list_users", {
     p_search: (params.search ?? "").trim() || null,

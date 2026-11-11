@@ -315,16 +315,6 @@ export function messageHtml(
 // Weekly admin report
 // ---------------------------------------------------------------------------
 
-/** For user-written text (titles, names) placed into a template. */
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
 export interface WeeklyStats {
   new_users: number;
   new_users_prev: number;

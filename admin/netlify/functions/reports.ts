@@ -3,6 +3,7 @@ import { isAuthenticated } from "./_lib/auth";
 import { getSupabaseAdmin } from "./_lib/supabase";
 
 const PAGE_SIZE = 50;
+const MAX_PAGE = 10_000;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function json(statusCode: number, body: unknown) {
@@ -19,7 +20,8 @@ export const handler: Handler = async (event) => {
 
   try {
     const params = event.queryStringParameters ?? {};
-    const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
+    // Felső korlát: egy elírt / túl nagy szám különben integer túlcsordulást okoz az OFFSET-ben.
+    const page = Math.min(MAX_PAGE, Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1));
     const reportedId = params.reportedId && UUID_RE.test(params.reportedId) ? params.reportedId : null;
 
     const supabase = getSupabaseAdmin();

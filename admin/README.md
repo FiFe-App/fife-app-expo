@@ -38,6 +38,23 @@ A `netlify dev` szükséges ahhoz, hogy a `/api/*` hívások eljussanak a
 | `ADMIN_PASSWORD`             | A belépéshez használt jelszó                                     |
 | `ADMIN_SESSION_SECRET`       | Hosszú random string a bejelentkezési süti aláírásához (pl. `openssl rand -hex 32`) |
 
+## Biztonság
+
+Az admin felületről minden felhasználó emailje olvasható, bárki badboy-já tehető, és
+hírlevél küldhető mindenkinek, ezért:
+
+- Az `ADMIN_PASSWORD` legyen hosszú, véletlenszerű jelszó (legalább 20 karakter), pl.
+  `openssl rand -base64 24`.
+- **Login korlát:** egy IP-ről 15 percen belül 10 sikertelen próba után a belépés 429-et ad
+  az ablak végéig, akkor is, ha közben jó jelszót írnak be. A próbálkozásokat az
+  `admin_login_attempts` tábla tartja nyilván, amelyet csak a service role ér el. Az IP a
+  Netlify által beállított `x-nf-client-connection-ip` headerből jön, amit a kliens nem
+  tud hamisítani. Ha a Supabase nem érhető el, a login korlát nélkül működik tovább (a
+  hibát naplózza), hogy egy beállítási hiba ne zárja ki az admint.
+- **Session visszavonása:** a süti 7 napig érvényes, és a kijelentkezés csak az adott
+  böngészőből törli. Minden kiadott session azonnali érvénytelenítéséhez cseréld le az
+  `ADMIN_SESSION_SECRET`-et, és deployold újra a site-ot.
+
 ## Netlify deploy
 
 1. Hozz létre egy **új** Netlify site-ot, ami ugyanerre a repóra mutat.

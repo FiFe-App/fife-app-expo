@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
   });
   if (error || !data) {
     console.error("admin_weekly_stats failed:", error);
-    return json({ error: error?.message ?? "No stats" }, 500);
+    return json({ error: "Could not load stats" }, 500);
   }
 
   const stats = data as WeeklyStats;
@@ -143,8 +143,9 @@ Deno.serve(async (req) => {
     console.log(`Weekly report sent to ${reportEmail} — ${info.response || "(no response)"}`);
   } catch (err) {
     console.error("Weekly report send failed:", err);
-    return json({ error: String(err) }, 500);
+    return json({ error: "Send failed" }, 500);
   }
 
-  return json({ ok: true, sent_to: reportEmail, period: label, stats });
+  // Keep the body small: pg_net stores every response in net._http_response.
+  return json({ ok: true, sent_to: reportEmail });
 });
