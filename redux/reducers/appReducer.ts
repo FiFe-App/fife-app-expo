@@ -67,8 +67,9 @@ export interface AppState {
    */
   lastRoute: { path: string; at: string } | null;
   /**
-   * App-zár: ask for the fingerprint / face / the phone's own PIN when the app
-   * is opened. A setting of this device, not of the account, so it lives here:
+   * App-zár: ask for the fingerprint / face / the phone's own PIN when Én mód
+   * (the private side) is opened. Mi mód is never locked.
+   * A setting of this device, not of the account, so it lives here:
    * it never goes to the server and logging out leaves it as it is. See
    * hooks/useAppLock.ts.
    */

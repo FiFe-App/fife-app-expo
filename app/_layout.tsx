@@ -47,7 +47,7 @@ import UpdateAvailableCard from "@/components/version/UpdateAvailableCard";
 import InAppMessageDialog from "@/components/InAppMessageDialog";
 import { emotionAvailable } from "@/constants/emotionTiming";
 import { initAnalytics, screenNameFromSegments, trackEvent } from "@/lib/analytics";
-import { modeForPath } from "@/lib/mode/appMode";
+import { MODE_HOME, modeForPath } from "@/lib/mode/appMode";
 import { useAppLock } from "@/hooks/useAppLock";
 import AppLockScreen from "@/components/AppLockScreen";
 
@@ -97,10 +97,11 @@ function RootContent() {
   useLastRoute();
   const { loadFromServer: loadSettings } = useUserSettings();
   const versionGate = useAppVersionGate();
-  // The app-zár guards a signed-in user's own pages; signed out there is
-  // nothing private to hide, and the login wall stays as it is.
+  // The app-zár guards Én mód — the private side with the journal — for a
+  // signed-in user. Mi (chat, search, the community) is what people open in
+  // public, so it never asks; signed out there is nothing private at all.
   const appLockEnabled = useSelector((state: RootState) => state.app.appLockEnabled);
-  const appLock = useAppLock(!!appLockEnabled && !!uid);
+  const appLock = useAppLock(!!appLockEnabled && !!uid, modeForPath(pathname) === "en");
 
   // Manage Supabase token auto-refresh and offline sync on foreground
   useEffect(() => {
@@ -397,7 +398,7 @@ function RootContent() {
                 />
                 <Stack.Screen
                   name="beallitasok"
-                  options={{ title: "Ezen a telefonon" }}
+                  options={{ title: "Beállítások" }}
                 />
               </Stack.Protected>
               <Stack.Protected guard={!uid}>
@@ -453,7 +454,14 @@ function RootContent() {
             {!!uid && <InAppMessageDialog />}
           </View>
         </ThemedView>
-        {appLock.locked && <AppLockScreen onUnlock={appLock.unlock} />}
+        {appLock.locked && (
+          <AppLockScreen
+            onUnlock={appLock.unlock}
+            // The lock covers the whole screen, bar included, so it has to
+            // offer its own way back to the side that needs no unlocking.
+            onLeave={() => router.navigate(MODE_HOME.mi)}
+          />
+        )}
       </SafeAreaView>
     </PaperProvider>
   );

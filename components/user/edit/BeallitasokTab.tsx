@@ -31,8 +31,9 @@ import {
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { Spacing } from "@/constants/spacing";
-import { useAppTheme } from "@/assets/theme";
+import { modeTokens, useAppTheme } from "@/assets/theme";
 import { BorderRadius } from "@/constants/borderRadius";
+import {theme as expTheme} from "@/assets/theme";
 
 export default function BeallitasokTab() {
   const theme = useAppTheme();
@@ -179,7 +180,7 @@ export default function BeallitasokTab() {
         <Link href="/beallitasok" asChild>
           <TouchableRipple
             accessibilityRole="link"
-            style={{ borderRadius: BorderRadius.lg, backgroundColor: theme.colors.secondaryContainer }}
+            style={{ borderRadius: BorderRadius.lg, backgroundColor: "#ffedc8ff" }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.md, padding: Spacing.lg }}>
               <View style={{ flex: 1 }}>

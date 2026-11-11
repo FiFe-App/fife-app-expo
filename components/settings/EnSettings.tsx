@@ -104,7 +104,7 @@ export default function EnSettings() {
           <View style={rowStyle}>
             <View style={{ flex: 1 }}>
               <ThemedText>App-zár</ThemedText>
-              <ThemedText type="label">Ujjlenyomat, arc vagy PIN megnyitáskor. Ez a beállítás csak ezen a telefonon él.</ThemedText>
+              <ThemedText type="label">Ujjlenyomat, arc vagy PIN az Én módba lépéskor — a Mi mód (üzenetek, keresés) zár nélkül használható. Ez a beállítás csak ezen a telefonon él.</ThemedText>
             </View>
             <Switch
               accessibilityLabel="App-zár"
@@ -151,18 +151,6 @@ export default function EnSettings() {
         </Menu>
       </View>
 
-      <Divider />
-      <View style={{ paddingVertical: Spacing.lg, gap: Spacing.xs }}>
-        <ThemedText variant="bodyLarge" type="bold">Jogi dokumentumok</ThemedText>
-        {LEGAL_DOCUMENTS.map((document) => (
-          <TouchableRipple key={document.url} onPress={() => openBrowserAsync(document.url)}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.sm }}>
-              <ThemedText style={{ flex: 1 }}>{document.label}</ThemedText>
-              <Icon source="open-in-new" size={16} color={theme.colors.onSurfaceVariant} />
-            </View>
-          </TouchableRipple>
-        ))}
-      </View>
 
       <Divider />
       <View style={{ paddingVertical: Spacing.lg, gap: Spacing.md }}>
@@ -183,6 +171,19 @@ export default function EnSettings() {
         <Button mode="outlined" icon="exit-run" onPress={signOut}>
           Kijelentkezés
         </Button>
+      </View>
+      
+      <Divider />
+      <View style={{ paddingVertical: Spacing.lg, gap: Spacing.xs }}>
+        <ThemedText variant="bodyLarge" type="bold">Jogi dokumentumok</ThemedText>
+        {LEGAL_DOCUMENTS.map((document) => (
+          <TouchableRipple key={document.url} onPress={() => openBrowserAsync(document.url)}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.sm }}>
+              <ThemedText style={{ flex: 1 }}>{document.label}</ThemedText>
+              <Icon source="open-in-new" size={16} color={theme.colors.onSurfaceVariant} />
+            </View>
+          </TouchableRipple>
+        ))}
       </View>
     </View>
   );

@@ -1,24 +1,30 @@
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
-import { Icon } from "react-native-paper";
+import { Icon, IconButton } from "react-native-paper";
 
 import { useAppTheme } from "@/assets/theme";
 import { Button } from "@/components/Button";
 import { Logo } from "@/components/Logo";
 import { ThemedText } from "@/components/ThemedText";
 import { Spacing } from "@/constants/spacing";
+import BottomNavigation from "./navigation/BottomNavigation";
+import { MyAppbar } from "./MyAppBar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface AppLockScreenProps {
   onUnlock: () => Promise<boolean>;
+  /** Leaves Én for Mi, which is not locked. */
+  onLeave?: () => void;
 }
 
 /**
- * Covers the whole app while the app-zár is locked. It sits on top of the
+ * Covers the whole app while the app-zár is locked and Én mód is on screen. It sits on top of the
  * navigator instead of replacing it, so unlocking lands exactly where the user
  * left off. The OS prompt opens by itself; the button is for after "Mégse".
  */
-export default function AppLockScreen({ onUnlock }: AppLockScreenProps) {
+export default function AppLockScreen({ onUnlock, onLeave }: AppLockScreenProps) {
   const theme = useAppTheme();
+  const { top } = useSafeAreaInsets();
 
   useEffect(() => {
     onUnlock();
@@ -29,17 +35,30 @@ export default function AppLockScreen({ onUnlock }: AppLockScreenProps) {
       accessibilityViewIsModal
       style={[StyleSheet.absoluteFill, styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <Logo style={styles.logo} />
-      <Icon source="lock-outline" size={36} color={theme.colors.onBackground} />
+
+      {onLeave && (
+        <IconButton
+        style={{position:"absolute",left:10,top:top}} size={36}
+        mode="contained-tonal" icon="chevron-left" onPress={onLeave} />
+      )}
+      <Icon source="lock-outline" size={84} color={theme.colors.onBackground} />
       <ThemedText variant="headlineSmall" type="bold" style={{ textAlign: "center" }}>
-        A FiFe zárolva van
+        Az Én mód zárolva van
       </ThemedText>
       <ThemedText variant="bodyMedium" style={{ textAlign: "center", color: theme.colors.onSurfaceVariant }}>
-        Ujjlenyomattal, arccal vagy a telefonod PIN-kódjával oldhatod fel.
+        A Mi mód zár nélkül is használható.
       </ThemedText>
-      <Button mode="contained" icon="fingerprint" onPress={onUnlock} style={{ marginTop: Spacing.md }}>
+      <Button mode="contained" icon="lock-open" onPress={onUnlock} style={{ marginTop: Spacing.md }}>
         Feloldás
       </Button>
+      {onLeave && (
+        <Button mode="text" icon="account-group-outline" onPress={onLeave}>
+          Vissza a Mi módba
+        </Button>
+      )}
+      <View style={{position:"absolute",width:"100%",bottom:0}}>
+        <BottomNavigation />
+      </View>
     </View>
   );
 }
@@ -51,7 +70,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.md,
-    padding: Spacing.xl,
   },
   logo: {
     width: 160,

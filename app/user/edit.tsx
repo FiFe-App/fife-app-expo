@@ -131,11 +131,6 @@ export default function Index() {
             title: "Hogy látják a profilom mások",
           },
           {
-            icon: "archive",
-            onPress: () => router.push("/user/saved-buzinesses"),
-            title: "Mentett bizniszek",
-          },
-          {
             icon: "exit-run",
             onPress: signOut,
             title: "Kijelentkezés",
