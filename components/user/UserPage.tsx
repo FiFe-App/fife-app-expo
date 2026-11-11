@@ -46,6 +46,7 @@ import Measure from "@/components/tutorial/Measure";
 import SectionLabel from "@/components/buziness/SectionLabel";
 import { useAppTheme } from "@/assets/theme";
 import { ThemedText } from "../ThemedText";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 type UserInfo = Partial<Tables<"profiles">>;
 
@@ -166,7 +167,7 @@ export default function UserPage() {
       {<Stack.Screen options={{ title:myProfile ? "Így látnak mások" : "" }} />}
       <ThemedView style={{ flex: 1 }}>
         {data && uid && (
-          <ScrollView contentContainerStyle={{ paddingBottom: myProfile ? 96 : 0 }}>
+          <ScrollView contentContainerStyle={{ paddingBottom: (myProfile ? 96 : 0) + MODE_SWITCH_CLEARANCE }}>
             <ThemedView style={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.xxl, paddingBottom: Spacing.xl, gap: Spacing.xl }}>
               {/* Report / Block buttons */}
               {!myProfile && (

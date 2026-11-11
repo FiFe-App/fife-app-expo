@@ -13,6 +13,7 @@ import UserItem from "../user/UserItem";
 import { RootState } from "@/redux/store";
 import { theme } from "@/assets/theme";
 import { Spacing } from "@/constants/spacing";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 export interface ContactListProps {
   uid: string;
@@ -49,7 +50,7 @@ export function SavedProfiles({ uid, myProfile, name }: ContactListProps) {
     <>
       <ThemedView style={{ flex: 1 }}>
         {contacts.length > 0 && <ThemedText variant="labelLarge" style={{ padding: Spacing.xs, color: theme.colors.secondary, fontWeight: "bold" }}>{myProfile ? "Őket jelölted megbízhatónak" : `Őket jelölte ${name} megbízhatónak`}</ThemedText>
-        }<ScrollView>
+        }<ScrollView contentContainerStyle={{ paddingBottom: MODE_SWITCH_CLEARANCE }}>
           {loading && (
             <View
               style={{ flex: 1, alignItems: "center", justifyContent: "center" }}

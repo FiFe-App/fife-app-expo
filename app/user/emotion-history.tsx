@@ -13,6 +13,7 @@ import { emotionAvailable } from "@/constants/emotionTiming";
 import { Calendar } from "react-native-calendars";
 import { Divider, Icon, IconButton, Surface, TextInput, TouchableRipple } from "react-native-paper";
 import { useKeyboardScrollIntoView } from "@/hooks/useKeyboardScrollIntoView";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 type MarkedDates = Record<
   string,
@@ -131,7 +132,7 @@ export default function EmotionHistoryScreen() {
         ref={scrollRef}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        contentContainerStyle={{ padding: Spacing.md, paddingBottom: Spacing.md + keyboardHeight }}
+        contentContainerStyle={{ padding: Spacing.md, paddingBottom: Spacing.md + keyboardHeight + MODE_SWITCH_CLEARANCE }}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
       >

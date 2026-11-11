@@ -8,6 +8,7 @@ import { dismissInviteCard } from "@/redux/reducers/userReducer";
 import { showDialog } from "@/redux/reducers/infoReducer";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useInviteLink } from "@/hooks/useInviteLink";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 export default function InviteCard() {
   const dispatch = useDispatch();
@@ -31,7 +32,7 @@ export default function InviteCard() {
   };
 
   return (
-    <Surface elevation={5} style={{ borderRadius: BorderRadius.md, position: "absolute", bottom: Spacing.md, left: Spacing.md, right: Spacing.md }}>
+    <Surface elevation={5} style={{ borderRadius: BorderRadius.md, position: "absolute", bottom: Spacing.md + MODE_SWITCH_CLEARANCE, left: Spacing.md, right: Spacing.md }}>
       <View style={{ flexDirection: "row", alignItems: "center" }}>
         <Pressable onPress={handleOpen} style={{ flex: 1, flexDirection: "row", alignItems: "center", paddingLeft: Spacing.md }}>
           <ThemedText variant="bodyLarge" style={{ flex: 1 }}>
