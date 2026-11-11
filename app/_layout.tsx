@@ -47,6 +47,9 @@ import UpdateAvailableCard from "@/components/version/UpdateAvailableCard";
 import InAppMessageDialog from "@/components/InAppMessageDialog";
 import { emotionAvailable } from "@/constants/emotionTiming";
 import { initAnalytics, screenNameFromSegments, trackEvent } from "@/lib/analytics";
+import { modeForPath } from "@/lib/mode/appMode";
+import { useAppLock } from "@/hooks/useAppLock";
+import AppLockScreen from "@/components/AppLockScreen";
 
 initAnalytics();
 
@@ -94,6 +97,10 @@ function RootContent() {
   useLastRoute();
   const { loadFromServer: loadSettings } = useUserSettings();
   const versionGate = useAppVersionGate();
+  // The app-zár guards a signed-in user's own pages; signed out there is
+  // nothing private to hide, and the login wall stays as it is.
+  const appLockEnabled = useSelector((state: RootState) => state.app.appLockEnabled);
+  const appLock = useAppLock(!!appLockEnabled && !!uid);
 
   // Manage Supabase token auto-refresh and offline sync on foreground
   useEffect(() => {
@@ -259,14 +266,19 @@ function RootContent() {
   const isDarkMode =
     userThemePreference === "dark" ||
     (userThemePreference === "auto" && deviceColorScheme === "dark");
-  const theme = getTheme(isDarkMode);
+  // Én (private) and Mi (community) each get their own palette, so the user
+  // can always tell which side of the app they are on.
+  // Signed out (login, registration, a shared biznisz page) the app keeps its
+  // original look — the login wall is not part of either side.
+  const appMode = uid ? modeForPath(pathname) : "en";
+  const theme = getTheme(isDarkMode, appMode);
 
   useEffect(() => {
     if (pathname.includes("csatlakozom") || pathname=="/")
       dispatch(setStatusBarColor(theme.colors.background));
     else
       dispatch(setStatusBarColor(theme.colors.surface));
-  }, [isDarkMode, theme.colors.background, bottomBarColor, dispatch, pathname]);
+  }, [isDarkMode, theme.colors.background, theme.colors.surface, bottomBarColor, dispatch, pathname]);
 
   // A blocked build never reaches the router: an old client talking to a
   // backend it no longer matches is exactly what the gate exists to stop.
@@ -315,7 +327,14 @@ function RootContent() {
             <InfoLayer />
 
             <Stack
-              screenOptions={{ header: (props: NativeStackHeaderProps) => <MyAppbar title={props.options.title} /> }}
+              screenOptions={{
+                header: (props: NativeStackHeaderProps) => <MyAppbar title={props.options.title} />,
+                // Screens left behind in the stack stop re-rendering until they
+                // are shown again. Without it every one of them re-renders when
+                // the Én/Mi theme flips, which is most of what makes the
+                // switch slow once both sides have been visited.
+                freezeOnBlur: true,
+              }}
             >
               <Stack.Protected guard={!!uid}>
                 <Stack.Screen
@@ -376,6 +395,10 @@ function RootContent() {
                   name="user/get-help"
                   options={{ title: "Segítség kell?" }}
                 />
+                <Stack.Screen
+                  name="beallitasok"
+                  options={{ title: "Ezen a telefonon" }}
+                />
               </Stack.Protected>
               <Stack.Protected guard={!uid}>
 
@@ -430,6 +453,7 @@ function RootContent() {
             {!!uid && <InAppMessageDialog />}
           </View>
         </ThemedView>
+        {appLock.locked && <AppLockScreen onUnlock={appLock.unlock} />}
       </SafeAreaView>
     </PaperProvider>
   );

@@ -12,6 +12,7 @@ import {
 import { useMyLocation } from "@/hooks/useMyLocation";
 import Measure from "../tutorial/Measure";
 import { ThemedView } from "../ThemedView";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 interface BuzinessListProps {
   load: () => void;
@@ -129,6 +130,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
+    paddingBottom: MODE_SWITCH_CLEARANCE,
   },
   footer: {
     padding: Spacing.lg,

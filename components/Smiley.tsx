@@ -2,13 +2,18 @@ import { Image } from "expo-image";
 import { useRef } from "react";
 import { Animated, Platform, Pressable, View, ViewStyle } from "react-native";
 import { BorderRadius } from "@/constants/borderRadius";
+import { useAppMode } from "@/lib/mode/appMode";
+
+const enModSmiley = require("@/assets/smiley.gif");
+const miModSmiley = require("@/assets/gifs/community_logo.gif");
 
 const Smiley = ({ style }: { style?: ViewStyle }) => {
   const size = useRef(new Animated.Value(1)).current;
+  const mode = useAppMode();
 
   const handleGrow = () => {
     size.stopAnimation((currentValue: number) => {
-      if (currentValue > 40)
+      if (currentValue > 2)
         Animated.timing(size, {
           toValue: 1,
           duration: 1000,
@@ -40,8 +45,8 @@ const Smiley = ({ style }: { style?: ViewStyle }) => {
       >
         <Pressable onPress={handleGrow}>
           <Image
-            source={require("@/assets/smiley.gif")}
-            style={[{ width: 40, height: 40, zIndex: 20, borderRadius: BorderRadius.sm, }, style]}
+            source={mode == "en" ? enModSmiley : miModSmiley}
+            style={[{ width: 40, height: 40, zIndex: 20, borderRadius: mode == "en" ? BorderRadius.sm : 0 }, style]}
           />
         </Pressable>
       </Animated.View>

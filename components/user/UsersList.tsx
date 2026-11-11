@@ -11,6 +11,7 @@ import { NearestProfile, ProfileSearchResult } from "@/redux/store.type";
 import { ThemedView } from "../ThemedView";
 import { Button } from "../Button";
 import { NO_LOCATION_ERROR, NO_NEARBY_USERS, NO_NEARBY_USERS_HINT } from "@/hooks/useFifeSearch";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 interface UsersListProps {
   load: () => void;
@@ -99,6 +100,7 @@ export const UsersList: React.FC<UsersListProps> = ({
           gap: Spacing.sm,
           marginVertical: Spacing.sm,
           paddingHorizontal: Spacing.md,
+          paddingBottom: MODE_SWITCH_CLEARANCE,
         }}
       />
 

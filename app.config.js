@@ -93,6 +93,12 @@ export default {
       }
     ],
     [
+      "expo-local-authentication",
+      {
+        faceIDPermission: "A FiFe az arcfelismerést az app-zár feloldására használja."
+      }
+    ],
+    [
       "expo-font",
       {
         fonts: [
