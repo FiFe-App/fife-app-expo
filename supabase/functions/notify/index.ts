@@ -498,6 +498,7 @@ const REPORT_TARGET_LABELS: Record<string, string> = {
   group_message: "csoportos üzenet",
   biznisz: "biznisz",
   comment: "komment",
+  request: "kérés",
 };
 
 async function notifyAdminOfReport(supabase: ReturnType<typeof createClient>, record: Record<string, any>) {
@@ -638,6 +639,24 @@ Deno.serve(async (req) => {
             htmlBuilder: (name) => commentHtml(name, authorName, buzinessTitle, buzinessId),
             data: { url: `/biznisz/${buzinessId}` },
           });
+        }
+      } else if (key.startsWith("request/")) {
+        // A comment under a kérés: tell its author. Push only, no email — a busy request can
+        // collect many comments and there is no email template for this one.
+        const requestId = key.replace("request/", "");
+        const [authorRes, requestRes] = await Promise.all([
+          supabase.from("profiles").select("full_name").eq("id", record.author).maybeSingle(),
+          supabase.from("requests").select("author, title").eq("id", requestId).maybeSingle(),
+        ]);
+        const authorName = authorRes.data?.full_name || "Valaki";
+        const request = requestRes.data;
+        if (request && request.author !== record.author) {
+          await sendNotification(
+            supabase,
+            request.author,
+            `${authorName} hozzászólt a kérésedhez: ${request.title}`,
+            { pushOnly: true, data: { url: `/kerelmek/${requestId}` } },
+          );
         }
       }
     } else if (table === "reports") {

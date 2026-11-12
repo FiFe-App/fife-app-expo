@@ -15,7 +15,7 @@ import { TextInput, View, FlatList, Pressable, Text, StyleSheet } from "react-na
 import { useCallback, useRef, useState } from "react";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 
-const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropdown = true, mode = "biznisz" }: { onSearch: (query: string) => void; autoFocus?: boolean; showSuggestionsDropdown?: boolean; mode?: SearchMode }) => {
+const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropdown = true, mode = "biznisz", onFocus, onChangeText }: { onSearch: (query: string) => void; autoFocus?: boolean; showSuggestionsDropdown?: boolean; mode?: SearchMode; onFocus?: () => void; onChangeText?: (text: string) => void }) => {
   const dispatch = useDispatch();
   const theme = useAppTheme();
 
@@ -24,16 +24,23 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
   // buziness query behind /biznisz's "Találatok: …" header, and vice versa.
   const buzinessText = useSelector((state: RootState) => state.buziness.searchParams?.text ?? "");
   const fifeText = useSelector((state: RootState) => state.users.userSearchParams?.text ?? "");
-  const searchText = mode === "fife" ? fifeText : buzinessText;
+  const requestText = useSelector((state: RootState) => state.requests.searchText);
+  const searchText =
+    mode === "fife" ? fifeText : mode === "kerelem" ? requestText : buzinessText;
   const [inputText, setInputText] = useState(searchText);
   const [focused, setFocused] = useState(autoFocus);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const greeting = mode === "fife"
     ? "Keress fifékre (név vagy @felhasználónév)..."
-    : "Keress bizniszekre...";
+    : mode === "kerelem"
+      ? "Keress kérések között..."
+      : "Keress bizniszekre...";
 
   const storeText = useCallback((text: string) => {
+    // A kérések search runs on submit only (each new query costs an embedding), so what is
+    // typed stays here; the search screen hears of it through onChangeText.
+    if (mode === "kerelem") return;
     dispatch(mode === "fife"
       ? storeUserSearchParams({ text })
       : storeBuzinessSearchParams({ text }));
@@ -46,11 +53,12 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
   const handleChangeText = useCallback((text: string) => {
     if (text.includes("$")) return;
     setInputText(text);
+    onChangeText?.(text);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       storeText(text);
     }, 400);
-  }, [storeText]);
+  }, [storeText, onChangeText]);
 
   const handleSelectSuggestion = useCallback((query: string) => {
     setInputText(query);
@@ -66,6 +74,7 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
 
   const handleClear = () => {
     setInputText("");
+    onChangeText?.("");
   };
 
   return (
@@ -82,7 +91,10 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
             style={{ flex: 1, height: 40, fontFamily: "RedHatText", fontWeight: "300", color: theme.colors.onSurface, paddingHorizontal: Spacing.sm }}
             onChangeText={handleChangeText}
             onSubmitEditing={handleSubmit}
-            onFocus={() => setFocused(true)}
+            onFocus={() => {
+              setFocused(true);
+              onFocus?.();
+            }}
             onBlur={() => setTimeout(() => setFocused(false), 150)}
             enterKeyHint="search"
             placeholderTextColor={theme.colors.onSurfaceVariant}

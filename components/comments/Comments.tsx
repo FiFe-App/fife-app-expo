@@ -21,6 +21,7 @@ import {
 } from "react-native";
 import {
   ActivityIndicator,
+  Icon,
   IconButton,
   Menu,
   Modal,
@@ -40,7 +41,7 @@ import { BorderRadius } from "@/constants/borderRadius";
 import ReportContentModal from "../user/ReportContentModal";
 import BlockUserModal from "../user/BlockUserModal";
 
-const Comments = ({ path, placeholder, limit = 10, style, publicComments }: CommentsProps) => {
+const Comments = ({ path, placeholder, limit = 10, style, publicComments, closed, closedText }: CommentsProps) => {
   const dispatch = useDispatch();
   const navigation = router;
   const theme = useTheme();
@@ -403,6 +404,24 @@ const Comments = ({ path, placeholder, limit = 10, style, publicComments }: Comm
           </ThemedText>
         )
       )}
+      {closed ? (
+        <View
+          testID="comments-closed"
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: Spacing.sm,
+            padding: Spacing.md,
+            borderRadius: BorderRadius.md,
+            backgroundColor: theme.colors.surfaceVariant,
+          }}
+        >
+          <Icon source="lock-outline" size={20} color={theme.colors.onSurfaceVariant} />
+          <ThemedText style={{ flex: 1, color: theme.colors.onSurfaceVariant }}>
+            {closedText ?? "A hozzászólás le van zárva."}
+          </ThemedText>
+        </View>
+      ) : (
       <View style={{ flexDirection: "row" }}>
         <View style={{ flex: 1 }}>
           <TextInput
@@ -438,6 +457,7 @@ const Comments = ({ path, placeholder, limit = 10, style, publicComments }: Comm
           />
         </View>
       </View>
+      )}
 
       <Menu
         visible={!!uid && !!menuAnchor}

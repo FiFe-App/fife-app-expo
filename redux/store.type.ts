@@ -142,8 +142,8 @@ export type User = Tables<"profiles"> & {
     profileRecommendations?: { count: number }[];
   };
 
-/** Which of the two searches the search screen is currently driving. */
-export type SearchMode = "biznisz" | "fife";
+/** Which of the searches the search screen is currently driving. */
+export type SearchMode = "biznisz" | "fife" | "kerelem";
 
 /**
  * A profile row as returned by the name/username search.

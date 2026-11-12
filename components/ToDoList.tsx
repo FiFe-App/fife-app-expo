@@ -8,6 +8,7 @@ import { addTask, setTaskReminder, toggleTask } from "@/redux/reducers/userReduc
 import { cancelTaskReminder } from "@/lib/notifications/scheduleTaskReminder";
 import { useExpireTaskReminders } from "@/hooks/useExpireTaskReminders";
 import TaskModal from "./TaskModal";
+import LustaSearchSheet from "./LustaSearchSheet";
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
@@ -33,6 +34,7 @@ export default function ToDoList({ onInputFocus }: ToDoListProps) {
   );
   const [newTitle, setNewTitle] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [helpSearchOpen, setHelpSearchOpen] = useState(false);
   const inputContainerRef = useRef<View>(null);
 
   const handleToggle = (task: TaskItem) => {
@@ -108,6 +110,18 @@ export default function ToDoList({ onInputFocus }: ToDoListProps) {
               key={task.id}
               style={{ flexDirection: "row", alignItems: "center", gap: Spacing.xs }}
             >
+              <TouchableRipple
+                onPress={() => handleToggle(task)}
+                accessibilityLabel={task.checked ? "Visszanyitás" : "Kipipálás"}
+                borderless
+                style={{ borderRadius: BorderRadius.xl, padding: Spacing.xs }}
+              >
+                <Icon
+                  source={task.checked ? "check-circle" : "checkbox-blank-circle-outline"}
+                  size={24}
+                  color={task.checked ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                />
+              </TouchableRipple>
               {/* The row opens the task; only the icon ticks it off. */}
               <TouchableRipple
                 onPress={() => setSelectedId(task.id)}
@@ -144,24 +158,20 @@ export default function ToDoList({ onInputFocus }: ToDoListProps) {
                   )}
                 </View>
               </TouchableRipple>
-              <TouchableRipple
-                onPress={() => handleToggle(task)}
-                accessibilityLabel={task.checked ? "Visszanyitás" : "Kipipálás"}
-                borderless
-                style={{ borderRadius: BorderRadius.xl, padding: Spacing.xs }}
-              >
-                <Icon
-                  source={task.checked ? "check-circle" : "checkbox-blank-circle-outline"}
-                  size={24}
-                  color={task.checked ? theme.colors.primary : theme.colors.onSurfaceVariant}
-                />
-              </TouchableRipple>
             </View>
           );
         })}
       </Surface>
       <Portal>
-        <TaskModal taskId={selectedId} onDismiss={() => setSelectedId(null)} />
+        <TaskModal
+          taskId={selectedId}
+          onDismiss={() => setSelectedId(null)}
+          onAskForHelp={() => {
+            setSelectedId(null);
+            setHelpSearchOpen(true);
+          }}
+        />
+        <LustaSearchSheet visible={helpSearchOpen} onDismiss={() => setHelpSearchOpen(false)} />
       </Portal>
     </View>
   );

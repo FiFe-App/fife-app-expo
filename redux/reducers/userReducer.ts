@@ -8,7 +8,7 @@ type SearchHistoryKey = "previousSearches" | "previousProfileSearches";
 const MAX_PREVIOUS_SEARCHES = 10;
 
 /**
- * The two searches keep separate histories — a fife's name must never surface
+ * The searches keep separate histories — a fife's name must never surface
  * as a biznisz suggestion, and vice versa.
  */
 const searchHistoryKey = (mode: SearchMode): SearchHistoryKey =>
