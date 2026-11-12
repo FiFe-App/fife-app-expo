@@ -23,7 +23,6 @@ import * as ExpoImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   HelperText,
   Icon,
@@ -32,16 +31,17 @@ import {
   Modal,
   Portal,
   SegmentedButtons,
-  Surface,
   Text,
   TextInput,
   TouchableRipple,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "../Button";
-import { useKeyboardHeight } from "../KeyboardAwareModal";
+import { KeyboardAwareModal, useKeyboardHeight } from "../KeyboardAwareModal";
+import { ModalCard, modalContainerStyle } from "../ModalCard";
 import FiFeMap from "../mapView/FiFeMap";
 import { Marker } from "../mapView/mapView";
+import ProfileImage from "../ProfileImage";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 
@@ -49,10 +49,11 @@ import { ThemedView } from "../ThemedView";
  * The form. One input is enough to ask something; everything else sits in a collapsed
  * accordion. Mounted only while the sheet is open, so every opening starts from a clean form.
  */
-const NewRequestForm = ({ initialTitle }: { initialTitle: string }) => {
+const NewRequestForm = ({ initialTitle, onClose }: { initialTitle: string; onClose: () => void }) => {
   const theme = useAppTheme();
   const dispatch = useDispatch();
   const uid = useSelector((state: RootState) => state.user.uid);
+  const avatarUrl = useSelector((state: RootState) => state.user.userData?.avatar_url);
   const { myLocation } = useMyLocation();
 
   const [title, setTitle] = useState(initialTitle);
@@ -164,37 +165,27 @@ const NewRequestForm = ({ initialTitle }: { initialTitle: string }) => {
 
   return (
     <>
-      <View
-        style={{
-          alignSelf: "flex-start",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: Spacing.sm,
-          paddingHorizontal: Spacing.md,
-          paddingVertical: Spacing.sm,
-          borderRadius: BorderRadius.full,
-          backgroundColor: theme.colors.secondaryContainer,
-        }}
-      >
-        <Icon source="hand-heart-outline" size={18} color={theme.colors.onSecondaryContainer} />
-        <ThemedText
-          variant="labelLarge"
-          type="bold"
-          style={{ color: theme.colors.onSecondaryContainer }}
-        >
-          Új kérés
-        </ThemedText>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
+        <ProfileImage
+          uid={uid ?? ""}
+          avatar_url={avatarUrl}
+          style={{ width: 40, height: 40, borderRadius: BorderRadius.md }}
+        />
+        <View style={{ flex: 1 }}>
+          <ThemedText type="bold">Új kérés</ThemedText>
+          <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+            Elég egy mondat, a részleteket később is hozzáadhatod.
+          </Text>
+        </View>
+        <IconButton
+          testID="request-close"
+          icon="close"
+          accessibilityLabel="Bezárás"
+          onPress={onClose}
+        />
       </View>
 
-      <View style={{ gap: Spacing.xs }}>
-        <ThemedText type="title" style={{ fontFamily: "Piazzolla-ExtraBold", fontSize: 28, lineHeight: 34 }}>
-          Miben segítsen a közösség?
-        </ThemedText>
-        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-          Elég egy mondat. A részleteket később is hozzáadhatod.
-        </Text>
-      </View>
-
+      {/* Styled like the prompt on the community screen it was opened from. */}
       <TextInput
         testID="request-title"
         mode="outlined"
@@ -202,12 +193,11 @@ const NewRequestForm = ({ initialTitle }: { initialTitle: string }) => {
         value={title}
         onChangeText={setTitle}
         maxLength={REQUEST_LIMITS.titleMax}
-        placeholder="pl. kertészt keresek Újpesten"
+        placeholder="Miben segítsen a közösség?"
         returnKeyType="done"
         onSubmitEditing={save}
-        left={<TextInput.Icon icon="magnify" />}
-        outlineStyle={{ borderRadius: BorderRadius.full, borderWidth: 2 }}
-        style={{ backgroundColor: theme.colors.surface }}
+        outlineStyle={{ borderRadius: BorderRadius.full, borderWidth: 1 }}
+        style={{ backgroundColor: theme.colors.background }}
       />
 
       <List.Accordion
@@ -371,14 +361,15 @@ const NewRequestForm = ({ initialTitle }: { initialTitle: string }) => {
 };
 
 /**
- * "Új kérés": a bottom sheet, opened from anywhere with openRequestComposer(). Mounted once at
- * the root, so a screen only has to dispatch.
+ * "Új kérés": a centered modal, opened from anywhere with openRequestComposer(). The community
+ * screen's post-style prompt (RequestComposerPrompt) opens it, and the title input inside is
+ * styled like that prompt, so the field reads as the same one, grown. Mounted once at the root,
+ * so a screen only has to dispatch.
  */
-export const NewRequestSheet = () => {
+export const NewRequestModal = () => {
   const dispatch = useDispatch();
   const uid = useSelector((state: RootState) => state.user.uid);
   const { open, initialTitle } = useSelector((state: RootState) => state.requests.composer);
-  const { bottom } = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight();
   const { height: windowHeight } = useWindowDimensions();
 
@@ -387,48 +378,24 @@ export const NewRequestSheet = () => {
   const close = () => dispatch(closeRequestComposer());
 
   return (
-    <Portal>
-      <Modal
-        visible={open}
-        onDismiss={close}
-        // Paper keeps its modal clear of the bottom safe area, which would leave a gap under
-        // the sheet: the sheet pads for the inset (or the keyboard) itself instead.
-        style={{ marginBottom: 0, justifyContent: "flex-end" }}
-        contentContainerStyle={{ margin: 0 }}
+    <KeyboardAwareModal
+      visible={open}
+      onDismiss={close}
+      contentContainerStyle={modalContainerStyle}
+    >
+      <ModalCard
+        testID="new-request-modal"
+        style={{ maxHeight: (windowHeight - keyboardHeight) * 0.9, padding: 0 }}
       >
-        <Surface
-          testID="new-request-sheet"
-          elevation={1}
-          style={{
-            borderTopLeftRadius: BorderRadius.xl * 2,
-            borderTopRightRadius: BorderRadius.xl * 2,
-            maxHeight: windowHeight * 0.92,
-          }}
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ gap: Spacing.lg, padding: Spacing.lg }}
         >
-          <View
-            style={{
-              alignSelf: "center",
-              width: 48,
-              height: 5,
-              borderRadius: BorderRadius.full,
-              marginTop: Spacing.md,
-              backgroundColor: "#7F7F7F55",
-            }}
-          />
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{
-              gap: Spacing.lg,
-              padding: Spacing.xl,
-              paddingBottom: Spacing.xl + Math.max(bottom, keyboardHeight),
-            }}
-          >
-            <NewRequestForm initialTitle={initialTitle} />
-          </ScrollView>
-        </Surface>
-      </Modal>
-    </Portal>
+          <NewRequestForm initialTitle={initialTitle} onClose={close} />
+        </ScrollView>
+      </ModalCard>
+    </KeyboardAwareModal>
   );
 };
 
-export default NewRequestSheet;
+export default NewRequestModal;

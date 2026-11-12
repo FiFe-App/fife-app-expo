@@ -63,15 +63,6 @@ export const RequestsForYou = () => {
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
           <Pressable
-            testID="requests-new"
-            onPress={() => dispatch(openRequestComposer())}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Új kérés"
-          >
-            <Icon size={22} color={theme.colors.primary} source="plus-circle-outline" />
-          </Pressable>
-          <Pressable
             testID="requests-all"
             onPress={openAll}
             style={{ flexDirection: "row", alignItems: "center", gap: Spacing.xs }}

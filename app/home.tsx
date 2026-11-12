@@ -1,5 +1,6 @@
 import { useFocusEffect } from "expo-router";
 import { FiFeRadar } from "@/components/user/FiFeRadar";
+import RequestComposerPrompt from "@/components/requests/RequestComposerPrompt";
 import RequestsForYou from "@/components/requests/RequestsForYou";
 import { ThemedView } from "@/components/ThemedView";
 import { Spacing } from "@/constants/spacing";
@@ -16,7 +17,7 @@ import { useFifeSearch } from "@/hooks/useFifeSearch";
 import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 /**
- * Környék: the FiFe Radar (who is around) and, below it, the requests that suit the user.
+ * Környék: the FiFe Radar (who is around), a post-style prompt to ask for something, and the requests that suit the user.
  * Browsing bizniszek lives on the search screen.
  */
 export default function Index() {
@@ -69,6 +70,7 @@ export default function Index() {
           loading={loading}
           error={error}
         />
+        <RequestComposerPrompt />
         <RequestsForYou />
       </ScrollView>
       <InviteCard />

@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
-import NewRequestSheet from "@/components/requests/NewRequestSheet";
+import NewRequestModal from "@/components/requests/NewRequestModal";
 import { login } from "@/redux/reducers/userReducer";
 import {
   closeRequestComposer,
@@ -12,10 +12,11 @@ import { createTestStore, renderWithProviders } from "@/test-utils/renderWithPro
 
 jest.mock("expo-router", () => require("@/test-utils/mocks/expo-router"));
 jest.mock("@/lib/supabase/supabase", () => require("@/test-utils/mocks/supabase"));
-// The map and the keyboard are native; the sheet only needs them to exist.
+// The map and the keyboard are native; the modal only needs them to exist.
 jest.mock("@/components/KeyboardAwareModal", () => ({
   useKeyboardHeight: () => 0,
-  KeyboardAwareModal: ({ children }: { children: React.ReactNode }) => children,
+  KeyboardAwareModal: ({ visible, children }: { visible: boolean; children: React.ReactNode }) =>
+    visible ? children : null,
 }));
 jest.mock("@/components/MapSelector/MapSelector", () => () => null);
 jest.mock("@/components/mapView/FiFeMap", () => () => null);
@@ -42,9 +43,9 @@ const respondWithCreated = (id: number) =>
     return builder;
   });
 
-describe("NewRequestSheet", () => {
+describe("NewRequestModal", () => {
   it("is closed until something opens it", async () => {
-    await renderWithProviders(<NewRequestSheet />, { store: signedIn() });
+    await renderWithProviders(<NewRequestModal />, { store: signedIn() });
 
     expect(screen.queryByTestId("request-title")).toBeNull();
   });
@@ -52,7 +53,7 @@ describe("NewRequestSheet", () => {
   it("opens with only the title input and the details folded", async () => {
     const store = signedIn();
     store.dispatch(openRequestComposer());
-    await renderWithProviders(<NewRequestSheet />, { store });
+    await renderWithProviders(<NewRequestModal />, { store });
 
     expect(await screen.findByTestId("request-title")).toBeTruthy();
     expect(screen.getByText("További részletek")).toBeTruthy();
@@ -62,7 +63,7 @@ describe("NewRequestSheet", () => {
   it("copies the searched text into the title", async () => {
     const store = signedIn();
     store.dispatch(openRequestComposer("  fúrógép kell "));
-    await renderWithProviders(<NewRequestSheet />, { store });
+    await renderWithProviders(<NewRequestModal />, { store });
 
     expect((await screen.findByTestId("request-title")).props.value).toBe("fúrógép kell");
   });
@@ -70,7 +71,7 @@ describe("NewRequestSheet", () => {
   it("needs a title of at least 3 characters to submit", async () => {
     const store = signedIn();
     store.dispatch(openRequestComposer("ab"));
-    await renderWithProviders(<NewRequestSheet />, { store });
+    await renderWithProviders(<NewRequestModal />, { store });
 
     const submit = await screen.findByTestId("request-submit");
     expect(submit.props.accessibilityState?.disabled).toBe(true);
@@ -85,7 +86,7 @@ describe("NewRequestSheet", () => {
     respondWithCreated(77);
     const store = signedIn();
     store.dispatch(openRequestComposer("Kertészt keresek"));
-    await renderWithProviders(<NewRequestSheet />, { store });
+    await renderWithProviders(<NewRequestModal />, { store });
 
     await fireEvent.press(await screen.findByTestId("request-submit"));
 
@@ -110,7 +111,7 @@ describe("NewRequestSheet", () => {
   it("starts from a clean form every time it opens", async () => {
     const store = signedIn();
     store.dispatch(openRequestComposer("régi szöveg"));
-    await renderWithProviders(<NewRequestSheet />, { store });
+    await renderWithProviders(<NewRequestModal />, { store });
     await screen.findByTestId("request-title");
 
     store.dispatch(closeRequestComposer());
@@ -123,7 +124,7 @@ describe("NewRequestSheet", () => {
   it("renders nothing for a signed-out visitor", async () => {
     const store = createTestStore();
     store.dispatch(openRequestComposer("x"));
-    await renderWithProviders(<NewRequestSheet />, { store });
+    await renderWithProviders(<NewRequestModal />, { store });
 
     expect(screen.queryByTestId("request-title")).toBeNull();
   });

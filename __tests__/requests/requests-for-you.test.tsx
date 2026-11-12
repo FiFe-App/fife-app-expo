@@ -38,16 +38,6 @@ describe("RequestsForYou (community screen strip)", () => {
     );
   });
 
-  it("opens the new-request sheet from the + button", async () => {
-    supabase.rpc.mockResolvedValue({ data: [], error: null });
-    const store = signedIn();
-    await renderWithProviders(<RequestsForYou />, { store });
-
-    await fireEvent.press(screen.getByTestId("requests-new"));
-
-    expect(store.getState().requests.composer.open).toBe(true);
-  });
-
   it("invites the user to ask when there is nothing nearby", async () => {
     supabase.rpc.mockResolvedValue({ data: [], error: null });
     const store = signedIn();
