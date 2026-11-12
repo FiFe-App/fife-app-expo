@@ -11,7 +11,10 @@ const DEFAULT_LOCATION = { lat: 47.4979, long: 19.0402 };
  * without text search. Uses local state so the biznisz page's redux-backed
  * results stay untouched. Paginates in pages of `take` so the home screen can
  * load more on scroll. */
-export function useNearbyBuzinesses(take = 5) {
+export function useNearbyBuzinesses(
+  take = 5,
+  { personalised = true }: { personalised?: boolean } = {},
+) {
   const { myLocation } = useMyLocation();
 
   // Profile location as fallback when GPS is not available
@@ -21,7 +24,9 @@ export function useNearbyBuzinesses(take = 5) {
 
   // The user's interest tags. The server ORs them together and sorts the matching
   // listings to the front, so this is what makes the opening list personal.
-  const interests = useSelector((state: RootState) => state.user.interests);
+  const storedInterests = useSelector((state: RootState) => state.user.interests);
+  // The search screen lists what is new with no "for you" ordering: it passes personalised: false.
+  const interests = personalised ? storedInterests : undefined;
 
   const [data, setData] = useState<BuzinessSearchItemInterface[]>([]);
   const [loading, setLoading] = useState(false);

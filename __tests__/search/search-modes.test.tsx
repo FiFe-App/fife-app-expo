@@ -7,6 +7,8 @@ import {
 } from "@/redux/reducers/userReducer";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { storeRequestSearchText } from "@/redux/reducers/requestsReducer";
+import { setInterests } from "@/redux/reducers/userReducer";
+import { makeRequest } from "@/test-utils/fixtures/requests";
 import { SearchMode } from "@/redux/store.type";
 import {
   __resetRouter,
@@ -43,7 +45,8 @@ const history = (store: TestStore) => ({
 beforeEach(() => {
   __resetRouter();
   __resetSupabase();
-  __setLocalSearchParams({});
+  // Opened from a search box, which always passes its mode: the screen is for searching.
+  __setLocalSearchParams({ mode: "biznisz" });
 });
 
 describe("search screen modes", () => {
@@ -237,5 +240,65 @@ describe("addPreviousSearch / removeFromPreviousSearches", () => {
     store.dispatch(removeFromPreviousSearches({ query: "Pista", mode: "fife" }));
 
     expect(history(store)).toEqual({ biznisz: ["Pista"], fife: [] });
+  });
+});
+
+describe("search screen opened from the menu", () => {
+  beforeEach(() => {
+    // The Keresés tab opens /search with no mode.
+    __setLocalSearchParams({});
+  });
+
+  const rows = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      id: i + 1,
+      title: `Új biznisz ${i + 1} $ címke`,
+      description: "leírás",
+      author: "other",
+      created_at: new Date().toISOString(),
+      images: [],
+      recommendations: 0,
+    }));
+
+  it("lists the new bizniszek with an empty, non-personalised search", async () => {
+    supabase.functions.invoke.mockResolvedValue({ data: rows(2), error: null });
+    const store = withRecentSearch("régi keresés");
+    store.dispatch(setInterests(["kert"]));
+    await renderWithProviders(<SearchScreen />, { store });
+
+    await waitFor(() => expect(screen.getByText("Új biznisz 1")).toBeTruthy());
+    expect(screen.getByText("Új bizniszek")).toBeTruthy();
+    expect(supabase.functions.invoke).toHaveBeenCalledWith(
+      "business-search",
+      expect.objectContaining({
+        body: expect.objectContaining({ query: "", interests: [] }),
+      }),
+    );
+  });
+
+  it("does not show the search history until the user starts searching", async () => {
+    supabase.functions.invoke.mockResolvedValue({ data: [], error: null });
+    await renderWithProviders(<SearchScreen />, { store: withRecentSearch("régi keresés") });
+
+    expect(screen.queryByText("Korábbi kereséseid")).toBeNull();
+    expect(screen.queryByText("régi keresés")).toBeNull();
+  });
+
+  it("lists the newest requests in kérések mode", async () => {
+    supabase.functions.invoke.mockResolvedValue({ data: [], error: null });
+    supabase.rpc.mockResolvedValue({
+      data: [makeRequest({ id: 3, title: "Fúrógép kell" })],
+      error: null,
+    });
+    await renderWithProviders(<SearchScreen />, { store: withRecentSearch("régi keresés") });
+
+    await fireEvent.press(screen.getByTestId("search-mode-kerelem"));
+
+    await waitFor(() => expect(screen.getByText("Fúrógép kell")).toBeTruthy());
+    expect(screen.getByText("Új kérések")).toBeTruthy();
+    expect(supabase.rpc).toHaveBeenCalledWith(
+      "requests_feed",
+      expect.objectContaining({ p_scope: "all" }),
+    );
   });
 });

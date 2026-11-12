@@ -256,3 +256,5 @@ Korlátok, amiket a tervezésnél figyelembe kell venni:
 - **Bottom nav**: 1 px × 36 px vonal, a két oldalán 12 px margó.
 - **Szűrők sorrendje**: Mind (alapértelmezett), Neked, Saját, Megoldott.
 - **Új kérés**: nem külön oldal, hanem bottom sheet (`NewRequestSheet`, a gyökérben egyszer felcsatolva, `openRequestComposer()`-rel nyitható). Egyetlen cím-input; a leírás, képek, hely és kulcsszavak a lecsukott "További részletek" accordionban vannak. Három karakter cím elég a beküldéshez. A keresésben ("Kérések" mód) a beírt szövegből "Új kérés: „…”" sor nyitja meg a sheetet kitöltött címmel; a találati listán a FAB és az üres állapot gombja is átviszi a keresett szöveget.
+- **Környék (home)**: a bizniszek kikerültek innen. A FiFe Radar alatt a "Kérések neked" függőleges kártyák állnak (legfeljebb 6, alattuk "Összes kérés"), nem vízszintes sor.
+- **Keresés fül**: menüből nyitva (nincs `mode` a route-ban) böngésző nézet: nincs billentyűzet, nincs előzmény, az új bizniszek (vagy "Kérések" módban az új kérések) listája, "neked" sorrend nélkül. A keresődobozba koppintva (vagy a Fake keresőmezőből nyitva) a megszokott keresés jön.

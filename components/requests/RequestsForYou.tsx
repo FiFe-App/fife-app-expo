@@ -5,7 +5,7 @@ import { openRequestComposer, storeRequestSearchText } from "@/redux/reducers/re
 import { RootState } from "@/redux/store";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
-import { FlatList, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { ActivityIndicator, Icon } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "../Button";
@@ -16,7 +16,7 @@ import RequestCard from "./RequestCard";
 const STRIP_SIZE = 6;
 
 /**
- * "Kérések neked": the strip at the very top of the community screen. The server puts the
+ * "Kérések neked": the section under the FiFe Radar on the community screen. The server puts the
  * requests that fit the user's bizniszek first and keeps them to the user's surroundings.
  * "Mind" opens the full list; with nothing to show it invites the user to ask for something.
  */
@@ -35,6 +35,12 @@ export const RequestsForYou = () => {
   );
 
   if (!uid) return null;
+
+  const openAll = () => {
+    // This section is not a search: don't open the list behind a leftover query.
+    dispatch(storeRequestSearchText(""));
+    router.push("/kerelmek");
+  };
 
   const empty = fetched && !loading && !error && data.length === 0;
 
@@ -67,11 +73,7 @@ export const RequestsForYou = () => {
           </Pressable>
           <Pressable
             testID="requests-all"
-            onPress={() => {
-              // The strip is not a search: don't open the list behind a leftover query.
-              dispatch(storeRequestSearchText(""));
-              router.push("/kerelmek");
-            }}
+            onPress={openAll}
             style={{ flexDirection: "row", alignItems: "center", gap: Spacing.xs }}
           >
             <ThemedText variant="labelMedium" type="bold" style={{ color: theme.colors.primary }}>
@@ -98,29 +100,23 @@ export const RequestsForYou = () => {
           </Button>
         </View>
       ) : (
-        <FlatList
-          horizontal
-          data={data}
-          keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => (
+        <View style={{ gap: Spacing.sm, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm }}>
+          {data.map((item) => (
             <RequestCard
+              key={item.id}
               data={item}
-              compact
               onDeleted={remove}
+              onBlocked={() => load("for_me")}
+              onSolved={remove}
             />
+          ))}
+          {loading && data.length === 0 && <ActivityIndicator style={{ marginVertical: Spacing.lg }} />}
+          {data.length >= STRIP_SIZE && (
+            <Button mode="contained-tonal" onPress={openAll}>
+              Összes kérés
+            </Button>
           )}
-          contentContainerStyle={{
-            gap: Spacing.sm,
-            paddingHorizontal: Spacing.md,
-            paddingVertical: Spacing.sm,
-          }}
-          showsHorizontalScrollIndicator={false}
-          ListFooterComponent={
-            loading && data.length === 0 ? (
-              <ActivityIndicator style={{ alignSelf: "center", marginHorizontal: Spacing.lg }} />
-            ) : null
-          }
-        />
+        </View>
       )}
     </View>
   );

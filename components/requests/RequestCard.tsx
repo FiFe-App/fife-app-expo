@@ -19,8 +19,6 @@ import RequestMenu from "./RequestMenu";
 
 interface RequestCardProps {
   data: RequestItem;
-  /** Small card for the horizontal strip on the community screen. */
-  compact?: boolean;
   onDeleted?: (id: number) => void;
   onBlocked?: (author: string) => void;
   onSolved?: (id: number) => void;
@@ -59,7 +57,7 @@ export const RequestBadges = ({
 };
 
 const RequestCard = memo(
-  ({ data, compact, onDeleted, onBlocked, onSolved }: RequestCardProps) => {
+  ({ data, onDeleted, onBlocked, onSolved }: RequestCardProps) => {
     const theme = useAppTheme();
     const uid = useSelector((state: RootState) => state.user.uid);
     const solved = data.status === "solved";
@@ -70,7 +68,7 @@ const RequestCard = memo(
 
     const card = (
       <Surface
-        style={[styles.container, compact && styles.compact, solved && { opacity: 0.8 }]}
+        style={[styles.container, solved && { opacity: 0.8 }]}
         elevation={2}
         mode="flat"
       >
@@ -92,25 +90,23 @@ const RequestCard = memo(
               {age} · {place}
             </Text>
           </View>
-          {!compact && (
-            <RequestMenu
-              request={data}
-              onDeleted={() => onDeleted?.(data.id)}
-              onBlocked={() => onBlocked?.(data.author)}
-              onSolved={() => onSolved?.(data.id)}
-            />
-          )}
+          <RequestMenu
+            request={data}
+            onDeleted={() => onDeleted?.(data.id)}
+            onBlocked={() => onBlocked?.(data.author)}
+            onSolved={() => onSolved?.(data.id)}
+          />
         </View>
 
         <View style={{ gap: Spacing.xs }}>
-          <Text variant="titleMedium" numberOfLines={compact ? 2 : 3}>
+          <Text variant="titleMedium" numberOfLines={3}>
             {data.title}
           </Text>
           <RequestBadges solved={solved} match={!!data.is_match && !mine} />
           {!!data.description && (
             <Text
               variant="bodyMedium"
-              numberOfLines={compact ? 2 : 4}
+              numberOfLines={4}
               ellipsizeMode="tail"
               style={{ color: theme.colors.onSurfaceVariant }}
             >
@@ -119,7 +115,7 @@ const RequestCard = memo(
           )}
         </View>
 
-        {!compact && !!firstImage && (
+        {!!firstImage && (
           <View style={styles.imageWrap}>
             <SupabaseImage
               bucket={REQUESTS_BUCKET}
@@ -138,7 +134,7 @@ const RequestCard = memo(
           </View>
         )}
 
-        {!compact && data.tags?.length > 0 && (
+        {data.tags?.length > 0 && (
           <View style={styles.tags}>
             {data.tags.map((tag) => (
               <CategoryChip key={tag}>{tag}</CategoryChip>
@@ -150,7 +146,6 @@ const RequestCard = memo(
           <MetaStat icon="comment-outline">
             {data.comment_count > 0 ? `${data.comment_count} hozzászólás` : "Hozzászólok"}
           </MetaStat>
-          {compact && !!firstImage && <MetaStat icon="image">kép</MetaStat>}
         </View>
       </Surface>
     );
@@ -175,10 +170,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
     gap: Spacing.sm,
-  },
-  compact: {
-    width: 260,
-    flex: 1,
   },
   header: {
     flexDirection: "row",

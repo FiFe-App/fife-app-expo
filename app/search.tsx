@@ -4,6 +4,10 @@ import { ThemedText } from "@/components/ThemedText";
 import { Spacing } from "@/constants/spacing";
 import { useAppTheme } from "@/assets/theme";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
+import { useNearbyBuzinesses } from "@/hooks/useNearbyBuzinesses";
+import { useRequests } from "@/hooks/useRequests";
+import BuzinessItem from "@/components/buziness/BuzinessItem";
+import RequestCard from "@/components/requests/RequestCard";
 import { openRequestComposer } from "@/redux/reducers/requestsReducer";
 import { removeFromPreviousSearches } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
@@ -11,7 +15,7 @@ import { SearchMode } from "@/redux/store.type";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, View } from "react-native";
-import { Chip, Icon } from "react-native-paper";
+import { ActivityIndicator, Chip, Icon } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { MyAppbar } from "@/components/MyAppBar";
 import { runSearch } from "@/lib/search/runSearch";
@@ -61,6 +65,21 @@ export default function SearchScreen() {
 
   const suggestions = useSearchSuggestions(searchText, mode === "biznisz");
 
+  // Opened from the menu (no mode in the route) the screen is for browsing: no keyboard, no
+  // history, just what is new. Opened from a search box (FakeSearchInput always passes a mode),
+  // or once the user taps into the box, it is for searching.
+  const [engaged, setEngaged] = useState(isMode(params.mode));
+  const browsing = !engaged;
+  const browseBizniszek = useNearbyBuzinesses(10, { personalised: false });
+  const browseRequests = useRequests(10);
+  const { fetch: fetchNewBizniszek } = browseBizniszek;
+  const { load: loadNewRequests } = browseRequests;
+  useEffect(() => {
+    if (!browsing) return;
+    if (mode === "biznisz") fetchNewBizniszek();
+    if (mode === "kerelem") loadNewRequests("all");
+  }, [browsing, mode, fetchNewBizniszek, loadNewRequests]);
+
   const handleSearch = useCallback((query: string) => {
     runSearch(dispatch, query, mode, "replace");
   }, [dispatch, mode]);
@@ -70,12 +89,12 @@ export default function SearchScreen() {
       header: () => (
         <MyAppbar
           // key re-seeds the input's local text from the other slice on a flip.
-          center={<BuzinessSearchInput key={mode} mode={mode} onSearch={handleSearch} autoFocus showSuggestionsDropdown={false} />}
+          center={<BuzinessSearchInput key={mode} mode={mode} onSearch={handleSearch} autoFocus={engaged} onFocus={() => setEngaged(true)} showSuggestionsDropdown={false} />}
           style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }}
         />
       ),
     });
-  }, [navigation, handleSearch, mode]);
+  }, [navigation, handleSearch, mode, engaged]);
 
   const listData = useMemo<ListItem[]>(() => {
     const prev = (previousSearches ?? []).filter((q) =>
@@ -132,7 +151,87 @@ export default function SearchScreen() {
           );
         })}
       </ThemedView>
-      {mode === "kerelem" && !!searchText.trim() && (
+      {browsing && mode === "biznisz" && (
+        <FlatList
+          testID="search-browse-bizniszek"
+          data={browseBizniszek.data}
+          keyExtractor={(item) => String(item.id)}
+          onEndReachedThreshold={0.6}
+          onEndReached={browseBizniszek.fetchNextPage}
+          contentContainerStyle={{
+            padding: Spacing.md,
+            gap: Spacing.sm,
+            paddingBottom: MODE_SWITCH_CLEARANCE + Spacing.md,
+          }}
+          ListHeaderComponent={
+            <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>
+              Új bizniszek
+            </ThemedText>
+          }
+          renderItem={({ item }) => <BuzinessItem data={item} />}
+          ListFooterComponent={
+            browseBizniszek.loading ? <ActivityIndicator style={{ marginVertical: Spacing.lg }} /> : null
+          }
+          ListEmptyComponent={
+            browseBizniszek.error ? (
+              <ThemedText type="error" style={{ textAlign: "center" }}>{browseBizniszek.error}</ThemedText>
+            ) : browseBizniszek.fetched && !browseBizniszek.loading ? (
+              <ThemedText style={{ textAlign: "center", padding: Spacing.lg }}>
+                Még nincs biznisz.
+              </ThemedText>
+            ) : null
+          }
+        />
+      )}
+      {browsing && mode === "kerelem" && (
+        <FlatList
+          testID="search-browse-requests"
+          data={browseRequests.data}
+          keyExtractor={(item) => String(item.id)}
+          onEndReachedThreshold={0.6}
+          onEndReached={browseRequests.loadMore}
+          contentContainerStyle={{
+            padding: Spacing.md,
+            gap: Spacing.sm,
+            paddingBottom: MODE_SWITCH_CLEARANCE + Spacing.md,
+          }}
+          ListHeaderComponent={
+            <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>
+              Új kérések
+            </ThemedText>
+          }
+          renderItem={({ item }) => (
+            <RequestCard
+              data={item}
+              onDeleted={browseRequests.remove}
+              onSolved={browseRequests.remove}
+            />
+          )}
+          ListFooterComponent={
+            browseRequests.loading ? <ActivityIndicator style={{ marginVertical: Spacing.lg }} /> : null
+          }
+          ListEmptyComponent={
+            browseRequests.error ? (
+              <ThemedText type="error" style={{ textAlign: "center" }}>{browseRequests.error}</ThemedText>
+            ) : browseRequests.fetched && !browseRequests.loading ? (
+              <ThemedText style={{ textAlign: "center", padding: Spacing.lg }}>
+                Még nincs kérés.
+              </ThemedText>
+            ) : null
+          }
+        />
+      )}
+      {browsing && mode === "fife" && (
+        <View style={{ padding: Spacing.lg }}>
+          <ThemedText
+            variant="labelMedium"
+            style={{ color: theme.colors.onSurfaceVariant, textAlign: "center" }}
+          >
+            Írd be egy fife nevét vagy @felhasználónevét.
+          </ThemedText>
+        </View>
+      )}
+      {!browsing && mode === "kerelem" && !!searchText.trim() && (
         // Nobody asked for this yet? The typed text becomes the title of a new request.
         <Pressable
           testID="search-new-request"
@@ -156,6 +255,7 @@ export default function SearchScreen() {
           </ThemedText>
         </Pressable>
       )}
+      {!browsing && (
       <FlatList
         data={listData}
         keyExtractor={(item, i) => item.kind + (item.kind === "section" ? item.label : item.query) + i}
@@ -219,6 +319,7 @@ export default function SearchScreen() {
           );
         }}
       />
+      )}
     </ThemedView>
   );
 }

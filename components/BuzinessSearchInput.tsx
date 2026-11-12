@@ -16,7 +16,7 @@ import { TextInput, View, FlatList, Pressable, Text, StyleSheet } from "react-na
 import { useCallback, useRef, useState } from "react";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 
-const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropdown = true, mode = "biznisz" }: { onSearch: (query: string) => void; autoFocus?: boolean; showSuggestionsDropdown?: boolean; mode?: SearchMode }) => {
+const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropdown = true, mode = "biznisz", onFocus }: { onSearch: (query: string) => void; autoFocus?: boolean; showSuggestionsDropdown?: boolean; mode?: SearchMode; onFocus?: () => void }) => {
   const dispatch = useDispatch();
   const theme = useAppTheme();
 
@@ -91,7 +91,10 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
             style={{ flex: 1, height: 40, fontFamily: "RedHatText", fontWeight: "300", color: theme.colors.onSurface, paddingHorizontal: Spacing.sm }}
             onChangeText={handleChangeText}
             onSubmitEditing={handleSubmit}
-            onFocus={() => setFocused(true)}
+            onFocus={() => {
+              setFocused(true);
+              onFocus?.();
+            }}
             onBlur={() => setTimeout(() => setFocused(false), 150)}
             enterKeyHint="search"
             placeholderTextColor={theme.colors.onSurfaceVariant}
