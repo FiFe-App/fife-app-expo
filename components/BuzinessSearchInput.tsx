@@ -4,7 +4,6 @@ import {
   storeBuzinessSearchParams
 } from "@/redux/reducers/buzinessReducer";
 import { storeUserSearchParams } from "@/redux/reducers/usersReducer";
-import { storeRequestSearchText } from "@/redux/reducers/requestsReducer";
 import { RootState } from "@/redux/store";
 import { SearchMode } from "@/redux/store.type";
 import { Icon, TouchableRipple } from "react-native-paper";
@@ -16,7 +15,7 @@ import { TextInput, View, FlatList, Pressable, Text, StyleSheet } from "react-na
 import { useCallback, useRef, useState } from "react";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 
-const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropdown = true, mode = "biznisz", onFocus }: { onSearch: (query: string) => void; autoFocus?: boolean; showSuggestionsDropdown?: boolean; mode?: SearchMode; onFocus?: () => void }) => {
+const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropdown = true, mode = "biznisz", onFocus, onChangeText }: { onSearch: (query: string) => void; autoFocus?: boolean; showSuggestionsDropdown?: boolean; mode?: SearchMode; onFocus?: () => void; onChangeText?: (text: string) => void }) => {
   const dispatch = useDispatch();
   const theme = useAppTheme();
 
@@ -39,10 +38,9 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
       : "Keress bizniszekre...";
 
   const storeText = useCallback((text: string) => {
-    if (mode === "kerelem") {
-      dispatch(storeRequestSearchText(text));
-      return;
-    }
+    // A kérések search runs on submit only (each new query costs an embedding), so what is
+    // typed stays here; the search screen hears of it through onChangeText.
+    if (mode === "kerelem") return;
     dispatch(mode === "fife"
       ? storeUserSearchParams({ text })
       : storeBuzinessSearchParams({ text }));
@@ -55,11 +53,12 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
   const handleChangeText = useCallback((text: string) => {
     if (text.includes("$")) return;
     setInputText(text);
+    onChangeText?.(text);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       storeText(text);
     }, 400);
-  }, [storeText]);
+  }, [storeText, onChangeText]);
 
   const handleSelectSuggestion = useCallback((query: string) => {
     setInputText(query);
@@ -75,6 +74,7 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
 
   const handleClear = () => {
     setInputText("");
+    onChangeText?.("");
   };
 
   return (

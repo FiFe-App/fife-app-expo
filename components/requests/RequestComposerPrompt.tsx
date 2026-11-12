@@ -61,7 +61,7 @@ export const RequestComposerPrompt = () => {
           numberOfLines={1}
           style={{ flex: 1, color: theme.colors.onSurfaceVariant, fontFamily: "RedHatText" }}
         >
-          Miben segítsen a közösség?
+          Kell valamiben segítség?
         </Text>
         <Icon source="hand-heart-outline" size={20} color={theme.colors.primary} />
       </Pressable>

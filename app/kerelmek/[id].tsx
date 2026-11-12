@@ -20,6 +20,7 @@ import { useMyLocation } from "@/hooks/useMyLocation";
 import getDistance from "@/lib/functions/getDistance";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import { requestAge, requestPlaceText } from "@/lib/requests/format";
+import { leaveRequest } from "@/lib/requests/navigation";
 import { REQUESTS_BUCKET } from "@/lib/requests/requestImages";
 import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
@@ -101,7 +102,7 @@ export default function RequestScreen() {
           icon="hand-heart-outline"
           title="Nem találjuk ezt a kérést"
           text="Lehet, hogy a készítője törölte, vagy nem érhető el."
-          action={<Button mode="contained-tonal" onPress={() => router.replace("/kerelmek")}>Vissza a kérésekhez</Button>}
+          action={<Button mode="contained-tonal" onPress={leaveRequest}>Vissza a kérésekhez</Button>}
         />
       </>
     );
@@ -166,8 +167,8 @@ export default function RequestScreen() {
                     images: data.images,
                     status: data.status,
                   }}
-                  onDeleted={() => router.replace("/kerelmek")}
-                  onBlocked={() => router.replace("/kerelmek")}
+                  onDeleted={() => leaveRequest()}
+                  onBlocked={() => leaveRequest()}
                   onSolved={load}
                 />
               </View>

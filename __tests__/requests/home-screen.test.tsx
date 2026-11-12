@@ -39,7 +39,7 @@ describe("Környék (home)", () => {
 
     // The radar comes first, then the post-style prompt, then the requests.
     const text = JSON.stringify(screen.toJSON());
-    expect(text.indexOf("FiFe Radar")).toBeLessThan(text.indexOf("Miben segítsen a közösség?"));
-    expect(text.indexOf("Miben segítsen a közösség?")).toBeLessThan(text.indexOf("Kérések neked"));
+    expect(text.indexOf("FiFe Radar")).toBeLessThan(text.indexOf("Kell valamiben segítség?"));
+    expect(text.indexOf("Kell valamiben segítség?")).toBeLessThan(text.indexOf("Kérések neked"));
   });
 });

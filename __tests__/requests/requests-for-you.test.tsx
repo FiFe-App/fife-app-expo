@@ -49,7 +49,7 @@ describe("RequestsForYou (community screen strip)", () => {
     expect(store.getState().requests.composer).toEqual({ open: true, initialTitle: "" });
   });
 
-  it("opens the full list from Mind, without a leftover search", async () => {
+  it("opens the Kérések tab of the search from Mind, on the for-you slice and without a leftover search", async () => {
     supabase.rpc.mockResolvedValue({ data: [], error: null });
     const store = signedIn();
     store.dispatch(storeRequestSearchText("régi keresés"));
@@ -57,8 +57,12 @@ describe("RequestsForYou (community screen strip)", () => {
 
     await fireEvent.press(screen.getByTestId("requests-all"));
 
-    expect(router.push).toHaveBeenCalledWith("/kerelmek");
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: "/search",
+      params: { mode: "kerelem", browse: "1" },
+    });
     expect(store.getState().requests.searchText).toBe("");
+    expect(store.getState().requests.scope).toBe("for_me");
   });
 
   it("shows the error and not the empty state when the load fails", async () => {

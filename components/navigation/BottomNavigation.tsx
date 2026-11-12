@@ -122,8 +122,9 @@ const BottomNavigation = () => {
   const settingsActive = !switching && pathname.startsWith("/beallitasok");
   const usActive = switching
     ? pendingMode === "mi"
-    : first.includes("home") || first.includes("fifeRadar") || first === "kerelmek";
-  const searchActive = !switching && (first === "search" || pathname === "/biznisz");
+    : first.includes("home") || first.includes("fifeRadar");
+  const searchActive =
+    !switching && (first === "search" || pathname === "/biznisz" || first === "kerelmek");
   const chatActive = !switching && (first.includes("chat") || first === "group");
   // Én's own pages also live under /user, so only the Mi side's /user pages
   // light up the profile tab.

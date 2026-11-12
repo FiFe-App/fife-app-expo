@@ -33,6 +33,7 @@ import {
   Modal,
   Portal,
   SegmentedButtons,
+  Surface,
   Text,
   TextInput,
   TouchableRipple,
@@ -40,7 +41,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "../Button";
 import { KeyboardAwareModal, useKeyboardHeight } from "../KeyboardAwareModal";
-import { ModalCard, modalContainerStyle } from "../ModalCard";
+import { modalContainerStyle } from "../ModalCard";
 import FiFeMap from "../mapView/FiFeMap";
 import { Marker } from "../mapView/mapView";
 import ProfileImage from "../ProfileImage";
@@ -64,7 +65,7 @@ async function limitMessage(error: unknown): Promise<string | null> {
  * The form. One input is enough to ask something; everything else sits in a collapsed
  * accordion. Mounted only while the sheet is open, so every opening starts from a clean form.
  */
-const NewRequestForm = ({ initialTitle, onClose }: { initialTitle: string; onClose: () => void }) => {
+const NewRequestForm = ({ initialTitle }: { initialTitle: string }) => {
   const theme = useAppTheme();
   const dispatch = useDispatch();
   const uid = useSelector((state: RootState) => state.user.uid);
@@ -177,41 +178,34 @@ const NewRequestForm = ({ initialTitle, onClose }: { initialTitle: string; onClo
 
   return (
     <>
+      {/* The same row as the prompt on the community screen it was opened from, so the field
+          reads as that one, grown. */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
         <ProfileImage
           uid={uid ?? ""}
           avatar_url={avatarUrl}
           style={{ width: 40, height: 40, borderRadius: BorderRadius.md }}
         />
-        <View style={{ flex: 1 }}>
-          <ThemedText type="bold">Új kérés</ThemedText>
-          <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-            Elég egy mondat, a részleteket később is hozzáadhatod.
-          </Text>
-        </View>
-        <IconButton
-          testID="request-close"
-          icon="close"
-          accessibilityLabel="Bezárás"
-          onPress={onClose}
+        <TextInput
+          testID="request-title"
+          mode="outlined"
+          autoFocus
+          value={title}
+          onChangeText={setTitle}
+          maxLength={REQUEST_LIMITS.titleMax}
+          placeholder="Kell valamiben segítség?"
+          returnKeyType="done"
+          onSubmitEditing={save}
+          dense
+          outlineStyle={{ borderRadius: BorderRadius.full, borderWidth: 1 }}
+          style={{ flex: 1, backgroundColor: theme.colors.background }}
         />
       </View>
 
-      {/* Styled like the prompt on the community screen it was opened from. */}
-      <TextInput
-        testID="request-title"
-        mode="outlined"
-        autoFocus
-        value={title}
-        onChangeText={setTitle}
-        maxLength={REQUEST_LIMITS.titleMax}
-        placeholder="Miben segítsen a közösség?"
-        returnKeyType="done"
-        onSubmitEditing={save}
-        outlineStyle={{ borderRadius: BorderRadius.full, borderWidth: 1 }}
-        style={{ backgroundColor: theme.colors.background }}
-      />
-
+      <Surface
+        elevation={1}
+        style={{ borderRadius: BorderRadius.lg, overflow: "hidden", paddingHorizontal: Spacing.md }}
+      >
       <List.Accordion
         testID="request-details"
         title="További részletek"
@@ -334,6 +328,7 @@ const NewRequestForm = ({ initialTitle, onClose }: { initialTitle: string; onClo
           </View>
         </View>
       </List.Accordion>
+      </Surface>
 
       <Button
         testID="request-submit"
@@ -373,7 +368,7 @@ const NewRequestForm = ({ initialTitle, onClose }: { initialTitle: string; onClo
 };
 
 /**
- * "Új kérés": a centered modal, opened from anywhere with openRequestComposer(). The community
+ * "Új kérés": a centered modal on a bare backdrop (no card), opened from anywhere with openRequestComposer(). The community
  * screen's post-style prompt (RequestComposerPrompt) opens it, and the title input inside is
  * styled like that prompt, so the field reads as the same one, grown. Mounted once at the root,
  * so a screen only has to dispatch.
@@ -389,24 +384,30 @@ export const NewRequestModal = () => {
 
   const close = () => dispatch(closeRequestComposer());
 
+  // The Paper modal only renders inside a Portal (without one it never shows, on the web at
+  // least). No card: the form floats on the dimmed backdrop, like a post box being opened.
   return (
-    <KeyboardAwareModal
-      visible={open}
-      onDismiss={close}
-      contentContainerStyle={modalContainerStyle}
-    >
-      <ModalCard
-        testID="new-request-modal"
-        style={{ maxHeight: (windowHeight - keyboardHeight) * 0.9, padding: 0 }}
+    <Portal>
+      <KeyboardAwareModal
+        visible={open}
+        onDismiss={close}
+        dismissableBackButton
+        contentContainerStyle={modalContainerStyle}
       >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ gap: Spacing.lg, padding: Spacing.lg }}
+        <View
+          testID="new-request-modal"
+          style={{ width: "100%", maxWidth: 560, alignSelf: "center" }}
         >
-          <NewRequestForm initialTitle={initialTitle} onClose={close} />
-        </ScrollView>
-      </ModalCard>
-    </KeyboardAwareModal>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            style={{ maxHeight: (windowHeight - keyboardHeight) * 0.9 }}
+            contentContainerStyle={{ gap: Spacing.md }}
+          >
+            <NewRequestForm initialTitle={initialTitle} />
+          </ScrollView>
+        </View>
+      </KeyboardAwareModal>
+    </Portal>
   );
 };
 

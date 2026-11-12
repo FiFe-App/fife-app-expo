@@ -102,12 +102,6 @@ export interface UserState {
    */
   previousProfileSearches?: string[];
   /**
-   * Recent kérések searches. Kept on this device only: unlike the two lists
-   * above it is not part of the user_settings blob, so it is optional for the
-   * same persisted-slice reason and never overwritten by a settings sync.
-   */
-  previousRequestSearches?: string[];
-  /**
    * `updated_at` of the user_settings row this state was last hydrated from or
    * pushed to. Undefined means "never synced with the server on this device".
    */

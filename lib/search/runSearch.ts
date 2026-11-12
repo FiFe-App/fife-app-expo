@@ -2,13 +2,12 @@ import type { Dispatch } from "@reduxjs/toolkit";
 import { router } from "expo-router";
 
 import { storeBuzinesses, storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
-import { storeRequestSearchText } from "@/redux/reducers/requestsReducer";
 import { storeUserSearchParams } from "@/redux/reducers/usersReducer";
 import { addPreviousSearch } from "@/redux/reducers/userReducer";
 import type { SearchMode } from "@/redux/store.type";
 
 /**
- * Runs a biznisz, fife or kérések search the way the search screen does: records it in
+ * Runs a biznisz or fife search the way the search screen does: records it in
  * that mode's history, stores the query and opens the results. Returns false
  * (and does nothing) for an empty query.
  *
@@ -23,13 +22,11 @@ export const runSearch = (
 ): boolean => {
   const trimmed = query.trim();
   if (!trimmed) return false;
+  // The kérések are listed on the search screen itself and keep no history: the screen handles
+  // them without this function.
+  if (mode === "kerelem") return false;
   dispatch(addPreviousSearch({ query: trimmed, mode }));
   const go = how === "replace" ? router.replace : router.navigate;
-  if (mode === "kerelem") {
-    dispatch(storeRequestSearchText(trimmed));
-    go("/kerelmek");
-    return true;
-  }
   if (mode === "fife") {
     dispatch(storeUserSearchParams({ text: trimmed, skip: 0 }));
     go("/fifeRadar");

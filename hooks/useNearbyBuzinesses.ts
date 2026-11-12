@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { invokeFunction } from "@/lib/supabase/invokeFunction";
 import { RootState } from "@/redux/store";
-import { BuzinessSearchItemInterface } from "@/redux/store.type";
+import { BuzinessSearchItemInterface, CircleType } from "@/redux/store.type";
 import { useMyLocation } from "./useMyLocation";
 
 const DEFAULT_LOCATION = { lat: 47.4979, long: 19.0402 };
@@ -11,7 +11,10 @@ const DEFAULT_LOCATION = { lat: 47.4979, long: 19.0402 };
  * without text search. Uses local state so the biznisz page's redux-backed
  * results stay untouched. Paginates in pages of `take` so the home screen can
  * load more on scroll. */
-export function useNearbyBuzinesses(take = 5) {
+export function useNearbyBuzinesses(
+  take = 5,
+  { searchCircle, ingyen = false }: { searchCircle?: CircleType; ingyen?: boolean } = {},
+) {
   const { myLocation } = useMyLocation();
 
   // Profile location as fallback when GPS is not available
@@ -38,6 +41,9 @@ export function useNearbyBuzinesses(take = 5) {
   const requestIdRef = useRef(0);
 
   const getSearchLocation = useCallback(() => {
+    // A place chosen in the filter wins over where the user happens to be.
+    if (searchCircle)
+      return { lat: searchCircle.location.latitude, long: searchCircle.location.longitude };
     if (myLocation)
       return {
         lat: myLocation.coords.latitude,
@@ -46,7 +52,7 @@ export function useNearbyBuzinesses(take = 5) {
     if (profileLocation)
       return { lat: profileLocation.lat, long: profileLocation.lng };
     return DEFAULT_LOCATION;
-  }, [myLocation, profileLocation]);
+  }, [searchCircle, myLocation, profileLocation]);
 
   const runSearch = useCallback(
     async (skip: number) => {
@@ -57,7 +63,7 @@ export function useNearbyBuzinesses(take = 5) {
             query: "",
             take,
             skip,
-            ingyen: false,
+            ingyen,
             maxdistance: 100000,
             // No "for you" ordering: interests now steer the kérések, not this list.
             interests: [],
@@ -70,7 +76,7 @@ export function useNearbyBuzinesses(take = 5) {
       if (error) throw new Error(error.message == "Edge Function returned a non-2xx status code" ? "Sajnos hiba történt, próbáld meg később" :error.message);
       return (buzinesses || []) as BuzinessSearchItemInterface[];
     },
-    [take, getSearchLocation],
+    [take, getSearchLocation, ingyen],
   );
 
   const fetch = useCallback(async () => {

@@ -357,10 +357,6 @@ function RootContent() {
                   options={{ title: "Bizniszek keresése" }}
                 />
                 <Stack.Screen
-                  name="kerelmek/index"
-                  options={{ header: () => <HomeHeader mode="kerelem" /> }}
-                />
-                <Stack.Screen
                   name="kerelmek/[id]"
                   options={{ title: "Kérés" }}
                 />
