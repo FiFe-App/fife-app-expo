@@ -13,7 +13,9 @@ import {
   REQUEST_LIMITS,
   REQUEST_RADIUS_OPTIONS,
 } from "@/lib/requests/types";
+import { invokeFunction } from "@/lib/supabase/invokeFunction";
 import { supabase } from "@/lib/supabase/supabase";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { closeRequestComposer } from "@/redux/reducers/requestsReducer";
 import { RootState } from "@/redux/store";
@@ -44,6 +46,19 @@ import { Marker } from "../mapView/mapView";
 import ProfileImage from "../ProfileImage";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
+
+/** The "at most 10 open requests" message the function passes on in words for the user. */
+async function limitMessage(error: unknown): Promise<string | null> {
+  if (!(error instanceof FunctionsHttpError)) return null;
+  try {
+    const body = await error.context.json();
+    return typeof body?.error === "string" && body.error.includes("nyitott kérésed")
+      ? body.error
+      : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * The form. One input is enough to ask something; everything else sits in a collapsed
@@ -96,10 +111,10 @@ const NewRequestForm = ({ initialTitle, onClose }: { initialTitle: string; onClo
     if (!uid || !canSubmit) return;
     setSaving(true);
     try {
-      const { data: created, error } = await supabase
-        .from("requests")
-        .insert({
-          author: uid,
+      // The row is written by the create-request function: it makes the embedding (when the
+      // user's AI setting allows) that only the server may write.
+      const { data: created, error } = await invokeFunction<{ id: number }>("create-request", {
+        body: {
           title: trimmedTitle,
           description: description.trim(),
           tags,
@@ -109,18 +124,15 @@ const NewRequestForm = ({ initialTitle, onClose }: { initialTitle: string; onClo
             ? `POINT(${circle.location.longitude} ${circle.location.latitude})`
             : null,
           radius: circle ? radius : null,
-        })
-        .select("id")
-        .single();
+        },
+      });
 
-      if (error || !created) {
+      if (error || !created?.id) {
         console.error("Error creating request:", error);
         dispatch(
           addSnack({
-            // The trigger's limit message is written for the user; anything else is not.
-            title: error?.message?.includes("nyitott kérésed")
-              ? error.message
-              : "Hiba történt a kérés mentése során. Próbáld újra később.",
+            // The limit message is written for the user; anything else is not.
+            title: (await limitMessage(error)) ?? "Hiba történt a kérés mentése során. Próbáld újra később.",
           }),
         );
         return;

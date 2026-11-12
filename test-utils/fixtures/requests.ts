@@ -19,5 +19,6 @@ export const makeRequest = (overrides: Partial<RequestItem> = {}): RequestItem =
   distance: 3200,
   comment_count: 0,
   is_match: false,
+  is_interest_match: false,
   ...overrides,
 });

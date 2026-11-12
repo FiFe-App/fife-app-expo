@@ -31,7 +31,7 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { ActivityIndicator, Icon, Surface, Text } from "react-native-paper";
 import { useSelector } from "react-redux";
 
-type RequestRow = Tables<"requests"> & {
+type RequestRow = Omit<Tables<"requests">, "embedding" | "embedding_text"> & {
   profiles: { full_name: string | null; avatar_url: string | null } | null;
 };
 
@@ -51,7 +51,10 @@ export default function RequestScreen() {
   const load = useCallback(async () => {
     const { data: row, error } = await supabase
       .from("requests")
-      .select("*, profiles(full_name, avatar_url)")
+      // Explicit columns: the embedding columns are server-side only and large.
+      .select(
+        "id, created_at, author, title, description, tags, images, location, radius, status, solved_at, profiles(full_name, avatar_url)",
+      )
       .eq("id", id)
       .maybeSingle();
     if (error || !row) {

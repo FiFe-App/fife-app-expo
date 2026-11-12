@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { useSelector } from "react-redux";
+import { invokeFunction } from "@/lib/supabase/invokeFunction";
 import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
 import type { RequestItem, RequestScope } from "@/lib/requests/types";
@@ -18,6 +19,9 @@ export function useRequests(take = 10) {
   const profileLocation = useSelector(
     (state: RootState) => state.user.userData?.location,
   );
+
+  // Interests put the requests that fit them first in the "for me" slice (server side).
+  const interests = useSelector((state: RootState) => state.user.interests);
 
   const [data, setData] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -48,22 +52,44 @@ export function useRequests(take = 10) {
     async (skip: number) => {
       const { scope, query } = paramsRef.current;
       const { lat, long } = getLocation();
-      const { data: rows, error: rpcError } = await supabase.rpc("requests_feed", {
-        p_scope: scope,
-        p_query: query || undefined,
-        p_lat: lat,
-        p_long: long,
-        p_skip: skip,
-        p_take: take,
-      });
-      if (rpcError) {
+      let rows: RequestItem[] | null;
+      let failure: unknown;
+      if (query) {
+        // A text search goes through request-search: it embeds the query (when the user's AI
+        // setting allows) and mixes the literal and the semantic score.
+        const res = await invokeFunction<RequestItem[]>("request-search", {
+          body: {
+            query,
+            scope,
+            lat,
+            long,
+            skip,
+            take,
+            interests: interests ?? [],
+          },
+        });
+        rows = res.data;
+        failure = res.error;
+      } else {
+        const res = await supabase.rpc("requests_feed", {
+          p_scope: scope,
+          p_lat: lat,
+          p_long: long,
+          p_skip: skip,
+          p_take: take,
+          p_interests: interests ?? [],
+        });
+        rows = res.data as RequestItem[] | null;
+        failure = res.error;
+      }
+      if (failure) {
         // The screen only gets the friendly text; the real reason belongs in the log.
-        console.error("requests_feed failed:", rpcError);
+        console.error("requests_feed failed:", failure);
         throw new Error("Sajnos hiba történt, próbáld meg később");
       }
       return (rows ?? []) as RequestItem[];
     },
-    [getLocation, take],
+    [getLocation, take, interests],
   );
 
   const load = useCallback(

@@ -70,7 +70,7 @@ export default function SearchScreen() {
   // or once the user taps into the box, it is for searching.
   const [engaged, setEngaged] = useState(isMode(params.mode));
   const browsing = !engaged;
-  const browseBizniszek = useNearbyBuzinesses(10, { personalised: false });
+  const browseBizniszek = useNearbyBuzinesses(10);
   const browseRequests = useRequests(10);
   const { fetch: fetchNewBizniszek } = browseBizniszek;
   const { load: loadNewRequests } = browseRequests;

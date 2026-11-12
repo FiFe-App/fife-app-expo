@@ -24,16 +24,20 @@ interface RequestCardProps {
   onSolved?: (id: number) => void;
 }
 
-/** "Megoldva" / "Illik a bizniszedhez" badges, shared by the card and the detail page. */
+/** "Megoldva" / "érdekel" / "illik a bizniszedhez" badges, shared by the card and the detail page. */
 export const RequestBadges = ({
   solved,
   match,
+  interest = false,
 }: {
   solved: boolean;
+  /** Fits one of my bizniszek. */
   match: boolean;
+  /** Fits one of my interests (érdeklődési kör). */
+  interest?: boolean;
 }) => {
   const theme = useAppTheme();
-  if (!solved && !match) return null;
+  if (!solved && !match && !interest) return null;
   return (
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs }}>
       {solved && (
@@ -42,6 +46,14 @@ export const RequestBadges = ({
           textStyle={{ color: theme.colors.onNature }}
         >
           megoldva
+        </CategoryChip>
+      )}
+      {interest && !solved && (
+        <CategoryChip
+          style={{ backgroundColor: theme.colors.secondaryContainer }}
+          textStyle={{ color: theme.colors.onSecondaryContainer }}
+        >
+          érdekel
         </CategoryChip>
       )}
       {match && !solved && (
@@ -102,7 +114,11 @@ const RequestCard = memo(
           <Text variant="titleMedium" numberOfLines={3}>
             {data.title}
           </Text>
-          <RequestBadges solved={solved} match={!!data.is_match && !mine} />
+          <RequestBadges
+            solved={solved}
+            match={!!data.is_match && !mine}
+            interest={!!data.is_interest_match && !mine}
+          />
           {!!data.description && (
             <Text
               variant="bodyMedium"

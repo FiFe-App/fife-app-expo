@@ -22,6 +22,10 @@
 -- Nincs session_replication_role: a requests_before_write trigger (max. 10 nyitott kérés /
 -- szerző, solved_at konzisztencia) minden sorra ténylegesen lefut.
 --
+-- EMBEDDING: a seedelt kéréseknek nincs embeddingjük (a seedben nincs OpenAI). A szemantikus
+-- keresés és illesztés ezekre csak akkor működik, ha a szerző user_settings.ai_enhance = true,
+-- és lefut a fill-embeddings edge function. A szó szerinti ág embedding nélkül is működik.
+--
 -- KÉPEK: az images oszlop a 'requests' storage bucket objektumútvonalait tárolja
 -- (<uid>/<requestId>/<fájl>). A seedben nincs valódi fájl, ezért a legtöbb kérésnél üres.
 -- Három kérésnél (1001, 1010, 1012) van útvonal: az SQL ettől hibátlan, de a kép csak akkor

@@ -1032,6 +1032,8 @@ export type Database = {
           author: string
           created_at: string
           description: string
+          embedding: string | null
+          embedding_text: string | null
           id: number
           images: string[]
           location: unknown
@@ -1045,6 +1047,8 @@ export type Database = {
           author: string
           created_at?: string
           description?: string
+          embedding?: string | null
+          embedding_text?: string | null
           id?: number
           images?: string[]
           location?: unknown
@@ -1058,6 +1062,8 @@ export type Database = {
           author?: string
           created_at?: string
           description?: string
+          embedding?: string | null
+          embedding_text?: string | null
           id?: number
           images?: string[]
           location?: unknown
@@ -1443,9 +1449,12 @@ export type Database = {
       parse_app_version: { Args: { v: string }; Returns: number[] }
       requests_feed: {
         Args: {
+          p_interests?: string[]
           p_lat?: number
           p_long?: number
+          p_match_threshold?: number
           p_query?: string
+          p_query_embedding?: string
           p_scope?: string
           p_skip?: number
           p_take?: number
@@ -1460,6 +1469,7 @@ export type Database = {
           distance: number | null
           id: number
           images: string[]
+          is_interest_match: boolean
           is_match: boolean
           lat: number | null
           long: number | null

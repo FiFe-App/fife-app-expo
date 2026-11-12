@@ -33,15 +33,9 @@ beforeEach(() => {
   __resetSupabase();
 });
 
-/** The insert chain's `.select().single()` resolves with the registered row. */
+/** create-request answers with the new id. */
 const respondWithCreated = (id: number) =>
-  supabase.from.mockImplementation(() => {
-    const builder: Record<string, unknown> = {};
-    for (const m of ["insert", "update", "select", "eq"]) builder[m] = jest.fn(() => builder);
-    builder.single = jest.fn(() => Promise.resolve({ data: { id }, error: null }));
-    builder.then = (f: (v: unknown) => unknown) => Promise.resolve({ data: null, error: null }).then(f);
-    return builder;
-  });
+  supabase.functions.invoke.mockResolvedValue({ data: { id }, error: null });
 
 describe("NewRequestModal", () => {
   it("is closed until something opens it", async () => {
@@ -82,7 +76,7 @@ describe("NewRequestModal", () => {
     );
   });
 
-  it("creates the request from the title alone, closes and opens it", async () => {
+  it("creates the request through create-request from the title alone, closes and opens it", async () => {
     respondWithCreated(77);
     const store = signedIn();
     store.dispatch(openRequestComposer("Kertészt keresek"));
@@ -96,15 +90,17 @@ describe("NewRequestModal", () => {
         params: { id: 77 },
       }),
     );
-    const insert = (supabase.from.mock.results[0].value.insert as jest.Mock).mock.calls[0][0];
-    expect(insert).toMatchObject({
-      author: "me-uid",
-      title: "Kertészt keresek",
-      description: "",
-      tags: [],
-      location: null,
-      radius: null,
+    expect(supabase.functions.invoke).toHaveBeenCalledWith("create-request", {
+      body: {
+        title: "Kertészt keresek",
+        description: "",
+        tags: [],
+        location: null,
+        radius: null,
+      },
     });
+    // The row is no longer inserted from the app.
+    expect(supabase.from).not.toHaveBeenCalledWith("requests");
     expect(store.getState().requests.composer.open).toBe(false);
   });
 
@@ -127,5 +123,23 @@ describe("NewRequestModal", () => {
     await renderWithProviders(<NewRequestModal />, { store });
 
     expect(screen.queryByTestId("request-title")).toBeNull();
+  });
+
+  it("tells the user when the open-requests limit is reached", async () => {
+    const { FunctionsHttpError } = jest.requireActual("@supabase/supabase-js");
+    const message = "Egyszerre legfeljebb 10 nyitott kérésed lehet. Jelöld megoldottnak a régebbieket.";
+    supabase.functions.invoke.mockResolvedValue({
+      data: null,
+      error: new FunctionsHttpError({ json: () => Promise.resolve({ error: message }) }),
+    });
+    const store = signedIn();
+    store.dispatch(openRequestComposer("Tizenegyedik"));
+    await renderWithProviders(<NewRequestModal />, { store });
+
+    await fireEvent.press(await screen.findByTestId("request-submit"));
+
+    await waitFor(() => expect(store.getState().info.snacks?.[0]?.title).toBe(message));
+    expect(router.push).not.toHaveBeenCalled();
+    expect(store.getState().requests.composer.open).toBe(true);
   });
 });

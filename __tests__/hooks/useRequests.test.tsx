@@ -1,7 +1,7 @@
 import { act } from "@testing-library/react-native";
 
 import { useRequests } from "@/hooks/useRequests";
-import { setLocation } from "@/redux/reducers/userReducer";
+import { setInterests, setLocation } from "@/redux/reducers/userReducer";
 import { __resetSupabase, supabase } from "@/test-utils/mocks/supabase";
 import {
   createTestStore,
@@ -22,26 +22,61 @@ beforeEach(() => {
 });
 
 describe("useRequests", () => {
-  it("asks the requests_feed RPC for the scope, the text and my position", async () => {
+  it("asks the requests_feed RPC for the scope, my position and my interests", async () => {
     supabase.rpc.mockResolvedValue({ data: [], error: null });
     const store = createTestStore();
     store.dispatch(setLocation({ latitude: 47.5, longitude: 19.05, radius: 500 }));
+    store.dispatch(setInterests(["kertészet", "fúrógép"]));
     const { result } = await renderHookWithProviders(() => useRequests(5), { store });
 
     await act(async () => {
-      await result.current.load("for_me", "  kert ");
+      await result.current.load("for_me");
     });
 
     expect(supabase.rpc).toHaveBeenCalledWith("requests_feed", {
       p_scope: "for_me",
-      p_query: "kert",
       p_lat: 47.5,
       p_long: 19.05,
       p_skip: 0,
       p_take: 5,
+      p_interests: ["kertészet", "fúrógép"],
     });
     expect(result.current.fetched).toBe(true);
     expect(result.current.hasMore).toBe(false);
+  });
+
+  it("sends a text search through request-search, which embeds the query server side", async () => {
+    supabase.functions.invoke.mockResolvedValue({ data: page(1, 2), error: null });
+    const store = createTestStore();
+    store.dispatch(setInterests(["kert"]));
+    const { result } = await renderHookWithProviders(() => useRequests(5), { store });
+
+    await act(async () => {
+      await result.current.load("all", "  fűnyírás ");
+    });
+
+    expect(supabase.rpc).not.toHaveBeenCalled();
+    expect(supabase.functions.invoke).toHaveBeenCalledWith("request-search", {
+      body: expect.objectContaining({
+        query: "fűnyírás",
+        scope: "all",
+        skip: 0,
+        take: 5,
+        interests: ["kert"],
+      }),
+    });
+    expect(result.current.data.map((r) => r.id)).toEqual([1, 2]);
+  });
+
+  it("shows the friendly error when request-search fails", async () => {
+    supabase.functions.invoke.mockResolvedValue({ data: null, error: { message: "boom" } });
+    const { result } = await renderHookWithProviders(() => useRequests(5));
+
+    await act(async () => {
+      await result.current.load("all", "valami");
+    });
+
+    expect(result.current.error).toBe("Sajnos hiba történt, próbáld meg később");
   });
 
   it("falls back to Budapest when no location is known", async () => {
@@ -52,7 +87,7 @@ describe("useRequests", () => {
       await result.current.load("all");
     });
 
-    expect(lastArgs()).toMatchObject({ p_lat: 47.4979, p_long: 19.0402, p_query: undefined });
+    expect(lastArgs()).toMatchObject({ p_lat: 47.4979, p_long: 19.0402, p_interests: [] });
   });
 
   it("pages on, skipping what it already has, and does not repeat a row", async () => {

@@ -75,15 +75,40 @@ describe("RequestCard", () => {
     expect(screen.getByText("Te")).toBeTruthy();
   });
 
+  it("flags a request that fits my interests, next to the biznisz badge", async () => {
+    await renderWithProviders(
+      <RequestCard data={makeRequest({ is_interest_match: true, is_match: true })} />,
+      { store: signedIn() },
+    );
+
+    expect(screen.getByText("érdekel")).toBeTruthy();
+    expect(screen.getByText("illik a bizniszedhez")).toBeTruthy();
+  });
+
+  it("does not flag my own request as interesting", async () => {
+    await renderWithProviders(
+      <RequestCard data={makeRequest({ author: "me-uid", is_interest_match: true })} />,
+      { store: signedIn() },
+    );
+
+    expect(screen.queryByText("érdekel")).toBeNull();
+  });
+
   it("marks a solved request and drops the match badge", async () => {
     await renderWithProviders(
       <RequestCard
-        data={makeRequest({ status: "solved", solved_at: new Date().toISOString(), is_match: true })}
+        data={makeRequest({
+          status: "solved",
+          solved_at: new Date().toISOString(),
+          is_match: true,
+          is_interest_match: true,
+        })}
       />,
       { store: signedIn() },
     );
 
     expect(screen.getByText("megoldva")).toBeTruthy();
+    expect(screen.queryByText("érdekel")).toBeNull();
     expect(screen.queryByText("illik a bizniszedhez")).toBeNull();
   });
 
