@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { AppShell, Button, Group, Tabs, Title } from "@mantine/core";
-import { IconAlertTriangle, IconMail, IconMessage, IconUsers } from "@tabler/icons-react";
+import { IconAlertTriangle, IconBuildingStore, IconMail, IconMessage, IconUsers } from "@tabler/icons-react";
 
 import { logout } from "../api";
 import { InAppMessagesPage } from "./InAppMessagesPage";
 import { NewslettersPage } from "./NewslettersPage";
-import { ReportsPage, type ReportedUserFilter } from "./ReportsPage";
+import { BuzinessesPage } from "./BuzinessesPage";
+import { EMPTY_SCOPE, ReportsPage, type ReportsScope } from "./ReportsPage";
 import { UsersPage } from "./UsersPage";
 
-const TABS = ["hirlevelek", "app-uzenet", "felhasznalok", "feljelentesek"] as const;
+const TABS = ["hirlevelek", "app-uzenet", "felhasznalok", "bizniszek", "feljelentesek"] as const;
 type Tab = (typeof TABS)[number];
 
 // Az aktív fül a URL hash-ben él, így frissítés után is ott marad, és
@@ -20,7 +21,7 @@ function tabFromHash(): Tab {
 
 export function AdminShell({ onLoggedOut }: { onLoggedOut: () => void }) {
   const [tab, setTab] = useState<Tab>(tabFromHash);
-  const [reportedUser, setReportedUser] = useState<ReportedUserFilter | null>(null);
+  const [reportsScope, setReportsScope] = useState<ReportsScope>(EMPTY_SCOPE);
 
   useEffect(() => {
     const onHashChange = () => setTab(tabFromHash());
@@ -55,6 +56,9 @@ export function AdminShell({ onLoggedOut }: { onLoggedOut: () => void }) {
                 <Tabs.Tab value="felhasznalok" leftSection={<IconUsers size={16} />}>
                   Felhasználók
                 </Tabs.Tab>
+                <Tabs.Tab value="bizniszek" leftSection={<IconBuildingStore size={16} />}>
+                  Bizniszek
+                </Tabs.Tab>
                 <Tabs.Tab value="feljelentesek" leftSection={<IconAlertTriangle size={16} />}>
                   Feljelentések
                 </Tabs.Tab>
@@ -74,7 +78,16 @@ export function AdminShell({ onLoggedOut }: { onLoggedOut: () => void }) {
           <UsersPage
             onLoggedOut={onLoggedOut}
             onShowReports={(user) => {
-              setReportedUser(user);
+              setReportsScope({ user, buziness: null });
+              changeTab("feljelentesek");
+            }}
+          />
+        )}
+        {tab === "bizniszek" && (
+          <BuzinessesPage
+            onLoggedOut={onLoggedOut}
+            onShowReports={(buziness) => {
+              setReportsScope({ user: null, buziness });
               changeTab("feljelentesek");
             }}
           />
@@ -82,8 +95,8 @@ export function AdminShell({ onLoggedOut }: { onLoggedOut: () => void }) {
         {tab === "feljelentesek" && (
           <ReportsPage
             onLoggedOut={onLoggedOut}
-            reportedUser={reportedUser}
-            onReportedUserChange={setReportedUser}
+            scope={reportsScope}
+            onScopeChange={setReportsScope}
           />
         )}
       </AppShell.Main>

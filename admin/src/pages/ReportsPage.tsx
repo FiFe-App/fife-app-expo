@@ -1,23 +1,60 @@
 import { useCallback, useEffect, useState } from "react";
-import { Badge, CloseButton, Group, Pagination, Paper, Select, Stack, Table, Text, Title } from "@mantine/core";
+import {
+  Anchor,
+  Badge,
+  CloseButton,
+  Group,
+  Pagination,
+  Paper,
+  Select,
+  Stack,
+  Table,
+  Text,
+  Title,
+} from "@mantine/core";
+import { IconExternalLink } from "@tabler/icons-react";
 
 import { AuthError, fetchReports } from "../api";
 import { BadBoyToggle } from "../components/BadBoyToggle";
 import { formatDate } from "../format";
-import { REPORT_REASONS, type AdminReport, type Page } from "../types";
+import {
+  REPORT_REASONS,
+  REPORT_TARGETS,
+  type AdminReport,
+  type Page,
+  type ReportTargetType,
+} from "../types";
 
-export interface ReportedUserFilter {
-  id: string;
-  label: string;
+/**
+ * Honnan érkeztünk ide szűrve: egy felhasználó (Felhasználók fül) vagy egy
+ * biznisz (Bizniszek fül) feljelentései. A biznisz szűrő a biznisz alatti
+ * kommentek feljelentéseit is mutatja.
+ */
+export interface ReportsScope {
+  user: { id: string; label: string } | null;
+  buziness: { id: number; label: string } | null;
 }
+
+export const EMPTY_SCOPE: ReportsScope = { user: null, buziness: null };
 
 interface Props {
   onLoggedOut: () => void;
-  reportedUser: ReportedUserFilter | null;
-  onReportedUserChange: (user: ReportedUserFilter | null) => void;
+  scope: ReportsScope;
+  onScopeChange: (scope: ReportsScope) => void;
 }
 
+const APP_URL = "https://fifeapp.hu";
+
 const REASON_OPTIONS = Object.entries(REPORT_REASONS).map(([value, label]) => ({ value, label }));
+const TARGET_OPTIONS = Object.entries(REPORT_TARGETS).map(([value, label]) => ({ value, label }));
+
+const TARGET_COLOR: Record<ReportTargetType, string> = {
+  profile: "grape",
+  message: "blue",
+  group_message: "cyan",
+  biznisz: "teal",
+  comment: "indigo",
+};
 
 function PersonCell({ name, email }: { name: string | null; email: string | null }) {
   return (
@@ -34,8 +71,46 @@ function PersonCell({ name, email }: { name: string | null; email: string | null
   );
 }
 
-export function ReportsPage({ onLoggedOut, reportedUser, onReportedUserChange }: Props) {
+function ContentCell({ report }: { report: AdminReport }) {
+  const type = report.target_type in REPORT_TARGETS ? report.target_type : "profile";
+  return (
+    <Stack gap={4}>
+      <Group gap={6} wrap="nowrap">
+        <Badge size="sm" variant="light" color={TARGET_COLOR[type]}>
+          {REPORT_TARGETS[type]}
+        </Badge>
+        {report.buziness_id !== null && (
+          <Anchor
+            href={`${APP_URL}/biznisz/${report.buziness_id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            size="sm"
+          >
+            <Group gap={2} wrap="nowrap">
+              {report.buziness_title ?? `Biznisz #${report.buziness_id}`}
+              <IconExternalLink size={12} />
+            </Group>
+          </Anchor>
+        )}
+      </Group>
+      {report.target_excerpt ? (
+        <Text size="sm" lineClamp={3} style={{ whiteSpace: "pre-wrap" }} title={report.target_excerpt}>
+          {report.target_excerpt}
+        </Text>
+      ) : (
+        type !== "profile" && (
+          <Text size="xs" c="dimmed">
+            nincs mentett szöveg
+          </Text>
+        )
+      )}
+    </Stack>
+  );
+}
+
+export function ReportsPage({ onLoggedOut, scope, onScopeChange }: Props) {
   const [reason, setReason] = useState<string | null>(null);
+  const [targetType, setTargetType] = useState<ReportTargetType | null>(null);
   const [page, setPage] = useState(1);
 
   const [result, setResult] = useState<Page<AdminReport> | null>(null);
@@ -44,12 +119,20 @@ export function ReportsPage({ onLoggedOut, reportedUser, onReportedUserChange }:
 
   useEffect(() => {
     setPage(1);
-  }, [reason, reportedUser?.id]);
+  }, [reason, targetType, scope.user?.id, scope.buziness?.id]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setResult(await fetchReports({ reportedId: reportedUser?.id ?? null, reason, page }));
+      setResult(
+        await fetchReports({
+          reportedId: scope.user?.id ?? null,
+          buzinessId: scope.buziness?.id ?? null,
+          reason,
+          targetType,
+          page,
+        }),
+      );
       setLoadError(null);
     } catch (err) {
       if (err instanceof AuthError) {
@@ -60,7 +143,7 @@ export function ReportsPage({ onLoggedOut, reportedUser, onReportedUserChange }:
     } finally {
       setLoading(false);
     }
-  }, [reportedUser?.id, reason, page, onLoggedOut]);
+  }, [scope.user?.id, scope.buziness?.id, reason, targetType, page, onLoggedOut]);
 
   useEffect(() => {
     load();
@@ -82,7 +165,7 @@ export function ReportsPage({ onLoggedOut, reportedUser, onReportedUserChange }:
   const totalPages = result ? Math.max(1, Math.ceil(result.total / result.pageSize)) : 1;
 
   return (
-    <Stack gap="lg" maw={1200} mx="auto">
+    <Stack gap="lg" maw={1300} mx="auto">
       <div>
         <Title order={2}>Feljelentések</Title>
         <Text c="dimmed" size="sm">
@@ -92,6 +175,14 @@ export function ReportsPage({ onLoggedOut, reportedUser, onReportedUserChange }:
 
       <Group gap="md" align="center">
         <Select
+          placeholder="Minden típus"
+          data={TARGET_OPTIONS}
+          value={targetType}
+          onChange={(v) => setTargetType(v as ReportTargetType | null)}
+          clearable
+          w={200}
+        />
+        <Select
           placeholder="Minden indok"
           data={REASON_OPTIONS}
           value={reason}
@@ -99,7 +190,7 @@ export function ReportsPage({ onLoggedOut, reportedUser, onReportedUserChange }:
           clearable
           w={300}
         />
-        {reportedUser && (
+        {scope.user && (
           <Badge
             size="lg"
             variant="light"
@@ -108,12 +199,29 @@ export function ReportsPage({ onLoggedOut, reportedUser, onReportedUserChange }:
               <CloseButton
                 size="xs"
                 variant="transparent"
-                aria-label="Szűrés törlése"
-                onClick={() => onReportedUserChange(null)}
+                aria-label="Felhasználó szűrés törlése"
+                onClick={() => onScopeChange({ ...scope, user: null })}
               />
             }
           >
-            Feljelentett: {reportedUser.label}
+            Feljelentett: {scope.user.label}
+          </Badge>
+        )}
+        {scope.buziness && (
+          <Badge
+            size="lg"
+            variant="light"
+            color="teal"
+            rightSection={
+              <CloseButton
+                size="xs"
+                variant="transparent"
+                aria-label="Biznisz szűrés törlése"
+                onClick={() => onScopeChange({ ...scope, buziness: null })}
+              />
+            }
+          >
+            Biznisz: {scope.buziness.label}
           </Badge>
         )}
       </Group>
@@ -135,11 +243,12 @@ export function ReportsPage({ onLoggedOut, reportedUser, onReportedUserChange }:
             Nincs a szűrésnek megfelelő feljelentés.
           </Text>
         ) : (
-          <Table.ScrollContainer minWidth={900}>
+          <Table.ScrollContainer minWidth={1100}>
             <Table striped highlightOnHover verticalSpacing="sm" style={{ opacity: loading ? 0.6 : 1 }}>
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th>Dátum</Table.Th>
+                  <Table.Th>Tartalom</Table.Th>
                   <Table.Th>Feljelentett</Table.Th>
                   <Table.Th>Indok</Table.Th>
                   <Table.Th>Leírás</Table.Th>
@@ -153,6 +262,9 @@ export function ReportsPage({ onLoggedOut, reportedUser, onReportedUserChange }:
                     <Table.Td>
                       <Text size="sm">{formatDate(report.created_at)}</Text>
                     </Table.Td>
+                    <Table.Td maw={340}>
+                      <ContentCell report={report} />
+                    </Table.Td>
                     <Table.Td>
                       <PersonCell name={report.reported_name} email={report.reported_email} />
                     </Table.Td>
@@ -161,21 +273,21 @@ export function ReportsPage({ onLoggedOut, reportedUser, onReportedUserChange }:
                         {REPORT_REASONS[report.reason] ?? report.reason}
                       </Badge>
                     </Table.Td>
-                    <Table.Td maw={360}>
+                    <Table.Td maw={300}>
                       <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-                        {report.description}
+                        {report.description || <Text span c="dimmed">—</Text>}
                       </Text>
                     </Table.Td>
                     <Table.Td>
                       <PersonCell name={report.author_name} email={report.author_email} />
                     </Table.Td>
                     <Table.Td>
-                      {report.reported_name !== null ? (
+                      {report.reported_id !== null && report.reported_name !== null ? (
                         <BadBoyToggle
                           userId={report.reported_id}
                           name={report.reported_name}
                           value={report.reported_bad_boy}
-                          onChange={(value) => updateBadBoy(report.reported_id, value)}
+                          onChange={(value) => updateBadBoy(report.reported_id!, value)}
                           onAuthError={onLoggedOut}
                         />
                       ) : (

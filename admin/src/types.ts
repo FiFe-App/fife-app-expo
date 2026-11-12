@@ -67,15 +67,63 @@ export interface AdminReport {
   author_id: string;
   author_name: string | null;
   author_email: string | null;
-  reported_id: string;
+  target_type: ReportTargetType;
+  /** A jelentett üzenet / biznisz / komment id-ja; profilnál null. */
+  target_id: string | null;
+  /** A tartalom szövege a feljelentés pillanatában — törlés után is megmarad. */
+  target_excerpt: string | null;
+  /** Biznisz feljelentésnél maga a biznisz, kommentnél az, amelyik alatt a komment van. */
+  buziness_id: number | null;
+  buziness_title: string | null;
+  /** A tartalom szerzője / a profil. Null, ha a fiókot azóta törölték. */
+  reported_id: string | null;
   reported_name: string | null;
   reported_email: string | null;
   reported_bad_boy: boolean;
 }
 
+export type ReportTargetType = "profile" | "message" | "group_message" | "biznisz" | "comment";
+
+export const REPORT_TARGETS: Record<ReportTargetType, string> = {
+  profile: "Profil",
+  message: "Üzenet",
+  group_message: "Csoportüzenet",
+  biznisz: "Biznisz",
+  comment: "Komment",
+};
+
 export interface ReportFilters {
   reportedId: string | null;
+  buzinessId: number | null;
   reason: string | null;
+  targetType: ReportTargetType | null;
+  page: number;
+}
+
+export interface AdminBuziness {
+  id: number;
+  title: string;
+  description: string;
+  created_at: string;
+  public: boolean;
+  ingyen: boolean;
+  author_id: string;
+  author_name: string | null;
+  author_email: string | null;
+  author_bad_boy: boolean;
+  /** Magára a bizniszre érkezett feljelentések. */
+  report_count: number;
+  /** A biznisz alatti kommentekre érkezett feljelentések. */
+  comment_report_count: number;
+}
+
+/** "true" / "false" csak azokat mutatja, "all" mindet. */
+export type PublicFilter = "all" | "true" | "false";
+
+export interface BuzinessFilters {
+  search: string;
+  reported: boolean;
+  public: PublicFilter;
   page: number;
 }
 
@@ -86,8 +134,10 @@ export interface Page<T> {
   pageSize: number;
 }
 
-/** Ugyanazok az értékek, mint az app ReportProfileModal-jában. */
+/** Ugyanazok az értékek, mint az app ReportContentModal-jában. */
 export const REPORT_REASONS: Record<string, string> = {
+  objectionable_content: "Sértő, bántó vagy zaklató tartalom",
+  spam: "Spam vagy átverés",
   terms_violation: "Megszegte a feltételeket",
   not_trustworthy: "Nem megbízható",
   illegal_activity: "Illegális tevékenység",

@@ -1,6 +1,8 @@
 import type {
+  AdminBuziness,
   AdminReport,
   AdminUser,
+  BuzinessFilters,
   InAppMessage,
   InAppMessageInput,
   Newsletter,
@@ -115,13 +117,28 @@ export async function setBadBoy(id: string, badBoy: boolean): Promise<boolean> {
 export async function fetchReports(filters: ReportFilters): Promise<Page<AdminReport>> {
   const params = new URLSearchParams({ page: String(filters.page) });
   if (filters.reportedId) params.set("reportedId", filters.reportedId);
+  if (filters.buzinessId) params.set("buzinessId", String(filters.buzinessId));
   if (filters.reason) params.set("reason", filters.reason);
+  if (filters.targetType) params.set("targetType", filters.targetType);
 
   const res = await fetch(`/api/reports?${params}`, { credentials: "same-origin" });
   if (res.status === 401) throw new AuthError();
   if (!res.ok) throw new Error(await parseErrorBody(res));
   const data = await res.json();
   return { items: data.reports, total: data.total, page: data.page, pageSize: data.pageSize };
+}
+
+export async function fetchBuzinesses(filters: BuzinessFilters): Promise<Page<AdminBuziness>> {
+  const params = new URLSearchParams({ page: String(filters.page) });
+  if (filters.search.trim()) params.set("search", filters.search.trim());
+  if (filters.reported) params.set("reported", "true");
+  if (filters.public !== "all") params.set("public", filters.public);
+
+  const res = await fetch(`/api/buzinesses?${params}`, { credentials: "same-origin" });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  const data = await res.json();
+  return { items: data.buzinesses, total: data.total, page: data.page, pageSize: data.pageSize };
 }
 
 export async function fetchInAppMessage(): Promise<InAppMessage | null> {

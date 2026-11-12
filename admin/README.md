@@ -1,21 +1,30 @@
 # FiFe Admin
 
 Önálló admin app. Vite + React + Mantine frontend, Netlify Functions backend, ami a
-Supabase service role kulccsal olvas és ír. Három fül:
+Supabase service role kulccsal olvas és ír. Fülek:
 
 - **Hírlevelek** (`#hirlevelek`): kiküldés és nyomon követés, lásd lent.
+- **App üzenet** (`#app-uzenet`): az appban felugró üzenet szerkesztése.
 - **Felhasználók** (`#felhasznalok`): név, email, regisztráció, utolsó belépés, bizniszek
   és feljelentések száma. Kereshető név/felhasználónév/email alapján, szűrhető badboyokra és
   a feljelentettekre. A badboy kapcsoló megerősítés után azonnal átállítja a
   `profiles.bad_boy`-t. A feljelentések számára kattintva a Feljelentések fül nyílik meg,
   erre a felhasználóra szűrve.
+- **Bizniszek** (`#bizniszek`): cím (linkkel az appbeli oldalra), szerző, létrehozás,
+  láthatóság (nyilvános / csak tagoknak) és a feljelentések száma — a bizniszre és az alatta
+  lévő kommentekre érkezettek együtt. Kereshető cím, leírás és szerző alapján, szűrhető
+  láthatóságra és a feljelentettekre. Itt is átállítható a szerző badboy állapota. A
+  feljelentések számára kattintva a Feljelentések fül nyílik meg erre a bizniszre szűrve.
 - **Feljelentések** (`#feljelentesek`): a `reports` tábla, a bejelentővel és a
-  bejelentettel együtt. Szűrhető indokra és bejelentett felhasználóra, és innen is át
-  lehet állítani a badboy állapotot.
+  bejelentettel együtt. A „Tartalom” oszlop mutatja, mit jelentettek (profil, üzenet,
+  csoportüzenet, biznisz vagy komment), a tartalom akkori szövegét, és biznisznél /
+  kommentnél a biznisz linkjét. Szűrhető típusra, indokra, bejelentett felhasználóra és
+  bizniszre, és innen is át lehet állítani a badboy állapotot.
 
-A listák a `admin_list_users` / `admin_list_reports` adatbázis-függvényekből jönnek
-(`supabase/migrations/20260930120000_admin_insights.sql`). Ezek csak a service role
-kulccsal hívhatók, mert emailt adnak vissza.
+A listák az `admin_list_users` / `admin_list_buzinesses` / `admin_list_reports`
+adatbázis-függvényekből jönnek (`supabase/migrations/20260930120000_admin_insights.sql`,
+`20261112120000_admin_content_reports.sql`). Ezek csak a service role kulccsal hívhatók,
+mert emailt adnak vissza.
 
 ## Helyi futtatás
 
