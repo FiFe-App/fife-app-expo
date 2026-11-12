@@ -9,6 +9,9 @@ import {
   cancelTaskReminder,
   scheduleTaskReminder,
 } from "@/lib/notifications/scheduleTaskReminder";
+import { __resetRouter, router } from "@/test-utils/mocks/expo-router";
+
+jest.mock("expo-router", () => require("@/test-utils/mocks/expo-router"));
 
 // The module talks to the OS notification scheduler; only the calls matter here.
 jest.mock("@/lib/notifications/scheduleTaskReminder", () => ({
@@ -167,5 +170,46 @@ describe("ToDoList", () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  describe("Ki segít? bridge", () => {
+    beforeEach(() => __resetRouter());
+
+    const openSheet = async () => {
+      const store = await setup();
+      await fireEvent.press(screen.getByLabelText("Adóbevallás"));
+      await fireEvent.press(screen.getByText("Ki segít a környéken?"));
+      return store;
+    };
+
+    it("opens the community search with an empty field, not the task's text", async () => {
+      await openSheet();
+
+      expect(screen.getByText("Ki segít ebben a környéken?")).toBeTruthy();
+      expect(screen.getByLabelText("Keresés a bizniszek között").props.value).toBe("");
+      expect(screen.queryByDisplayValue("Adóbevallás")).toBeNull();
+    });
+
+    it("searches bizniszek with what the user typed", async () => {
+      const store = await openSheet();
+
+      await fireEvent.changeText(screen.getByLabelText("Keresés a bizniszek között"), "költöztetés");
+      await fireEvent.press(screen.getByText("Keresés"));
+
+      expect(store.getState().buziness.searchParams?.text).toBe("költöztetés");
+      expect(router.navigate).toHaveBeenCalledWith("/biznisz");
+      expect(screen.queryByText("Ki segít ebben a környéken?")).toBeNull();
+    });
+
+    it("searches fifék when that is picked", async () => {
+      const store = await openSheet();
+
+      await fireEvent.press(screen.getByText("Fifék"));
+      await fireEvent.changeText(screen.getByLabelText("Keresés a fifék között"), "Marci");
+      await fireEvent.press(screen.getByText("Keresés"));
+
+      expect(store.getState().users.userSearchParams?.text).toBe("Marci");
+      expect(router.navigate).toHaveBeenCalledWith("/fifeRadar");
+    });
   });
 });

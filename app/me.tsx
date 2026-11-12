@@ -11,36 +11,23 @@ import { Card, Icon, Surface, TouchableRipple } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { ThemedText } from "@/components/ThemedText";
 import { emotionAvailable } from "@/constants/emotionTiming";
-import { clearOptions, setInAppMessageVisible, setOptions, showDialog } from "@/redux/reducers/infoReducer";
-import { dismissedIsItSafe } from "@/redux/reducers/userReducer";
+import { clearOptions, setInAppMessageVisible, setOptions } from "@/redux/reducers/infoReducer";
 import { Link, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
-import { Button } from "@/components/Button";
-import { useAppTheme } from "@/assets/theme";
 import { useKeyboardScrollIntoView } from "@/hooks/useKeyboardScrollIntoView";
+import { useAppTheme } from "@/assets/theme";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 /** Until the newest in_app_messages row has loaded, or when it sets none. */
 const DEFAULT_OPEN_ICON = "message-draw";
 
 export default function MeScreen() {
-  const { uid, isItSafeDismissed } = useSelector((state: RootState) => state.user);
+  const { uid } = useSelector((state: RootState) => state.user);
+  const savedCount = useSelector((state: RootState) => state.user.savedBuzinesses?.length ?? 0);
   const dispatch = useDispatch();
-  const { scrollRef, keyboardHeight, handleScroll, registerFocusedInput } = useKeyboardScrollIntoView();
   const theme = useAppTheme();
+  const { scrollRef, keyboardHeight, handleScroll, registerFocusedInput } = useKeyboardScrollIntoView();
   const openIcon = useSelector((state: RootState) => state.info.inAppMessageOpenIcon) ?? DEFAULT_OPEN_ICON;
-  const isItSafeButtonText = `Ez a hely biztonságos${isItSafeDismissed ? "." : "?"}`;
-
-  const showIsItSafeDialog = ()=>{
-    dispatch(showDialog({
-      title: "Igen, ez egy biztonságos hely.",
-      text: "Ez a te saját oldalad, az itt megadott adataidat titkosítva tároljuk és senki nem férhet hozzájuk.",
-      submitText: "Rendben",
-      //dismissable: false,
-      onSubmit: () => {
-        dispatch(dismissedIsItSafe());
-      },
-    }));
-  };
 
   useFocusEffect(
     useCallback(() => {
@@ -66,19 +53,18 @@ export default function MeScreen() {
         ref={scrollRef}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        contentContainerStyle={{ gap: Spacing.md, paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: keyboardHeight }}
+        contentContainerStyle={{ gap: Spacing.md, paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: keyboardHeight + MODE_SWITCH_CLEARANCE }}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
       >
         <Mantra />
         <View style={{ gap: Spacing.sm }}>
-          <Button 
-            mode={isItSafeDismissed ? "text" : "contained-tonal"} 
-            onPress={showIsItSafeDialog}>
-              {isItSafeButtonText}
-          </Button>
-          <Link asChild href="/user/get-help">
-            <TouchableRipple>
+          <NotificationPrompts />
+          {emotionAvailable && <EmotionCheckCard onNoteFocus={registerFocusedInput} />}
+          <ToDoList onInputFocus={registerFocusedInput} />
+          {/* A Mi page, linked from home because people keep coming back to it. */}
+          <Link asChild href="/user/saved-buzinesses">
+            <TouchableRipple accessibilityRole="link" style={{ borderRadius: BorderRadius.lg }}>
               <Surface
                 elevation={1}
                 style={{
@@ -90,15 +76,18 @@ export default function MeScreen() {
                   paddingHorizontal: Spacing.lg,
                 }}
               >
-                <Icon source="lifebuoy" size={24} color={theme.colors.primary} />
-                <ThemedText style={{ flex: 1 }} type="defaultSemiBold">Segítség kell?</ThemedText>
+                <Icon source="archive-outline" size={24} color={theme.colors.tertiary} />
+                <ThemedText style={{ flex: 1 }} type="defaultSemiBold">Elmentett bizniszek</ThemedText>
+                <ThemedText
+                  accessibilityLabel={`${savedCount} elmentett biznisz`}
+                  style={{ color: theme.colors.onSurfaceVariant }}
+                >
+                  {savedCount} db
+                </ThemedText>
                 <Icon source="chevron-right" size={20} color={theme.colors.outline} />
               </Surface>
             </TouchableRipple>
           </Link>
-          <NotificationPrompts />
-          {emotionAvailable && <EmotionCheckCard onNoteFocus={registerFocusedInput} />}
-          <ToDoList onInputFocus={registerFocusedInput} />
           {false && <View style={styles.cardRow}>
             <Card style={[styles.card, styles.cardSpacing]} theme={{colors: {shadow:"red"}}} onPress={() => {}}>
               <Card.Content style={styles.cardContent}>

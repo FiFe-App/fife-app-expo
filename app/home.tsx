@@ -21,6 +21,7 @@ import { useFifeSearch } from "@/hooks/useFifeSearch";
 import { useNearbyBuzinesses } from "@/hooks/useNearbyBuzinesses";
 import { useAppTheme } from "@/assets/theme";
 import { Button } from "@/components/Button";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 export default function Index() {
   const { uid, messagingEnabled } = useSelector((state: RootState) => state.user);
@@ -81,7 +82,7 @@ export default function Index() {
       <ScrollView
         style={{ flex: 1, minHeight: 0 }}
         stickyHeaderIndices={[stickyHeaderIndex]}
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: Spacing.xxl }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: Spacing.xxl + MODE_SWITCH_CLEARANCE }}
         onScroll={({ nativeEvent }) => {
           const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
           const distanceFromBottom =
@@ -108,7 +109,7 @@ export default function Index() {
             backgroundColor: theme.colors.background
           }}
         >
-          <View style={{ flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
+          <View style={{ flex: 1, flexDirection: "row", alignItems: "flex-end", gap: Spacing.xs }}>
             <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>
               {searchCircle ? "Közeli" : "Budapesti"} Bizniszek neked
             </ThemedText>
