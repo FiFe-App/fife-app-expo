@@ -6,6 +6,7 @@ const typeToValueLabel = (type?: string): string => {
   if (type === "PLACE") return "Teljes címed";
   if (type === "WEB") return "Weboldalad";
   if (type === "MESSAGE") return "Közvetlen üzenet";
+  if (type === "I-HELP-YOU") return "Rám írhatsz";
   if (type === "OTHER") return "Bármilyen más adatod";
   return "Válassz típust.";
 };

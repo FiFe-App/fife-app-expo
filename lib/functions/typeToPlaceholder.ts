@@ -6,6 +6,8 @@ const typeToPlaceholder = (type?: string): string => {
   if (type === "PLACE") return "1097 Ady Endre út 2/b";
   if (type === "WEB") return "weboldalam.com";
   if (type === "MESSAGE") return "Engedélyezheted a appon belüli üzenetváltást";
+  if (type === "I-HELP-YOU")
+    return "Megengeded, hogy rádírjon valaki akinek szüksége lenne támogatásra?";
   if (type === "OTHER") return "";
   return "";
 };

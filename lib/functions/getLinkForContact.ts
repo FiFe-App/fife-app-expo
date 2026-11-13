@@ -12,7 +12,8 @@ const getLinkForContact = (
   if (contact.type === "FACEBOOK")
     return `https://facebook.com/${contact.data}`;
   if (contact.type === "WEB") return `https://${contact.data}`;
-  if (contact.type === "MESSAGE") return { pathname: "/chat/[uid]", params: { uid: contact.author } };
+  if (contact.type === "MESSAGE" || contact.type === "I-HELP-YOU")
+    return { pathname: "/chat/[uid]", params: { uid: contact.author } };
   return "" as Href;
 };
 
