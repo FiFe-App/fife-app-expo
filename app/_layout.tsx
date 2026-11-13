@@ -385,6 +385,10 @@ function RootContent() {
                   options={{ title: "Üzenet" }}
                 />
                 <Stack.Screen
+                  name="chat/beszelgetnek"
+                  options={{ title: "Beszélgetnék valakivel" }}
+                />
+                <Stack.Screen
                   name="group/[id]"
                   options={{ title: "Csoport" }}
                 />
@@ -395,10 +399,6 @@ function RootContent() {
                 <Stack.Screen
                   name="user/get-help"
                   options={{ title: "Segítség kell?" }}
-                />
-                <Stack.Screen
-                  name="user/beszelgetnek"
-                  options={{ title: "Beszélgetnék valakivel" }}
                 />
                 <Stack.Screen
                   name="beallitasok"

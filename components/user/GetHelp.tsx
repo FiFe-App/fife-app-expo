@@ -96,7 +96,7 @@ export default function GetHelp() {
         >
           <TouchableRipple
             accessibilityRole="link"
-            onPress={() => router.push("/user/beszelgetnek")}
+            onPress={() => router.push("/chat/beszelgetnek")}
           >
             <View
               style={{

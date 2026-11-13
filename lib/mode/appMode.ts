@@ -9,7 +9,7 @@ export type { AppMode };
  * this phone's settings.
  * Everything else — community, search, messages, profiles, biznisz — is Mi.
  */
-const EN_PATHS = ["/login", "/me", "/user/emotion-history", "/user/get-help", "/user/beszelgetnek", "/beallitasok"] as const;
+const EN_PATHS = ["/login", "/me", "/user/emotion-history", "/user/get-help", "/beallitasok"] as const;
 
 /** Where the Én/Mi switch lands on each side: that side's first tab. */
 export const MODE_HOME: Record<AppMode, "/me" | "/home"> = {

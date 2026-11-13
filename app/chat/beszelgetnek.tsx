@@ -1,4 +1,4 @@
-import HelpersList from "@/components/user/HelpersList";
+import HelpersList from "@/components/chat/HelpersList";
 import { ThemedView } from "@/components/ThemedView";
 import { useAppTheme } from "@/assets/theme";
 
