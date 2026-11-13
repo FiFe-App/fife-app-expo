@@ -397,6 +397,10 @@ function RootContent() {
                   options={{ title: "Segítség kell?" }}
                 />
                 <Stack.Screen
+                  name="user/beszelgetnek"
+                  options={{ title: "Beszélgetnék valakivel" }}
+                />
+                <Stack.Screen
                   name="beallitasok"
                   options={{ title: "Beállítások" }}
                 />

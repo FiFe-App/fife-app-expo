@@ -20,6 +20,7 @@ import {
   TouchableRipple,
 } from "react-native-paper";
 import { useDispatch } from "react-redux";
+import { router } from "expo-router";
 import AddHelpContactDialog from "@/components/user/AddHelpContactDialog";
 import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
@@ -81,6 +82,56 @@ export default function GetHelp() {
                   Vészhelyzetben hívd a 112-t
                 </ThemedText>
               </View>
+            </View>
+          </TouchableRipple>
+        </Surface>
+
+        <Surface
+          style={{
+            borderRadius: BorderRadius.lg,
+            overflow: "hidden",
+            marginTop: Spacing.md,
+          }}
+          elevation={1}
+        >
+          <TouchableRipple
+            accessibilityRole="link"
+            onPress={() => router.push("/user/beszelgetnek")}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: Spacing.md,
+                paddingVertical: Spacing.md,
+                paddingHorizontal: Spacing.lg,
+                backgroundColor: theme.colors.secondaryContainer,
+              }}
+            >
+              <Icon
+                source="hand-heart"
+                size={28}
+                color={theme.colors.onSecondaryContainer}
+              />
+              <View style={{ flex: 1 }}>
+                <ThemedText
+                  type="bold"
+                  style={{ color: theme.colors.onSecondaryContainer }}
+                >
+                  Beszélgetnék valakivel
+                </ThemedText>
+                <ThemedText
+                  variant="labelSmall"
+                  style={{ color: theme.colors.onSecondaryContainer }}
+                >
+                  FiFe tagok, akik szívesen meghallgatnak
+                </ThemedText>
+              </View>
+              <Icon
+                source="chevron-right"
+                size={20}
+                color={theme.colors.onSecondaryContainer}
+              />
             </View>
           </TouchableRipple>
         </Surface>

@@ -13,6 +13,10 @@ import { Linking, View } from "react-native";
 import { Icon, Surface, Text, TouchableRipple } from "react-native-paper";
 import { useDispatch } from "react-redux";
 
+// Contacts that open the in-app chat instead of an external link.
+const isChatContact = (contact: Tables<"contacts">) =>
+  contact.type === "MESSAGE" || contact.type === "I-HELP-YOU";
+
 interface ContactsCardProps {
   contacts: Tables<"contacts">[];
   isOwnProfile?: boolean;
@@ -46,7 +50,7 @@ export default function ContactsCard({ contacts, isOwnProfile }: ContactsCardPro
             onPress={() => {
               const link = getLinkForContact(contact);
 
-              if (!link || isOwnProfile && contact.type == "MESSAGE") return;
+              if (!link || isOwnProfile && isChatContact(contact)) return;
               if (typeof link === "object" || link.startsWith("/")) {
                 router.push(link);
               } else {
@@ -92,6 +96,8 @@ export default function ContactsCard({ contacts, isOwnProfile }: ContactsCardPro
                 <Text variant="bodyMedium" numberOfLines={1}>
                   {contact.type === "MESSAGE"
                     ? (isOwnProfile ? "A közvetlen üzenet engedélyezve van" : "Kattints a beszélgetéshez")
+                    : contact.type === "I-HELP-YOU"
+                    ? (isOwnProfile ? "Megjelensz a Beszélgetnék valakivel listában" : "Írj rám, ha támogatásra van szükséged")
                     : contact.data}
                 </Text>
                 <Text
@@ -101,7 +107,7 @@ export default function ContactsCard({ contacts, isOwnProfile }: ContactsCardPro
                   {contact.title || typeToValueLabel(contact.type)}
                 </Text>
               </View>
-              {contact.type !== "MESSAGE" && <Icon source="open-in-new" size={16} color={theme.colors.outline} />}
+              {!isChatContact(contact) && <Icon source="open-in-new" size={16} color={theme.colors.outline} />}
             </View>
           </TouchableRipple>
         </React.Fragment>

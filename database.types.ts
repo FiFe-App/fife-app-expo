@@ -1430,6 +1430,7 @@ export type Database = {
         | "FACEBOOK"
         | "PLACE"
         | "MESSAGE"
+        | "I-HELP-YOU"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1569,6 +1570,7 @@ export const Constants = {
         "FACEBOOK",
         "PLACE",
         "MESSAGE",
+        "I-HELP-YOU",
       ],
     },
   },

@@ -118,7 +118,9 @@ const BottomNavigation = () => {
   // shows as selected and the old route's tabs are no longer lit.
   const meActive = switching ? pendingMode === "en" : pathname === "/me";
   const naploActive = !switching && pathname.startsWith("/user/emotion-history");
-  const helpActive = !switching && pathname.startsWith("/user/get-help");
+  const helpActive =
+    !switching &&
+    (pathname.startsWith("/user/get-help") || pathname.startsWith("/user/beszelgetnek"));
   const settingsActive = !switching && pathname.startsWith("/beallitasok");
   const usActive = switching ? pendingMode === "mi" : first.includes("home") || first.includes("fifeRadar");
   const searchActive = !switching && (first === "search" || pathname === "/biznisz");
