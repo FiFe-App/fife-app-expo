@@ -207,6 +207,11 @@ verify_jwt = false
 [functions.on-profile-delete]
 verify_jwt = false
 
+# Fired weekly by pg_cron (private.trigger_weekly_admin_report). Checks the
+# caller itself with isServiceRoleRequest, like notify.
+[functions.weekly-report]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
