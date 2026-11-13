@@ -75,3 +75,21 @@ export const fetchHelpers = async (
 
   return { helpers: shuffle(helpers), error: null };
 };
+
+/**
+ * Whether `uid` has "Rám írhatsz" switched on, or `null` when the read failed.
+ */
+export const fetchOffersHelp = async (uid: string) => {
+  const { data, error } = await supabase
+    .from("contacts")
+    .select("id")
+    .eq("author", uid)
+    .eq("type", "I-HELP-YOU")
+    .eq("data", MESSAGING_ENABLED_VALUE)
+    .limit(1);
+  if (error) {
+    console.error("reading I-HELP-YOU contact failed", error);
+    return null;
+  }
+  return (data ?? []).length > 0;
+};

@@ -1,4 +1,4 @@
-import { fetchHelpers } from "@/lib/chat/helpers";
+import { fetchHelpers, fetchOffersHelp } from "@/lib/chat/helpers";
 import {
   __resetSupabase,
   __setTableRows,
@@ -90,5 +90,22 @@ describe("fetchHelpers", () => {
     __setTableRows("contacts", { data: null, error: { message: "down" } });
 
     expect(await fetchHelpers("me")).toEqual({ helpers: [], error: "down" });
+  });
+});
+
+describe("fetchOffersHelp", () => {
+  it("reads a switched-on I-HELP-YOU contact", async () => {
+    __setTableRows("contacts", { data: [{ id: 1 }], error: null });
+    expect(await fetchOffersHelp("me")).toBe(true);
+  });
+
+  it("reads no contact as off", async () => {
+    __setTableRows("contacts", { data: [], error: null });
+    expect(await fetchOffersHelp("me")).toBe(false);
+  });
+
+  it("reports an unknown result when the read fails", async () => {
+    __setTableRows("contacts", { data: null, error: { message: "down" } });
+    expect(await fetchOffersHelp("me")).toBeNull();
   });
 });
