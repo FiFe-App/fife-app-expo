@@ -17,7 +17,7 @@ const DURATIONS_MIN = [15, 30, 60];
 const CUE_FOR_MS = 60 * 1000;
 
 const INTRO =
-  "Megteheted, hogy mindent leteszel egy kicsit." +
+  "Megteheted, hogy mindent leteszel egy kicsit. " +
   "Állj meg egy fél-egy órára, jót fog tenni:)";
 
 const INFO = {

@@ -52,7 +52,7 @@ afterEach(() => jest.useRealTimers());
 
 it("says what is about to happen and offers 15, 30 and 60 minutes", async () => {
   await renderWithProviders(<BreakScreen />);
-  expect(screen.getByText(/amikor nő, lélegezz be, amikor csökken, fújd ki/)).toBeTruthy();
+  expect(screen.getByText(/Megteheted, hogy mindent leteszel egy kicsit\. Állj meg/)).toBeTruthy();
   expect(screen.getByText("15 perc")).toBeTruthy();
   expect(screen.getByText("30 perc")).toBeTruthy();
   expect(screen.getByText("60 perc")).toBeTruthy();

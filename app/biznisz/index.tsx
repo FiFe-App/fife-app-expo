@@ -35,6 +35,7 @@ import { MyAppbar } from "@/components/MyAppBar";
 import { Spacing } from "@/constants/spacing";
 import { useAppTheme } from "@/assets/theme";
 import { BorderRadius } from "@/constants/borderRadius";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 export default function Index() {
   const theme = useAppTheme();
@@ -85,7 +86,7 @@ export default function Index() {
         <Measure name="map-switch">
           <FAB
             icon={searchType === "map" ? "format-list-bulleted" : "map"}
-            style={{ position: "absolute", bottom: Spacing.lg, right: Spacing.lg }}
+            style={{ position: "absolute", bottom: Spacing.lg + MODE_SWITCH_CLEARANCE, right: Spacing.lg }}
             variant="tertiary"
             customSize={80}
             onPress={() => {
