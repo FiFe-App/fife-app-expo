@@ -22,5 +22,7 @@ export const formatLogDate = (date: string): string =>
     year: "numeric",
     month: "long",
     day: "numeric",
-    weekday: "long",
   });
+
+export const formatWeekday = (date: string): string =>
+  parseDateString(date).toLocaleDateString("hu-HU", { weekday: "long" });

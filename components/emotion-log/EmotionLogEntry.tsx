@@ -8,7 +8,7 @@ import { EmotionLogLocal } from "@/redux/store.type";
 import { useRef, useState } from "react";
 import { Image, View } from "react-native";
 import { Button, IconButton, Surface, TextInput } from "react-native-paper";
-import { formatLogDate } from "./dates";
+import { formatLogDate, formatWeekday } from "./dates";
 
 interface EmotionLogEntryProps {
   date: string;
@@ -42,7 +42,8 @@ export default function EmotionLogEntry({
       elevation={0}
       style={{
         borderRadius: BorderRadius.lg,
-        padding: Spacing.md,
+        paddingVertical: Spacing.xs,
+        paddingHorizontal: Spacing.sm,
         borderWidth: 2,
         borderColor: highlighted ? theme.colors.primary : "transparent",
       }}
@@ -60,7 +61,7 @@ export default function EmotionLogEntry({
         />
       ) : (
         <View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.md }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
             {log ? (
               <Image source={emotionByRate(log.rate)?.image} style={{ width: 40, height: 40 }} />
             ) : (
@@ -78,21 +79,27 @@ export default function EmotionLogEntry({
             <View style={{ flex: 1 }}>
               {isToday && <ThemedText variant="labelSmall" style={{ color: theme.colors.primary }}>Ma</ThemedText>}
               <ThemedText variant="labelLarge" type="bold">{formatLogDate(date)}</ThemedText>
+              <ThemedText variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                {formatWeekday(date)}
+              </ThemedText>
             </View>
             <IconButton
               icon={log ? "pencil" : "plus"}
+              size={20}
+              iconColor={theme.colors.outline}
+              style={{ margin: 0, opacity: 0.6 }}
               onPress={onStartEdit}
               accessibilityLabel={log ? "Bejegyzés szerkesztése" : "Bejegyzés hozzáadása"}
             />
           </View>
           {log ? (
             log.note ? (
-              <ThemedText style={{ marginTop: Spacing.sm }}>{log.note}</ThemedText>
+              <ThemedText style={{ marginTop: Spacing.xs }}>{log.note}</ThemedText>
             ) : (
-              <ThemedText style={{ marginTop: Spacing.sm, color: theme.colors.outline }}>Nincs jegyzet.</ThemedText>
+              <ThemedText style={{ marginTop: Spacing.xs, color: theme.colors.outline }}>Nincs jegyzet.</ThemedText>
             )
           ) : (
-            <ThemedText style={{ marginTop: Spacing.sm, color: theme.colors.outline }}>
+            <ThemedText style={{ marginTop: Spacing.xs, color: theme.colors.outline }}>
               Ezen a napon nincs bejegyzés.
             </ThemedText>
           )}
@@ -143,6 +150,11 @@ function EntryForm({
           <ThemedText variant="titleSmall" type="bold">
             {isToday && !log ? "Hogy vagy ma?" : formatLogDate(date)}
           </ThemedText>
+          {!(isToday && !log) && (
+            <ThemedText variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+              {formatWeekday(date)}
+            </ThemedText>
+          )}
         </View>
         {canCancel && <IconButton icon="close" onPress={onCancel} accessibilityLabel="Mégse" />}
       </View>

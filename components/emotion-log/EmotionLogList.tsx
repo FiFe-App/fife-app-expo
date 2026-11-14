@@ -330,9 +330,9 @@ export default function EmotionLogList({ logs, target, onSave }: EmotionLogListP
         scrollEventThrottle={16}
         maintainVisibleContentPosition={!IS_WEB ? { minIndexForVisible: 0 } : undefined}
         contentContainerStyle={{
-          gap: Spacing.md,
-          padding: Spacing.md,
-          paddingBottom: Spacing.md + keyboardHeight + MODE_SWITCH_CLEARANCE + Spacing.xxxl,
+          gap: Spacing.sm,
+          padding: Spacing.sm,
+          paddingBottom: keyboardHeight + MODE_SWITCH_CLEARANCE,
         }}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
@@ -369,7 +369,7 @@ export default function EmotionLogList({ logs, target, onSave }: EmotionLogListP
           size="small"
           accessibilityLabel="Ugrás a lista aljára"
           onPress={jumpToBottom}
-          style={{ position: "absolute", bottom: Spacing.lg + MODE_SWITCH_CLEARANCE, right: Spacing.lg }}
+          style={{ position: "absolute", bottom: Spacing.lg, right: Spacing.lg }}
         />
       )}
     </View>
