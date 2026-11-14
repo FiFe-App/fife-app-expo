@@ -265,7 +265,7 @@ async function notifyGroupChatMembers(
   }
 
   const preview = (record.text || "").slice(0, 100);
-  const message = `${groupTitle} – ${senderName}: ${preview}`;
+  const message = `${groupTitle} - ${senderName}: ${preview}`;
   await Promise.all(
     members.map((m) =>
       sendNotification(supabase, m.user_id, message, {

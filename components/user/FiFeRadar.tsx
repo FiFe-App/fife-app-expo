@@ -124,12 +124,12 @@ export const FiFeRadar: React.FC<FiFeRadarProps> = ({
         ListFooterComponent={
           canLoadMore && !!users.length ? (
             <ActivityIndicator style={{ marginHorizontal: Spacing.md }} />
-          ) : null
+          ) : undefined
         }
         ListEmptyComponent={
           loading ? (
             <ActivityIndicator style={{ padding: Spacing.lg }} />
-          ) : error ? null : (
+          ) : error ? undefined : (
             // Search ran and found nobody — say so instead of rendering a
             // blank strip that looks like a failed load.
             <View style={{ paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, gap: Spacing.xs }}>

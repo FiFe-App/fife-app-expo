@@ -25,7 +25,7 @@ const DELAYS: number[][] = [
 ];
 
 const FILES: (ImageSource|null)[][] = [
-  [null,                               require("@/assets/gifs/black.gif"),  require("@/assets/gifs/brown.gif")],
+  [null,                               require("@/assets/gifs/sleep.gif"),  require("@/assets/gifs/brown.gif")],
   [require("@/assets/gifs/green.gif"), require("@/assets/smiley.gif"),                                null],
   [require("@/assets/gifs/red.gif"),   require("@/assets/gifs/yellow.gif"), require("@/assets/gifs/purple.gif")],
 ];
@@ -71,7 +71,7 @@ function SplashCell({ delay, size, file }: SplashCellProps) {
       <View style={[
         styles.webCell,
         { opacity: webVisible ? 1 : 0 },
-        // @ts-expect-error – web-only CSS property
+        // @ts-expect-error - web-only CSS property
         { transition: `opacity ${FADE_DURATION}ms ease-in-out` },
       ]}>
         {file != null && (
@@ -156,7 +156,7 @@ export function SplashAnimation({ onFinished }: SplashAnimationProps) {
       <View style={[
         styles.webContainer,
         { backgroundColor: darkModeMql && darkModeMql.matches ? "#1e1b16" : "#fff5e0", opacity: webContainerVisible ? 1 : 0 },
-        // @ts-expect-error – web-only CSS property
+        // @ts-expect-error - web-only CSS property
         { transition: "opacity 400ms ease-in-out" },
       ]}>
         <Pressable style={[StyleSheet.absoluteFill, { zIndex: 100 }]} onPress={dismiss} />

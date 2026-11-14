@@ -37,6 +37,8 @@ import { isSameCalendarDay } from "@/lib/functions/formatChatDate";
 import { Spacing } from "@/constants/spacing";
 import { useJumpToMessage } from "@/hooks/useJumpToMessage";
 import { useReplyTargets } from "@/hooks/useReplyTargets";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
+import { useKeyboardHeight } from "@/components/KeyboardAwareModal";
 
 type Message = Tables<"messages">;
 
@@ -91,6 +93,7 @@ export default function ChatScreen() {
   const mountId = useRef(Date.now()).current;
   const navigation = useNavigation();
   const listRef = useRef<FlatList<Message>>(null);
+  const keyboardHeight = useKeyboardHeight();
 
   useFocusEffect(
     useCallback(() => {
@@ -598,7 +601,7 @@ export default function ChatScreen() {
           onEndReached={loadOlderMessages}
           onEndReachedThreshold={0.5}
           ListFooterComponent={
-            loadingOlder ? <ActivityIndicator style={styles.loadingOlder} /> : null
+            loadingOlder ? <ActivityIndicator style={styles.loadingOlder} /> : undefined
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
@@ -627,6 +630,8 @@ export default function ChatScreen() {
           onImageChange={setPendingImage}
           disabled={sending || !hasMessagingEnabled || !otherHasMessagingEnabled}
         />
+        {/* Room for the Én/Mi switch over the bottom bar; the keyboard covers the bar. */}
+        <View style={{ height: keyboardHeight > 0 ? 0 : MODE_SWITCH_CLEARANCE }} />
       </ThemedView>
 
       {!!otherUid && (

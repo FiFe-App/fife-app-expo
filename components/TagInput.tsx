@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  NativeSyntheticEvent,
   StyleProp,
-  TextInput as RNTextInput,
-  TextInputKeyPressEventData,
+  type TextInputInstance,
+  type TextInputKeyPressEvent,
   View,
   ViewStyle,
 } from "react-native";
@@ -41,7 +40,7 @@ const TagInput = ({
   suggest = false,
 }: TagInputProps) => {
   const theme = useAppTheme();
-  const inputRef = useRef<RNTextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
 
@@ -123,7 +122,7 @@ const TagInput = ({
   };
 
   const handleKeyPress = (
-    e: NativeSyntheticEvent<TextInputKeyPressEventData>,
+    e: TextInputKeyPressEvent,
   ) => {
     if (e.nativeEvent.key === "Backspace" && draft === "" && value.length > 0) {
       e.preventDefault?.();

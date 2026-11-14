@@ -1,6 +1,6 @@
 import { usePathname, useRootNavigationState, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { InteractionManager, Platform } from "react-native";
+import { Platform } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
 import { clearLastRoute, setLastRoute } from "@/redux/reducers/appReducer";
@@ -93,7 +93,7 @@ export function useLastRoute() {
 
     // After the launch work rather than in the middle of it, so the restored
     // screen mounts onto an app that is already up.
-    const task = InteractionManager.runAfterInteractions(() => {
+    const task = requestIdleCallback(() => {
       try {
         router.replace(target.path as `/${string}`);
       } catch (error) {
@@ -102,7 +102,7 @@ export function useLastRoute() {
         console.warn("Could not restore the last screen:", error);
       }
     });
-    return () => task.cancel();
+    return () => cancelIdleCallback(task);
     // Deliberately narrow: this runs once, as soon as there is both a router
     // and a user to restore for.
     // eslint-disable-next-line react-hooks/exhaustive-deps

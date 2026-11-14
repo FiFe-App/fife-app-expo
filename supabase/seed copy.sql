@@ -1367,7 +1367,7 @@ VALUES (
 
 -- ============================================================
 -- Batch 4: 10 more diverse buzinesses + recommendations
--- Uses random() for embeddings – values are not semantically
+-- Uses random() for embeddings - values are not semantically
 -- meaningful but embedding_text drives PGroonga full-text search.
 -- ============================================================
 INSERT INTO public.buziness (

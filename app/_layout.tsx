@@ -36,6 +36,8 @@ import { clearChatReadState, clearDrafts, setUnreadCounts } from "@/redux/reduce
 import { fetchUnreadCounts } from "@/lib/chat/fetchUnreadCounts";
 import { supabase } from "@/lib/supabase/supabase";
 import { registerForPushNotificationsAsync } from "@/lib/notifications/registerForPushNotifications";
+import { scheduleDailyEmotionReminder, cancelDailyEmotionReminder } from "@/lib/notifications/scheduleDailyEmotionReminder";
+import { cancelFocusNotifications } from "@/lib/notifications/scheduleFocusNotifications";
 import { useDailyEmotionReminder } from "@/hooks/useDailyEmotionReminder";
 import { useLastRoute } from "@/hooks/useLastRoute";
 import { setStatusBarColor } from "@/redux/reducers/infoReducer";
@@ -47,6 +49,9 @@ import UpdateAvailableCard from "@/components/version/UpdateAvailableCard";
 import InAppMessageDialog from "@/components/InAppMessageDialog";
 import { emotionAvailable } from "@/constants/emotionTiming";
 import { initAnalytics, screenNameFromSegments, trackEvent } from "@/lib/analytics";
+import { MODE_HOME, modeForPath } from "@/lib/mode/appMode";
+import { useAppLock } from "@/hooks/useAppLock";
+import AppLockScreen from "@/components/AppLockScreen";
 
 initAnalytics();
 
@@ -70,7 +75,7 @@ function RootContent() {
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
   const { uid, messagingEnabled } = useSelector((state: RootState) => state.user);
   const lastReadAt = useSelector((state: RootState) => state.chat.lastReadAt);
-  const { statusBarColor, bottomBarColor } = useSelector((state: RootState) => state.info);
+  const { statusBarColor, bottomBarColor, screenTint } = useSelector((state: RootState) => state.info);
   const hasInitialized = React.useRef(false);
 
   // Anonymous screen views, by route pattern ("/user/[uid]"), never the
@@ -94,6 +99,11 @@ function RootContent() {
   useLastRoute();
   const { loadFromServer: loadSettings } = useUserSettings();
   const versionGate = useAppVersionGate();
+  // The app-zár guards Én mód — the private side with the journal — for a
+  // signed-in user. Mi (chat, search, the community) is what people open in
+  // public, so it never asks; signed out there is nothing private at all.
+  const appLockEnabled = useSelector((state: RootState) => state.app.appLockEnabled);
+  const appLock = useAppLock(!!appLockEnabled && !!uid, modeForPath(pathname) === "en");
 
   // Manage Supabase token auto-refresh and offline sync on foreground
   useEffect(() => {
@@ -126,6 +136,7 @@ function RootContent() {
       if (event === "SIGNED_OUT") {
         // Refresh token expired or explicit sign-out — clear Redux to match
         dispatch(logout());
+        cancelFocusNotifications().catch(() => {});
         dispatch(clearEmotionLogs());
         dispatch(clearDrafts());
         dispatch(clearChatReadState());
@@ -259,14 +270,19 @@ function RootContent() {
   const isDarkMode =
     userThemePreference === "dark" ||
     (userThemePreference === "auto" && deviceColorScheme === "dark");
-  const theme = getTheme(isDarkMode);
+  // Én (private) and Mi (community) each get their own palette, so the user
+  // can always tell which side of the app they are on.
+  // Signed out (login, registration, a shared biznisz page) the app keeps its
+  // original look — the login wall is not part of either side.
+  const appMode = uid ? modeForPath(pathname) : "en";
+  const theme = getTheme(isDarkMode, appMode);
 
   useEffect(() => {
     if (pathname.includes("csatlakozom") || pathname=="/")
       dispatch(setStatusBarColor(theme.colors.background));
     else
       dispatch(setStatusBarColor(theme.colors.surface));
-  }, [isDarkMode, theme.colors.background, bottomBarColor, dispatch, pathname]);
+  }, [isDarkMode, theme.colors.background, theme.colors.surface, bottomBarColor, dispatch, pathname]);
 
   // A blocked build never reaches the router: an old client talking to a
   // backend it no longer matches is exactly what the gate exists to stop.
@@ -296,8 +312,13 @@ function RootContent() {
     !pathname.includes("csatlakozom") &&
     !pathname.includes("meghivo") &&
     !pathname.includes("leiratkozas") &&
+    pathname !== "/szunet" &&
+    pathname !== "/focus" &&
     pathname !== "/biznisz/new" &&
     !pathname.startsWith("/biznisz/edit");
+
+  // Only for the screen that set it — see InfoState.screenTint.
+  const tint = screenTint?.path === pathname ? screenTint.color : null;
 
   return (
     <PaperProvider theme={theme}>
@@ -308,14 +329,21 @@ function RootContent() {
           fills the home indicator / gesture area; without it the screen does. */}
       <SafeAreaView
         edges={showBottomNav ? ["top", "left", "right"] : ["top", "left", "right", "bottom"]}
-        style={{ flex: 1, backgroundColor: statusBarColor || theme.colors.surface }}
+        style={{ flex: 1, backgroundColor: tint || statusBarColor || theme.colors.surface }}
       >
-        <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
+        <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: tint || theme.colors.background }}>
           <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
             <InfoLayer />
 
             <Stack
-              screenOptions={{ header: (props: NativeStackHeaderProps) => <MyAppbar title={props.options.title} /> }}
+              screenOptions={{
+                header: (props: NativeStackHeaderProps) => <MyAppbar title={props.options.title} />,
+                // Screens left behind in the stack stop re-rendering until they
+                // are shown again. Without it every one of them re-renders when
+                // the Én/Mi theme flips, which is most of what makes the
+                // switch slow once both sides have been visited.
+                freezeOnBlur: true,
+              }}
             >
               <Stack.Protected guard={!!uid}>
                 <Stack.Screen
@@ -376,6 +404,18 @@ function RootContent() {
                   name="user/get-help"
                   options={{ title: "Segítség kell?" }}
                 />
+                <Stack.Screen
+                  name="focus"
+                  options={{ title: "Fókusz" }}
+                />
+                <Stack.Screen
+                  name="szunet"
+                  options={{ title: "Szünet" }}
+                />
+                <Stack.Screen
+                  name="beallitasok"
+                  options={{ title: "Beállítások" }}
+                />
               </Stack.Protected>
               <Stack.Protected guard={!uid}>
 
@@ -430,6 +470,14 @@ function RootContent() {
             {!!uid && <InAppMessageDialog />}
           </View>
         </ThemedView>
+        {appLock.locked && (
+          <AppLockScreen
+            onUnlock={appLock.unlock}
+            // The lock covers the whole screen, bar included, so it has to
+            // offer its own way back to the side that needs no unlocking.
+            onLeave={() => router.navigate(MODE_HOME.mi)}
+          />
+        )}
       </SafeAreaView>
     </PaperProvider>
   );

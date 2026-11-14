@@ -181,7 +181,7 @@ hogy ne számítson:
   állít vissza, és weben egyáltalán nem fut: ott a címsor az igazság.
   Óvatosságból: megvárja, amíg a router elindul (előtte navigálni kivételt dob,
   ami indításkor szó nélkül kilövi az appot), a navigálás előtt törli a tárolt
-  útvonalat (így egy problémás képernyő nem tud végtelen indítás–összeomlás
+  útvonalat (így egy problémás képernyő nem tud végtelen indítás-összeomlás
   kört csinálni), és a biznisz szerkesztőt szándékosan nem állítja vissza — az
   a legnehezebb képernyő (térkép, médiaválasztó), és nem szerencsés vele
   kezdeni egy hideg indítást. Nem is veszik el vele semmi: a begépelt tartalmat
