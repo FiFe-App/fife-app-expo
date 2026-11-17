@@ -67,6 +67,7 @@ import {
   TouchableRipple,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 // Stable empties for a signed-out visitor while the public data is loading.
 const NO_COMMENTS: Comment[] = [];
@@ -508,7 +509,7 @@ export default function Index() {
             stickyHeaderIndices={[1]}
             automaticallyAdjustKeyboardInsets
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ paddingBottom: Spacing.xxl, minHeight: windowHeight+ 100 }}
+            contentContainerStyle={{ paddingBottom: Spacing.xxl + MODE_SWITCH_CLEARANCE, minHeight: windowHeight+ 100 }}
           >
             {/* HEADER (index 0) */}
             <View

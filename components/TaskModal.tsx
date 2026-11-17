@@ -40,6 +40,11 @@ interface TaskModalProps {
   /** The task to show; the modal is hidden while this is null. */
   taskId: string | null;
   onDismiss: () => void;
+  /**
+   * Opens the "Ki segít?" community search (see LustaSearchSheet). The button
+   * only shows when this is given.
+   */
+  onAskForHelp?: () => void;
 }
 
 const newId = () =>
@@ -56,7 +61,7 @@ const formatRemindAt = (iso: string) =>
     minute: "2-digit",
   });
 
-export default function TaskModal({ taskId, onDismiss }: TaskModalProps) {
+export default function TaskModal({ taskId, onDismiss, onAskForHelp }: TaskModalProps) {
   const theme = useAppTheme();
   const dispatch = useDispatch();
   const { height: windowHeight } = useWindowDimensions();
@@ -342,23 +347,36 @@ export default function TaskModal({ taskId, onDismiss }: TaskModalProps) {
                 </View>
               </View>
             ) : (
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Button
-                  icon="delete-outline"
-                  textColor={theme.colors.error}
-                  onPress={() => setConfirmDelete(true)}
+              <View style={{ gap: Spacing.sm }}>
+                {false && onAskForHelp && (
+                  <Button
+                    mode="outlined"
+                    icon="account-search-outline"
+                    textColor={theme.colors.tertiary}
+                    style={{ borderColor: theme.colors.tertiary }}
+                    onPress={onAskForHelp}
+                  >
+                    Ki segít a környéken?
+                  </Button>
+                )}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
                 >
-                  Feladat törlése
-                </Button>
-                <Button mode="contained-tonal" icon="magnify" onPress={handleSearch}>
-                  Keress rá
-                </Button>
+                  <Button
+                    icon="delete-outline"
+                    textColor={theme.colors.error}
+                    onPress={() => setConfirmDelete(true)}
+                  >
+                    Feladat törlése
+                  </Button>
+                  <Button mode="contained-tonal" icon="magnify" onPress={handleSearch}>
+                    Keress rá
+                  </Button>
+                </View>
               </View>
             )}
           </View>
