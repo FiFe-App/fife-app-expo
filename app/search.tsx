@@ -1,16 +1,19 @@
-import BuzinessSearchInput from "@/components/BuzinessSearchInput";
-import { ThemedView } from "@/components/ThemedView";
-import { ThemedText } from "@/components/ThemedText";
-import { Spacing } from "@/constants/spacing";
 import { useAppTheme } from "@/assets/theme";
-import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
-import { useNearbyBuzinesses } from "@/hooks/useNearbyBuzinesses";
-import { useRequests } from "@/hooks/useRequests";
+import { Button } from "@/components/Button";
 import BuzinessItem from "@/components/buziness/BuzinessItem";
+import BuzinessSearchInput from "@/components/BuzinessSearchInput";
+import { MyAppbar } from "@/components/MyAppBar";
 import RequestCard from "@/components/requests/RequestCard";
 import SearchFilterModal from "@/components/search/SearchFilterModal";
-import { Button } from "@/components/Button";
-import { REQUEST_SCOPES } from "@/lib/requests/types";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { BorderRadius } from "@/constants/borderRadius";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
+import { Spacing } from "@/constants/spacing";
+import { useNearbyBuzinesses } from "@/hooks/useNearbyBuzinesses";
+import { useRequests } from "@/hooks/useRequests";
+import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
+import { runSearch } from "@/lib/search/runSearch";
 import { openRequestComposer, storeRequestSearchText } from "@/redux/reducers/requestsReducer";
 import { removeFromPreviousSearches } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
@@ -20,10 +23,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, View } from "react-native";
 import { ActivityIndicator, Chip, Icon } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { MyAppbar } from "@/components/MyAppBar";
-import { runSearch } from "@/lib/search/runSearch";
-import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
-import { BorderRadius } from "@/constants/borderRadius";
 
 type ListItem =
   | { kind: "section"; label: string }
@@ -32,8 +31,8 @@ type ListItem =
 
 const MODES: { key: SearchMode; label: string; icon: string }[] = [
   { key: "biznisz", label: "Bizniszek", icon: "briefcase-outline" },
-  { key: "fife", label: "Fifék", icon: "account" },
   { key: "kerelem", label: "Kérések", icon: "hand-heart-outline" },
+  { key: "fife", label: "Fifék", icon: "account" },
 ];
 
 const isMode = (value: string | undefined): value is SearchMode =>
@@ -167,11 +166,7 @@ export default function SearchScreen() {
         : false;
 
   const requestsEmpty = requests.fetched && !requests.loading && !requests.error && requests.data.length === 0;
-  const requestsTitle = requestText.trim()
-    ? `Találatok: ${requestText.trim()}`
-    : requestScope === "all"
-      ? "Új kérések"
-      : `Kérések: ${REQUEST_SCOPES.find((s) => s.key === requestScope)?.label ?? ""}`;
+  const requestsTitle = "Találatok: ";
   const emptyText = requestText.trim()
     ? { title: "Nincs találat.", hint: "Próbálj más szót, vagy válts a Mind szűrőre." }
     : EMPTY_REQUESTS[requestScope];
@@ -217,7 +212,15 @@ export default function SearchScreen() {
           );
         })}
         {/* Always there: what it opens follows the chip that is selected. */}
-        <View style={{ marginLeft: "auto" }}>
+        <View style={{ marginLeft: "auto", flexDirection:"row",alignItems:"center" }}>
+          <ThemedText
+            variant="labelLarge"
+            type="bold"
+            numberOfLines={1}
+            style={{ flex:1, color: theme.colors.secondary }}
+          >
+            {requestsTitle}
+          </ThemedText>
           <Button
             testID="search-filter"
             icon={filterActive ? "filter-check" : "filter"}
@@ -230,27 +233,6 @@ export default function SearchScreen() {
       </ThemedView>
 
       {requestMode && (
-        <>
-          {!!typed.trim() && (
-            // Nobody asked for this yet? The typed text becomes the title of a new request.
-            <Pressable
-              testID="search-new-request"
-              onPress={() => dispatch(openRequestComposer(typed))}
-              style={({ pressed }) => ({
-                flexDirection: "row",
-                alignItems: "center",
-                gap: Spacing.md,
-                paddingHorizontal: Spacing.lg,
-                paddingVertical: Spacing.md,
-                backgroundColor: pressed ? theme.colors.surfaceVariant : "transparent",
-              })}
-            >
-              <Icon source="plus-circle-outline" size={22} color={theme.colors.primary} />
-              <ThemedText type="bold" numberOfLines={1} style={{ flex: 1, color: theme.colors.primary }}>
-                Új kérés: „{typed.trim()}”
-              </ThemedText>
-            </Pressable>
-          )}
           <FlatList
             testID="search-requests"
             data={requests.data}
@@ -264,31 +246,6 @@ export default function SearchScreen() {
               paddingBottom: MODE_SWITCH_CLEARANCE + Spacing.md,
               flexGrow: 1,
             }}
-            ListHeaderComponent={
-              <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.xs }}>
-                <ThemedText
-                  variant="labelLarge"
-                  type="bold"
-                  numberOfLines={1}
-                  style={{ flexShrink: 1, color: theme.colors.secondary }}
-                >
-                  {requestsTitle}
-                </ThemedText>
-                {!!requestText.trim() && (
-                  <Chip
-                    testID="requests-clear-search"
-                    icon="close"
-                    compact
-                    onPress={() => {
-                      dispatch(storeRequestSearchText(""));
-                      setTyped("");
-                    }}
-                  >
-                    Törlés
-                  </Chip>
-                )}
-              </View>
-            }
             renderItem={({ item }) => (
               <RequestCard
                 data={item}
@@ -328,7 +285,6 @@ export default function SearchScreen() {
               ) : null
             }
           />
-        </>
       )}
 
       {browsing && mode === "biznisz" && (
@@ -343,11 +299,6 @@ export default function SearchScreen() {
             gap: Spacing.sm,
             paddingBottom: MODE_SWITCH_CLEARANCE + Spacing.md,
           }}
-          ListHeaderComponent={
-            <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>
-              Új bizniszek
-            </ThemedText>
-          }
           renderItem={({ item }) => <BuzinessItem data={item} />}
           ListFooterComponent={
             browseBizniszek.loading ? <ActivityIndicator style={{ marginVertical: Spacing.lg }} /> : null
@@ -369,7 +320,7 @@ export default function SearchScreen() {
             variant="labelMedium"
             style={{ color: theme.colors.onSurfaceVariant, textAlign: "center" }}
           >
-            Írd be egy fife nevét vagy @felhasználónevét.
+            Írj be egy nevet vagy @felhasználónevet.
           </ThemedText>
         </View>
       )}

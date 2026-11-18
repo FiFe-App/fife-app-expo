@@ -10,9 +10,11 @@ import Smiley from "./Smiley";
 import { Pressable, Text, View } from "react-native";
 import { useMemo } from "react";
 import { router } from "expo-router";
+import { useAppMode } from "@/lib/mode/appMode";
 
 const FakeSearchInput = ({ mode = "biznisz" }: { mode?: SearchMode }) => {
   const theme = useAppTheme();
+  const appMode = useAppMode();
   // Both selectors always run — only which one is displayed depends on mode.
   const buzinessText = useSelector((state: RootState) => state.buziness.searchParams?.text ?? "");
   const fifeText = useSelector((state: RootState) => state.users.userSearchParams?.text ?? "");
@@ -26,7 +28,7 @@ const FakeSearchInput = ({ mode = "biznisz" }: { mode?: SearchMode }) => {
 
   return (
     <ThemedView style={{ flex: 1, flexDirection: "row", gap: Spacing.md, alignItems: "center", justifyContent: "center" }} type="card">
-      <Smiley style={{ width: 35, height: 35, zIndex: 100000 }} />
+      {appMode == "en" && <Smiley style={{ width: 35, height: 35, zIndex: 100000 }} />}
       <Pressable
         onPress={() => router.push({ pathname: "/search", params: { mode } })}
         style={{

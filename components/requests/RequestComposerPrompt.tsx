@@ -29,9 +29,7 @@ export const RequestComposerPrompt = () => {
         gap: Spacing.sm,
         marginHorizontal: Spacing.md,
         marginVertical: Spacing.sm,
-        padding: Spacing.md,
         borderRadius: BorderRadius.lg,
-        backgroundColor: theme.colors.elevation.level1,
       }}
     >
       <ProfileImage

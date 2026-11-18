@@ -136,7 +136,7 @@ export default function RequestScreen() {
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ padding: Spacing.md, gap: Spacing.md, paddingBottom: Spacing.xxl }}
           >
-            <Surface elevation={2} style={{ borderRadius: BorderRadius.lg, padding: Spacing.md, gap: Spacing.md }}>
+            <Surface elevation={0} style={{ gap: Spacing.md }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
                 <ProfileImage
                   uid={data.author}
@@ -153,9 +153,17 @@ export default function RequestScreen() {
                   >
                     {mine ? "Te" : (authorName ?? "Törölt felhasználó")}
                   </ThemedText>
-                  <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                    {requestAge(data.created_at)} · {place}
-                  </Text>
+
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: Spacing.md }}>
+
+
+                    <MetaStat icon={"calendar"}>
+                      {requestAge(data.created_at)}
+                    </MetaStat>
+                    <MetaStat icon={coords ? "map-marker" : "wifi"}>
+                      {coords ? place : "Bárhol"}
+                    </MetaStat>
+                  </View>
                 </View>
                 <RequestMenu
                   request={{
@@ -175,6 +183,13 @@ export default function RequestScreen() {
 
               <View style={{ gap: Spacing.sm }}>
                 <Text variant="titleLarge">{data.title}</Text>
+                {data.tags?.length > 0 && (
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs }}>
+                    {data.tags.map((tag) => (
+                      <CategoryChip key={tag}>{tag}</CategoryChip>
+                    ))}
+                  </View>
+                )}
                 <RequestBadges solved={solved} match={false} />
                 {!!data.description && (
                   <UrlText text={data.description} style={{ fontSize: 16, lineHeight: 24 }} />
@@ -192,24 +207,6 @@ export default function RequestScreen() {
                 />
               ))}
 
-              {data.tags?.length > 0 && (
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs }}>
-                  {data.tags.map((tag) => (
-                    <CategoryChip key={tag}>{tag}</CategoryChip>
-                  ))}
-                </View>
-              )}
-
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: Spacing.md }}>
-                <MetaStat icon={coords ? "map-marker" : "wifi"}>
-                  {coords ? place : "Bárhol"}
-                </MetaStat>
-                {coords && !!data.radius && (
-                  <MetaStat icon="radius-outline">
-                    {Math.round(data.radius / 100) / 10} km-es körzetből
-                  </MetaStat>
-                )}
-              </View>
 
               {coords && (
                 <View style={{ borderRadius: BorderRadius.md, overflow: "hidden", height: 160 }}>
@@ -236,7 +233,7 @@ export default function RequestScreen() {
                   icon="check-circle-outline"
                   onPress={() => solve(data)}
                 >
-                  Megoldva
+                  Megoldva?
                 </Button>
               )}
               {solved && (
@@ -257,18 +254,12 @@ export default function RequestScreen() {
                 </View>
               )}
             </Surface>
-
-            <View>
-              <ThemedText variant="titleMedium" style={{ paddingBottom: Spacing.sm }}>
-                Hozzászólások
-              </ThemedText>
-              <Comments
-                path={"request/" + data.id}
-                placeholder={mine ? "Válaszolj…" : "Tudsz segíteni? Írj hozzászólást!"}
-                closed={solved}
-                closedText="A kérés megoldódott, ezért új hozzászólást már nem lehet írni."
-              />
-            </View>
+            <Comments
+              path={"request/" + data.id}
+              placeholder={mine ? "Válaszolj…" : "Tudsz segíteni?"}
+              closed={solved}
+              closedText="A kérés megoldódott, ezért új hozzászólást már nem lehet írni."
+            />
           </ScrollView>
         </ThemedView>
       </KeyboardAvoidingView>
