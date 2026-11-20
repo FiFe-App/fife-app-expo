@@ -14,10 +14,12 @@ import Smiley from "./Smiley";
 import { TextInput, View, FlatList, Pressable, Text, StyleSheet } from "react-native";
 import { useCallback, useRef, useState } from "react";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
+import { useAppMode } from "@/lib/mode/appMode";
 
 const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropdown = true, mode = "biznisz", onFocus, onChangeText }: { onSearch: (query: string) => void; autoFocus?: boolean; showSuggestionsDropdown?: boolean; mode?: SearchMode; onFocus?: () => void; onChangeText?: (text: string) => void }) => {
   const dispatch = useDispatch();
   const theme = useAppTheme();
+  const appMode = useAppMode();
 
   const canSearch = true;
   // The two searches are distinct: a name typed here must never land in the
@@ -80,11 +82,9 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
   return (
     <View style={{ flex: 1 }}>
       <ThemedView style={{ flex: 1, flexDirection: "row", gap: Spacing.md, alignItems: "center", justifyContent: "center" }} type="card">
-        <Smiley style={{ width: 35, height: 35, zIndex: 100000 }} />
+        {appMode == "en" && <Smiley style={{ width: 35, height: 35, zIndex: 100000 }} />}
         <View style={{ flex: 1, height: 40, flexDirection: "row", alignItems: "center", backgroundColor: theme.colors.background, borderRadius: BorderRadius.full, paddingHorizontal: Spacing.md }}>
-          <TouchableRipple onPress={handleSubmit} disabled={!canSearch} borderless style={{ borderRadius: 20, padding: Spacing.xs }}>
-            <Icon source="magnify" size={22} color={theme.colors.onSurface} />
-          </TouchableRipple>
+
           <TextInput
             value={inputText}
             autoFocus={autoFocus}
@@ -100,6 +100,9 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
             placeholderTextColor={theme.colors.onSurfaceVariant}
             placeholder={greeting}
           />
+          <TouchableRipple onPress={handleSubmit} disabled={!canSearch} borderless style={{ borderRadius: 20, padding: Spacing.xs }}>
+            <Icon source="magnify" size={22} color={theme.colors.backdrop}/>
+          </TouchableRipple>
           {!!inputText.length && <TouchableRipple onPress={handleClear} disabled={!canSearch} borderless style={{ borderRadius: 20, padding: Spacing.xs }}>
             <Icon source="close" size={22} color={theme.colors.onSurface} />
           </TouchableRipple>}

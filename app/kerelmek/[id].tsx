@@ -233,7 +233,7 @@ export default function RequestScreen() {
                   icon="check-circle-outline"
                   onPress={() => solve(data)}
                 >
-                  Megoldva?
+                  Megoldódótt?
                 </Button>
               )}
               {solved && (

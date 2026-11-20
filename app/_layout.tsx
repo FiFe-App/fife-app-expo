@@ -460,6 +460,8 @@ function RootContent() {
             {!!uid && <InAppMessageDialog />}
           </View>
         </ThemedView>
+        <View style={{bottom:0,height:30,width:"100%",backgroundColor:theme.colors.elevation.level1,position:"absolute",zIndex:-1}}/>
+
         {appLock.locked && (
           <AppLockScreen
             onUnlock={appLock.unlock}
