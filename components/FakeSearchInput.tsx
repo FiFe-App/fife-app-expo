@@ -9,9 +9,11 @@ import { Pressable, Text, View } from "react-native";
 import { useMemo } from "react";
 import { router } from "expo-router";
 import { searchHref } from "@/lib/search/href";
+import { useAppMode } from "@/lib/mode/appMode";
 
 const FakeSearchInput = ({ mode = "biznisz" }: { mode?: SearchMode }) => {
   const theme = useAppTheme();
+  const appMode = useAppMode();
 
   const greeting = useMemo(() => {
     if (mode === "fife") return "Keress fifékre...";
@@ -21,7 +23,7 @@ const FakeSearchInput = ({ mode = "biznisz" }: { mode?: SearchMode }) => {
 
   return (
     <ThemedView style={{ flex: 1, flexDirection: "row", gap: Spacing.md, alignItems: "center", justifyContent: "center" }} type="card">
-      <Smiley style={{ width: 35, height: 35, zIndex: 100000 }} />
+      {appMode == "en" && <Smiley style={{ width: 35, height: 35, zIndex: 100000 }} />}
       <Pressable
         onPress={() => router.push(searchHref(mode, { focus: true }))}
         style={{

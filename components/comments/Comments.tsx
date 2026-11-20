@@ -313,10 +313,64 @@ const Comments = ({ path, placeholder, limit = 10, style, publicComments, closed
 
   return (
     <View
-      style={[{ flex: 1 }, style]}
+      style={[{ flex: undefined }, style]}
     >
+      {closed ? (
+        <View
+          testID="comments-closed"
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: Spacing.sm,
+            padding: Spacing.md,
+            borderRadius: BorderRadius.md,
+            backgroundColor: theme.colors.surfaceVariant,
+          }}
+        >
+          <Icon source="lock-outline" size={20} color={theme.colors.onSurfaceVariant} />
+          <ThemedText style={{ flex: 1, color: theme.colors.onSurfaceVariant }}>
+            {closedText ?? "A hozzászólás le van zárva."}
+          </ThemedText>
+        </View>
+      ) : (
+      <View style={{ flexDirection: "row" }}>
+        <View style={{ flex: 1 }}>
+          <TextInput
+            style={{ paddingRight: 95 }}
+            value={text}
+            onChangeText={setText}
+            onSubmitEditing={handleSend}
+            returnKeyType="send"
+            submitBehavior="submit"
+            disabled={!uid || loading}
+            placeholder={
+              uid
+                ? placeholder
+                  ? placeholder
+                  : "Kommented"
+                : "Jelentkezz be a hozzászóláshoz."
+            }
+          />
+        </View>
+        <View style={{ position: "absolute", right: 0, flexDirection: "row" }}>
+          {image ? (
+            <ImageBackground source={{ uri: image.uri }}>
+              <IconButton icon="close" onPress={dismissImage} />
+            </ImageBackground>
+          ) : (
+            <IconButton icon="image" onPress={pickImage} disabled={!uid} />
+          )}
+          <IconButton
+            icon="send"
+            onPress={handleSend}
+            disabled={!uid || !text}
+            loading={loading}
+          />
+        </View>
+      </View>
+      )}
       {
-        <View style={{ paddingBottom: 10, flex:1, minHeight: 200 }}>
+        <View style={{ paddingBottom: 10, flex:undefined, minHeight: 0 }}>
           {!!visibleComments.length &&
             visibleComments.map((comment, ind) => {
               return (
@@ -403,60 +457,6 @@ const Comments = ({ path, placeholder, limit = 10, style, publicComments, closed
             Még nem érkezett vélemény
           </ThemedText>
         )
-      )}
-      {closed ? (
-        <View
-          testID="comments-closed"
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: Spacing.sm,
-            padding: Spacing.md,
-            borderRadius: BorderRadius.md,
-            backgroundColor: theme.colors.surfaceVariant,
-          }}
-        >
-          <Icon source="lock-outline" size={20} color={theme.colors.onSurfaceVariant} />
-          <ThemedText style={{ flex: 1, color: theme.colors.onSurfaceVariant }}>
-            {closedText ?? "A hozzászólás le van zárva."}
-          </ThemedText>
-        </View>
-      ) : (
-      <View style={{ flexDirection: "row" }}>
-        <View style={{ flex: 1 }}>
-          <TextInput
-            style={{ paddingRight: 95 }}
-            value={text}
-            onChangeText={setText}
-            onSubmitEditing={handleSend}
-            returnKeyType="send"
-            submitBehavior="submit"
-            disabled={!uid || loading}
-            placeholder={
-              uid
-                ? placeholder
-                  ? placeholder
-                  : "Kommented"
-                : "Jelentkezz be a hozzászóláshoz."
-            }
-          />
-        </View>
-        <View style={{ position: "absolute", right: 0, flexDirection: "row" }}>
-          {image ? (
-            <ImageBackground source={{ uri: image.uri }}>
-              <IconButton icon="close" onPress={dismissImage} />
-            </ImageBackground>
-          ) : (
-            <IconButton icon="image" onPress={pickImage} disabled={!uid} />
-          )}
-          <IconButton
-            icon="send"
-            onPress={handleSend}
-            disabled={!uid || !text}
-            loading={loading}
-          />
-        </View>
-      </View>
       )}
 
       <Menu

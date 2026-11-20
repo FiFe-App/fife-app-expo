@@ -35,8 +35,8 @@ type ListItem =
 
 const MODES: { key: SearchMode; label: string; icon: string }[] = [
   { key: "biznisz", label: "Bizniszek", icon: "briefcase-outline" },
-  { key: "fife", label: "Fifék", icon: "account" },
   { key: "kerelem", label: "Kérések", icon: "hand-heart-outline" },
+  { key: "fife", label: "Fifék", icon: "account" },
 ];
 
 const SCOPES: RequestScope[] = ["all", "for_me", "mine", "solved"];

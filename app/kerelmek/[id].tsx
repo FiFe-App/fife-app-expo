@@ -5,14 +5,12 @@ import ErrorScreen from "@/components/ErrorScreen";
 import FiFeMap from "@/components/mapView/FiFeMap";
 import { Marker } from "@/components/mapView/mapView";
 import CategoryChip from "@/components/CategoryChip";
-import MetaStat from "@/components/MetaStat";
 import { RequestBadges } from "@/components/requests/RequestCard";
 import RequestHeaderInfo from "@/components/requests/RequestHeaderInfo";
 import { useRequestActions, useSolveRequest } from "@/components/requests/RequestMenu";
 import { MyAppbar } from "@/components/MyAppBar";
 import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
 import SupabaseImage from "@/components/SupabaseImage";
-import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import UrlText from "@/components/UrlText";
 import { BorderRadius } from "@/constants/borderRadius";
@@ -205,9 +203,16 @@ export default function RequestScreen() {
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ padding: Spacing.md, gap: Spacing.md, paddingBottom: Spacing.xxl }}
           >
-            <Surface elevation={2} style={{ borderRadius: BorderRadius.lg, padding: Spacing.md, gap: Spacing.md }}>
+            <Surface elevation={0} style={{ gap: Spacing.md }}>
               <View style={{ gap: Spacing.sm }}>
                 <Text variant="titleLarge">{data.title}</Text>
+                {data.tags?.length > 0 && (
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs }}>
+                    {data.tags.map((tag) => (
+                      <CategoryChip key={tag}>{tag}</CategoryChip>
+                    ))}
+                  </View>
+                )}
                 <RequestBadges solved={solved} match={false} />
                 {!!data.description && (
                   <UrlText text={data.description} style={{ fontSize: 16, lineHeight: 24 }} />
@@ -224,25 +229,6 @@ export default function RequestScreen() {
                   style={{ width: "100%", aspectRatio: 4 / 3, borderRadius: BorderRadius.md }}
                 />
               ))}
-
-              {data.tags?.length > 0 && (
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: Spacing.xs }}>
-                  {data.tags.map((tag) => (
-                    <CategoryChip key={tag}>{tag}</CategoryChip>
-                  ))}
-                </View>
-              )}
-
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: Spacing.md }}>
-                <MetaStat icon={coords ? "map-marker" : "wifi"}>
-                  {coords ? place : "Bárhol"}
-                </MetaStat>
-                {coords && !!data.radius && (
-                  <MetaStat icon="radius-outline">
-                    {Math.round(data.radius / 100) / 10} km-es körzetből
-                  </MetaStat>
-                )}
-              </View>
 
               {coords && (
                 <View style={{ borderRadius: BorderRadius.md, overflow: "hidden", height: 160 }}>
@@ -269,22 +255,17 @@ export default function RequestScreen() {
                   icon="check-circle-outline"
                   onPress={() => solve(data)}
                 >
-                  Megoldva
+                  Megoldódott?
                 </Button>
               )}
             </Surface>
 
-            <View>
-              <ThemedText variant="titleMedium" style={{ paddingBottom: Spacing.sm }}>
-                Hozzászólások
-              </ThemedText>
-              <Comments
-                path={"request/" + data.id}
-                placeholder={mine ? "Válaszolj…" : "Tudsz segíteni? Írj hozzászólást!"}
-                closed={solved}
-                closedText="A kérés megoldódott, ezért új hozzászólást már nem lehet írni."
-              />
-            </View>
+            <Comments
+              path={"request/" + data.id}
+              placeholder={mine ? "Válaszolj…" : "Tudsz segíteni?"}
+              closed={solved}
+              closedText="A kérés megoldódott, ezért új hozzászólást már nem lehet írni."
+            />
           </ScrollView>
         </ThemedView>
       </KeyboardAvoidingView>

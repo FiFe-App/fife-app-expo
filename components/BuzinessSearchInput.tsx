@@ -8,6 +8,7 @@ import Smiley from "./Smiley";
 import { TextInput, View, FlatList, Pressable, Text, StyleSheet } from "react-native";
 import { useCallback, useState } from "react";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
+import { useAppMode } from "@/lib/mode/appMode";
 
 interface BuzinessSearchInputProps {
   onSearch: (query: string) => void;
@@ -38,6 +39,7 @@ const BuzinessSearchInput = ({
   onChangeText,
 }: BuzinessSearchInputProps) => {
   const theme = useAppTheme();
+  const appMode = useAppMode();
 
   const canSearch = true;
   const [inputText, setInputText] = useState(initialText);
@@ -79,11 +81,9 @@ const BuzinessSearchInput = ({
   return (
     <View style={{ flex: 1 }}>
       <ThemedView style={{ flex: 1, flexDirection: "row", gap: Spacing.md, alignItems: "center", justifyContent: "center" }} type="card">
-        <Smiley style={{ width: 35, height: 35, zIndex: 100000 }} />
+        {appMode == "en" && <Smiley style={{ width: 35, height: 35, zIndex: 100000 }} />}
         <View style={{ flex: 1, height: 40, flexDirection: "row", alignItems: "center", backgroundColor: theme.colors.background, borderRadius: BorderRadius.full, paddingHorizontal: Spacing.md }}>
-          <TouchableRipple onPress={handleSubmit} disabled={!canSearch} borderless style={{ borderRadius: 20, padding: Spacing.xs }}>
-            <Icon source="magnify" size={22} color={theme.colors.onSurface} />
-          </TouchableRipple>
+
           <TextInput
             value={inputText}
             autoFocus={autoFocus}
@@ -104,6 +104,9 @@ const BuzinessSearchInput = ({
             placeholderTextColor={theme.colors.onSurfaceVariant}
             placeholder={greeting}
           />
+          <TouchableRipple onPress={handleSubmit} disabled={!canSearch} borderless style={{ borderRadius: 20, padding: Spacing.xs }}>
+            <Icon source="magnify" size={22} color={theme.colors.backdrop}/>
+          </TouchableRipple>
           {!!inputText.length && <TouchableRipple onPress={handleClear} disabled={!canSearch} borderless style={{ borderRadius: 20, padding: Spacing.xs }}>
             <Icon source="close" size={22} color={theme.colors.onSurface} />
           </TouchableRipple>}
