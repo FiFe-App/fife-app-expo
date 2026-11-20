@@ -2,7 +2,6 @@ import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import RequestsForYou from "@/components/requests/RequestsForYou";
 import { login } from "@/redux/reducers/userReducer";
-import { storeRequestSearchText } from "@/redux/reducers/requestsReducer";
 import { __resetRouter, router } from "@/test-utils/mocks/expo-router";
 import { __resetSupabase, supabase } from "@/test-utils/mocks/supabase";
 import { makeRequest } from "@/test-utils/fixtures/requests";
@@ -49,20 +48,16 @@ describe("RequestsForYou (community screen strip)", () => {
     expect(store.getState().requests.composer).toEqual({ open: true, initialTitle: "" });
   });
 
-  it("opens the Kérések tab of the search from Mind, on the for-you slice and without a leftover search", async () => {
+  it("opens the Kérések tab of the search from Mind, on the for-you slice", async () => {
     supabase.rpc.mockResolvedValue({ data: [], error: null });
-    const store = signedIn();
-    store.dispatch(storeRequestSearchText("régi keresés"));
-    await renderWithProviders(<RequestsForYou />, { store });
+    await renderWithProviders(<RequestsForYou />, { store: signedIn() });
 
     await fireEvent.press(screen.getByTestId("requests-all"));
 
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/search",
-      params: { mode: "kerelem", browse: "1" },
+      params: { mode: "kerelem", scope: "for_me" },
     });
-    expect(store.getState().requests.searchText).toBe("");
-    expect(store.getState().requests.scope).toBe("for_me");
   });
 
   it("shows the error and not the empty state when the load fails", async () => {

@@ -1,12 +1,8 @@
 import { useAppTheme } from "@/assets/theme";
 import { Spacing } from "@/constants/spacing";
 import { useRequests } from "@/hooks/useRequests";
-import { REQUESTS_HREF } from "@/lib/requests/navigation";
-import {
-  openRequestComposer,
-  storeRequestScope,
-  storeRequestSearchText,
-} from "@/redux/reducers/requestsReducer";
+import { searchHref } from "@/lib/search/href";
+import { openRequestComposer } from "@/redux/reducers/requestsReducer";
 import { RootState } from "@/redux/store";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
@@ -42,11 +38,8 @@ export const RequestsForYou = () => {
   if (!uid) return null;
 
   const openAll = () => {
-    // The list is the Kérések tab of the search screen. This section is the "for you" slice
-    // and not a search: don't open it behind a leftover query or another filter.
-    dispatch(storeRequestSearchText(""));
-    dispatch(storeRequestScope("for_me"));
-    router.push(REQUESTS_HREF);
+    // The list is the Kérések tab of the search screen, on the same "for you" slice.
+    router.push(searchHref("kerelem", { scope: "for_me" }));
   };
 
   const empty = fetched && !loading && !error && data.length === 0;

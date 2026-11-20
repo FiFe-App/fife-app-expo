@@ -10,7 +10,7 @@ const DEFAULT_LOCATION = { lat: 47.4979, long: 19.0402 };
 
 /**
  * A paged slice of the requests feed (the requests_feed RPC). Local state, like
- * useNearbyBuzinesses, so the home strip and the full list never share (or fight over) a page.
+ * the other lists, so the home section and the search screen never share (or fight over) a page.
  *
  * `load(scope, query)` starts over; `loadMore()` continues with the same scope and query.
  */

@@ -60,7 +60,7 @@ function SheetContent({ onDismiss }: { onDismiss: () => void }) {
   });
 
   const submit = () => {
-    if (runSearch(dispatch, query, mode, "navigate")) onDismiss();
+    if (runSearch(dispatch, query, mode)) onDismiss();
   };
 
   return (

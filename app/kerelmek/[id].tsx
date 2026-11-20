@@ -1,15 +1,16 @@
-import { useAppTheme } from "@/assets/theme";
 import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 import { Button } from "@/components/Button";
 import Comments from "@/components/comments/Comments";
 import ErrorScreen from "@/components/ErrorScreen";
 import FiFeMap from "@/components/mapView/FiFeMap";
 import { Marker } from "@/components/mapView/mapView";
-import ProfileImage from "@/components/ProfileImage";
 import CategoryChip from "@/components/CategoryChip";
 import MetaStat from "@/components/MetaStat";
 import { RequestBadges } from "@/components/requests/RequestCard";
-import RequestMenu, { useSolveRequest } from "@/components/requests/RequestMenu";
+import RequestHeaderInfo from "@/components/requests/RequestHeaderInfo";
+import { useRequestActions, useSolveRequest } from "@/components/requests/RequestMenu";
+import { MyAppbar } from "@/components/MyAppBar";
+import { clearOptions, setOptions } from "@/redux/reducers/infoReducer";
 import SupabaseImage from "@/components/SupabaseImage";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -25,19 +26,20 @@ import { REQUESTS_BUCKET } from "@/lib/requests/requestImages";
 import { supabase } from "@/lib/supabase/supabase";
 import { RootState } from "@/redux/store";
 import { Tables } from "@/database.types";
-import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Stack, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import { ActivityIndicator, Icon, Surface, Text } from "react-native-paper";
-import { useSelector } from "react-redux";
+import { ActivityIndicator, Surface, Text } from "react-native-paper";
+import { useDispatch, useSelector } from "react-redux";
 
 type RequestRow = Omit<Tables<"requests">, "embedding" | "embedding_text"> & {
   profiles: { full_name: string | null; avatar_url: string | null } | null;
 };
 
 export default function RequestScreen() {
-  const theme = useAppTheme();
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
   const { id: idParam } = useLocalSearchParams<{ id: string }>();
   const id = Number(idParam);
   const uid = useSelector((state: RootState) => state.user.uid);
@@ -86,6 +88,91 @@ export default function RequestScreen() {
     }
   }, [data]);
 
+  const mine = !!data && data.author === uid;
+  const solved = data?.status === "solved";
+  const authorName = data?.profiles?.full_name ?? null;
+  const distance =
+    coords && myLocation
+      ? getDistance(
+          myLocation.coords.latitude,
+          myLocation.coords.longitude,
+          coords.lat,
+          coords.long,
+        )
+      : null;
+  const place = requestPlaceText({
+    lat: coords?.lat ?? null,
+    long: coords?.long ?? null,
+    distance,
+  });
+
+  // The ⋮ menu of the app bar (info.options): solve / delete for the author, report / block for
+  // everyone else. The dialogs those open are rendered at the bottom of this screen.
+  const { items, modals } = useRequestActions(
+    {
+      id: data?.id ?? id,
+      author: data?.author ?? "",
+      author_name: authorName,
+      title: data?.title ?? "",
+      description: data?.description ?? "",
+      images: data?.images ?? [],
+      status: data?.status ?? "open",
+    },
+    { onDeleted: leaveRequest, onBlocked: leaveRequest, onSolved: load },
+  );
+  // The options outlive a render, so what they call is read from here when they are pressed.
+  const itemsRef = useRef(items);
+  useEffect(() => {
+    itemsRef.current = items;
+  });
+  const itemTitles = items.map((item) => item.title).join("|");
+  useFocusEffect(
+    useCallback(() => {
+      if (!itemTitles) {
+        dispatch(clearOptions());
+        return;
+      }
+      dispatch(
+        setOptions(
+          itemTitles.split("|").map((title) => {
+            const item = itemsRef.current.find((i) => i.title === title);
+            return {
+              title,
+              icon: item?.icon ?? "dots-vertical",
+              onPress: () => itemsRef.current.find((i) => i.title === title)?.onPress(),
+            };
+          }),
+        ),
+      );
+      return () => {
+        dispatch(clearOptions());
+      };
+    }, [dispatch, itemTitles]),
+  );
+
+  // Back arrow, who asked / when / where, the ⋮ menu: the app bar is this request's header.
+  const headerAuthor = data?.author;
+  const headerAvatar = data?.profiles?.avatar_url;
+  const headerAge = data ? requestAge(data.created_at) : "";
+  useEffect(() => {
+    if (!headerAuthor) return;
+    navigation.setOptions({
+      header: () => (
+        <MyAppbar
+          center={
+            <RequestHeaderInfo
+              authorId={headerAuthor}
+              name={headerAuthor === uid ? "Te" : (authorName ?? "Törölt felhasználó")}
+              avatarUrl={headerAvatar}
+              age={headerAge}
+              place={place}
+            />
+          }
+        />
+      ),
+    });
+  }, [navigation, headerAuthor, headerAvatar, headerAge, authorName, place, uid]);
+
   if (validId && loading) {
     return (
       <ThemedView style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -108,24 +195,6 @@ export default function RequestScreen() {
     );
   }
 
-  const mine = data.author === uid;
-  const solved = data.status === "solved";
-  const distance =
-    coords && myLocation
-      ? getDistance(
-          myLocation.coords.latitude,
-          myLocation.coords.longitude,
-          coords.lat,
-          coords.long,
-        )
-      : null;
-  const place = requestPlaceText({
-    lat: coords?.lat ?? null,
-    long: coords?.long ?? null,
-    distance,
-  });
-  const authorName = data.profiles?.full_name ?? null;
-
   return (
     <>
       <Stack.Screen options={{ title: "Kérés" }} />
@@ -137,42 +206,6 @@ export default function RequestScreen() {
             contentContainerStyle={{ padding: Spacing.md, gap: Spacing.md, paddingBottom: Spacing.xxl }}
           >
             <Surface elevation={2} style={{ borderRadius: BorderRadius.lg, padding: Spacing.md, gap: Spacing.md }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
-                <ProfileImage
-                  uid={data.author}
-                  avatar_url={data.profiles?.avatar_url}
-                  style={{ width: 44, height: 44, borderRadius: BorderRadius.md }}
-                />
-                <View style={{ flex: 1 }}>
-                  <ThemedText
-                    type="bold"
-                    numberOfLines={1}
-                    onPress={() =>
-                      router.navigate({ pathname: "/user/[uid]", params: { uid: data.author } })
-                    }
-                  >
-                    {mine ? "Te" : (authorName ?? "Törölt felhasználó")}
-                  </ThemedText>
-                  <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                    {requestAge(data.created_at)} · {place}
-                  </Text>
-                </View>
-                <RequestMenu
-                  request={{
-                    id: data.id,
-                    author: data.author,
-                    author_name: authorName,
-                    title: data.title,
-                    description: data.description,
-                    images: data.images,
-                    status: data.status,
-                  }}
-                  onDeleted={() => leaveRequest()}
-                  onBlocked={() => leaveRequest()}
-                  onSolved={load}
-                />
-              </View>
-
               <View style={{ gap: Spacing.sm }}>
                 <Text variant="titleLarge">{data.title}</Text>
                 <RequestBadges solved={solved} match={false} />
@@ -239,23 +272,6 @@ export default function RequestScreen() {
                   Megoldva
                 </Button>
               )}
-              {solved && (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: Spacing.sm,
-                    padding: Spacing.md,
-                    borderRadius: BorderRadius.md,
-                    backgroundColor: theme.colors.surfaceVariant,
-                  }}
-                >
-                  <Icon source="archive-check-outline" size={22} color={theme.colors.nature} />
-                  <Text variant="bodyMedium" style={{ flex: 1 }}>
-                    Ez a kérés megoldódott, ezért archiválva van.
-                  </Text>
-                </View>
-              )}
             </Surface>
 
             <View>
@@ -272,6 +288,7 @@ export default function RequestScreen() {
           </ScrollView>
         </ThemedView>
       </KeyboardAvoidingView>
+      {modals}
     </>
   );
 }

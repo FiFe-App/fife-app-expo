@@ -261,3 +261,17 @@ Korlátok, amiket a tervezésnél figyelembe kell venni:
 - **Neked sorrend és jelvények**: a "Neked" lista elején az érdeklődési körhöz illeszkedő kérések ("érdekel" jelvény), utánuk a bizniszeidhez illeszkedők ("illik a bizniszedhez"), aztán a többi. Az érdeklődést a kliens küldi (`p_interests`), az illesztés szó szerinti és (ha van vektor) szemantikus.
 - **Embedding**: az új kérést a `create-request` edge function menti (kliensnek nincs INSERT joga), az "AI-s megtalálhatóság" bekapcsolva `embedding_text` + `embedding` készül, mint a bizniszeknél. A szöveges keresés a `request-search` függvényen megy (lekérdezés-embedding a közös cache-sel). A seedelt kéréseknek nincs embeddingjük: a szemantikus ághoz a szerzőnek `ai_enhance = true` kell, és `fill-embeddings`-t kell futtatni.
 - **Új kérés (Környék)**: a FiFe Radar és a Kérések neked közt egy poszt-szerű álinput van (avatar + mező). Rákoppintva az új kérés modal középen nyílik; a cím input ugyanúgy néz ki, mint az álinput.
+
+## Keresés oldal újratervezve (`/search`)
+
+- **Egyetlen hely minden kereséshez.** A `/biznisz` oldal megszűnt (a route csak átirányít a keresésre), a bizniszek, fifék és kérések találatai is a `search.tsx`-en vannak. A keresés állapota a route-ban él (`/search?mode=…&q=…&scope=…`), ezért minden konkrét keresés — az üres is — külön előzmény-bejegyzés, és a Vissza gomb az előzőre visz.
+- **Minden chip alapkeresést indít:** Bizniszek → új bizniszek, Fifék → FiFe Radar, Kérések → kérések neked. Az aktív chip kitöltött (primary) színű. Ugyanarra a chipre koppintva (üres kereséssel) újratölt, nem halmoz egy ikerbejegyzést.
+- **Korábbi keresések** csak akkor látszanak, ha a felhasználó a keresőmezőbe koppint (a lista a mező elhagyásakor eltűnik). A kéréseknek nincs keresési előzménye. A billentyűzet csak akkor nyílik meg, ha a keresőmezőre koppintva (a Környék és az Otthon álkeresője, `focus=1`) érkezik a felhasználó.
+- **Cím ("Találatok")** a kategóriától és a szűrőtől függ: "Új bizniszek", "FiFe Radar", "Kérések neked", "Találatok a kérések között: kert · saját", "Új bizniszek · ingyenes, kiválasztott helyen".
+- **Finomítás** mindig látszik; a modal a kategóriától függ (bizniszek: hely, ingyenes, AI; fifék: hely; kérések: Mind / Neked / Saját / Megoldott). A szűrő a keresést helyben finomítja, nem új előzmény-bejegyzés. Kérések szöveges keresése alapból az összes kérésben keres (nem csak a "Neked" szeleten).
+- **Új kérés** gomb a bizniszek és a kérések listájának tetején és alján is, a keresőmező aktuális szövegével: "Új kérés ezzel a szöveggel: „…”".
+
+## Kérés oldala (`/kerelmek/[id]`)
+
+- A fejléc az app bar: vissza nyíl — a kérés létrehozója (avatar, név; koppintásra a profilja), a kérés kora és helye — jobbra a ⋮ menü (az `info.options`-ből: a létrehozónak Megoldva / Törlés, másoknak Jelentés / Letiltás).
+- A "megoldódott" magyarázat egyszer szerepel: a lezárt komment mezőnél. A felső "archiválva" sáv megszűnt; a "megoldva" jelvény marad.

@@ -4,7 +4,8 @@ import { trackEvent } from "@/lib/analytics";
 import { addSnack, showDialog } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
 import type { RequestItem } from "@/lib/requests/types";
-import { useState } from "react";
+import type { OptionProps } from "@/redux/store.type";
+import { ReactNode, useState } from "react";
 import { IconButton, Menu, Portal } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { useAppTheme } from "@/assets/theme";
@@ -56,12 +57,18 @@ export function useSolveRequest(onSolved?: () => void) {
   };
 }
 
-/** ⋮ menu of a request: mark solved / delete for the author, report / block for everyone else. */
-const RequestMenu = ({ request, onDeleted, onBlocked, onSolved }: RequestMenuProps) => {
+/**
+ * What the user can do with a request: mark it solved / delete it when it is theirs, report it /
+ * block its author when it is not. `items` is shaped like the app bar's options (info.options),
+ * so the request page can hand them to MyAppbar's ⋮ menu; `modals` holds the report and block
+ * dialogs those items open and has to be rendered by whoever uses the items.
+ */
+export function useRequestActions(
+  request: MenuRequest,
+  { onDeleted, onBlocked, onSolved }: Omit<RequestMenuProps, "request">,
+): { items: OptionProps[]; modals: ReactNode } {
   const dispatch = useDispatch();
-  const theme = useAppTheme();
   const uid = useSelector((state: RootState) => state.user.uid);
-  const [menuVisible, setMenuVisible] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [blocking, setBlocking] = useState(false);
   const solve = useSolveRequest(onSolved);
@@ -89,6 +96,59 @@ const RequestMenu = ({ request, onDeleted, onBlocked, onSolved }: RequestMenuPro
     );
   };
 
+  let items: OptionProps[] = [];
+  if (uid) {
+    items = mine
+      ? [
+          ...(request.status === "open"
+            ? [{ icon: "check-circle-outline", title: "Megoldva", onPress: () => solve(request) }]
+            : []),
+          { icon: "delete", title: "Törlés", onPress: confirmDelete },
+        ]
+      : [
+          { icon: "alert-octagon", title: "Jelentés", onPress: () => setReporting(true) },
+          { icon: "account-cancel", title: "Felhasználó letiltása", onPress: () => setBlocking(true) },
+        ];
+  }
+
+  const modals = uid ? (
+    <Portal>
+      <ReportContentModal
+        show={reporting}
+        setShow={(show) => {
+          if (!show) setReporting(false);
+        }}
+        targetType="request"
+        targetId={request.id}
+        reportedUserId={request.author}
+        label={request.author_name ?? ""}
+        excerpt={[request.title, request.description].filter(Boolean).join("\n")}
+      />
+      <BlockUserModal
+        show={blocking}
+        setShow={(show) => {
+          if (!show) setBlocking(false);
+        }}
+        profileId={request.author}
+        profileName={request.author_name ?? "Ez a felhasználó"}
+        onBlocked={() => {
+          setBlocking(false);
+          onBlocked?.();
+        }}
+      />
+    </Portal>
+  ) : null;
+
+  return { items, modals };
+}
+
+/** ⋮ menu of a request card. */
+const RequestMenu = ({ request, onDeleted, onBlocked, onSolved }: RequestMenuProps) => {
+  const theme = useAppTheme();
+  const uid = useSelector((state: RootState) => state.user.uid);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const { items, modals } = useRequestActions(request, { onDeleted, onBlocked, onSolved });
+
   if (!uid) return null;
 
   return (
@@ -108,74 +168,19 @@ const RequestMenu = ({ request, onDeleted, onBlocked, onSolved }: RequestMenuPro
           />
         }
       >
-        {mine ? (
-          <>
-            {request.status === "open" && (
-              <Menu.Item
-                leadingIcon="check-circle-outline"
-                title="Megoldva"
-                onPress={() => {
-                  setMenuVisible(false);
-                  solve(request);
-                }}
-              />
-            )}
-            <Menu.Item
-              leadingIcon="delete"
-              title="Törlés"
-              onPress={() => {
-                setMenuVisible(false);
-                confirmDelete();
-              }}
-            />
-          </>
-        ) : (
-          <>
-            <Menu.Item
-              leadingIcon="alert-octagon"
-              title="Jelentés"
-              onPress={() => {
-                setMenuVisible(false);
-                setReporting(true);
-              }}
-            />
-            <Menu.Item
-              leadingIcon="account-cancel"
-              title="Felhasználó letiltása"
-              onPress={() => {
-                setMenuVisible(false);
-                setBlocking(true);
-              }}
-            />
-          </>
-        )}
+        {items.map((item) => (
+          <Menu.Item
+            key={item.title}
+            leadingIcon={item.icon}
+            title={item.title}
+            onPress={() => {
+              setMenuVisible(false);
+              item.onPress();
+            }}
+          />
+        ))}
       </Menu>
-
-      <Portal>
-        <ReportContentModal
-          show={reporting}
-          setShow={(show) => {
-            if (!show) setReporting(false);
-          }}
-          targetType="request"
-          targetId={request.id}
-          reportedUserId={request.author}
-          label={request.author_name ?? ""}
-          excerpt={[request.title, request.description].filter(Boolean).join("\n")}
-        />
-        <BlockUserModal
-          show={blocking}
-          setShow={(show) => {
-            if (!show) setBlocking(false);
-          }}
-          profileId={request.author}
-          profileName={request.author_name ?? "Ez a felhasználó"}
-          onBlocked={() => {
-            setBlocking(false);
-            onBlocked?.();
-          }}
-        />
-      </Portal>
+      {modals}
     </>
   );
 };

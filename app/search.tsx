@@ -3,25 +3,28 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { Spacing } from "@/constants/spacing";
 import { useAppTheme } from "@/assets/theme";
+import { useBuzinessSearch } from "@/hooks/useBuzinessSearch";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
-import { useNearbyBuzinesses } from "@/hooks/useNearbyBuzinesses";
-import { useRequests } from "@/hooks/useRequests";
-import BuzinessItem from "@/components/buziness/BuzinessItem";
-import RequestCard from "@/components/requests/RequestCard";
+import BuzinessResults from "@/components/search/BuzinessResults";
+import FifeResults from "@/components/search/FifeResults";
+import RequestResults from "@/components/search/RequestResults";
 import SearchFilterModal from "@/components/search/SearchFilterModal";
+import Measure from "@/components/tutorial/Measure";
 import { Button } from "@/components/Button";
-import { REQUEST_SCOPES } from "@/lib/requests/types";
-import { openRequestComposer, storeRequestSearchText } from "@/redux/reducers/requestsReducer";
+import { MyAppbar } from "@/components/MyAppBar";
+import { searchHref } from "@/lib/search/href";
+import { runSearch } from "@/lib/search/runSearch";
+import { searchTitle } from "@/lib/search/title";
+import { RequestScope } from "@/lib/requests/types";
+import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
 import { removeFromPreviousSearches } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { SearchMode } from "@/redux/store.type";
-import { useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, View } from "react-native";
-import { ActivityIndicator, Chip, Icon } from "react-native-paper";
+import { Chip, Icon } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { MyAppbar } from "@/components/MyAppBar";
-import { runSearch } from "@/lib/search/runSearch";
 import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 import { BorderRadius } from "@/constants/borderRadius";
 
@@ -36,145 +39,144 @@ const MODES: { key: SearchMode; label: string; icon: string }[] = [
   { key: "kerelem", label: "Kérések", icon: "hand-heart-outline" },
 ];
 
+const SCOPES: RequestScope[] = ["all", "for_me", "mine", "solved"];
 const isMode = (value: string | undefined): value is SearchMode =>
   MODES.some((m) => m.key === value);
+const isScope = (value: string | undefined): value is RequestScope =>
+  SCOPES.includes(value as RequestScope);
 
-/** The empty-state copy per slice of the kérések: what the user can do about it differs. */
-const EMPTY_REQUESTS: Record<string, { title: string; hint: string }> = {
-  all: { title: "Még nincs kérés.", hint: "Légy te az első, aki kér valamit a közösségtől!" },
-  for_me: {
-    title: "Most nincs a környékeden, ami neked való kérés.",
-    hint: "Nézd meg a Finomítás › Mind szűrőt, vagy kérj te valamit.",
-  },
-  mine: { title: "Még nem kértél semmit.", hint: "Ha elakadtál valamivel, kérdezd meg a közösséget!" },
-  solved: { title: "Még nincs megoldott kérés.", hint: "Itt jelennek meg az archivált kérések." },
-};
-
+/**
+ * The one place every search happens. A search is a route (/search?mode=…&q=…&scope=…): a chip
+ * starts the default search of its category (new bizniszek, the FiFe Radar, the kérések for
+ * you), a typed query starts a concrete one, and each is its own entry of the history, so
+ * Back steps through them — the empty ones too.
+ */
 export default function SearchScreen() {
   const theme = useAppTheme();
   const dispatch = useDispatch();
   const navigation = useNavigation();
-  // `mode` is set by a search box (FakeSearchInput always passes it); the menu tab passes
-  // nothing. `browse` asks for the quiet view (no keyboard) even with a mode, e.g. from the
-  // "Összes kérés" button of the community screen.
-  const params = useLocalSearchParams<{ mode?: string; browse?: string }>();
-  const [mode, setMode] = useState<SearchMode>(isMode(params.mode) ? params.mode : "biznisz");
-  const requestMode = mode === "kerelem";
+  // `focus` comes from a search box that was tapped (FakeSearchInput): the keyboard opens.
+  const params = useLocalSearchParams<{ mode?: string; q?: string; scope?: string; focus?: string }>();
+  const mode: SearchMode = isMode(params.mode) ? params.mode : "biznisz";
+  const q = typeof params.q === "string" ? params.q : "";
+  const scope: RequestScope = isScope(params.scope) ? params.scope : "for_me";
+  const autoFocus = params.focus === "1";
 
-  const buzinessText = useSelector((state: RootState) => state.buziness.searchParams?.text ?? "");
-  const fifeText = useSelector((state: RootState) => state.users.userSearchParams?.text ?? "");
-  const requestText = useSelector((state: RootState) => state.requests.searchText);
-  const requestScope = useSelector((state: RootState) => state.requests.scope);
   const buzinessCircle = useSelector((state: RootState) => state.buziness.searchParams?.searchCircle);
   const buzinessIngyen = useSelector((state: RootState) => state.buziness.searchParams?.ingyen) ?? false;
-  const searchText = mode === "fife" ? fifeText : mode === "kerelem" ? requestText : buzinessText;
-  // The box is re-seeded from the other mode's slice on a flip; what counts as typed follows.
-  const textOf = (m: SearchMode) => (m === "fife" ? fifeText : m === "kerelem" ? requestText : buzinessText);
-  // What is typed in the box right now (the kérések search itself only runs on submit).
-  const [typed, setTyped] = useState(requestText);
+  const fifeCircle = useSelector((state: RootState) => state.users.userSearchParams?.searchCircle);
+  // What is typed in the box right now; the "Új kérés" buttons carry it into the modal.
+  const [typed, setTyped] = useState(q);
+  // The previous searches are for the moment the user taps into the box, and no longer.
+  const [inputFocused, setInputFocused] = useState(autoFocus);
+  // Bumped when the chip of the search already on screen is tapped: load it again.
+  const [reloadKey, setReloadKey] = useState(0);
+  const [filterOpen, setFilterOpen] = useState(false);
+
   // Each mode keeps its own history: a name you looked up is not a biznisz query.
   const previousBuzinessSearches = useSelector((state: RootState) => state.user.previousSearches);
   const previousProfileSearches = useSelector(
     (state: RootState) => state.user.previousProfileSearches,
   );
-  const previousSearches = mode === "fife" ? previousProfileSearches : previousBuzinessSearches;
+  // The kérések keep no history.
+  const previousSearches =
+    mode === "fife" ? previousProfileSearches : mode === "kerelem" ? [] : previousBuzinessSearches;
+  const suggestions = useSearchSuggestions(typed, inputFocused && mode === "biznisz");
 
-  const suggestions = useSearchSuggestions(searchText, mode === "biznisz");
-
-  // Opened from the menu the screen is for browsing: no keyboard, no history, just what is
-  // new. Opened from a search box, or once the user taps into the box, it is for searching.
-  const [engaged, setEngaged] = useState(isMode(params.mode) && params.browse !== "1");
-  const browsing = !engaged && !requestMode;
-  const browseBizniszek = useNearbyBuzinesses(10, {
-    searchCircle: buzinessCircle,
-    ingyen: buzinessIngyen,
-  });
-  const requests = useRequests(10);
-  const { fetch: fetchNewBizniszek } = browseBizniszek;
-  const { load: loadRequests } = requests;
-  useEffect(() => {
-    if (browsing && mode === "biznisz") fetchNewBizniszek();
-  }, [browsing, mode, fetchNewBizniszek]);
-
-  // The kérések are listed right here: the filter and the submitted text pick what is shown.
-  // A request made, solved or deleted elsewhere must show up when the user comes back, so the
-  // list reloads on focus too (the first focus is covered by the effect).
-  const requestParamsRef = useRef({ scope: requestScope, query: requestText });
-  useEffect(() => {
-    requestParamsRef.current = { scope: requestScope, query: requestText };
-  }, [requestScope, requestText]);
-  useEffect(() => {
-    if (requestMode) loadRequests(requestScope, requestText);
-  }, [requestMode, requestScope, requestText, loadRequests]);
-  const focusedOnce = useRef(false);
+  // The bizniszek live in redux (the list and the map share them), so a screen that comes back
+  // into focus — Back from a later search — has to put its own search there again.
+  const { canLoadMore, search, loadNext, error } = useBuzinessSearch();
   useFocusEffect(
     useCallback(() => {
-      if (!focusedOnce.current) {
-        focusedOnce.current = true;
-        return;
-      }
-      if (requestMode) loadRequests(requestParamsRef.current.scope, requestParamsRef.current.query);
-    }, [requestMode, loadRequests]),
+      if (mode !== "biznisz") return;
+      dispatch(storeBuzinessSearchParams({ text: q }));
+      search(q);
+      // reloadKey is not read: bumping it is how a tap on the active chip asks for a reload.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mode, q, reloadKey, dispatch, search]),
   );
 
   const handleSearch = useCallback((query: string) => {
-    if (mode === "kerelem") {
-      // The results are on this very screen: just set what they filter by.
-      dispatch(storeRequestSearchText(query.trim()));
+    const trimmed = query.trim();
+    if (!trimmed) {
+      // The empty search is the category's default one, and is a history entry like any other.
+      if (!q) setReloadKey((k) => k + 1);
+      else router.push(searchHref(mode, { scope }));
       return;
     }
-    runSearch(dispatch, query, mode, "replace");
-  }, [dispatch, mode]);
+    if (mode === "kerelem") {
+      // The default slice is "for you", which is a poor place to look something up in.
+      router.push(searchHref(mode, { q: trimmed, scope: scope === "for_me" ? "all" : scope }));
+      return;
+    }
+    runSearch(dispatch, trimmed, mode);
+  }, [dispatch, mode, q, scope]);
 
   useEffect(() => {
     navigation.setOptions({
       header: () => (
         <MyAppbar
-          // key re-seeds the input's local text from the other slice on a flip.
-          center={<BuzinessSearchInput key={mode} mode={mode} onSearch={handleSearch} autoFocus={engaged} onFocus={() => setEngaged(true)} onChangeText={setTyped} showSuggestionsDropdown={false} />}
+          center={
+            <BuzinessSearchInput
+              mode={mode}
+              initialText={q}
+              onSearch={handleSearch}
+              autoFocus={autoFocus}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
+              onChangeText={setTyped}
+              showSuggestionsDropdown={false}
+            />
+          }
           style={{ elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 }}
         />
       ),
     });
-  }, [navigation, handleSearch, mode, engaged]);
+  }, [navigation, handleSearch, mode, q, autoFocus]);
+
+  const openMode = (next: SearchMode) => {
+    const nextScope = next === "kerelem" ? "for_me" : undefined;
+    // The same default search as the one on screen: load it again instead of stacking a twin.
+    if (next === mode && !q && (next !== "kerelem" || scope === "for_me")) {
+      setReloadKey((k) => k + 1);
+      return;
+    }
+    router.push(searchHref(next, { scope: nextScope }));
+  };
 
   const listData = useMemo<ListItem[]>(() => {
-    const prev = (previousSearches ?? []).filter((q) =>
-      !searchText || q.toLowerCase().includes(searchText.toLowerCase())
+    const prev = (previousSearches ?? []).filter((p) =>
+      !typed || p.toLowerCase().includes(typed.toLowerCase())
     );
-    const suggestionTexts = new Set(prev.map((q) => q.toLowerCase()));
+    const suggestionTexts = new Set(prev.map((p) => p.toLowerCase()));
     const filtered = suggestions.filter((s) => !suggestionTexts.has(s.query_text.toLowerCase()));
 
     const items: ListItem[] = [];
     if (prev.length > 0) {
       items.push({ kind: "section", label: "Korábbi kereséseid" });
-      prev.forEach((q) => items.push({ kind: "previous", query: q }));
+      prev.forEach((p) => items.push({ kind: "previous", query: p }));
     }
     if (mode === "biznisz" && filtered.length > 0) {
       items.push({ kind: "section", label: "Gyakori keresések" });
       filtered.forEach((s) => items.push({ kind: "suggestion", query: s.query_text }));
     }
     return items;
-  }, [previousSearches, suggestions, searchText, mode]);
+  }, [previousSearches, suggestions, typed, mode]);
+  const showHistory = inputFocused && listData.length > 0;
 
-  // The "Finomítás" modal: what it refines depends on what is searched.
-  const [filterOpen, setFilterOpen] = useState(false);
   const filterActive =
     mode === "kerelem"
-      ? requestScope !== "all"
+      ? scope !== "for_me"
       : mode === "biznisz"
         ? !!buzinessCircle || buzinessIngyen
-        : false;
-
-  const requestsEmpty = requests.fetched && !requests.loading && !requests.error && requests.data.length === 0;
-  const requestsTitle = requestText.trim()
-    ? `Találatok: ${requestText.trim()}`
-    : requestScope === "all"
-      ? "Új kérések"
-      : `Kérések: ${REQUEST_SCOPES.find((s) => s.key === requestScope)?.label ?? ""}`;
-  const emptyText = requestText.trim()
-    ? { title: "Nincs találat.", hint: "Próbálj más szót, vagy válts a Mind szűrőre." }
-    : EMPTY_REQUESTS[requestScope];
+        : !!fifeCircle;
+  const title = searchTitle({
+    mode,
+    q,
+    scope,
+    ingyen: buzinessIngyen,
+    hasCircle: mode === "fife" ? !!fifeCircle : !!buzinessCircle,
+  });
 
   return (
     <ThemedView style={{ flex: 1 }} type="default">
@@ -183,10 +185,9 @@ export default function SearchScreen() {
         style={{
           flexDirection: "row",
           flexWrap: "wrap",
-          alignItems: "center",
           gap: Spacing.sm,
           paddingHorizontal: Spacing.lg,
-          paddingVertical: Spacing.sm,
+          paddingTop: Spacing.sm,
         }}
       >
         {MODES.map((m) => {
@@ -199,199 +200,66 @@ export default function SearchScreen() {
               selected={selected}
               showSelectedCheck={false}
               mode={selected ? "flat" : "outlined"}
-              onPress={() => {
-                setMode(m.key);
-                setTyped(textOf(m.key));
-              }}
+              onPress={() => openMode(m.key)}
+              accessibilityState={{ selected }}
+              selectedColor={selected ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
               style={{
                 borderRadius: BorderRadius.full,
-                backgroundColor: selected ? theme.colors.secondaryContainer : "transparent",
-                borderColor: theme.colors.outlineVariant,
+                backgroundColor: selected ? theme.colors.primary : "transparent",
+                borderColor: selected ? theme.colors.primary : theme.colors.outlineVariant,
               }}
               textStyle={{
-                color: selected ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant,
+                color: selected ? theme.colors.onPrimary : theme.colors.onSurfaceVariant,
+                fontFamily: selected ? "RedHatText-Bold" : "RedHatText",
               }}
             >
               {m.label}
             </Chip>
           );
         })}
+      </ThemedView>
+      <ThemedView
+        type="card"
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: Spacing.sm,
+          paddingLeft: Spacing.lg,
+          paddingRight: Spacing.sm,
+          paddingVertical: Spacing.xs,
+        }}
+      >
+        <ThemedText
+          testID="search-title"
+          variant="labelLarge"
+          type="bold"
+          numberOfLines={2}
+          style={{ flex: 1, color: theme.colors.secondary }}
+        >
+          {title}
+        </ThemedText>
         {/* Always there: what it opens follows the chip that is selected. */}
-        <View style={{ marginLeft: "auto" }}>
-          <Button
-            testID="search-filter"
-            icon={filterActive ? "filter-check" : "filter"}
-            mode="text"
-            onPress={() => setFilterOpen(true)}
-          >
-            Finomítás
-          </Button>
-        </View>
+        <Measure name="filter">
+          <View>
+            <Button
+              testID="search-filter"
+              icon={filterActive ? "filter-check" : "filter"}
+              mode="text"
+              onPress={() => setFilterOpen(true)}
+            >
+              Finomítás
+            </Button>
+          </View>
+        </Measure>
       </ThemedView>
 
-      {requestMode && (
-        <>
-          {!!typed.trim() && (
-            // Nobody asked for this yet? The typed text becomes the title of a new request.
-            <Pressable
-              testID="search-new-request"
-              onPress={() => dispatch(openRequestComposer(typed))}
-              style={({ pressed }) => ({
-                flexDirection: "row",
-                alignItems: "center",
-                gap: Spacing.md,
-                paddingHorizontal: Spacing.lg,
-                paddingVertical: Spacing.md,
-                backgroundColor: pressed ? theme.colors.surfaceVariant : "transparent",
-              })}
-            >
-              <Icon source="plus-circle-outline" size={22} color={theme.colors.primary} />
-              <ThemedText type="bold" numberOfLines={1} style={{ flex: 1, color: theme.colors.primary }}>
-                Új kérés: „{typed.trim()}”
-              </ThemedText>
-            </Pressable>
-          )}
-          <FlatList
-            testID="search-requests"
-            data={requests.data}
-            keyExtractor={(item) => String(item.id)}
-            keyboardShouldPersistTaps="handled"
-            onEndReachedThreshold={0.6}
-            onEndReached={requests.loadMore}
-            contentContainerStyle={{
-              padding: Spacing.md,
-              gap: Spacing.sm,
-              paddingBottom: MODE_SWITCH_CLEARANCE + Spacing.md,
-              flexGrow: 1,
-            }}
-            ListHeaderComponent={
-              <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.xs }}>
-                <ThemedText
-                  variant="labelLarge"
-                  type="bold"
-                  numberOfLines={1}
-                  style={{ flexShrink: 1, color: theme.colors.secondary }}
-                >
-                  {requestsTitle}
-                </ThemedText>
-                {!!requestText.trim() && (
-                  <Chip
-                    testID="requests-clear-search"
-                    icon="close"
-                    compact
-                    onPress={() => {
-                      dispatch(storeRequestSearchText(""));
-                      setTyped("");
-                    }}
-                  >
-                    Törlés
-                  </Chip>
-                )}
-              </View>
-            }
-            renderItem={({ item }) => (
-              <RequestCard
-                data={item}
-                onDeleted={requests.remove}
-                onBlocked={() => loadRequests(requestScope, requestText)}
-                onSolved={(id) =>
-                  // An archived request leaves every slice but "mine" and "solved".
-                  requestScope === "mine"
-                    ? requests.patch(id, { status: "solved" })
-                    : requests.remove(id)
-                }
-              />
-            )}
-            ListFooterComponent={
-              requests.loading ? <ActivityIndicator style={{ marginVertical: Spacing.lg }} /> : null
-            }
-            ListEmptyComponent={
-              requests.error ? (
-                <ThemedText type="error" style={{ textAlign: "center", padding: Spacing.lg }}>
-                  {requests.error}
-                </ThemedText>
-              ) : requestsEmpty ? (
-                <View style={{ alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.xxxl }}>
-                  <Icon source="hand-heart-outline" size={40} color={theme.colors.onSurfaceVariant} />
-                  <ThemedText type="bold" style={{ textAlign: "center" }}>{emptyText.title}</ThemedText>
-                  <ThemedText style={{ textAlign: "center", color: theme.colors.onSurfaceVariant }}>
-                    {emptyText.hint}
-                  </ThemedText>
-                  <Button
-                    testID="requests-empty-new"
-                    mode="contained-tonal"
-                    onPress={() => dispatch(openRequestComposer(requestText.trim() || undefined))}
-                  >
-                    {requestText.trim() ? "Új kérés ezzel a szöveggel" : "Új kérés"}
-                  </Button>
-                </View>
-              ) : null
-            }
-          />
-        </>
-      )}
-
-      {browsing && mode === "biznisz" && (
-        <FlatList
-          testID="search-browse-bizniszek"
-          data={browseBizniszek.data}
-          keyExtractor={(item) => String(item.id)}
-          onEndReachedThreshold={0.6}
-          onEndReached={browseBizniszek.fetchNextPage}
-          contentContainerStyle={{
-            padding: Spacing.md,
-            gap: Spacing.sm,
-            paddingBottom: MODE_SWITCH_CLEARANCE + Spacing.md,
-          }}
-          ListHeaderComponent={
-            <ThemedText variant="labelLarge" type="bold" style={{ color: theme.colors.secondary }}>
-              Új bizniszek
-            </ThemedText>
-          }
-          renderItem={({ item }) => <BuzinessItem data={item} />}
-          ListFooterComponent={
-            browseBizniszek.loading ? <ActivityIndicator style={{ marginVertical: Spacing.lg }} /> : null
-          }
-          ListEmptyComponent={
-            browseBizniszek.error ? (
-              <ThemedText type="error" style={{ textAlign: "center" }}>{browseBizniszek.error}</ThemedText>
-            ) : browseBizniszek.fetched && !browseBizniszek.loading ? (
-              <ThemedText style={{ textAlign: "center", padding: Spacing.lg }}>
-                Még nincs biznisz.
-              </ThemedText>
-            ) : null
-          }
-        />
-      )}
-      {browsing && mode === "fife" && (
-        <View style={{ padding: Spacing.lg }}>
-          <ThemedText
-            variant="labelMedium"
-            style={{ color: theme.colors.onSurfaceVariant, textAlign: "center" }}
-          >
-            Írd be egy fife nevét vagy @felhasználónevét.
-          </ThemedText>
-        </View>
-      )}
-
-      {!browsing && !requestMode && (
+      {showHistory ? (
         <FlatList
           data={listData}
           keyExtractor={(item, i) => item.kind + (item.kind === "section" ? item.label : item.query) + i}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingBottom: MODE_SWITCH_CLEARANCE }}
-          ListEmptyComponent={
-            mode === "fife" ? (
-              <View style={{ padding: Spacing.lg }}>
-                <ThemedText
-                  variant="labelMedium"
-                  style={{ color: theme.colors.onSurfaceVariant, textAlign: "center" }}
-                >
-                  Írd be egy fife nevét vagy @felhasználónevét.
-                </ThemedText>
-              </View>
-            ) : null
-          }
           renderItem={({ item }) => {
             if (item.kind === "section") {
               return (
@@ -436,9 +304,28 @@ export default function SearchScreen() {
             );
           }}
         />
+      ) : mode === "biznisz" ? (
+        <BuzinessResults
+          canLoadMore={canLoadMore}
+          loadNext={loadNext}
+          error={error}
+          reload={() => search(q)}
+          typed={typed}
+        />
+      ) : mode === "fife" ? (
+        <FifeResults q={q} reloadKey={reloadKey} />
+      ) : (
+        <RequestResults q={q} scope={scope} typed={typed} reloadKey={reloadKey} />
       )}
 
-      <SearchFilterModal mode={mode} visible={filterOpen} onDismiss={() => setFilterOpen(false)} />
+      <SearchFilterModal
+        mode={mode}
+        scope={scope}
+        onScopeChange={(next) => router.setParams({ scope: next })}
+        onBuzinessApplied={(searchCircle, ingyen) => search(q, { searchCircle, ingyen })}
+        visible={filterOpen}
+        onDismiss={() => setFilterOpen(false)}
+      />
     </ThemedView>
   );
 }

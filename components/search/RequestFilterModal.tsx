@@ -1,11 +1,8 @@
 import { BorderRadius } from "@/constants/borderRadius";
 import { Spacing } from "@/constants/spacing";
-import { REQUEST_SCOPES } from "@/lib/requests/types";
-import { storeRequestScope } from "@/redux/reducers/requestsReducer";
-import { RootState } from "@/redux/store";
+import { REQUEST_SCOPES, RequestScope } from "@/lib/requests/types";
 import { View } from "react-native";
 import { Modal, Portal, RadioButton, Text, TouchableRipple, useTheme } from "react-native-paper";
-import { useDispatch, useSelector } from "react-redux";
 import { Button } from "../Button";
 import { ModalCard, modalContainerStyle } from "../ModalCard";
 
@@ -19,13 +16,18 @@ const DESCRIPTIONS: Record<string, string> = {
 interface RequestFilterModalProps {
   visible: boolean;
   onDismiss: () => void;
+  scope: RequestScope;
+  onScopeChange: (scope: RequestScope) => void;
 }
 
 /** "Finomítás" for kérések: which slice of them the search looks in. */
-export const RequestFilterModal = ({ visible, onDismiss }: RequestFilterModalProps) => {
+export const RequestFilterModal = ({
+  visible,
+  onDismiss,
+  scope,
+  onScopeChange,
+}: RequestFilterModalProps) => {
   const theme = useTheme();
-  const dispatch = useDispatch();
-  const scope = useSelector((state: RootState) => state.requests.scope);
 
   return (
     <Portal>
@@ -37,7 +39,7 @@ export const RequestFilterModal = ({ visible, onDismiss }: RequestFilterModalPro
               key={s.key}
               testID={`requests-scope-${s.key}`}
               onPress={() => {
-                dispatch(storeRequestScope(s.key));
+                onScopeChange(s.key);
                 onDismiss();
               }}
               borderless
@@ -48,7 +50,7 @@ export const RequestFilterModal = ({ visible, onDismiss }: RequestFilterModalPro
                   value={s.key}
                   status={scope === s.key ? "checked" : "unchecked"}
                   onPress={() => {
-                    dispatch(storeRequestScope(s.key));
+                    onScopeChange(s.key);
                     onDismiss();
                   }}
                 />
