@@ -16,7 +16,7 @@ import { searchHref } from "@/lib/search/href";
 import { runSearch } from "@/lib/search/runSearch";
 import { searchTitle } from "@/lib/search/title";
 import { RequestScope } from "@/lib/requests/types";
-import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { storeSearchText } from "@/redux/reducers/searchReducer";
 import { removeFromPreviousSearches } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { SearchMode } from "@/redux/store.type";
@@ -86,10 +86,15 @@ export default function SearchScreen() {
   // The bizniszek live in redux (the list and the map share them), so a screen that comes back
   // into focus — Back from a later search — has to put its own search there again.
   const { canLoadMore, search, loadNext, error } = useBuzinessSearch();
+  // The one search text of the store follows the search on screen, whichever kind it is.
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(storeSearchText(q));
+    }, [q, dispatch]),
+  );
   useFocusEffect(
     useCallback(() => {
       if (mode !== "biznisz") return;
-      dispatch(storeBuzinessSearchParams({ text: q }));
       search(q);
       // reloadKey is not read: bumping it is how a tap on the active chip asks for a reload.
       // eslint-disable-next-line react-hooks/exhaustive-deps

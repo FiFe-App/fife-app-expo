@@ -9,7 +9,6 @@ const initialState: BuzinessState = {
   buzinesses: [],
   searchParams: {
     skip: 0,
-    text: "",
     loading: false,
     searchCircle: undefined,
     searchType: "list",

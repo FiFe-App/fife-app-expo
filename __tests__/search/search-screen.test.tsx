@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import SearchScreen from "@/app/search";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
+import { storeSearchText } from "@/redux/reducers/searchReducer";
 import { addPreviousSearch } from "@/redux/reducers/userReducer";
 import { SearchMode } from "@/redux/store.type";
 import { makeRequest } from "@/test-utils/fixtures/requests";
@@ -302,6 +303,28 @@ describe("the search screen: Új kérés", () => {
     expect(await screen.findAllByText("Új kérés ezzel a szöveggel: „fúrógép kell”")).toHaveLength(2);
     await fireEvent.press(screen.getByTestId("search-new-request-top"));
     expect(store.getState().requests.composer).toEqual({ open: true, initialTitle: "fúrógép kell" });
+  });
+});
+
+describe("the search screen: the one search text of the store", () => {
+  it.each(["biznisz", "fife", "kerelem"] as const)("follows the query of the search on screen in %s mode", async (mode) => {
+    __setLocalSearchParams({ mode, q: "kert" });
+    supabase.rpc.mockResolvedValue({ data: [], error: null });
+    const store = createTestStore();
+
+    await renderWithProviders(<SearchScreen />, { store });
+
+    await waitFor(() => expect(store.getState().search.text).toBe("kert"));
+  });
+
+  it("is emptied by a search with no query", async () => {
+    __setLocalSearchParams({ mode: "biznisz" });
+    const store = createTestStore();
+    store.dispatch(storeSearchText("régi"));
+
+    await renderWithProviders(<SearchScreen />, { store });
+
+    await waitFor(() => expect(store.getState().search.text).toBe(""));
   });
 });
 

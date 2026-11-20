@@ -3,7 +3,7 @@ import { screen, waitFor } from "@testing-library/react-native";
 import FifeRadarScreen from "@/app/fifeRadar";
 import { NO_LOCATION_ERROR } from "@/hooks/useFifeSearch";
 import { init, setLocation } from "@/redux/reducers/userReducer";
-import { storeUserSearchParams } from "@/redux/reducers/usersReducer";
+import { storeSearchText } from "@/redux/reducers/searchReducer";
 import { __resetRouter } from "@/test-utils/mocks/expo-router";
 import { __resetSupabase, __setTableRows, supabase } from "@/test-utils/mocks/supabase";
 import {
@@ -64,7 +64,7 @@ describe("FiFe Radar screen", () => {
     // proximity fetch would hide the results from exactly the people most
     // likely to search by name.
     const store = loggedIn();
-    store.dispatch(storeUserSearchParams({ text: "Pista" }));
+    store.dispatch(storeSearchText("Pista"));
     __setTableRows("profiles", { data: [profileRow("Nagy Pista")], error: null });
 
     await renderWithProviders(<FifeRadarScreen />, { store });
@@ -78,7 +78,7 @@ describe("FiFe Radar screen", () => {
 
   it("says nothing matched rather than blaming the neighbourhood", async () => {
     const store = loggedIn();
-    store.dispatch(storeUserSearchParams({ text: "Nincsilyen" }));
+    store.dispatch(storeSearchText("Nincsilyen"));
     __setTableRows("profiles", { data: [], error: null });
 
     await renderWithProviders(<FifeRadarScreen />, { store });

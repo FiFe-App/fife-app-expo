@@ -241,7 +241,6 @@ export interface CircleType {
     radius: number;
   }
 export interface SearchParams {
-  text?: string;
   searchCircle?: CircleType;
   loading?: boolean;
   searchType?: string;

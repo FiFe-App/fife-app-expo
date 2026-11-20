@@ -31,7 +31,7 @@ export default function FifeRadarScreen() {
     (state: RootState) => state.users.userSearchParams?.searchCircle,
   );
   const searchText = useSelector(
-    (state: RootState) => state.users.userSearchParams?.text ?? "",
+    (state: RootState) => state.search.text,
   );
   const isSearching = searchText.trim().length > 0;
   const dispatch = useDispatch();

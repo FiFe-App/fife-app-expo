@@ -48,6 +48,10 @@ export function useBuzinessSearch() {
   // via useFocusEffect with empty deps) always read the latest values.
   const searchParamsRef = useRef(searchParams);
   searchParamsRef.current = searchParams;
+  // The text being searched is the one for every kind of search, see redux/reducers/searchReducer.
+  const searchText = useSelector((state: RootState) => state.search.text);
+  const searchTextRef = useRef(searchText);
+  searchTextRef.current = searchText;
   const searchCircleRef = useRef(searchCircle);
   searchCircleRef.current = searchCircle;
   const myLocationRef = useRef(myLocation);
@@ -88,7 +92,7 @@ export function useBuzinessSearch() {
         };
 
     try {
-      const effectiveQuery = query ?? params?.text ?? "";
+      const effectiveQuery = query ?? searchTextRef.current;
       const { data, error } = await invokeFunction("business-search", {
         body: {
           query: effectiveQuery,
@@ -156,7 +160,7 @@ export function useBuzinessSearch() {
     try {
       const { data, error } = await invokeFunction("business-search", {
         body: {
-          query: params?.text ?? "",
+          query: searchTextRef.current,
           take: PAGE_SIZE,
           skip: nextSkip,
           ingyen: params?.ingyen || false,
