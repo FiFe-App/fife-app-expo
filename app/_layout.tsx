@@ -349,10 +349,6 @@ function RootContent() {
                   options={{ header: () => <HomeHeader /> }}
                 />
                 <Stack.Screen
-                  name="fifeRadar"
-                  options={{ header: () => <HomeHeader mode="fife" /> }}
-                />
-                <Stack.Screen
                   name="kerelmek/[id]"
                   options={{ title: "Kérés" }}
                 />

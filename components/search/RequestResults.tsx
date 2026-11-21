@@ -1,17 +1,43 @@
 import { useAppTheme } from "@/assets/theme";
+import { BorderRadius } from "@/constants/borderRadius";
 import { Spacing } from "@/constants/spacing";
 import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 import { useRequests } from "@/hooks/useRequests";
 import type { RequestScope } from "@/lib/requests/types";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, View } from "react-native";
 import { ActivityIndicator, Icon } from "react-native-paper";
 import RequestCard from "../requests/RequestCard";
 import { ThemedText } from "../ThemedText";
+import { Marker } from "../mapView/mapView";
+import { ThemedView } from "../ThemedView";
 import NewRequestButton from "./NewRequestButton";
+import ResultsMap from "./ResultsMap";
 
 /** The empty-state copy per slice of the kérések: what the user can do about it differs. */
+/** A pin of the map: a heart in a circle, bigger and ringed when picked. */
+const RequestPin = ({ selected, solved }: { selected: boolean; solved: boolean }) => {
+  const theme = useAppTheme();
+  return (
+    <View
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: BorderRadius.full,
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: selected ? 4 : 2,
+        borderColor: selected ? theme.colors.onPrimary : theme.colors.background,
+        backgroundColor: solved ? theme.colors.nature : theme.colors.primary,
+        transform: [{ scale: selected ? 1.25 : 1 }],
+      }}
+    >
+      <Icon source="hand-heart" size={20} color={theme.colors.onPrimary} />
+    </View>
+  );
+};
+
 const EMPTY: Record<RequestScope, { title: string; hint: string }> = {
   all: { title: "Még nincs kérés.", hint: "Légy te az első, aki kér valamit a közösségtől!" },
   for_me: {
@@ -28,13 +54,15 @@ interface RequestResultsProps {
   /** What is in the search box right now, carried into the "Új kérés" buttons. */
   typed: string;
   reloadKey: number;
+  view: "list" | "map";
 }
 
 /**
- * The kérések of the search screen: the slice the filter picked, narrowed by the query. The
- * "Új kérés" button is above and under the list, whatever it holds.
+ * The kérések of the search screen: the slice the filter picked, narrowed by the query. The one
+ * "Új kérés" button is above the list, whatever it holds. In the map view the requests with a
+ * place are pins; the one picked is the first row of the list under the map.
  */
-export const RequestResults = ({ q, scope, typed, reloadKey }: RequestResultsProps) => {
+export const RequestResults = ({ q, scope, typed, reloadKey, view }: RequestResultsProps) => {
   const theme = useAppTheme();
   const requests = useRequests(10);
   const { load, remove, patch } = requests;
@@ -65,10 +93,27 @@ export const RequestResults = ({ q, scope, typed, reloadKey }: RequestResultsPro
     ? { title: "Nincs találat.", hint: "Próbálj más szót, vagy válts a Mind szűrőre." }
     : EMPTY[scope];
 
-  return (
+  // The pins are the requests with a place ("Bárhol" has none); the picked one leads the list.
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const pinned = useMemo(
+    () => requests.data.filter((r) => r.lat != null && r.long != null),
+    [requests.data],
+  );
+  const selected = requests.data.find((r) => r.id === selectedId) ?? null;
+  const ordered = useMemo(
+    () => (selected ? [selected, ...requests.data.filter((r) => r.id !== selected.id)] : requests.data),
+    [selected, requests.data],
+  );
+  const listRef = useRef<FlatList>(null);
+  useEffect(() => {
+    if (selectedId != null) listRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, [selectedId]);
+
+  const list = (
     <FlatList
+      ref={listRef}
       testID="search-requests"
-      data={requests.data}
+      data={ordered}
       keyExtractor={(item) => String(item.id)}
       keyboardShouldPersistTaps="handled"
       onEndReachedThreshold={0.6}
@@ -79,7 +124,7 @@ export const RequestResults = ({ q, scope, typed, reloadKey }: RequestResultsPro
         paddingBottom: MODE_SWITCH_CLEARANCE + Spacing.md,
         flexGrow: 1,
       }}
-      ListHeaderComponent={<NewRequestButton text={typed} testID="search-new-request-top" />}
+      ListHeaderComponent={<NewRequestButton text={typed} testID="search-new-request" />}
       renderItem={({ item }) => (
         <RequestCard
           data={item}
@@ -92,16 +137,15 @@ export const RequestResults = ({ q, scope, typed, reloadKey }: RequestResultsPro
         />
       )}
       ListFooterComponent={
-        <View style={{ gap: Spacing.sm }}>
-          {requests.loading && <ActivityIndicator style={{ marginVertical: Spacing.lg }} />}
-          <NewRequestButton text={typed} testID="search-new-request-bottom" />
-        </View>
+        requests.loading ? <ActivityIndicator style={{ marginVertical: Spacing.lg }} /> : null
       }
       ListEmptyComponent={
         requests.error ? (
-          <ThemedText type="error" style={{ textAlign: "center", padding: Spacing.lg }}>
-            {requests.error}
-          </ThemedText>
+          <ThemedView type="error" testID="requests-error" style={{ alignItems: "center", padding: Spacing.md }}>
+            <ThemedText type="error" style={{ textAlign: "center" }}>
+              {requests.error}
+            </ThemedText>
+          </ThemedView>
         ) : empty ? (
           <View style={{ alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.xl }}>
             <Icon source="hand-heart-outline" size={40} color={theme.colors.onSurfaceVariant} />
@@ -113,6 +157,29 @@ export const RequestResults = ({ q, scope, typed, reloadKey }: RequestResultsPro
         ) : null
       }
     />
+  );
+
+  if (view !== "map") return list;
+
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, minHeight: 220 }}>
+        <ResultsMap onBackgroundPress={() => setSelectedId(null)}>
+          {pinned.map((request) => (
+            <Marker
+              key={request.id}
+              coordinate={{ latitude: request.lat as number, longitude: request.long as number }}
+              anchor={{ x: 0.5, y: 0.5 }}
+              zIndex={request.id === selectedId ? 10 : 1}
+              onPress={() => setSelectedId(request.id)}
+            >
+              <RequestPin selected={request.id === selectedId} solved={request.status === "solved"} />
+            </Marker>
+          ))}
+        </ResultsMap>
+      </View>
+      <View style={{ flex: 1 }}>{list}</View>
+    </View>
   );
 };
 

@@ -275,3 +275,12 @@ Korlátok, amiket a tervezésnél figyelembe kell venni:
 
 - A fejléc az app bar: vissza nyíl — a kérés létrehozója (avatar, név; koppintásra a profilja), a kérés kora és helye — jobbra a ⋮ menü (az `info.options`-ből: a létrehozónak Megoldva / Törlés, másoknak Jelentés / Letiltás).
 - A "megoldódott" magyarázat egyszer szerepel: a lezárt komment mezőnél. A felső "archiválva" sáv megszűnt; a "megoldva" jelvény marad.
+
+## Újabb módosítások
+
+- **Új kérés modal**: két lecsukott accordion, a tartalmuk a modal teljes szélességében: *Targetálás* (kulcsszavak + hely, sugár) és *További infók* (leírás + képek). A cím és a leírás többsoros.
+- **Keresés cím**: a cím egy sor, ami a szűrő szűkítését (pl. "kiválasztott helyen", "ingyenes") külön, label méretű sorban mutatja, nem " · " után.
+- **Térkép nézet minden fülön**: egy nézetváltó (lista/térkép) a keresés oldalon. A bizniszek térképe a teljes képernyő; a fifék és a kérések térképe fölül van, alatta a lista, és a kijelölt elem a lista élén jelenik meg. A fifék pinjei a profilképek; a névkeresés találatainak nincs nyilvános helye, ezért ott nincs pin.
+- **FiFe Radar oldal megszűnt**: csak a keresés Fifék füle van, a Környék "Muti többet" sávja oda visz.
+- **Kérések**: egyetlen "Új kérés" gomb a lista tetején; a keresési előzmények tetején is van egy. A hibaüzenet hibakonténerben jelenik meg.
+- **Alsó sáv**: a fülek egy sorban, egyenletesen elosztva (nem két csoportban a váltó két oldalán).

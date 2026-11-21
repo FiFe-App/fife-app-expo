@@ -52,6 +52,9 @@ export function useBuzinessSearch() {
   const searchText = useSelector((state: RootState) => state.search.text);
   const searchTextRef = useRef(searchText);
   searchTextRef.current = searchText;
+  const searchView = useSelector((state: RootState) => state.search.view);
+  const searchViewRef = useRef(searchView);
+  searchViewRef.current = searchView;
   const searchCircleRef = useRef(searchCircle);
   searchCircleRef.current = searchCircle;
   const myLocationRef = useRef(myLocation);
@@ -96,7 +99,7 @@ export function useBuzinessSearch() {
       const { data, error } = await invokeFunction("business-search", {
         body: {
           query: effectiveQuery,
-          take: params?.searchType === "map" ? -1 : PAGE_SIZE,
+          take: searchViewRef.current === "map" ? -1 : PAGE_SIZE,
           skip: 0,
           ingyen: overrides?.ingyen ?? params?.ingyen ?? false,
           ...searchLocation,
@@ -113,13 +116,13 @@ export function useBuzinessSearch() {
       // Never the query itself — only whether there was one.
       trackEvent("search", {
         hasQuery: !!effectiveQuery.trim(),
-        type: params?.searchType ?? "list",
+        type: searchViewRef.current,
         free: overrides?.ingyen ?? params?.ingyen ?? false,
         customArea: !!effectiveSearchCircle,
         results: countBucket(data?.length || 0),
       });
       dispatch(storeBuzinesses(enrichWithDistance(data || [], myLocationRef.current)));
-      dispatch(storeBuzinessHasMore(params?.searchType !== "map" && (data?.length || 0) === PAGE_SIZE));
+      dispatch(storeBuzinessHasMore(searchViewRef.current !== "map" && (data?.length || 0) === PAGE_SIZE));
       dispatch(storeBuzinessLoading(false));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -132,7 +135,7 @@ export function useBuzinessSearch() {
     const params = searchParamsRef.current;
     const circle = searchCircleRef.current;
     const loc = myLocationRef.current;
-    if (!hasMore || loading || params?.searchType === "map") return;
+    if (!hasMore || loading || searchViewRef.current === "map") return;
     
     dispatch(storeBuzinessLoading(true));
     setError(null);

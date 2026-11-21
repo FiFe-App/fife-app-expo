@@ -33,6 +33,7 @@ jest.mock("@/components/MapSelector/MapSelector", () => {
 });
 jest.mock("@/components/mapView/mapView", () => ({ Marker: () => null, Circle: () => null }));
 jest.mock("@/components/mapView/FiFeMap", () => () => null);
+jest.mock("@/components/buziness/BuzinessMap", () => ({ BuzinessMap: () => null }));
 jest.mock("@/hooks/useNotificationPrefs", () => ({
   useNotificationPrefs: () => ({ prefs: { aiEnhance: false }, setPref: jest.fn(), hydrated: true }),
 }));
@@ -262,14 +263,14 @@ describe("the search screen: the previous searches", () => {
 });
 
 describe("the search screen: Új kérés", () => {
-  it("is above and under the list of the kérések", async () => {
+  it("is one button, above the list of the kérések", async () => {
     __setLocalSearchParams({ mode: "kerelem", scope: "for_me" });
     supabase.rpc.mockResolvedValue({ data: [makeRequest({ title: "Valami" })], error: null });
     await renderWithProviders(<SearchScreen />, { store: createTestStore() });
 
     await waitFor(() => expect(screen.getByText("Valami")).toBeTruthy());
-    expect(screen.getByTestId("search-new-request-top")).toBeTruthy();
-    expect(screen.getByTestId("search-new-request-bottom")).toBeTruthy();
+    expect(screen.getAllByTestId("search-new-request")).toHaveLength(1);
+    expect(screen.queryByTestId("search-new-request-bottom")).toBeNull();
   });
 
   it("is above and under the list of the bizniszek", async () => {
@@ -281,14 +282,20 @@ describe("the search screen: Új kérés", () => {
     expect(screen.getByTestId("search-new-request-bottom")).toBeTruthy();
   });
 
-  it("is there on an empty list, too", async () => {
+  it("is there on an empty list of the kérések, too", async () => {
     __setLocalSearchParams({ mode: "kerelem", scope: "for_me" });
     supabase.rpc.mockResolvedValue({ data: [], error: null });
     await renderWithProviders(<SearchScreen />, { store: createTestStore() });
 
     await waitFor(() => expect(screen.getByText(/Most nincs a környékeden/)).toBeTruthy());
-    expect(screen.getByTestId("search-new-request-top")).toBeTruthy();
-    expect(screen.getByTestId("search-new-request-bottom")).toBeTruthy();
+    expect(screen.getAllByTestId("search-new-request")).toHaveLength(1);
+  });
+
+  it("is at the top of the previous searches, too", async () => {
+    await renderWithProviders(<SearchScreen />, { store: withRecentSearch("régi keresés") });
+    await act(async () => searchBox().onFocus());
+
+    expect(await screen.findByTestId("search-new-request-history")).toBeTruthy();
   });
 
   it("says Új kérés while nothing is typed, and carries the typed text into the modal", async () => {
@@ -296,13 +303,69 @@ describe("the search screen: Új kérés", () => {
     supabase.rpc.mockResolvedValue({ data: [], error: null });
     const store = createTestStore();
     await renderWithProviders(<SearchScreen />, { store });
-    expect(await screen.findAllByText("Új kérés", { exact: true })).toHaveLength(2);
+    expect(await screen.findAllByText("Új kérés", { exact: true })).toHaveLength(1);
 
     await act(async () => searchBox().onChangeText(" fúrógép kell "));
 
-    expect(await screen.findAllByText("Új kérés ezzel a szöveggel: „fúrógép kell”")).toHaveLength(2);
-    await fireEvent.press(screen.getByTestId("search-new-request-top"));
+    expect(await screen.findAllByText("Új kérés ezzel a szöveggel: „fúrógép kell”")).toHaveLength(1);
+    await fireEvent.press(screen.getByTestId("search-new-request"));
     expect(store.getState().requests.composer).toEqual({ open: true, initialTitle: "fúrógép kell" });
+  });
+});
+
+describe("the search screen: the error of the kérések", () => {
+  it("is shown in an error container, not as a bare line", async () => {
+    __setLocalSearchParams({ mode: "kerelem", scope: "for_me" });
+    supabase.rpc.mockResolvedValue({ data: null, error: { message: "boom" } });
+    await renderWithProviders(<SearchScreen />, { store: createTestStore() });
+
+    const container = await screen.findByTestId("requests-error");
+    expect(container).toBeTruthy();
+    expect(screen.getByText("Sajnos hiba történt, próbáld meg később")).toBeTruthy();
+  });
+});
+
+describe("the search screen: the map view", () => {
+  it.each(["biznisz", "fife", "kerelem"] as const)("has a view switch in %s mode", async (mode) => {
+    __setLocalSearchParams({ mode });
+    supabase.rpc.mockResolvedValue({ data: [], error: null });
+    await renderWithProviders(<SearchScreen />, { store: createTestStore() });
+
+    expect(screen.getByTestId("search-view-switch")).toBeTruthy();
+  });
+
+  it("switches every tab between the list and the map", async () => {
+    __setLocalSearchParams({ mode: "kerelem", scope: "for_me" });
+    supabase.rpc.mockResolvedValue({ data: [makeRequest({ title: "Valami" })], error: null });
+    const store = createTestStore();
+    await renderWithProviders(<SearchScreen />, { store });
+    expect(screen.queryByTestId("results-map")).toBeNull();
+
+    await fireEvent.press(screen.getByTestId("search-view-switch"));
+
+    expect(store.getState().search.view).toBe("map");
+    expect(await screen.findByTestId("results-map")).toBeTruthy();
+    // The list is still there, under the map.
+    expect(screen.getByText("Valami")).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId("search-view-switch"));
+    expect(store.getState().search.view).toBe("list");
+    await waitFor(() => expect(screen.queryByTestId("results-map")).toBeNull());
+  });
+
+  it("searches the bizniszek again for the map, which wants every pin", async () => {
+    const store = createTestStore();
+    await renderWithProviders(<SearchScreen />, { store });
+    await waitFor(() => expect(supabase.functions.invoke).toHaveBeenCalledTimes(1));
+
+    await fireEvent.press(screen.getByTestId("search-view-switch"));
+
+    await waitFor(() =>
+      expect(supabase.functions.invoke).toHaveBeenLastCalledWith(
+        "business-search",
+        expect.objectContaining({ body: expect.objectContaining({ take: -1 }) }),
+      ),
+    );
   });
 });
 
@@ -335,8 +398,10 @@ describe("the search screen: the title", () => {
     await renderWithProviders(<SearchScreen />, { store: createTestStore() });
 
     expect(screen.getByTestId("search-title")).toHaveTextContent(
-      "Találatok a kérések között: fúrógép · saját",
+      "Találatok a kérések között: fúrógép",
     );
+    // What the filter narrowed is a line of its own, not part of the title.
+    expect(screen.getByTestId("search-title-filters")).toHaveTextContent("saját");
   });
 
   it("follows the bizniszek filter", async () => {
@@ -344,7 +409,8 @@ describe("the search screen: the title", () => {
     store.dispatch(storeBuzinessSearchParams({ ingyen: true }));
     await renderWithProviders(<SearchScreen />, { store });
 
-    expect(screen.getByTestId("search-title")).toHaveTextContent("Új bizniszek · ingyenes");
+    expect(screen.getByTestId("search-title")).toHaveTextContent("Új bizniszek");
+    expect(screen.getByTestId("search-title-filters")).toHaveTextContent("ingyenes");
   });
 });
 

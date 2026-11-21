@@ -44,14 +44,41 @@ describe("NewRequestModal", () => {
     expect(screen.queryByTestId("request-title")).toBeNull();
   });
 
-  it("opens with only the title input and the details folded", async () => {
+  it("opens with only the title input and the two accordions folded", async () => {
     const store = signedIn();
     store.dispatch(openRequestComposer());
     await renderWithProviders(<NewRequestModal />, { store });
 
     expect(await screen.findByTestId("request-title")).toBeTruthy();
-    expect(screen.getByText("További részletek")).toBeTruthy();
+    expect(screen.getByText("Targetálás")).toBeTruthy();
+    expect(screen.getByText("További infók")).toBeTruthy();
     expect(screen.queryByTestId("request-description")).toBeNull();
+    expect(screen.queryByText("Kulcsszavak")).toBeNull();
+  });
+
+  it("has the keywords and the place under Targetálás, the text and pictures under További infók", async () => {
+    const store = signedIn();
+    store.dispatch(openRequestComposer());
+    await renderWithProviders(<NewRequestModal />, { store });
+
+    await fireEvent.press(await screen.findByText("Targetálás"));
+    expect(await screen.findByText("Kulcsszavak")).toBeTruthy();
+    expect(screen.getByText("Hol kell a segítség?")).toBeTruthy();
+    expect(screen.queryByTestId("request-description")).toBeNull();
+
+    await fireEvent.press(screen.getByText("További infók"));
+    expect(await screen.findByTestId("request-description")).toBeTruthy();
+    expect(screen.getByText("Képek")).toBeTruthy();
+  });
+
+  it("makes every text field multiline", async () => {
+    const store = signedIn();
+    store.dispatch(openRequestComposer());
+    await renderWithProviders(<NewRequestModal />, { store });
+
+    expect(screen.getByTestId("request-title").props.multiline).toBe(true);
+    await fireEvent.press(screen.getByText("További infók"));
+    expect((await screen.findByTestId("request-description")).props.multiline).toBe(true);
   });
 
   it("copies the searched text into the title", async () => {

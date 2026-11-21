@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, FlatList } from "react-native";
 import { router } from "expo-router";
 import { Spacing } from "@/constants/spacing";
@@ -24,6 +24,8 @@ interface UsersListProps {
   emptyTitle?: string;
   emptyHint?: string;
   endOfListText?: string;
+  /** When this changes the list jumps back to its first row (e.g. a user was picked on a map). */
+  resetScrollKey?: string | number | null;
 }
 
 export const UsersList: React.FC<UsersListProps> = ({
@@ -36,7 +38,12 @@ export const UsersList: React.FC<UsersListProps> = ({
   emptyTitle = NO_NEARBY_USERS,
   emptyHint = NO_NEARBY_USERS_HINT,
   endOfListText = "Nem található több fife",
+  resetScrollKey,
 }) => {
+  const listRef = useRef<FlatList>(null);
+  useEffect(() => {
+    if (resetScrollKey != null) listRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, [resetScrollKey]);
   const { userSearchParams } = useSelector(
     (state: RootState) => state.users,
   );
@@ -59,6 +66,7 @@ export const UsersList: React.FC<UsersListProps> = ({
     <View style={styles.container}>
 
       <FlatList
+        ref={listRef}
         data={data}
         keyExtractor={(item, index) => item.id === "-1" ? `divider-${index}` : item.id}
         renderItem={({ item }) =>

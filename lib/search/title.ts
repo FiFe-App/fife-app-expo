@@ -30,12 +30,20 @@ interface TitleInput {
   hasCircle?: boolean;
 }
 
+export interface SearchTitle {
+  /** The line above the list. */
+  title: string;
+  /** What the filter narrowed ("ingyenes", "kiválasztott helyen"), for a smaller line under it. */
+  filters: string[];
+}
+
 /**
- * The line above the list. Without a query it names what the category lists by default (new
+ * The text above the list. Without a query it names what the category lists by default (new
  * bizniszek, the FiFe Radar, the kérések for you); with one it says what is being searched
- * ("Találatok a kérések között: kert"). Whatever the filter narrowed is appended.
+ * ("Találatok a kérések között: kert"). Whatever the filter narrowed comes apart from it, as a
+ * line of its own.
  */
-export function searchTitle({ mode, q, scope = "for_me", ingyen, hasCircle }: TitleInput): string {
+export function searchTitle({ mode, q, scope = "for_me", ingyen, hasCircle }: TitleInput): SearchTitle {
   const query = q?.trim();
   const filters: string[] = [];
   if (mode === "biznisz" && ingyen) filters.push("ingyenes");
@@ -45,12 +53,12 @@ export function searchTitle({ mode, q, scope = "for_me", ingyen, hasCircle }: Ti
   }
   if (mode !== "kerelem" && hasCircle) filters.push("kiválasztott helyen");
 
-  const base = query
+  const title = query
     ? `Találatok a ${CATEGORY[mode]} között: ${query}`
     : mode === "biznisz"
       ? "Új bizniszek"
       : mode === "fife"
         ? "FiFe Radar"
         : REQUEST_SCOPE_TITLE[scope];
-  return filters.length ? `${base} · ${filters.join(", ")}` : base;
+  return { title, filters };
 }

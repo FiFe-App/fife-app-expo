@@ -8,6 +8,7 @@ import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 import BuzinessResults from "@/components/search/BuzinessResults";
 import FifeResults from "@/components/search/FifeResults";
 import RequestResults from "@/components/search/RequestResults";
+import NewRequestButton from "@/components/search/NewRequestButton";
 import SearchFilterModal from "@/components/search/SearchFilterModal";
 import Measure from "@/components/tutorial/Measure";
 import { Button } from "@/components/Button";
@@ -16,14 +17,14 @@ import { searchHref } from "@/lib/search/href";
 import { runSearch } from "@/lib/search/runSearch";
 import { searchTitle } from "@/lib/search/title";
 import { RequestScope } from "@/lib/requests/types";
-import { storeSearchText } from "@/redux/reducers/searchReducer";
+import { storeSearchText, storeSearchView } from "@/redux/reducers/searchReducer";
 import { removeFromPreviousSearches } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { SearchMode } from "@/redux/store.type";
 import { router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, View } from "react-native";
-import { Chip, Icon } from "react-native-paper";
+import { Chip, FAB, Icon, Text } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 import { BorderRadius } from "@/constants/borderRadius";
@@ -39,6 +40,7 @@ const MODES: { key: SearchMode; label: string; icon: string }[] = [
   { key: "fife", label: "Fifék", icon: "account" },
 ];
 
+const NO_HISTORY: string[] = [];
 const SCOPES: RequestScope[] = ["all", "for_me", "mine", "solved"];
 const isMode = (value: string | undefined): value is SearchMode =>
   MODES.some((m) => m.key === value);
@@ -64,6 +66,7 @@ export default function SearchScreen() {
 
   const buzinessCircle = useSelector((state: RootState) => state.buziness.searchParams?.searchCircle);
   const buzinessIngyen = useSelector((state: RootState) => state.buziness.searchParams?.ingyen) ?? false;
+  const view = useSelector((state: RootState) => state.search.view);
   const fifeCircle = useSelector((state: RootState) => state.users.userSearchParams?.searchCircle);
   // What is typed in the box right now; the "Új kérés" buttons carry it into the modal.
   const [typed, setTyped] = useState(q);
@@ -80,7 +83,7 @@ export default function SearchScreen() {
   );
   // The kérések keep no history.
   const previousSearches =
-    mode === "fife" ? previousProfileSearches : mode === "kerelem" ? [] : previousBuzinessSearches;
+    mode === "fife" ? previousProfileSearches : mode === "kerelem" ? NO_HISTORY : previousBuzinessSearches;
   const suggestions = useSearchSuggestions(typed, inputFocused && mode === "biznisz");
 
   // The bizniszek live in redux (the list and the map share them), so a screen that comes back
@@ -96,9 +99,10 @@ export default function SearchScreen() {
     useCallback(() => {
       if (mode !== "biznisz") return;
       search(q);
-      // reloadKey is not read: bumping it is how a tap on the active chip asks for a reload.
+      // reloadKey is not read: bumping it is how a tap on the active chip asks for a reload. The
+      // view is: the map asks for every pin, the list for pages, and each is its own search.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [mode, q, reloadKey, dispatch, search]),
+    }, [mode, q, reloadKey, view, dispatch, search]),
   );
 
   const handleSearch = useCallback((query: string) => {
@@ -175,7 +179,7 @@ export default function SearchScreen() {
       : mode === "biznisz"
         ? !!buzinessCircle || buzinessIngyen
         : !!fifeCircle;
-  const title = searchTitle({
+  const { title, filters } = searchTitle({
     mode,
     q,
     scope,
@@ -235,15 +239,27 @@ export default function SearchScreen() {
           paddingVertical: Spacing.xs,
         }}
       >
+        <View style={{ flex: 1 }}>
         <ThemedText
           testID="search-title"
           variant="labelLarge"
           type="bold"
           numberOfLines={2}
-          style={{ flex: 1, color: theme.colors.secondary }}
+          style={{ color: theme.colors.secondary }}
         >
           {title}
         </ThemedText>
+        {filters.length > 0 && (
+          <Text
+            testID="search-title-filters"
+            variant="labelSmall"
+            numberOfLines={1}
+            style={{ color: theme.colors.onSurfaceVariant }}
+          >
+            {filters.join(", ")}
+          </Text>
+        )}
+      </View>
         {/* Always there: what it opens follows the chip that is selected. */}
         <Measure name="filter">
           <View>
@@ -265,6 +281,11 @@ export default function SearchScreen() {
           keyExtractor={(item, i) => item.kind + (item.kind === "section" ? item.label : item.query) + i}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingBottom: MODE_SWITCH_CLEARANCE }}
+          ListHeaderComponent={
+            <View style={{ paddingHorizontal: Spacing.md, paddingTop: Spacing.sm }}>
+              <NewRequestButton text={typed} testID="search-new-request-history" />
+            </View>
+          }
           renderItem={({ item }) => {
             if (item.kind === "section") {
               return (
@@ -318,9 +339,24 @@ export default function SearchScreen() {
           typed={typed}
         />
       ) : mode === "fife" ? (
-        <FifeResults q={q} reloadKey={reloadKey} />
+        <FifeResults q={q} reloadKey={reloadKey} view={view} />
       ) : (
-        <RequestResults q={q} scope={scope} typed={typed} reloadKey={reloadKey} />
+        <RequestResults q={q} scope={scope} typed={typed} reloadKey={reloadKey} view={view} />
+      )}
+
+      {!showHistory && (
+        // One switch for every tab: the list, or the map with the list under it.
+        <Measure name="map-switch">
+          <FAB
+            testID="search-view-switch"
+            icon={view === "map" ? "format-list-bulleted" : "map"}
+            accessibilityLabel={view === "map" ? "Lista nézet" : "Térkép nézet"}
+            style={{ position: "absolute", bottom: Spacing.lg + MODE_SWITCH_CLEARANCE, right: Spacing.lg }}
+            variant="tertiary"
+            customSize={64}
+            onPress={() => dispatch(storeSearchView(view === "map" ? "list" : "map"))}
+          />
+        </Measure>
       )}
 
       <SearchFilterModal

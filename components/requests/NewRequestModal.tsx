@@ -27,6 +27,7 @@ import { useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import {
   HelperText,
+  Divider,
   Icon,
   IconButton,
   List,
@@ -47,6 +48,15 @@ import { Marker } from "../mapView/mapView";
 import ProfileImage from "../ProfileImage";
 import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
+
+// An accordion's header keeps the dialog's side padding; its content does not: it is as wide as
+// the dialog.
+const accordionHeaderStyle = { backgroundColor: "transparent", paddingHorizontal: Spacing.md };
+const accordionContentStyle = {
+  gap: Spacing.lg,
+  paddingHorizontal: Spacing.sm,
+  paddingBottom: Spacing.md,
+};
 
 /** The "at most 10 open requests" message the function passes on in words for the user. */
 async function limitMessage(error: unknown): Promise<string | null> {
@@ -84,13 +94,16 @@ const NewRequestForm = ({ initialTitle }: { initialTitle: string }) => {
   const trimmedTitle = title.trim();
   const canSubmit = trimmedTitle.length >= REQUEST_LIMITS.titleMin && !saving;
   const selectedLocation = circle?.location ?? myLocation?.coords;
-  // Tell the user the extras were filled in even while the accordion is folded.
-  const extras = [
-    description.trim() && "leírás",
-    images.length > 0 && `${images.length} kép`,
-    circle && "hely",
+  // What is filled in stays visible while an accordion is folded.
+  const targetingSummary = [
     tags.length > 0 && `${tags.length} kulcsszó`,
-  ].filter(Boolean) as string[];
+    circle && "hely",
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const detailsSummary = [description.trim() && "leírás", images.length > 0 && `${images.length} kép`]
+    .filter(Boolean)
+    .join(", ");
 
   const pickImages = async () => {
     const remaining = REQUEST_LIMITS.imagesMax - images.length;
@@ -194,140 +207,151 @@ const NewRequestForm = ({ initialTitle }: { initialTitle: string }) => {
           onChangeText={setTitle}
           maxLength={REQUEST_LIMITS.titleMax}
           placeholder="Kell valamiben segítség?"
-          returnKeyType="done"
-          onSubmitEditing={save}
+          multiline
           dense
-          outlineStyle={{ borderRadius: BorderRadius.full, borderWidth: 1 }}
+          outlineStyle={{ borderRadius: BorderRadius.xl, borderWidth: 1 }}
           style={{ flex: 1, backgroundColor: theme.colors.background }}
         />
       </View>
 
-      <Surface
-        elevation={1}
-        style={{ borderRadius: BorderRadius.lg, overflow: "hidden", paddingHorizontal: Spacing.md }}
-      >
-      <List.Accordion
-        testID="request-details"
-        title="További részletek"
-        description={extras.length ? extras.join(", ") : "Leírás, képek, hely, kulcsszavak"}
-        left={(props) => <List.Icon {...props} icon="tune-variant" />}
-        style={{ backgroundColor: "transparent", paddingHorizontal: 0 }}
-        titleStyle={{ fontFamily: "RedHatText-Bold" }}
-      >
-        <View style={{ gap: Spacing.lg, paddingBottom: Spacing.md }}>
-          <TextInput
-            testID="request-description"
-            mode="outlined"
-            label="Leírás"
-            value={description}
-            multiline
-            numberOfLines={3}
-            maxLength={REQUEST_LIMITS.descriptionMax}
-            onChangeText={setDescription}
-          />
+      {/* Two folded accordions, each as wide as the dialog: who should see the request
+          (keywords and place), and what else to tell about it (text and pictures). */}
+      <Surface elevation={1} style={{ borderRadius: BorderRadius.lg, overflow: "hidden" }}>
+        <List.Accordion
+          testID="request-targeting"
+          title="Targetálás"
+          description={targetingSummary || "Kulcsszavak és hely: kihez jusson el"}
+          left={(props) => <List.Icon {...props} icon="target" />}
+          style={accordionHeaderStyle}
+          titleStyle={{ fontFamily: "RedHatText-Bold" }}
+        >
+          <View style={accordionContentStyle}>
+            <View style={{ gap: Spacing.xs }}>
+              <ThemedText type="bold">Kulcsszavak</ThemedText>
+              <TagInput
+                placeholder="Új kulcsszó…"
+                onChange={(next) => setTags(next.slice(0, REQUEST_LIMITS.tagsMax))}
+                value={tags}
+                suggest
+              />
+              <HelperText type="info" visible style={{ paddingLeft: 0 }}>
+                Ezek alapján találnak rád azok, akik tudnak segíteni.
+              </HelperText>
+            </View>
 
-          <View style={{ gap: Spacing.sm }}>
-            <ThemedText type="bold">Képek</ThemedText>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm }}>
-              {images.map((image, index) => (
-                <View key={image.uri} style={{ width: 72, height: 72 }}>
-                  <Image
-                    source={{ uri: image.uri }}
-                    style={{ width: 72, height: 72, borderRadius: BorderRadius.md }}
-                    contentFit="cover"
+            <View style={{ gap: Spacing.sm }}>
+              <ThemedText type="bold">Hol kell a segítség?</ThemedText>
+              <SegmentedButtons
+                value={!circle ? "net" : "map"}
+                onValueChange={(v) => {
+                  if (v === "net") setCircle(undefined);
+                  else setMapModalVisible(true);
+                }}
+                buttons={[
+                  { value: "net", label: "Bárhol", icon: "wifi" },
+                  { value: "map", label: "Térképen", icon: "map-marker" },
+                ]}
+              />
+              {circle && (
+                <>
+                  <View style={{ borderRadius: BorderRadius.md, overflow: "hidden", height: 140 }}>
+                    <FiFeMap
+                      zoomControlEnabled={false}
+                      initialCamera={{ center: selectedLocation || undefined }}
+                      style={{ width: "100%", height: 140 }}
+                      moveOnMarkerPress
+                    >
+                      {!!selectedLocation && (
+                        <Marker coordinate={selectedLocation} anchor={{ x: 0.5, y: 0.5 }}>
+                          <NewMarkerIcon width={24} height={24} />
+                        </Marker>
+                      )}
+                    </FiFeMap>
+                  </View>
+                  <Button mode="contained-tonal" onPress={() => setMapModalVisible(true)}>
+                    Hely módosítása
+                  </Button>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+                    Mekkora körzetből várod a segítséget?
+                  </Text>
+                  <SegmentedButtons
+                    value={String(radius)}
+                    onValueChange={(v) => setRadius(Number(v))}
+                    buttons={REQUEST_RADIUS_OPTIONS.map((o) => ({
+                      value: String(o.value),
+                      label: o.label,
+                    }))}
                   />
-                  <IconButton
-                    icon="close-circle"
-                    size={20}
-                    accessibilityLabel="Kép törlése"
-                    onPress={() => setImages((prev) => prev.filter((_, i) => i !== index))}
-                    style={{ position: "absolute", top: -12, right: -12, margin: 0 }}
-                  />
-                </View>
-              ))}
-              {images.length < REQUEST_LIMITS.imagesMax && (
-                <TouchableRipple
-                  testID="request-add-image"
-                  onPress={pickImages}
-                  accessibilityLabel="Kép hozzáadása"
-                  style={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: BorderRadius.md,
-                    borderWidth: 1,
-                    borderStyle: "dashed",
-                    borderColor: theme.colors.outline,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Icon source="image-plus" size={26} color={theme.colors.primary} />
-                </TouchableRipple>
+                </>
               )}
             </View>
           </View>
+        </List.Accordion>
 
-          <View style={{ gap: Spacing.sm }}>
-            <ThemedText type="bold">Hol kell a segítség?</ThemedText>
-            <SegmentedButtons
-              value={!circle ? "net" : "map"}
-              onValueChange={(v) => {
-                if (v === "net") setCircle(undefined);
-                else setMapModalVisible(true);
-              }}
-              buttons={[
-                { value: "net", label: "Bárhol", icon: "wifi" },
-                { value: "map", label: "Térképen", icon: "map-marker" },
-              ]}
+        <Divider />
+
+        <List.Accordion
+          testID="request-details"
+          title="További infók"
+          description={detailsSummary || "Leírás és képek"}
+          left={(props) => <List.Icon {...props} icon="text-box-plus-outline" />}
+          style={accordionHeaderStyle}
+          titleStyle={{ fontFamily: "RedHatText-Bold" }}
+        >
+          <View style={accordionContentStyle}>
+            <TextInput
+              testID="request-description"
+              mode="outlined"
+              label="Leírás"
+              value={description}
+              multiline
+              numberOfLines={4}
+              maxLength={REQUEST_LIMITS.descriptionMax}
+              onChangeText={setDescription}
             />
-            {circle && (
-              <>
-                <View style={{ borderRadius: BorderRadius.md, overflow: "hidden", height: 140 }}>
-                  <FiFeMap
-                    zoomControlEnabled={false}
-                    initialCamera={{ center: selectedLocation || undefined }}
-                    style={{ width: "100%", height: 140 }}
-                    moveOnMarkerPress
+
+            <View style={{ gap: Spacing.sm }}>
+              <ThemedText type="bold">Képek</ThemedText>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm }}>
+                {images.map((image, index) => (
+                  <View key={image.uri} style={{ width: 72, height: 72 }}>
+                    <Image
+                      source={{ uri: image.uri }}
+                      style={{ width: 72, height: 72, borderRadius: BorderRadius.md }}
+                      contentFit="cover"
+                    />
+                    <IconButton
+                      icon="close-circle"
+                      size={20}
+                      accessibilityLabel="Kép törlése"
+                      onPress={() => setImages((prev) => prev.filter((_, i) => i !== index))}
+                      style={{ position: "absolute", top: -12, right: -12, margin: 0 }}
+                    />
+                  </View>
+                ))}
+                {images.length < REQUEST_LIMITS.imagesMax && (
+                  <TouchableRipple
+                    testID="request-add-image"
+                    onPress={pickImages}
+                    accessibilityLabel="Kép hozzáadása"
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: BorderRadius.md,
+                      borderWidth: 1,
+                      borderStyle: "dashed",
+                      borderColor: theme.colors.outline,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                   >
-                    {!!selectedLocation && (
-                      <Marker coordinate={selectedLocation} anchor={{ x: 0.5, y: 0.5 }}>
-                        <NewMarkerIcon width={24} height={24} />
-                      </Marker>
-                    )}
-                  </FiFeMap>
-                </View>
-                <Button mode="contained-tonal" onPress={() => setMapModalVisible(true)}>
-                  Hely módosítása
-                </Button>
-                <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                  Mekkora körzetből várod a segítséget?
-                </Text>
-                <SegmentedButtons
-                  value={String(radius)}
-                  onValueChange={(v) => setRadius(Number(v))}
-                  buttons={REQUEST_RADIUS_OPTIONS.map((o) => ({
-                    value: String(o.value),
-                    label: o.label,
-                  }))}
-                />
-              </>
-            )}
+                    <Icon source="image-plus" size={26} color={theme.colors.primary} />
+                  </TouchableRipple>
+                )}
+              </View>
+            </View>
           </View>
-
-          <View style={{ gap: Spacing.xs }}>
-            <ThemedText type="bold">Kulcsszavak</ThemedText>
-            <TagInput
-              placeholder="Új kulcsszó…"
-              onChange={(next) => setTags(next.slice(0, REQUEST_LIMITS.tagsMax))}
-              value={tags}
-              suggest
-            />
-            <HelperText type="info" visible style={{ paddingLeft: 0 }}>
-              Ezek alapján találnak rád azok, akik tudnak segíteni.
-            </HelperText>
-          </View>
-        </View>
-      </List.Accordion>
+        </List.Accordion>
       </Surface>
 
       <Button
