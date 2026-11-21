@@ -5,13 +5,21 @@ import { ThemedView as View } from "@/components/ThemedView";
 
 export type Breakpoint = "mobile" | "tablet" | "desktop";
 
+/**
+ * From this width on the app trades the bottom bar for a sidebar
+ * (components/navigation/SideNavigation.tsx) and lets screens use more room.
+ */
+export const WIDE_BREAKPOINT = 1024;
+
 export const useBreakpoint = () => {
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
   const isDesktop = !isMobile;
+  /** Sidebar instead of the bottom bar; screens may lay out in columns. */
+  const isWide = width >= WIDE_BREAKPOINT;
   const screenPadding = isDesktop ? 32 : 8;
   const current: Breakpoint = isDesktop ? "desktop" : "mobile";
-  return { isMobile, isDesktop, current, screenPadding };
+  return { isMobile, isDesktop, isWide, current, screenPadding };
 };
 
 type Props = {

@@ -17,13 +17,14 @@ import { enModeIcon, miModeIcon } from "./modeIcons";
 interface ModeSwitchProps {
   mode: AppMode;
   onSwitch: () => void;
+  /** Track width; the sidebar on wide screens stretches it to its own width. */
+  width?: number;
 }
 
 /** Size of the track; BottomNavigation sizes the dock around it. */
 export const MODE_SWITCH_WIDTH = 130;
 export const MODE_SWITCH_HEIGHT = 40;
 const TRACK_PADDING = 3;
-const HALF_WIDTH = (MODE_SWITCH_WIDTH - 2 * TRACK_PADDING) / 2;
 const HALF_HEIGHT = MODE_SWITCH_HEIGHT - 2 * TRACK_PADDING;
 
 /** How long the raised half takes to slide to the other side. */
@@ -74,7 +75,8 @@ function RaisedFill({ id, stops }: { id: string; stops: readonly string[] }) {
  * The slide runs on the UI thread, so it keeps moving smoothly even while the
  * JS thread is busy rendering the screen the switch leads to.
  */
-export default function ModeSwitch({ mode, onSwitch }: ModeSwitchProps) {
+export default function ModeSwitch({ mode, onSwitch, width = MODE_SWITCH_WIDTH }: ModeSwitchProps) {
+  const halfWidth = (width - 2 * TRACK_PADDING) / 2;
   const theme = useAppTheme();
   const tone = theme.dark ? "dark" : "light";
   const trackBg = theme.dark ? "#1E1B16" : "#F5EEE2";
@@ -96,7 +98,7 @@ export default function ModeSwitch({ mode, onSwitch }: ModeSwitchProps) {
   }, [mode, progress]);
 
   const slideStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: progress.value * HALF_WIDTH }],
+    transform: [{ translateX: progress.value * halfWidth }],
   }));
   const enFillStyle = useAnimatedStyle(() => ({ opacity: 1 - progress.value }));
   const miFillStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
@@ -146,9 +148,9 @@ export default function ModeSwitch({ mode, onSwitch }: ModeSwitchProps) {
   };
 
   return (
-    <View style={[styles.track, { backgroundColor: trackBg }]}>
+    <View style={[styles.track, { width, backgroundColor: trackBg }]}>
       {/* Behind the labels: the raised half, carrying its own shadow. */}
-      <Animated.View pointerEvents="none" style={[styles.raised, slideStyle]}>
+      <Animated.View pointerEvents="none" style={[styles.raised, { width: halfWidth }, slideStyle]}>
         <Animated.View style={[StyleSheet.absoluteFill, enFillStyle]}>
           <RaisedFill id="modeSwitchRaisedEn" stops={raisedStops.en[tone]} />
         </Animated.View>
@@ -164,7 +166,6 @@ export default function ModeSwitch({ mode, onSwitch }: ModeSwitchProps) {
 
 const styles = StyleSheet.create({
   track: {
-    width: MODE_SWITCH_WIDTH,
     height: MODE_SWITCH_HEIGHT,
     borderRadius: BorderRadius.full,
     padding: TRACK_PADDING,
@@ -174,7 +175,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: TRACK_PADDING,
     left: TRACK_PADDING,
-    width: HALF_WIDTH,
     height: HALF_HEIGHT,
     borderRadius: BorderRadius.full,
     // The raised half casts a soft shadow onto the track, like the reference.

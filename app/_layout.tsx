@@ -1,6 +1,8 @@
 import InfoLayer from "@/components/InfoLayer";
 import { SplashAnimation } from "@/components/SplashAnimation";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
+import SideNavigation from "@/components/navigation/SideNavigation";
+import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 import { persistor, store } from "@/redux/store";
 import { Stack, usePathname, useRouter, useSegments, type NativeStackHeaderProps } from "expo-router";
 import * as Notifications from "expo-notifications";
@@ -65,8 +67,12 @@ function HomeHeader({ mode = "biznisz" }: { mode?: SearchMode }) {
   );
 }
 
+/** How wide a screen may grow next to the sidebar on wide screens. */
+const WIDE_CONTENT_MAX_WIDTH = 1120;
+
 function RootContent() {
   const pathname = usePathname();
+  const { isWide } = useBreakpoint();
   const segments = useSegments();
   const dispatch = useDispatch();
   const deviceColorScheme = useColorScheme(); // Auto-detect device theme
@@ -311,6 +317,9 @@ function RootContent() {
     !pathname.includes("leiratkozas") &&
     pathname !== "/biznisz/new" &&
     !pathname.startsWith("/biznisz/edit");
+  // Wide screens get the same navigation as a sidebar, and the screens next
+  // to it more room than a phone column.
+  const sideNav = showBottomNav && isWide;
 
   return (
     <PaperProvider theme={theme}>
@@ -324,7 +333,10 @@ function RootContent() {
         style={{ flex: 1, backgroundColor: statusBarColor || theme.colors.surface }}
       >
         <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
-          <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
+          <View style={{ flex: 1, flexDirection: "row", width: "100%" }}>
+          {sideNav && <SideNavigation />}
+          <View style={{ flex: 1, minWidth: 0 }}>
+          <View style={pathname == "/" ? { flex: 1 } : { maxWidth: sideNav ? WIDE_CONTENT_MAX_WIDTH : 600, width: "100%", flex: 1, alignSelf: "center" }}>
             <InfoLayer />
 
             <Stack
@@ -450,8 +462,10 @@ function RootContent() {
                 onDismiss={versionGate.dismissUpdate}
               />
             )}
-            {showBottomNav && <BottomNavigation />}
+            {showBottomNav && !sideNav && <BottomNavigation />}
             {!!uid && <InAppMessageDialog />}
+          </View>
+          </View>
           </View>
         </ThemedView>
         {appLock.locked && (
