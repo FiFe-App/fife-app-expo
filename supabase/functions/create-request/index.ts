@@ -23,8 +23,6 @@ const TITLE_MAX = 120;
 const DESCRIPTION_MAX = 2000;
 const TAGS_MAX = 10;
 const TAG_MAX_LENGTH = 40;
-const RADIUS_MIN = 100;
-const RADIUS_MAX = 200000;
 const POINT = /^POINT\((-?\d{1,3}(?:\.\d+)?) (-?\d{1,2}(?:\.\d+)?)\)$/;
 
 const json = (body: unknown, status = 200) =>
@@ -85,9 +83,8 @@ Deno.serve(async (req) => {
     if (tags.length > TAGS_MAX) return json({ error: `At most ${TAGS_MAX} tags` }, 400);
   }
 
-  // "Bárhol": no location and no radius. Otherwise a WKT point (lon lat) and a radius in meters.
+  // "Bárhol": no location. Otherwise a WKT point (lon lat); a request has no radius of its own.
   let location: string | null = null;
-  let radius: number | null = null;
   if (body.location != null) {
     const match = typeof body.location === "string" ? POINT.exec(body.location) : null;
     const lon = match ? Number(match[1]) : NaN;
@@ -96,10 +93,6 @@ Deno.serve(async (req) => {
       return json({ error: "Location must be POINT(lon lat)" }, 400);
     }
     location = body.location as string;
-    radius = typeof body.radius === "number" ? body.radius : 5000;
-    if (!Number.isFinite(radius) || radius < RADIUS_MIN || radius > RADIUS_MAX) {
-      return json({ error: `Radius must be ${RADIUS_MIN}-${RADIUS_MAX} meters` }, 400);
-    }
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
@@ -147,7 +140,6 @@ Deno.serve(async (req) => {
       description: (description as string).trim(),
       tags,
       location,
-      radius,
       embedding,
       embedding_text,
     })

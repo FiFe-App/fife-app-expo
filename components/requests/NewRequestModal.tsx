@@ -5,13 +5,12 @@ import containerStyle from "@/components/styles";
 import TagInput from "@/components/TagInput";
 import { BorderRadius } from "@/constants/borderRadius";
 import { Spacing } from "@/constants/spacing";
+import { useComposerBack } from "@/hooks/useComposerBack";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import { countBucket, trackEvent } from "@/lib/analytics";
 import { uploadRequestImages } from "@/lib/requests/requestImages";
 import {
-  DEFAULT_REQUEST_RADIUS,
   REQUEST_LIMITS,
-  REQUEST_RADIUS_OPTIONS,
 } from "@/lib/requests/types";
 import { invokeFunction } from "@/lib/supabase/invokeFunction";
 import { supabase } from "@/lib/supabase/supabase";
@@ -23,7 +22,7 @@ import { CircleType } from "@/redux/store.type";
 import { Image } from "expo-image";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import {
   HelperText,
@@ -75,7 +74,21 @@ async function limitMessage(error: unknown): Promise<string | null> {
  * The form. One input is enough to ask something; everything else sits in a collapsed
  * accordion. Mounted only while the sheet is open, so every opening starts from a clean form.
  */
-const NewRequestForm = ({ initialTitle }: { initialTitle: string }) => {
+/** The title shows in full, up to this many lines (it is one line unless the text needs more). */
+const TITLE_MAX_LINES = 7;
+/** Paper's outlined, dense input: the room above and below its text. */
+const TITLE_VERTICAL_PADDING = 16;
+/** The room left and right of the text inside the input (kept a little over, so a line is never lost). */
+const TITLE_HORIZONTAL_PADDING = 18;
+
+const NewRequestForm = ({
+  initialTitle,
+  dismiss,
+}: {
+  initialTitle: string;
+  /** Closes the modal (the same way the Back button does) and resolves once it is gone. */
+  dismiss: () => Promise<void>;
+}) => {
   const theme = useAppTheme();
   const dispatch = useDispatch();
   const uid = useSelector((state: RootState) => state.user.uid);
@@ -87,9 +100,16 @@ const NewRequestForm = ({ initialTitle }: { initialTitle: string }) => {
   const [tags, setTags] = useState<string[]>([]);
   const [images, setImages] = useState<ExpoImagePicker.ImagePickerAsset[]>([]);
   const [circle, setCircle] = useState<CircleType | undefined>(undefined);
-  const [radius, setRadius] = useState<number>(DEFAULT_REQUEST_RADIUS);
   const [mapModalVisible, setMapModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [titleTextHeight, setTitleTextHeight] = useState(0);
+
+  // How tall the title input is: the lines its text takes, one at least, TITLE_MAX_LINES at most.
+  const titleFont = theme.fonts.bodyLarge;
+  const titleLineHeight = titleFont.lineHeight ?? 24;
+  const titleLines = Math.max(1, Math.round(titleTextHeight / titleLineHeight));
+  const titleInputHeight =
+    Math.min(titleLines, TITLE_MAX_LINES) * titleLineHeight + TITLE_VERTICAL_PADDING;
 
   const trimmedTitle = title.trim();
   const canSubmit = trimmedTitle.length >= REQUEST_LIMITS.titleMin && !saving;
@@ -137,7 +157,6 @@ const NewRequestForm = ({ initialTitle }: { initialTitle: string }) => {
           location: circle
             ? `POINT(${circle.location.longitude} ${circle.location.latitude})`
             : null,
-          radius: circle ? radius : null,
         },
       });
 
@@ -182,7 +201,7 @@ const NewRequestForm = ({ initialTitle }: { initialTitle: string }) => {
         images: countBucket(images.length),
         tags: countBucket(tags.length),
       });
-      dispatch(closeRequestComposer());
+      await dismiss();
       router.push({ pathname: "/kerelmek/[id]", params: { id: created.id } });
     } finally {
       setSaving(false);
@@ -199,19 +218,46 @@ const NewRequestForm = ({ initialTitle }: { initialTitle: string }) => {
           avatar_url={avatarUrl}
           style={{ width: 40, height: 40, borderRadius: BorderRadius.md }}
         />
-        <TextInput
-          testID="request-title"
-          mode="outlined"
-          autoFocus
-          value={title}
-          onChangeText={setTitle}
-          maxLength={REQUEST_LIMITS.titleMax}
-          placeholder="Kell valamiben segítség?"
-          multiline
-          dense
-          outlineStyle={{ borderRadius: BorderRadius.xl, borderWidth: 1 }}
-          style={{ flex: 1, backgroundColor: theme.colors.background }}
-        />
+        <View style={{ flex: 1 }}>
+          <TextInput
+            testID="request-title"
+            mode="outlined"
+            autoFocus
+            value={title}
+            onChangeText={setTitle}
+            maxLength={REQUEST_LIMITS.titleMax}
+            placeholder="Kell valamiben segítség?"
+            multiline
+            // One line to begin with; as tall as the text needs, up to TITLE_MAX_LINES, after
+            // that it scrolls.
+            scrollEnabled={titleLines > TITLE_MAX_LINES}
+            dense
+            outlineStyle={{ borderRadius: BorderRadius.xl, borderWidth: 1 }}
+            style={{ height: titleInputHeight, backgroundColor: theme.colors.background }}
+          />
+          {/* The same text, laid out invisibly at the input's width: its height is how many
+              lines the title takes, whatever the platform does with a multiline input. */}
+          <Text
+            testID="request-title-mirror"
+            aria-hidden
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            pointerEvents="none"
+            onLayout={(e) => setTitleTextHeight(e.nativeEvent.layout.height)}
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              opacity: 0,
+              paddingHorizontal: TITLE_HORIZONTAL_PADDING,
+              fontFamily: titleFont.fontFamily,
+              fontSize: titleFont.fontSize,
+              lineHeight: titleLineHeight,
+            }}
+          >
+            {title.endsWith("\n") ? `${title} ` : title || " "}
+          </Text>
+        </View>
       </View>
 
       {/* Two folded accordions, each as wide as the dialog: who should see the request
@@ -271,17 +317,6 @@ const NewRequestForm = ({ initialTitle }: { initialTitle: string }) => {
                   <Button mode="contained-tonal" onPress={() => setMapModalVisible(true)}>
                     Hely módosítása
                   </Button>
-                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                    Mekkora körzetből várod a segítséget?
-                  </Text>
-                  <SegmentedButtons
-                    value={String(radius)}
-                    onValueChange={(v) => setRadius(Number(v))}
-                    buttons={REQUEST_RADIUS_OPTIONS.map((o) => ({
-                      value: String(o.value),
-                      label: o.label,
-                    }))}
-                  />
                 </>
               )}
             </View>
@@ -403,10 +438,13 @@ export const NewRequestModal = () => {
   const { open, initialTitle } = useSelector((state: RootState) => state.requests.composer);
   const keyboardHeight = useKeyboardHeight();
   const { height: windowHeight } = useWindowDimensions();
+  const close = useCallback(() => {
+    dispatch(closeRequestComposer());
+  }, [dispatch]);
+  // The system Back button closes the modal (and the tap on the backdrop does the same).
+  const { dismiss } = useComposerBack(open, close);
 
   if (!uid) return null;
-
-  const close = () => dispatch(closeRequestComposer());
 
   // The Paper modal only renders inside a Portal (without one it never shows, on the web at
   // least). No card: the form floats on the dimmed backdrop, like a post box being opened.
@@ -414,8 +452,9 @@ export const NewRequestModal = () => {
     <Portal>
       <KeyboardAwareModal
         visible={open}
-        onDismiss={close}
-        dismissableBackButton
+        onDismiss={dismiss}
+        // Back is handled by useComposerBack, which also covers the browser's Back.
+        dismissableBackButton={false}
         contentContainerStyle={modalContainerStyle}
       >
         <View
@@ -427,7 +466,7 @@ export const NewRequestModal = () => {
             style={{ maxHeight: (windowHeight - keyboardHeight) * 0.9 }}
             contentContainerStyle={{ gap: Spacing.md }}
           >
-            <NewRequestForm initialTitle={initialTitle} />
+            <NewRequestForm initialTitle={initialTitle} dismiss={dismiss} />
           </ScrollView>
         </View>
       </KeyboardAwareModal>

@@ -36,7 +36,7 @@
 -- 1. Kérések
 -------------------------------------------------------------------
 INSERT INTO public.requests
-  (id, created_at, author, title, description, tags, images, location, radius, status, solved_at)
+  (id, created_at, author, title, description, tags, images, location, status, solved_at)
 SELECT
   v.id,
   now() - v.created_ago,
@@ -48,7 +48,6 @@ SELECT
   CASE WHEN v.lon IS NULL THEN NULL
        ELSE extensions.st_setsrid(extensions.st_makepoint(v.lon::double precision, v.lat::double precision), 4326)::extensions.geography
   END,
-  v.radius::real,
   v.status,
   CASE WHEN v.status = 'solved' THEN now() - v.solved_ago END
 FROM (VALUES
@@ -59,7 +58,7 @@ FROM (VALUES
    ARRAY['kertész','fűnyírás','sövény','kert'],
    -- Kézzel feltöltendő fájl a requests bucketbe: f1f2f3f4-f5f6-4f7f-8f9f-0f1f2f3f4f5f/1001/kert.jpg
    ARRAY['f1f2f3f4-f5f6-4f7f-8f9f-0f1f2f3f4f5f/1001/kert.jpg'],
-   19.1121, 47.5195, 3000, 'open', INTERVAL '6 days 4 hours', NULL::interval),
+   19.1121, 47.5195, 'open', INTERVAL '6 days 4 hours', NULL::interval),
 
   -- 1002 | nyitott | Újpest | friss (órák)
   (1002, '11223344-5566-4778-8990-aabbccddee00' /* peter */,
@@ -67,7 +66,7 @@ FROM (VALUES
    'Újpesten költöztem új lakásba, és pár polcot meg egy tévéállványt kellene felfúrnom betonfalba. Ütvefúró jó lenne fúrószárakkal. Vigyázok rá, és szívesen hozok érte egy sört vagy valami süteményt cserébe. Holnap vagy hétvégén bármikor jó.',
    ARRAY['fúrógép','kölcsönzés','barkács'],
    '{}'::text[],
-   19.0912, 47.5585, 2000, 'open', INTERVAL '3 hours', NULL),
+   19.0912, 47.5585, 'open', INTERVAL '3 hours', NULL),
 
   -- 1003 | nyitott | Buda, Móricz Zsigmond körtér
   (1003, '22334455-6677-4889-9001-bbccddeeff11' /* reka */,
@@ -75,7 +74,7 @@ FROM (VALUES
    'A lányom 8.-os, és a felvételi előtt jól jönne heti 1-2 alkalom matekból (törtek, egyenletek, geometria). Nálunk is lehet a Móricz Zsigmond körtér közelében, vagy online. Egyetemista is jöhet, ha türelmes. Az órabérről megegyezünk.',
    ARRAY['korrepetálás','matek','tanítás','felvételi'],
    '{}'::text[],
-   19.0467, 47.4786, 5000, 'open', INTERVAL '12 days', NULL),
+   19.0467, 47.4786, 'open', INTERVAL '12 days', NULL),
 
   -- 1004 | megoldott | Zugló, Örs vezér tere | javítás: illeszkedik Judit "Varroda Márti" bizniszéhez
   (1004, 'a3f8b9f2-3b1a-4a49-9a27-3e7f0e9d1c01' /* luna */,
@@ -83,7 +82,7 @@ FROM (VALUES
    'A hátsó váltó beragadt, és a kerék is nyolcasban van. Zuglóban, az Örs vezér tere környékén keresek valakit, aki hétköznap este is ráér, és megnézné.',
    ARRAY['biciklijavítás','kerékpár','javítás'],
    '{}'::text[],
-   19.1353, 47.5032, 3000, 'solved', INTERVAL '33 days', INTERVAL '30 days'),
+   19.1353, 47.5032, 'solved', INTERVAL '33 days', INTERVAL '30 days'),
 
   -- 1005 | nyitott | Pestszentlőrinc | kutya, séta: illeszkedik Klara "Kutyasétáltató Dóri" bizniszéhez
   (1005, '99aaccdd-ddee-4ff0-0115-223344556688' /* tamas */,
@@ -91,7 +90,7 @@ FROM (VALUES
    'Van egy 3 éves labradorom, Bodri, aki imádja a hosszú sétákat. Hétköznap 14 és 17 óra között kellene valaki, aki kivinné egy órára Pestszentlőrincen. Szelíd, jól szót fogad, pórázon is nyugodt. Heti 3-4 alkalom, természetesen fizetek érte.',
    ARRAY['kutya','séta','kutyasétáltatás'],
    '{}'::text[],
-   19.1815, 47.4390, 2500, 'open', INTERVAL '1 day 6 hours', NULL),
+   19.1815, 47.4390, 'open', INTERVAL '1 day 6 hours', NULL),
 
   -- 1006 | megoldott | Csepel
   (1006, 'aabbddee-eeff-4001-1226-334455667799' /* judit */,
@@ -99,7 +98,7 @@ FROM (VALUES
    'Csepelen költözöm egy másik lakásba, a harmadikról a földszintre. Nincs sok cucc, de a gardróbszekrény és a mosógép egyedül nehéz. Két-három óra az egész, utána pizza van.',
    ARRAY['költözés','segítség','cipekedés'],
    '{}'::text[],
-   19.0765, 47.4380, 4000, 'solved', INTERVAL '28 days', INTERVAL '26 days'),
+   19.0765, 47.4380, 'solved', INTERVAL '28 days', INTERVAL '26 days'),
 
   -- 1007 | nyitott | Kispest
   (1007, '55667788-99aa-4bbc-cdd1-eeff00112244' /* gabor */,
@@ -107,7 +106,7 @@ FROM (VALUES
    'Kispesten élünk, két gyerekünk van (3 és 6 évesek). Havonta 1-2 szombat este kellene valaki, aki vigyáz rájuk 18-tól kb. 23 óráig, a kicsik addigra már alszanak. A referencia előny, de a legfontosabb, hogy megbízható és barátságos legyen.',
    ARRAY['bébiszitter','gyerekfelügyelet','esti'],
    '{}'::text[],
-   19.1494, 47.4527, 4000, 'open', INTERVAL '9 days', NULL),
+   19.1494, 47.4527, 'open', INTERVAL '9 days', NULL),
 
   -- 1008 | nyitott | Óbuda | javítás: illeszkedik Judit bizniszéhez
   (1008, '44556677-8899-4aab-bcc0-ddeeff001133' /* eszter */,
@@ -115,7 +114,7 @@ FROM (VALUES
    'Egy 5 éves Lenovo laptopom van, bekapcsoláskor csak a ventilátor zúg, a kép nem jön be. Fontos fájlok vannak rajta, ezért szeretném, ha valaki, aki ért hozzá, megnézné, mielőtt boltba viszem. Óbudán vagyok, elviszem vagy elmegyek hozzád.',
    ARRAY['számítógép','laptop','javítás'],
    '{}'::text[],
-   19.0449, 47.5385, 5000, 'open', INTERVAL '2 days 5 hours', NULL),
+   19.0449, 47.5385, 'open', INTERVAL '2 days 5 hours', NULL),
 
   -- 1009 | megoldott | Angyalföld | közösség: illeszkedik Marci "Futó Klub" bizniszéhez
   (1009, '66778899-aabb-4ccd-dee2-ff0011223355' /* nora */,
@@ -123,7 +122,7 @@ FROM (VALUES
    'Szeretném, ha lenne a környéken egy kis társaság, akikkel vasárnaponként együtt főzünk valami nagyot (gulyás, tészta, bármi), és közösen megesszük. Az Angyalföldön van egy nagy konyhám, a hozzávalókat összedobjuk.',
    ARRAY['főzés','közösség','étel'],
    '{}'::text[],
-   19.0557, 47.5153, 2500, 'solved', INTERVAL '44 days', INTERVAL '37 days'),
+   19.0557, 47.5153, 'solved', INTERVAL '44 days', INTERVAL '37 days'),
 
   -- 1010 | nyitott | Pesthidegkút | bútor, felújítás: illeszkedik Zsofi "Bútorfelújító Andris" bizniszéhez
   (1010, '7788aabb-bbcc-4dde-eff3-001122334466' /* adam */,
@@ -134,7 +133,7 @@ FROM (VALUES
    --   7788aabb-bbcc-4dde-eff3-001122334466/1010/szekreny.jpg
    --   7788aabb-bbcc-4dde-eff3-001122334466/1010/iroasztal.jpg
    ARRAY['7788aabb-bbcc-4dde-eff3-001122334466/1010/szekreny.jpg','7788aabb-bbcc-4dde-eff3-001122334466/1010/iroasztal.jpg'],
-   18.9630, 47.5535, 8000, 'open', INTERVAL '4 days', NULL),
+   18.9630, 47.5535, 'open', INTERVAL '4 days', NULL),
 
   -- 1011 | nyitott | Bárhol
   (1011, 'b6d1e2c3-4f5a-6b7c-8d9e-0f1a2b3c4d5e' /* marci */,
@@ -142,7 +141,7 @@ FROM (VALUES
    'Dolgozom, a nyelvtant elég jól ismerem, de beszélni szinte sosem merek. Heti egy-két alkalommal online beszélgetnék valakivel angolul, lehet anyanyelvi vagy haladó is. Cserébe segítek magyarban vagy bármiben, amiben tudok.',
    ARRAY['angol','nyelvlecke','beszélgetés'],
    '{}'::text[],
-   NULL, NULL, NULL, 'open', INTERVAL '17 days', NULL),
+   NULL, NULL, 'open', INTERVAL '17 days', NULL),
 
   -- 1012 | nyitott | Ferencváros | festés, lakás: illeszkedik Eszter és Adam bizniszéhez
   (1012, 'c7e8f9a0-1b2c-3d4e-5f60-7a8b9c0d1e2f' /* zsofi */,
@@ -151,7 +150,7 @@ FROM (VALUES
    ARRAY['festés','lakás','szobafestés'],
    -- Kézzel feltöltendő fájl a requests bucketbe: c7e8f9a0-1b2c-3d4e-5f60-7a8b9c0d1e2f/1012/szoba.jpg
    ARRAY['c7e8f9a0-1b2c-3d4e-5f60-7a8b9c0d1e2f/1012/szoba.jpg'],
-   19.0630, 47.4880, 3000, 'open', INTERVAL '5 days 7 hours', NULL),
+   19.0630, 47.4880, 'open', INTERVAL '5 days 7 hours', NULL),
 
   -- 1013 | megoldott | Budapest (nagyobb körzet) | fotós, esküvő, portré: illeszkedik Gabor bizniszéhez
   (1013, '33445566-7788-4990-a112-ccddeeff0022' /* david */,
@@ -159,7 +158,7 @@ FROM (VALUES
    'A jövő nyári esküvőnkre (Budapest, kb. 60 vendég) keresünk fotóst. A természetes, nem pózolt képek tetszenek. Ha volt jó tapasztalatotok, írjatok, a hozzávetőleges árat is megköszönnénk.',
    ARRAY['fotós','esküvő','portré'],
    '{}'::text[],
-   19.0508, 47.4978, 15000, 'solved', INTERVAL '36 days', INTERVAL '22 days'),
+   19.0508, 47.4978, 'solved', INTERVAL '36 days', INTERVAL '22 days'),
 
   -- 1014 | nyitott | Bárhol | logó, grafikus: illeszkedik Tamas "Kreatív Grafika" bizniszéhez
   (1014, 'bbcceeff-ff00-4112-2337-445566778800' /* balazs */,
@@ -167,7 +166,7 @@ FROM (VALUES
    'A házi cukrászatomhoz (torták, sütemények) kellene egy egyszerű, de karakteres logó a dobozokra és a matricákra. Nincs hatalmas keretem, de fair árat fizetek. Online is megoldható, a mintákat szívesen megnézem.',
    ARRAY['logó','grafikus','arculat','csomagolás'],
    '{}'::text[],
-   NULL, NULL, NULL, 'open', INTERVAL '8 hours', NULL),
+   NULL, NULL, 'open', INTERVAL '8 hours', NULL),
 
   -- 1015 | megoldott | Újpest | piac, zöldség: illeszkedik Zsofi "Zöld Piac" bizniszéhez
   (1015, 'f1f2f3f4-f5f6-4f7f-8f9f-0f1f2f3f4f5f' /* anna */,
@@ -175,7 +174,7 @@ FROM (VALUES
    'A szomszédom 82 éves, és már nehezen jut el a piacra. Heti egyszer kellene valaki, aki elmegy neki zöldségért, gyümölcsért, és felcipeli a második emeletre. A pénzt előre odaadja, plusz hálás lesz érte.',
    ARRAY['piac','zöldség','bevásárlás','idősgondozás'],
    '{}'::text[],
-   19.0912, 47.5585, 1500, 'solved', INTERVAL '14 days', INTERVAL '9 days'),
+   19.0912, 47.5585, 'solved', INTERVAL '14 days', INTERVAL '9 days'),
 
   -- 1016 | megoldott | Bárhol
   (1016, '22334455-6677-4889-9001-bbccddeeff11' /* reka */,
@@ -183,7 +182,7 @@ FROM (VALUES
    'Nyáron Spanyolországba utazunk, és szeretnénk alapokat tanulni. Heti kétszer fél óra online is jó volna, kezdő szinten. Akár kis csoportban, akár egyénileg, a lényeg, hogy a kiejtést is gyakoroljuk.',
    ARRAY['spanyol','nyelvlecke','tanítás'],
    '{}'::text[],
-   NULL, NULL, NULL, 'solved', INTERVAL '31 days', INTERVAL '27 days'),
+   NULL, NULL, 'solved', INTERVAL '31 days', INTERVAL '27 days'),
 
   -- 1017 | nyitott | Újbuda | torta: illeszkedik Balazs "Házi Cukrász Kata" bizniszéhez
   (1017, 'e1e2e3e4-e5e6-4e7e-8e9e-0e1e2e3e4e5e' /* bence */,
@@ -191,7 +190,7 @@ FROM (VALUES
    'A párom szülinapjára kellene egy kisebb, kb. 8 személyes gluténmentes torta jövő hét végére. Újbudán lakunk, átvenni tudom, ha nincs messze. Ha van jó cukrász az ismeretségben, nagyon hálás lennék az ajánlásért.',
    ARRAY['torta','gluténmentes','születésnap','cukrász'],
    '{}'::text[],
-   19.0455, 47.4742, 6000, 'open', INTERVAL '1 day 3 hours', NULL),
+   19.0455, 47.4742, 'open', INTERVAL '1 day 3 hours', NULL),
 
   -- 1018 | megoldott | Bárhol (távsegítség)
   (1018, '55667788-99aa-4bbc-cdd1-eeff00112244' /* gabor */,
@@ -199,7 +198,7 @@ FROM (VALUES
    'Új routert kaptam a szolgáltatótól, és a vendéghálózat meg a port-továbbítás nem akar menni. Videóhíváson vagy telefonon végigvezetne valaki? Fél óra az egész.',
    ARRAY['internet','wifi','számítógép','távsegítség'],
    '{}'::text[],
-   NULL, NULL, NULL, 'solved', INTERVAL '21 days', INTERVAL '20 days 6 hours'),
+   NULL, NULL, 'solved', INTERVAL '21 days', INTERVAL '20 days 6 hours'),
 
   -- 1019 | nyitott | Óbuda | futás, sport: illeszkedik Marci "Futó Klub" bizniszéhez | friss (órák)
   (1019, 'a3f8b9f2-3b1a-4a49-9a27-3e7f0e9d1c01' /* luna */,
@@ -207,7 +206,7 @@ FROM (VALUES
    'Óbudán lakom, reggel fél hét körül szoktam futni a Duna-parton, de egyedül nehéz kimászni az ágyból. Lassú tempó, kb. 5-6 km, kezdő-középhaladó. Aki hasonló ritmusban él, jelentkezzen!',
    ARRAY['futás','sport','reggel'],
    '{}'::text[],
-   19.0405, 47.5390, 3000, 'open', INTERVAL '90 minutes', NULL),
+   19.0405, 47.5390, 'open', INTERVAL '90 minutes', NULL),
 
   -- 1020 | nyitott | Rákospalota | asztalos: illeszkedik Zsofi bizniszéhez
   (1020, '11223344-5566-4778-8990-aabbccddee00' /* peter */,
@@ -215,7 +214,7 @@ FROM (VALUES
    'A szüleim rákospalotai kertjébe építenék egy padot fenyőből, de a csapolásban és a lakkozásban bizonytalan vagyok. Egy asztalos vagy ügyes barkácsoló egy órát rám szánna egy hétvégén? Szerszám van, az anyagot már megvettem.',
    ARRAY['asztalos','barkács','kert','bútor'],
    '{}'::text[],
-   19.1050, 47.5700, 4000, 'open', INTERVAL '20 days', NULL),
+   19.1050, 47.5700, 'open', INTERVAL '20 days', NULL),
 
   -- 1021 | nyitott | Józsefváros | kávé, kávézó: illeszkedik Marci "Kávé Sarki" bizniszéhez
   (1021, 'aabbddee-eeff-4001-1226-334455667799' /* judit */,
@@ -223,7 +222,7 @@ FROM (VALUES
    'Józsefvárosban vagy Ferencvárosban keresek egy olyan kávézót, ahol laptoppal is lehet ülni pár órát, van wifi, és nincs túl hangos a zene. Ha tudtok jót, írjátok meg, kérlek!',
    ARRAY['kávé','kávézó','wifi','tanulás'],
    '{}'::text[],
-   19.0702, 47.4905, 2500, 'open', INTERVAL '11 days', NULL),
+   19.0702, 47.4905, 'open', INTERVAL '11 days', NULL),
 
   -- 1022 | nyitott | Buda, Széll Kálmán tér | a legrégebbi nyitott kérések egyike
   (1022, '8899bbcc-ccdd-4eef-f004-112233445577' /* klara */,
@@ -231,8 +230,8 @@ FROM (VALUES
    'Kiállításra készülök, és hat akvarellemhez kellene paszpartus keretezés. Budán keresek olyan helyet, ahol hozzáértők, és nem horror az ár. Ha volt jó tapasztalatotok, kérlek, ajánljatok!',
    ARRAY['keretezés','festmény','akvarell','kiállítás'],
    '{}'::text[],
-   19.0273, 47.5071, 6000, 'open', INTERVAL '25 days', NULL)
-) AS v(id, author, title, description, tags, images, lon, lat, radius, status, created_ago, solved_ago)
+   19.0273, 47.5071, 'open', INTERVAL '25 days', NULL)
+) AS v(id, author, title, description, tags, images, lon, lat, status, created_ago, solved_ago)
 JOIN public.profiles p ON p.id = v.author::uuid AND NOT p.bad_boy
 ON CONFLICT (id) DO NOTHING;
 

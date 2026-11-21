@@ -1037,7 +1037,6 @@ export type Database = {
           id: number
           images: string[]
           location: unknown
-          radius: number | null
           solved_at: string | null
           status: string
           tags: string[]
@@ -1052,7 +1051,6 @@ export type Database = {
           id?: number
           images?: string[]
           location?: unknown
-          radius?: number | null
           solved_at?: string | null
           status?: string
           tags?: string[]
@@ -1067,7 +1065,6 @@ export type Database = {
           id?: number
           images?: string[]
           location?: unknown
-          radius?: number | null
           solved_at?: string | null
           status?: string
           tags?: string[]
@@ -1453,6 +1450,7 @@ export type Database = {
           p_lat?: number
           p_long?: number
           p_match_threshold?: number
+          p_max_distance?: number
           p_query?: string
           p_query_embedding?: string
           p_scope?: string
@@ -1473,7 +1471,6 @@ export type Database = {
           is_match: boolean
           lat: number | null
           long: number | null
-          radius: number | null
           solved_at: string | null
           status: string
           tags: string[]

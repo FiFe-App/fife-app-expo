@@ -29,13 +29,3 @@ export const REQUEST_LIMITS = {
   imagesMax: 4,
   openMax: 10,
 } as const;
-
-/** Radius choices (meters) offered on the form; the column accepts 100..200000. */
-export const REQUEST_RADIUS_OPTIONS: { value: number; label: string }[] = [
-  { value: 1000, label: "1 km" },
-  { value: 3000, label: "3 km" },
-  { value: 5000, label: "5 km" },
-  { value: 10000, label: "10 km" },
-  { value: 25000, label: "25 km" },
-];
-export const DEFAULT_REQUEST_RADIUS = 5000;

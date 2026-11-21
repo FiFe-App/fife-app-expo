@@ -54,7 +54,6 @@ describe("create-request: validation", () => {
     ["more than ten tags", { title: "Kertészt keresek", tags: Array.from({ length: 11 }, (_, i) => `t${i}`) }],
     ["a location that is not a point", { title: "Kertészt keresek", location: "Budapest" }],
     ["a location out of range", { title: "Kertészt keresek", location: "POINT(200 47)" }],
-    ["a radius out of range", { title: "Kertészt keresek", location: "POINT(19 47)", radius: 5 }],
   ])("refuses %s", async (_name, body) => {
     const res = await create(body);
 
@@ -74,6 +73,7 @@ describe("create-request: writing rows (AI off)", () => {
         description: "Fűnyírás",
         tags: ["kertészet", " Kertészet ", "sövény", ""],
         location: "POINT(19.09 47.56)",
+        // A request has no radius of its own: whatever the body says is ignored.
         radius: 3000,
         // None of these may reach the row: the author is the caller, the rest is server-side.
         author: other.id,
@@ -91,7 +91,6 @@ describe("create-request: writing rows (AI off)", () => {
       title: `${TEST_MARKER}Kertészt keresek`,
       description: "Fűnyírás",
       tags: ["kertészet", "sövény"],
-      radius: 3000,
       status: "open",
       embedding: null,
       embedding_text: null,
@@ -107,8 +106,8 @@ describe("create-request: writing rows (AI off)", () => {
     });
 
     const { id } = (await readBody(res)) as { id: number };
-    const { data: row } = await admin.from("requests").select("location, radius").eq("id", id).single();
-    expect(row).toEqual({ location: null, radius: null });
+    const { data: row } = await admin.from("requests").select("location").eq("id", id).single();
+    expect(row).toEqual({ location: null });
   });
 
   it("refuses the eleventh open request with the message written for the user", async () => {

@@ -1,4 +1,7 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { BackHandler } from "react-native";
+
+import { lightTheme } from "@/assets/theme";
 
 import NewRequestModal from "@/components/requests/NewRequestModal";
 import { login } from "@/redux/reducers/userReducer";
@@ -123,7 +126,6 @@ describe("NewRequestModal", () => {
         description: "",
         tags: [],
         location: null,
-        radius: null,
       },
     });
     // The row is no longer inserted from the app.
@@ -168,5 +170,117 @@ describe("NewRequestModal", () => {
     await waitFor(() => expect(store.getState().info.snacks?.[0]?.title).toBe(message));
     expect(router.push).not.toHaveBeenCalled();
     expect(store.getState().requests.composer.open).toBe(true);
+  });
+
+  it("has no radius: the place is a point, nothing asks how far", async () => {
+    const store = signedIn();
+    store.dispatch(openRequestComposer());
+    await renderWithProviders(<NewRequestModal />, { store });
+
+    await fireEvent.press(await screen.findByText("Targetálás"));
+    await fireEvent.press(await screen.findByText("Térképen"));
+
+    expect(screen.queryByText(/körzetből/)).toBeNull();
+    expect(screen.queryByText("5 km")).toBeNull();
+  });
+
+  /** The system Back button, as far as the app can tell: the listeners it registered, newest first. */
+  const fakeBackButton = () => {
+    const listeners: (() => boolean)[] = [];
+    jest.spyOn(BackHandler, "addEventListener").mockImplementation((_event, handler) => {
+      listeners.push(handler as () => boolean);
+      return { remove: () => listeners.splice(listeners.indexOf(handler as () => boolean), 1) };
+    });
+    return {
+      listeners,
+      press: () => {
+        for (const handler of [...listeners].reverse()) if (handler()) return true;
+        return false;
+      },
+    };
+  };
+
+  it("is closed by the Back button, not by leaving the screen under it", async () => {
+    const back = fakeBackButton();
+    const store = signedIn();
+    store.dispatch(openRequestComposer("Kertészt keresek"));
+    await renderWithProviders(<NewRequestModal />, { store });
+    await screen.findByTestId("request-title");
+
+    let handled = false;
+    await act(async () => {
+      handled = back.press();
+    });
+
+    // The press was taken: the screen under the modal is not asked to go back.
+    expect(handled).toBe(true);
+    expect(store.getState().requests.composer.open).toBe(false);
+    await waitFor(() => expect(screen.queryByTestId("request-title")).toBeNull());
+  });
+
+  it("leaves Back to the screen once the modal is closed", async () => {
+    const back = fakeBackButton();
+    const store = signedIn();
+    await renderWithProviders(<NewRequestModal />, { store });
+
+    // Never opened, or closed again: the modal listens to nothing.
+    expect(back.press()).toBe(false);
+    store.dispatch(openRequestComposer());
+    await screen.findByTestId("request-title");
+    await act(async () => {
+      store.dispatch(closeRequestComposer());
+    });
+    expect(back.press()).toBe(false);
+  });
+});
+
+describe("NewRequestModal: the height of the title", () => {
+  const LINE = lightTheme.fonts.bodyLarge.lineHeight ?? 24;
+  const heightOf = () =>
+    (screen.getByTestId("request-title").props.style as { height: number }[] | { height: number })
+      ? (flatten(screen.getByTestId("request-title").props.style) as { height: number }).height
+      : 0;
+  const flatten = (style: unknown): unknown =>
+    Array.isArray(style) ? Object.assign({}, ...style.map(flatten)) : (style ?? {});
+  const layoutMirror = async (height: number) => {
+    await act(async () => {
+      fireEvent(screen.getByTestId("request-title-mirror", { includeHiddenElements: true }), "layout", {
+        nativeEvent: { layout: { height, width: 300, x: 0, y: 0 } },
+      });
+    });
+  };
+
+  const open = async () => {
+    const store = signedIn();
+    store.dispatch(openRequestComposer("Kertészt keresek"));
+    await renderWithProviders(<NewRequestModal />, { store });
+    await screen.findByTestId("request-title");
+  };
+
+  it("is one line to begin with", async () => {
+    await open();
+
+    expect(heightOf()).toBe(LINE + 16);
+    expect(screen.getByTestId("request-title").props.multiline).toBe(true);
+  });
+
+  it("grows to show the whole title", async () => {
+    await open();
+
+    await layoutMirror(LINE * 3);
+
+    expect(heightOf()).toBe(LINE * 3 + 16);
+  });
+
+  it("stops at seven lines, and scrolls from there", async () => {
+    await open();
+
+    await layoutMirror(LINE * 7);
+    expect(heightOf()).toBe(LINE * 7 + 16);
+    expect(screen.getByTestId("request-title").props.scrollEnabled).toBe(false);
+
+    await layoutMirror(LINE * 10);
+    expect(heightOf()).toBe(LINE * 7 + 16);
+    expect(screen.getByTestId("request-title").props.scrollEnabled).toBe(true);
   });
 });

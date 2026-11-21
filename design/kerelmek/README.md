@@ -291,3 +291,9 @@ Korlátok, amiket a tervezésnél figyelembe kell venni:
 - **Egy gombsor, nem összeakadó abszolút elemek:** a jobb felső sarokban egy oszlopban: pozícióm, zoom +/−, lista/térkép váltó. Alul csak a kártya vagy a keresés gomb van, az Én/Mi váltó fölé emelve (`MODE_SWITCH_CLEARANCE`), így semmi nem kerül a váltó, a nézetváltó FAB vagy a zoom alá.
 - A nézetváltó listanézetben a jobb alsó sarokban lebeg, térképnézetben a térkép gombsorának része.
 - A "Keress ezen a környéken": fifék: a Radar helyét állítja a térkép közepére; kérések: a kérések lekérdezését a térkép közepe körül futtatja. A térkép nagyobb oldalt kér (100 elem), mert minden elem egy pin.
+
+## Új kérés modal: sugár nélkül, Vissza, címsorok
+
+- **Nincs sugár.** A kérés helye egy pont vagy "Bárhol": a modalból kikerült a sugár-választó, a `create-request` nem fogad el sugarat, és a `requests.radius` oszlop megszűnt (migráció: `20261121120000_drop_requests_radius.sql`). Hogy egy kérés kinek "való" (Neked szelet), azt a `requests_feed` egyetlen, hívótól függő távolsággal dönti el (`p_max_distance`, alapból 20 km).
+- **A Vissza gomb zárja a modalt**: Androidon a hardveres gomb, weben a böngésző Vissza gombja (a modal egy saját előzmény-bejegyzést tesz, amit bezáráskor kivesz), nem a modal alatti képernyőről lép el.
+- **A cím mindig teljesen látszik**: alapból egy sor, a szöveg hosszával nő, legfeljebb 7 sorig, onnan görgethető.

@@ -24,7 +24,6 @@ const row = (overrides: Record<string, unknown> = {}) => ({
   tags: ["kertészet"],
   images: [],
   location: null,
-  radius: null,
   status: "open",
   solved_at: null,
   profiles: { full_name: "Kiss Anna", avatar_url: null },

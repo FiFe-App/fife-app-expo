@@ -13,7 +13,6 @@ export const makeRequest = (overrides: Partial<RequestItem> = {}): RequestItem =
   images: [],
   lat: 47.56,
   long: 19.09,
-  radius: 5000,
   status: "open",
   solved_at: null,
   distance: 3200,
