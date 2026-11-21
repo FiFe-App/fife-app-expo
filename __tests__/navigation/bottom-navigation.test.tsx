@@ -1,7 +1,9 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import React from "react";
 
 import BottomNavigation from "@/components/navigation/BottomNavigation";
+import { MODE_SWITCH_INTRO_KEY } from "@/components/navigation/ModeSwitchIntroSheet";
 import { setUnreadCounts } from "@/redux/reducers/chatReducer";
 import { login, setMessagingEnabled } from "@/redux/reducers/userReducer";
 import {
@@ -28,9 +30,13 @@ const signedInStore = () => {
 };
 
 describe("BottomNavigation", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     __resetRouter();
     __setPathname("/home");
+    // The first-switch explainer has its own tests below; here the user has
+    // already seen it.
+    await AsyncStorage.clear();
+    await AsyncStorage.setItem(MODE_SWITCH_INTRO_KEY, "1");
   });
 
   it("hides the messages tab while messaging is off", async () => {
@@ -182,5 +188,50 @@ describe("BottomNavigation", () => {
       .getAllByRole("tab")
       .filter((t) => t.props.accessibilityState?.selected);
     expect(selected).toHaveLength(1);
+  });
+});
+
+describe("BottomNavigation – first switch to Mi", () => {
+  beforeEach(async () => {
+    __resetRouter();
+    __setPathname("/me");
+    await AsyncStorage.clear();
+  });
+
+  it("asks before the first switch to Mi and switches on confirm", async () => {
+    await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
+
+    await fireEvent.press(screen.getByLabelText("Váltás Mi módra (közösség)"));
+
+    expect(await screen.findByText("Átváltasz a közösségre?")).toBeTruthy();
+    expect(screen.getByText("A „mi” szekcióban más felhasználókkal találkozhatsz.")).toBeTruthy();
+    // Still on Én until the user confirms.
+    expect(screen.getByLabelText("Én mód (aktív)")).toBeTruthy();
+    expect(router.navigate).not.toHaveBeenCalled();
+
+    await fireEvent.press(screen.getByText("Átváltok"));
+
+    await waitFor(() => expect(router.navigate).toHaveBeenCalledWith("/home"));
+    expect(await AsyncStorage.getItem(MODE_SWITCH_INTRO_KEY)).toBe("1");
+  });
+
+  it("does not ask again once the user has switched", async () => {
+    await AsyncStorage.setItem(MODE_SWITCH_INTRO_KEY, "1");
+    await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
+
+    await fireEvent.press(screen.getByLabelText("Váltás Mi módra (közösség)"));
+
+    await waitFor(() => expect(router.navigate).toHaveBeenCalledWith("/home"));
+    expect(screen.queryByText("Átváltasz a közösségre?")).toBeNull();
+  });
+
+  it("never asks when switching back to Én", async () => {
+    __setPathname("/chats");
+    await renderWithProviders(<BottomNavigation />, { store: signedInStore() });
+
+    await fireEvent.press(screen.getByLabelText("Váltás Én módra (privát)"));
+
+    await waitFor(() => expect(router.navigate).toHaveBeenCalledWith("/me"));
+    expect(screen.queryByText("Átváltasz a közösségre?")).toBeNull();
   });
 });

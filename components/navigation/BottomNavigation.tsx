@@ -12,6 +12,10 @@ import { modeTokens, useAppTheme } from "@/assets/theme";
 import Measure from "../tutorial/Measure";
 import ProfileImage from "../ProfileImage";
 import ModeSwitch from "./ModeSwitch";
+import ModeSwitchIntroSheet, {
+  markModeSwitchIntroSeen,
+  readModeSwitchIntroSeen,
+} from "./ModeSwitchIntroSheet";
 import NavBarShape, { NAV_DOCK_RISE } from "./NavBarShape";
 import { MODE_HOME, modeForPath, otherMode, type AppMode } from "@/lib/mode/appMode";
 import { emotionAvailable } from "@/constants/emotionTiming";
@@ -161,6 +165,39 @@ const BottomNavigation = () => {
       }, 0),
     );
   }, [pendingMode]);
+
+  // The first switch over to Mi asks first, so the user knows they are
+  // stepping from their private space into the community (see
+  // ModeSwitchIntroSheet). null = not read from storage yet.
+  const introSeen = useRef<boolean | null>(null);
+  const [introVisible, setIntroVisible] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    readModeSwitchIntroSeen().then((seen) => {
+      if (alive && introSeen.current === null) introSeen.current = seen;
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const onSwitchPress = async () => {
+    if (pendingMode || introVisible) return;
+    if (otherMode(modeForPath(pathnameRef.current)) !== "mi") {
+      switchMode();
+      return;
+    }
+    if (introSeen.current === null) introSeen.current = await readModeSwitchIntroSeen();
+    if (introSeen.current) switchMode();
+    else setIntroVisible(true);
+  };
+
+  const confirmIntro = () => {
+    introSeen.current = true;
+    markModeSwitchIntroSeen();
+    setIntroVisible(false);
+    switchMode();
+  };
 
   const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
   const accent = mode === "mi" ? theme.colors.tertiary : theme.colors.secondary;
@@ -320,9 +357,14 @@ const BottomNavigation = () => {
         {/* Reaches above the bar: screens keep MODE_SWITCH_CLEARANCE
             (constants/layout.ts) free under their content because of it. */}
         <View pointerEvents="box-none" style={styles.dock}>
-          <ModeSwitch mode={mode} onSwitch={switchMode} />
+          <ModeSwitch mode={mode} onSwitch={onSwitchPress} />
         </View>
       </View>
+      <ModeSwitchIntroSheet
+        visible={introVisible}
+        onConfirm={confirmIntro}
+        onDismiss={() => setIntroVisible(false)}
+      />
     </View>
   );
 };
