@@ -9,7 +9,7 @@ import { setUnreadCounts } from "@/redux/reducers/chatReducer";
 import { viewFunction } from "@/redux/reducers/tutorialReducer";
 import { clearOptions } from "@/redux/reducers/infoReducer";
 import { RootState } from "@/redux/store";
-import { useCallback, useEffect } from "react";
+import { Fragment, useCallback, useEffect } from "react";
 import { Pressable, View } from "react-native";
 import { Divider, Icon } from "react-native-paper";
 import { ScrollView } from "react-native";
@@ -21,6 +21,7 @@ import { useNearbyBuzinesses } from "@/hooks/useNearbyBuzinesses";
 import { useAppTheme } from "@/assets/theme";
 import { Button } from "@/components/Button";
 import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
+import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 
 export default function Index() {
   const { uid, messagingEnabled } = useSelector((state: RootState) => state.user);
@@ -30,6 +31,8 @@ export default function Index() {
   const { lastReadAt } = useSelector((state: RootState) => state.chat);
   const theme = useAppTheme();
   const dispatch = useDispatch();
+  // Next to the sidebar the bizniszek fill two (or more) columns.
+  const { isWide } = useBreakpoint();
 
   const { fetch, data, fetchNextPage, hasMore, error, loading } = useFifeSearch();
   const {
@@ -125,21 +128,29 @@ export default function Index() {
           </ThemedView>
         )}
         <View style={{ paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, paddingBottom: Spacing.xl }}>
-          {nearbyBuzinesses.map((buziness, index) => (
-            <View
-              key={buziness.id}
-              style={{ marginBottom: index === nearbyBuzinesses.length - 1 ? 0 : Spacing.sm }}
-            >
-              {/* Where the interest matches end and the rest of the feed begins. */}
-              {!buziness.is_match && index > 0 && nearbyBuzinesses[index - 1].is_match && (
-                <View>
-                  <ThemedText type="label">Egyéb bizniszek a környéken</ThemedText>
-                  <Divider style={{ marginVertical: Spacing.sm }} />
+          <View style={isWide ? { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm } : undefined}>
+            {nearbyBuzinesses.map((buziness, index) => (
+              <Fragment key={buziness.id}>
+                {/* Where the interest matches end and the rest of the feed begins.
+                    Spans the full row, also in the wide grid. */}
+                {!buziness.is_match && index > 0 && nearbyBuzinesses[index - 1].is_match && (
+                  <View style={{ width: "100%" }}>
+                    <ThemedText type="label">Egyéb bizniszek a környéken</ThemedText>
+                    <Divider style={{ marginVertical: Spacing.sm }} />
+                  </View>
+                )}
+                <View
+                  style={
+                    isWide
+                      ? { flexGrow: 1, flexShrink: 1, flexBasis: 340, minWidth: 0 }
+                      : { marginBottom: index === nearbyBuzinesses.length - 1 ? 0 : Spacing.sm }
+                  }
+                >
+                  <BuzinessItem data={buziness} />
                 </View>
-              )}
-              <BuzinessItem data={buziness} />
-            </View>
-          ))}
+              </Fragment>
+            ))}
+          </View>
           {buzinessesLoading && (
             <ActivityIndicator style={{ marginTop: nearbyBuzinesses.length ? Spacing.md : 0 }} />
           )}
