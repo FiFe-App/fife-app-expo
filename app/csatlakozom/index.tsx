@@ -2,23 +2,36 @@ import { ThemedView } from "@/components/ThemedView";
 import { View } from "react-native";
 import { Image } from "expo-image";
 import { ThemedText } from "@/components/ThemedText";
+import ModeCard from "@/components/navigation/ModeCard";
 import { Spacing } from "@/constants/spacing";
 
 const Register = () => {
   return (
     <ThemedView style={{ flex: 1, paddingTop: 36, alignItems: "center" }}>
-      <View style={{ flex: 1, zIndex: 2, overflow: "hidden", paddingHorizontal: Spacing.md }}>
+      <View
+        style={{
+          flex: 1,
+          zIndex: 2,
+          overflow: "hidden",
+          width: "100%",
+          maxWidth: 600,
+          paddingHorizontal: Spacing.md,
+        }}
+      >
         <ThemedText
           type="title"
           style={{ textAlign: "left", marginBottom: 16 }}
         >
           Ez egy eszköz ami segít neked a mindennapokban
         </ThemedText>
-        <ThemedText>
-          A FiFe App ambíciózusan két fronton indít támadást, hogy segítsen neked.
-          {"\n"}<ThemedText type="bold">Offline</ThemedText>, vagyis egy saját, személyes teret nyit neked, valamint egy
-          <ThemedText type="bold"> Online</ThemedText>, segítői hálózatba enged belépni.
+        <ThemedText style={{ marginBottom: Spacing.md }}>
+          A FiFe App két részből áll. Az alsó kapcsolóval bármikor válthatsz
+          köztük:
         </ThemedText>
+        <View style={{ gap: Spacing.sm }}>
+          <ModeCard mode="en" />
+          <ModeCard mode="mi" />
+        </View>
       </View>
       <View
         style={{
