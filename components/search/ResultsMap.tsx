@@ -1,29 +1,43 @@
 import MyLocationIcon from "@/assets/images/myLocationIcon";
-import { Spacing } from "@/constants/spacing";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import { useRef, type ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
-import { FAB, IconButton } from "react-native-paper";
+import { Button } from "react-native-paper";
 import FiFeMap from "../mapView/FiFeMap";
-import { Camera, Marker } from "../mapView/mapView";
-import mapStyles from "../mapView/style";
+import { MapBottom, MapControls } from "../mapView/MapControls";
+import { Camera, Marker, type Region } from "../mapView/mapView";
 
 interface ResultsMapProps {
   /** The pins: <Marker>s. */
   children?: ReactNode;
   /** A tap on the bare map: the selection ends. */
   onBackgroundPress?: () => void;
+  /** The list / map switch, shown in the map's column of buttons. */
+  viewSwitch?: ReactNode;
+  /** The card of the picked pin: it takes the bottom of the map. */
+  card?: ReactNode;
+  /** Without a picked pin the bottom holds "search around here": it is told where the map is. */
+  onSearchHere?: (center: { latitude: number; longitude: number }) => void;
+  searchHereLoading?: boolean;
 }
 
 /**
- * The map of the search screen's map view (fifék, kérések): the user's own position, zoom
- * buttons and the pins the tab puts on it. Pins select; what is selected is shown at the head
- * of the list under the map.
+ * The map view of the fifék and the kérések, laid out like the bizniszek's: the map fills the
+ * screen, one column of buttons sits at the top right, and the bottom holds the card of the
+ * picked pin, or the "search around here" button. There is no list.
  */
-export const ResultsMap = ({ children, onBackgroundPress }: ResultsMapProps) => {
+export const ResultsMap = ({
+  children,
+  onBackgroundPress,
+  viewSwitch,
+  card,
+  onSearchHere,
+  searchHereLoading,
+}: ResultsMapProps) => {
   const { myLocation } = useMyLocation();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
+  const regionRef = useRef<Region | null>(null);
 
   const panToMyLocation = () => {
     if (!mapRef.current || !myLocation) return;
@@ -54,6 +68,9 @@ export const ResultsMap = ({ children, onBackgroundPress }: ResultsMapProps) => 
           // no-op: suppress default POI behavior
         }}
         onPress={onBackgroundPress}
+        onRegionChangeComplete={(region: Region) => {
+          regionRef.current = region;
+        }}
         initialCamera={{
           center: {
             latitude: myLocation?.coords.latitude || 47.4979,
@@ -74,33 +91,40 @@ export const ResultsMap = ({ children, onBackgroundPress }: ResultsMapProps) => 
           </Marker>
         )}
       </FiFeMap>
-      <FAB
-        style={mapStyles.myLocationButton}
-        size="small"
-        icon={myLocation ? "map-marker" : "map-marker-question"}
-        onPress={panToMyLocation}
+      <MapControls
+        located={!!myLocation}
+        onLocate={panToMyLocation}
+        onZoom={zoom}
+        viewSwitch={viewSwitch}
       />
-      <View pointerEvents="box-none" style={styles.zoom}>
-        <IconButton
-          icon="plus"
-          style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0, margin: 0 }}
-          onPress={() => zoom(1)}
-          mode="contained"
-        />
-        <IconButton
-          icon="minus"
-          style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, margin: 0 }}
-          onPress={() => zoom(-1)}
-          mode="contained"
-        />
-      </View>
+      <MapBottom>
+        {card ? (
+          <View style={{ width: "100%" }}>{card}</View>
+        ) : (
+          onSearchHere && (
+            <Button
+              testID="map-search-here"
+              mode="contained-tonal"
+              loading={searchHereLoading}
+              onPress={() => {
+                const region = regionRef.current;
+                const center = region
+                  ? { latitude: region.latitude, longitude: region.longitude }
+                  : myLocation?.coords;
+                if (center) onSearchHere(center);
+              }}
+            >
+              Keress ezen a környéken
+            </Button>
+          )
+        )}
+      </MapBottom>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  zoom: { position: "absolute", right: Spacing.sm, bottom: Spacing.sm },
 });
 
 export default ResultsMap;

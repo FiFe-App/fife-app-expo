@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import FifeResults from "@/components/search/FifeResults";
 import { NO_LOCATION_ERROR } from "@/hooks/useFifeSearch";
@@ -9,8 +9,23 @@ import { createTestStore, renderWithProviders } from "@/test-utils/renderWithPro
 
 jest.mock("expo-router", () => require("@/test-utils/mocks/expo-router"));
 jest.mock("@/lib/supabase/supabase", () => require("@/test-utils/mocks/supabase"));
-jest.mock("@/components/mapView/mapView", () => ({ Marker: () => null, Circle: () => null }));
-jest.mock("@/components/mapView/FiFeMap", () => () => null);
+jest.mock("@/components/mapView/mapView", () => {
+  const { Pressable } = require("react-native");
+  return {
+    // A pin is a pressable holding what the screen drew for it.
+    Marker: ({ children, onPress }: { children?: React.ReactNode; onPress?: () => void }) => (
+      <Pressable testID="map-pin" onPress={onPress}>
+        {children}
+      </Pressable>
+    ),
+    Circle: () => null,
+  };
+});
+jest.mock("@/components/mapView/FiFeMap", () => {
+  const { View } = require("react-native");
+  const FiFeMap = ({ children }: { children?: React.ReactNode }) => <View>{children}</View>;
+  return FiFeMap;
+});
 
 const MY_UID = "11111111-1111-1111-1111-111111111111";
 
@@ -94,7 +109,7 @@ describe("FifeResults", () => {
     expect(screen.queryByText("Nincs még FiFe a környékeden")).toBeNull();
   });
 
-  it("in the map view lists the same fifék under the map", async () => {
+  it("in the map view pins the fifék, with no list, and shows the picked one as a card", async () => {
     const store = loggedIn();
     store.dispatch(setLocation({ latitude: 47.5, longitude: 19.05, radius: 500 }));
     supabase.rpc.mockResolvedValue({
@@ -104,9 +119,46 @@ describe("FifeResults", () => {
 
     await renderWithProviders(<FifeResults q="" reloadKey={0} view="map" />, { store });
 
-    expect(await screen.findByText("Fife a")).toBeTruthy();
-    expect(screen.getByText("Fife b")).toBeTruthy();
+    // Two fifék, and the marker of the user's own position.
+    expect(await screen.findAllByTestId("map-pin")).toHaveLength(3);
     expect(screen.getByTestId("results-map")).toBeTruthy();
+    // No list: the names appear only for the pin that is picked.
+    expect(screen.queryByText("Fife a")).toBeNull();
+    expect(screen.queryByText("Fife b")).toBeNull();
+
+    await fireEvent.press(screen.getAllByTestId("map-pin")[0]);
+
+    expect(await screen.findByText("Fife a")).toBeTruthy();
+    expect(screen.queryByText("Fife b")).toBeNull();
+  });
+
+  it("asks for a page of the fifék big enough for a map", async () => {
+    const store = loggedIn();
+    store.dispatch(setLocation({ latitude: 47.5, longitude: 19.05, radius: 500 }));
+    supabase.rpc.mockResolvedValue({ data: [], error: null });
+
+    await renderWithProviders(<FifeResults q="" reloadKey={0} view="map" />, { store });
+
+    await waitFor(() =>
+      expect(supabase.rpc).toHaveBeenCalledWith(
+        "nearest_profiles",
+        expect.objectContaining({ take: 100 }),
+      ),
+    );
+  });
+
+  it("searches around the spot the map shows when asked to", async () => {
+    const store = loggedIn();
+    store.dispatch(setLocation({ latitude: 47.5, longitude: 19.05, radius: 500 }));
+    supabase.rpc.mockResolvedValue({ data: [], error: null });
+    await renderWithProviders(<FifeResults q="" reloadKey={0} view="map" />, { store });
+
+    await fireEvent.press(await screen.findByTestId("map-search-here"));
+
+    expect(store.getState().users.userSearchParams?.searchCircle?.location).toEqual({
+      latitude: 47.5,
+      longitude: 19.05,
+    });
   });
 
   it("tells that a name search has nothing to pin on the map", async () => {

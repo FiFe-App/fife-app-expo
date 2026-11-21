@@ -9,6 +9,7 @@ import BuzinessResults from "@/components/search/BuzinessResults";
 import FifeResults from "@/components/search/FifeResults";
 import RequestResults from "@/components/search/RequestResults";
 import NewRequestButton from "@/components/search/NewRequestButton";
+import ViewSwitch from "@/components/search/ViewSwitch";
 import SearchFilterModal from "@/components/search/SearchFilterModal";
 import Measure from "@/components/tutorial/Measure";
 import { Button } from "@/components/Button";
@@ -17,14 +18,14 @@ import { searchHref } from "@/lib/search/href";
 import { runSearch } from "@/lib/search/runSearch";
 import { searchTitle } from "@/lib/search/title";
 import { RequestScope } from "@/lib/requests/types";
-import { storeSearchText, storeSearchView } from "@/redux/reducers/searchReducer";
+import { storeSearchText } from "@/redux/reducers/searchReducer";
 import { removeFromPreviousSearches } from "@/redux/reducers/userReducer";
 import { RootState } from "@/redux/store";
 import { SearchMode } from "@/redux/store.type";
 import { router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, Pressable, View } from "react-native";
-import { Chip, FAB, Icon, Text } from "react-native-paper";
+import { Chip, Icon, Text } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 import { BorderRadius } from "@/constants/borderRadius";
@@ -344,20 +345,8 @@ export default function SearchScreen() {
         <RequestResults q={q} scope={scope} typed={typed} reloadKey={reloadKey} view={view} />
       )}
 
-      {!showHistory && (
-        // One switch for every tab: the list, or the map with the list under it.
-        <Measure name="map-switch">
-          <FAB
-            testID="search-view-switch"
-            icon={view === "map" ? "format-list-bulleted" : "map"}
-            accessibilityLabel={view === "map" ? "Lista nézet" : "Térkép nézet"}
-            style={{ position: "absolute", bottom: Spacing.lg + MODE_SWITCH_CLEARANCE, right: Spacing.lg }}
-            variant="tertiary"
-            customSize={64}
-            onPress={() => dispatch(storeSearchView(view === "map" ? "list" : "map"))}
-          />
-        </Measure>
-      )}
+      {/* One switch for every tab. On the map it is part of the map's own buttons. */}
+      {!showHistory && view === "list" && <ViewSwitch />}
 
       <SearchFilterModal
         mode={mode}

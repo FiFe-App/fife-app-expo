@@ -284,3 +284,10 @@ Korlátok, amiket a tervezésnél figyelembe kell venni:
 - **FiFe Radar oldal megszűnt**: csak a keresés Fifék füle van, a Környék "Muti többet" sávja oda visz.
 - **Kérések**: egyetlen "Új kérés" gomb a lista tetején; a keresési előzmények tetején is van egy. A hibaüzenet hibakonténerben jelenik meg.
 - **Alsó sáv**: a fülek egy sorban, egyenletesen elosztva (nem két csoportban a váltó két oldalán).
+
+## Térkép nézet (átdolgozva)
+
+- **Nincs lista a térképen**, egyik fülön sem. A térkép kitölti a képernyőt; a kijelölt pin (fife, kérés, biznisz) kártyaként a térkép alján jelenik meg, kijelölés nélkül az alján a "Keress ezen a környéken" gomb áll. A fifék és a kérések térképe a bizniszekével azonos elrendezést használ (`MapControls`, `MapBottom`).
+- **Egy gombsor, nem összeakadó abszolút elemek:** a jobb felső sarokban egy oszlopban: pozícióm, zoom +/−, lista/térkép váltó. Alul csak a kártya vagy a keresés gomb van, az Én/Mi váltó fölé emelve (`MODE_SWITCH_CLEARANCE`), így semmi nem kerül a váltó, a nézetváltó FAB vagy a zoom alá.
+- A nézetváltó listanézetben a jobb alsó sarokban lebeg, térképnézetben a térkép gombsorának része.
+- A "Keress ezen a környéken": fifék: a Radar helyét állítja a térkép közepére; kérések: a kérések lekérdezését a térkép közepe körül futtatja. A térkép nagyobb oldalt kér (100 elem), mert minden elem egy pin.

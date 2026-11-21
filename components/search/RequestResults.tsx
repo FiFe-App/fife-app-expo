@@ -14,8 +14,12 @@ import { Marker } from "../mapView/mapView";
 import { ThemedView } from "../ThemedView";
 import NewRequestButton from "./NewRequestButton";
 import ResultsMap from "./ResultsMap";
+import ViewSwitch from "./ViewSwitch";
 
 /** The empty-state copy per slice of the kérések: what the user can do about it differs. */
+/** The most requests the map asks for at once. */
+const MAP_PAGE_SIZE = 100;
+
 /** A pin of the map: a heart in a circle, bigger and ringed when picked. */
 const RequestPin = ({ selected, solved }: { selected: boolean; solved: boolean }) => {
   const theme = useAppTheme();
@@ -60,23 +64,29 @@ interface RequestResultsProps {
 /**
  * The kérések of the search screen: the slice the filter picked, narrowed by the query. The one
  * "Új kérés" button is above the list, whatever it holds. In the map view the requests with a
- * place are pins; the one picked is the first row of the list under the map.
+ * place are pins and the one picked is a card at the bottom of the map, as with the bizniszek;
+ * there is no list.
  */
 export const RequestResults = ({ q, scope, typed, reloadKey, view }: RequestResultsProps) => {
   const theme = useAppTheme();
-  const requests = useRequests(10);
+  // Every request on the map is a pin, so it asks for more of them than a list page holds.
+  const requests = useRequests(view === "map" ? MAP_PAGE_SIZE : 10);
   const { load, remove, patch } = requests;
+  // "Search around here" on the map: the place the kérések are looked up around, in place of the
+  // user's own. Back on the list the user's own place counts again.
+  const [center, setCenter] = useState<{ lat: number; long: number } | undefined>(undefined);
+  const activeCenter = view === "map" ? center : undefined;
 
   useEffect(() => {
-    load(scope, q);
-  }, [scope, q, reloadKey, load]);
+    load(scope, q, activeCenter);
+  }, [scope, q, reloadKey, load, activeCenter]);
 
   // A request made, solved or deleted elsewhere must show up when the user comes back; the
   // first focus is covered by the effect above.
-  const paramsRef = useRef({ scope, q });
+  const paramsRef = useRef({ scope, q, center: activeCenter });
   useEffect(() => {
-    paramsRef.current = { scope, q };
-  }, [scope, q]);
+    paramsRef.current = { scope, q, center: activeCenter };
+  }, [scope, q, activeCenter]);
   const focusedOnce = useRef(false);
   useFocusEffect(
     useCallback(() => {
@@ -84,7 +94,7 @@ export const RequestResults = ({ q, scope, typed, reloadKey, view }: RequestResu
         focusedOnce.current = true;
         return;
       }
-      load(paramsRef.current.scope, paramsRef.current.q);
+      load(paramsRef.current.scope, paramsRef.current.q, paramsRef.current.center);
     }, [load]),
   );
 
@@ -93,27 +103,19 @@ export const RequestResults = ({ q, scope, typed, reloadKey, view }: RequestResu
     ? { title: "Nincs találat.", hint: "Próbálj más szót, vagy válts a Mind szűrőre." }
     : EMPTY[scope];
 
-  // The pins are the requests with a place ("Bárhol" has none); the picked one leads the list.
+  // The pins are the requests with a place ("Bárhol" has none); the picked one is the card at
+  // the bottom of the map.
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const pinned = useMemo(
     () => requests.data.filter((r) => r.lat != null && r.long != null),
     [requests.data],
   );
   const selected = requests.data.find((r) => r.id === selectedId) ?? null;
-  const ordered = useMemo(
-    () => (selected ? [selected, ...requests.data.filter((r) => r.id !== selected.id)] : requests.data),
-    [selected, requests.data],
-  );
-  const listRef = useRef<FlatList>(null);
-  useEffect(() => {
-    if (selectedId != null) listRef.current?.scrollToOffset({ offset: 0, animated: true });
-  }, [selectedId]);
 
   const list = (
     <FlatList
-      ref={listRef}
       testID="search-requests"
-      data={ordered}
+      data={requests.data}
       keyExtractor={(item) => String(item.id)}
       keyboardShouldPersistTaps="handled"
       onEndReachedThreshold={0.6}
@@ -129,7 +131,7 @@ export const RequestResults = ({ q, scope, typed, reloadKey, view }: RequestResu
         <RequestCard
           data={item}
           onDeleted={remove}
-          onBlocked={() => load(scope, q)}
+          onBlocked={() => load(scope, q, activeCenter)}
           onSolved={(id) =>
             // An archived request leaves every slice but "mine" and "solved".
             scope === "mine" ? patch(id, { status: "solved" }) : remove(id)
@@ -163,22 +165,40 @@ export const RequestResults = ({ q, scope, typed, reloadKey, view }: RequestResu
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={{ flex: 1, minHeight: 220 }}>
-        <ResultsMap onBackgroundPress={() => setSelectedId(null)}>
-          {pinned.map((request) => (
-            <Marker
-              key={request.id}
-              coordinate={{ latitude: request.lat as number, longitude: request.long as number }}
-              anchor={{ x: 0.5, y: 0.5 }}
-              zIndex={request.id === selectedId ? 10 : 1}
-              onPress={() => setSelectedId(request.id)}
-            >
-              <RequestPin selected={request.id === selectedId} solved={request.status === "solved"} />
-            </Marker>
-          ))}
-        </ResultsMap>
-      </View>
-      <View style={{ flex: 1 }}>{list}</View>
+      <ResultsMap
+        onBackgroundPress={() => setSelectedId(null)}
+        viewSwitch={<ViewSwitch inMap />}
+        card={
+          selected ? (
+            <RequestCard
+              data={selected}
+              onDeleted={(id) => {
+                setSelectedId(null);
+                remove(id);
+              }}
+              onBlocked={() => load(scope, q, activeCenter)}
+              onSolved={(id) => (scope === "mine" ? patch(id, { status: "solved" }) : remove(id))}
+            />
+          ) : undefined
+        }
+        onSearchHere={({ latitude, longitude }) => {
+          setSelectedId(null);
+          setCenter({ lat: latitude, long: longitude });
+        }}
+        searchHereLoading={requests.loading}
+      >
+        {pinned.map((request) => (
+          <Marker
+            key={request.id}
+            coordinate={{ latitude: request.lat as number, longitude: request.long as number }}
+            anchor={{ x: 0.5, y: 0.5 }}
+            zIndex={request.id === selectedId ? 10 : 1}
+            onPress={() => setSelectedId(request.id)}
+          >
+            <RequestPin selected={request.id === selectedId} solved={request.status === "solved"} />
+          </Marker>
+        ))}
+      </ResultsMap>
     </View>
   );
 };

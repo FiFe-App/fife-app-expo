@@ -1,6 +1,7 @@
 import { useAppTheme } from "@/assets/theme";
 import { BorderRadius } from "@/constants/borderRadius";
 import { Spacing } from "@/constants/spacing";
+import UserItem from "@/components/user/UserItem";
 import { UsersList } from "@/components/user/UsersList";
 import { useFifeSearch } from "@/hooks/useFifeSearch";
 import {
@@ -8,17 +9,21 @@ import {
   NO_PROFILE_RESULTS_HINT,
   useProfileSearch,
 } from "@/hooks/useProfileSearch";
+import { storeUserSearchParams } from "@/redux/reducers/usersReducer";
 import { RootState } from "@/redux/store";
 import { NearestProfile } from "@/redux/store.type";
 import { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Marker } from "../mapView/mapView";
 import ProfileImage from "../ProfileImage";
 import { ThemedText } from "../ThemedText";
 import ResultsMap from "./ResultsMap";
+import ViewSwitch from "./ViewSwitch";
 
 const PIN = 44;
+/** The most fifék the map asks for at once. */
+const MAP_PAGE_SIZE = 100;
 
 /** A pin of the map: the profile picture of the fife, ringed when picked. */
 const FifePin = ({ profile, selected }: { profile: NearestProfile; selected: boolean }) => {
@@ -48,8 +53,8 @@ const FifePin = ({ profile, selected }: { profile: NearestProfile; selected: boo
 /**
  * The fifék of the search screen: the FiFe Radar (who lives around) with no query, the people
  * matching a name or @username with one. The place of the radar is the filter's. In the map view
- * the radar's fifék are pins with their profile pictures; the one picked is the first row of the
- * list under the map.
+ * the radar's fifék are pins with their profile pictures, and the one picked is a card at the
+ * bottom of the map, as with the bizniszek; there is no list.
  */
 export const FifeResults = ({
   q,
@@ -61,10 +66,12 @@ export const FifeResults = ({
   view: "list" | "map";
 }) => {
   const theme = useAppTheme();
+  const dispatch = useDispatch();
   const searchCircle = useSelector(
     (state: RootState) => state.users.userSearchParams?.searchCircle,
   );
-  const radar = useFifeSearch();
+  // Every fife on the map is a pin, so it asks for more of them than a list page holds.
+  const radar = useFifeSearch(view === "map" ? MAP_PAGE_SIZE : undefined);
   const profiles = useProfileSearch();
   const { fetch: fetchRadar } = radar;
   const { search: searchProfiles } = profiles;
@@ -81,6 +88,68 @@ export const FifeResults = ({
   useEffect(() => {
     if (isSearching) searchProfiles(q);
   }, [isSearching, q, reloadKey, searchProfiles]);
+
+  // The pins are the radar's fifék with a place. (A name search finds people whose place is not
+  // public, so it has nothing to pin.)
+  const pinned = useMemo(
+    () =>
+      isSearching
+        ? []
+        : radar.data.filter((p) => p.id !== "-1" && p.lat != null && p.long != null),
+    [isSearching, radar.data],
+  );
+  const selected = pinned.find((p) => p.id === selectedId) ?? null;
+
+  if (view === "map") {
+    return (
+      <View style={{ flex: 1 }}>
+        <ResultsMap
+          onBackgroundPress={() => setSelectedId(null)}
+          viewSwitch={<ViewSwitch inMap />}
+          card={selected ? <UserItem data={selected} /> : undefined}
+          onSearchHere={({ latitude, longitude }) => {
+            setSelectedId(null);
+            dispatch(
+              storeUserSearchParams({
+                searchCircle: { location: { latitude, longitude }, radius: 1000 },
+              }),
+            );
+          }}
+          searchHereLoading={radar.loading}
+        >
+          {pinned.map((profile) => (
+            <Marker
+              key={profile.id}
+              coordinate={{ latitude: profile.lat, longitude: profile.long }}
+              anchor={{ x: 0.5, y: 0.5 }}
+              zIndex={profile.id === selectedId ? 10 : 1}
+              onPress={() => setSelectedId(profile.id)}
+            >
+              <FifePin profile={profile} selected={profile.id === selectedId} />
+            </Marker>
+          ))}
+        </ResultsMap>
+        {isSearching && (
+          <View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: Spacing.md,
+              right: 72,
+              top: Spacing.sm,
+              padding: Spacing.sm,
+              borderRadius: BorderRadius.md,
+              backgroundColor: theme.colors.surface,
+            }}
+          >
+            <ThemedText variant="labelMedium" style={{ textAlign: "center" }}>
+              A névkeresés találatai nem jelennek meg a térképen.
+            </ThemedText>
+          </View>
+        )}
+      </View>
+    );
+  }
 
   const list = isSearching
     ? {
@@ -101,64 +170,7 @@ export const FifeResults = ({
         load: radar.fetchNextPage,
       };
 
-  // The pins are the radar's fifék with a place. (A name search finds people whose place is not
-  // public, so it has nothing to pin.)
-  const pinned = useMemo(
-    () =>
-      isSearching
-        ? []
-        : radar.data.filter((p) => p.id !== "-1" && p.lat != null && p.long != null),
-    [isSearching, radar.data],
-  );
-  const selected = pinned.find((p) => p.id === selectedId) ?? null;
-  // The picked fife leads the list.
-  const ordered = useMemo(
-    () => (selected ? [selected, ...list.data.filter((p) => p.id !== selected.id)] : list.data),
-    [selected, list.data],
-  );
-
-  if (view !== "map") return <UsersList {...list} />;
-
-  return (
-    <View style={{ flex: 1 }}>
-      <View style={{ flex: 1, minHeight: 220 }}>
-        <ResultsMap onBackgroundPress={() => setSelectedId(null)}>
-          {pinned.map((profile) => (
-            <Marker
-              key={profile.id}
-              coordinate={{ latitude: profile.lat, longitude: profile.long }}
-              anchor={{ x: 0.5, y: 0.5 }}
-              zIndex={profile.id === selectedId ? 10 : 1}
-              onPress={() => setSelectedId(profile.id)}
-            >
-              <FifePin profile={profile} selected={profile.id === selectedId} />
-            </Marker>
-          ))}
-        </ResultsMap>
-        {isSearching && (
-          <View
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              left: Spacing.md,
-              right: Spacing.md,
-              top: Spacing.sm,
-              padding: Spacing.sm,
-              borderRadius: BorderRadius.md,
-              backgroundColor: theme.colors.surface,
-            }}
-          >
-            <ThemedText variant="labelMedium" style={{ textAlign: "center" }}>
-              A névkeresés találatai nem jelennek meg a térképen.
-            </ThemedText>
-          </View>
-        )}
-      </View>
-      <View style={{ flex: 1 }}>
-        <UsersList {...list} data={ordered} resetScrollKey={selectedId} />
-      </View>
-    </View>
-  );
+  return <UsersList {...list} />;
 };
 
 export default FifeResults;

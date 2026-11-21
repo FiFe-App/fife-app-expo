@@ -4,6 +4,7 @@ import { RootState } from "@/redux/store";
 import { View } from "react-native";
 import { useSelector } from "react-redux";
 import NewRequestButton from "./NewRequestButton";
+import ViewSwitch from "./ViewSwitch";
 
 interface BuzinessResultsProps {
   /** From useBuzinessSearch(), which the search screen runs. */
@@ -26,7 +27,7 @@ export const BuzinessResults = ({ canLoadMore, loadNext, error, reload, typed }:
   return (
     <View style={{ flex: 1 }}>
       {view === "map" ? (
-        <BuzinessMap load={reload} />
+        <BuzinessMap load={reload} viewSwitch={<ViewSwitch inMap />} />
       ) : (
         <BuzinessList
           load={loadNext}

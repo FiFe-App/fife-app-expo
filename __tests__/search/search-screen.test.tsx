@@ -2,7 +2,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import SearchScreen from "@/app/search";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
-import { storeSearchText } from "@/redux/reducers/searchReducer";
+import { storeSearchText, storeSearchView } from "@/redux/reducers/searchReducer";
 import { addPreviousSearch } from "@/redux/reducers/userReducer";
 import { SearchMode } from "@/redux/store.type";
 import { makeRequest } from "@/test-utils/fixtures/requests";
@@ -31,8 +31,23 @@ jest.mock("@/components/MapSelector/MapSelector", () => {
   );
   return MapSelector;
 });
-jest.mock("@/components/mapView/mapView", () => ({ Marker: () => null, Circle: () => null }));
-jest.mock("@/components/mapView/FiFeMap", () => () => null);
+jest.mock("@/components/mapView/mapView", () => {
+  const { Pressable } = require("react-native");
+  return {
+    // A pin is a pressable holding what the screen drew for it.
+    Marker: ({ children, onPress }: { children?: React.ReactNode; onPress?: () => void }) => (
+      <Pressable testID="map-pin" onPress={onPress}>
+        {children}
+      </Pressable>
+    ),
+    Circle: () => null,
+  };
+});
+jest.mock("@/components/mapView/FiFeMap", () => {
+  const { View } = require("react-native");
+  const FiFeMap = ({ children }: { children?: React.ReactNode }) => <View>{children}</View>;
+  return FiFeMap;
+});
 jest.mock("@/components/buziness/BuzinessMap", () => ({ BuzinessMap: () => null }));
 jest.mock("@/hooks/useNotificationPrefs", () => ({
   useNotificationPrefs: () => ({ prefs: { aiEnhance: false }, setPref: jest.fn(), hydrated: true }),
@@ -334,23 +349,46 @@ describe("the search screen: the map view", () => {
     expect(screen.getByTestId("search-view-switch")).toBeTruthy();
   });
 
-  it("switches every tab between the list and the map", async () => {
+  it("switches every tab between the list and the map, which has no list", async () => {
     __setLocalSearchParams({ mode: "kerelem", scope: "for_me" });
-    supabase.rpc.mockResolvedValue({ data: [makeRequest({ title: "Valami" })], error: null });
+    supabase.rpc.mockResolvedValue({
+      data: [makeRequest({ title: "Valami", lat: 47.5, long: 19.05 })],
+      error: null,
+    });
     const store = createTestStore();
     await renderWithProviders(<SearchScreen />, { store });
+    await waitFor(() => expect(screen.getByText("Valami")).toBeTruthy());
     expect(screen.queryByTestId("results-map")).toBeNull();
 
     await fireEvent.press(screen.getByTestId("search-view-switch"));
 
     expect(store.getState().search.view).toBe("map");
     expect(await screen.findByTestId("results-map")).toBeTruthy();
-    // The list is still there, under the map.
-    expect(screen.getByText("Valami")).toBeTruthy();
+    // No list on the map: the request shows only as a pin, and as a card once it is picked.
+    expect(screen.queryByText("Valami")).toBeNull();
+    await fireEvent.press((await screen.findAllByTestId("map-pin"))[0]);
+    expect(await screen.findByText("Valami")).toBeTruthy();
 
+    // The switch is among the map's own buttons now, still one.
+    expect(screen.getAllByTestId("search-view-switch")).toHaveLength(1);
     await fireEvent.press(screen.getByTestId("search-view-switch"));
     expect(store.getState().search.view).toBe("list");
     await waitFor(() => expect(screen.queryByTestId("results-map")).toBeNull());
+  });
+
+  it("asks for a big page of the kérések for the map", async () => {
+    __setLocalSearchParams({ mode: "kerelem", scope: "for_me" });
+    supabase.rpc.mockResolvedValue({ data: [], error: null });
+    const store = createTestStore();
+    store.dispatch(storeSearchView("map"));
+    await renderWithProviders(<SearchScreen />, { store });
+
+    await waitFor(() =>
+      expect(supabase.rpc).toHaveBeenCalledWith(
+        "requests_feed",
+        expect.objectContaining({ p_take: 100 }),
+      ),
+    );
   });
 
   it("searches the bizniszek again for the map, which wants every pin", async () => {

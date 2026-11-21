@@ -12,7 +12,7 @@ const DEFAULT_LOCATION = { lat: 47.4979, long: 19.0402 };
  * A paged slice of the requests feed (the requests_feed RPC). Local state, like
  * the other lists, so the home section and the search screen never share (or fight over) a page.
  *
- * `load(scope, query)` starts over; `loadMore()` continues with the same scope and query.
+ * `load(scope, query, center?)` starts over; `loadMore()` continues with the same scope and query.
  */
 export function useRequests(take = 10) {
   const { myLocation } = useMyLocation();
@@ -30,7 +30,11 @@ export function useRequests(take = 10) {
   // False until the first load settles, so "nothing here" can be told from "not loaded yet".
   const [fetched, setFetched] = useState(false);
 
-  const paramsRef = useRef<{ scope: RequestScope; query: string }>({
+  const paramsRef = useRef<{
+    scope: RequestScope;
+    query: string;
+    center?: { lat: number; long: number };
+  }>({
     scope: "all",
     query: "",
   });
@@ -50,8 +54,9 @@ export function useRequests(take = 10) {
 
   const runPage = useCallback(
     async (skip: number) => {
-      const { scope, query } = paramsRef.current;
-      const { lat, long } = getLocation();
+      const { scope, query, center } = paramsRef.current;
+      // A place picked on the map ("search around here") stands in for the user's own.
+      const { lat, long } = center ?? getLocation();
       let rows: RequestItem[] | null;
       let failure: unknown;
       if (query) {
@@ -93,8 +98,8 @@ export function useRequests(take = 10) {
   );
 
   const load = useCallback(
-    async (scope: RequestScope, query = "") => {
-      paramsRef.current = { scope, query: query.trim() };
+    async (scope: RequestScope, query = "", center?: { lat: number; long: number }) => {
+      paramsRef.current = { scope, query: query.trim(), center };
       const requestId = ++requestIdRef.current;
       skipRef.current = 0;
       hasMoreRef.current = true;
