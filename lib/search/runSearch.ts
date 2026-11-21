@@ -1,36 +1,22 @@
 import type { Dispatch } from "@reduxjs/toolkit";
 import { router } from "expo-router";
 
-import { storeBuzinesses, storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
-import { storeUserSearchParams } from "@/redux/reducers/usersReducer";
 import { addPreviousSearch } from "@/redux/reducers/userReducer";
 import type { SearchMode } from "@/redux/store.type";
+import { searchHref } from "./href";
 
 /**
- * Runs a biznisz or fife search the way the search screen does: records it in
- * that mode's history, stores the query and opens the results. Returns false
- * (and does nothing) for an empty query.
+ * Runs a biznisz or fife search the way the search screen does: records it in that mode's
+ * history and opens it as a new entry of /search, so Back returns to where the user came from.
+ * Returns false (and does nothing) for an empty query.
  *
- * `how` is "replace" from the search screen itself, so Back skips it, and
- * "navigate" from anywhere else, so Back returns to where the user came from.
+ * The kérések keep no history, and an empty search is a plain route push the screen makes
+ * on its own, so neither goes through here.
  */
-export const runSearch = (
-  dispatch: Dispatch,
-  query: string,
-  mode: SearchMode,
-  how: "replace" | "navigate" = "replace",
-): boolean => {
+export const runSearch = (dispatch: Dispatch, query: string, mode: SearchMode): boolean => {
   const trimmed = query.trim();
-  if (!trimmed) return false;
+  if (!trimmed || mode === "kerelem") return false;
   dispatch(addPreviousSearch({ query: trimmed, mode }));
-  const go = how === "replace" ? router.replace : router.navigate;
-  if (mode === "fife") {
-    dispatch(storeUserSearchParams({ text: trimmed, skip: 0 }));
-    go("/fifeRadar");
-    return true;
-  }
-  dispatch(storeBuzinessSearchParams({ text: trimmed }));
-  dispatch(storeBuzinesses([]));
-  go("/biznisz");
+  router.push(searchHref(mode, { q: trimmed }));
   return true;
 };

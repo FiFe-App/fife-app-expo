@@ -1,6 +1,7 @@
 import InfoLayer from "@/components/InfoLayer";
 import { SplashAnimation } from "@/components/SplashAnimation";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
+import NewRequestModal from "@/components/requests/NewRequestModal";
 import { persistor, store } from "@/redux/store";
 import { Stack, usePathname, useRouter, useSegments, type NativeStackHeaderProps } from "expo-router";
 import * as Notifications from "expo-notifications";
@@ -326,6 +327,7 @@ function RootContent() {
         <ThemedView type="card" style={{ width: "100%", flex: 1, alignContent: "center", backgroundColor: theme.colors.background }}>
           <View style={pathname == "/" ? { flex: 1 } : { maxWidth: 600, width: "100%", flex: 1, alignSelf: "center" }}>
             <InfoLayer />
+            <NewRequestModal />
 
             <Stack
               screenOptions={{
@@ -347,12 +349,8 @@ function RootContent() {
                   options={{ header: () => <HomeHeader /> }}
                 />
                 <Stack.Screen
-                  name="fifeRadar"
-                  options={{ header: () => <HomeHeader mode="fife" /> }}
-                />
-                <Stack.Screen
-                  name="biznisz/index"
-                  options={{ title: "Bizniszek keresése" }}
+                  name="kerelmek/[id]"
+                  options={{ title: "Kérés" }}
                 />
 
                 <Stack.Screen
@@ -454,6 +452,8 @@ function RootContent() {
             {!!uid && <InAppMessageDialog />}
           </View>
         </ThemedView>
+        <View style={{bottom:0,height:30,width:"100%",backgroundColor:theme.colors.elevation.level1,position:"absolute",zIndex:-1}}/>
+
         {appLock.locked && (
           <AppLockScreen
             onUnlock={appLock.unlock}

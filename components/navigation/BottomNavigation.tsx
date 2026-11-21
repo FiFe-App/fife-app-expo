@@ -120,8 +120,11 @@ const BottomNavigation = () => {
   const naploActive = !switching && pathname.startsWith("/user/emotion-history");
   const helpActive = !switching && pathname.startsWith("/user/get-help");
   const settingsActive = !switching && pathname.startsWith("/beallitasok");
-  const usActive = switching ? pendingMode === "mi" : first.includes("home") || first.includes("fifeRadar");
-  const searchActive = !switching && (first === "search" || pathname === "/biznisz");
+  const usActive = switching
+    ? pendingMode === "mi"
+    : first.includes("home");
+  const searchActive =
+    !switching && (first === "search" || first === "kerelmek");
   const chatActive = !switching && (first.includes("chat") || first === "group");
   // Én's own pages also live under /user, so only the Mi side's /user pages
   // light up the profile tab.
@@ -314,8 +317,11 @@ const BottomNavigation = () => {
           color={theme.colors.elevation.level1}
         />
         <View style={styles.bar}>
-          <View style={styles.side}>{mode === "en" ? enLeft : miLeft}</View>
-          <View style={styles.side}>{mode === "en" ? enRight : miRight}</View>
+          {/* One row: every tab gets the same share of the bar, whatever their number. */}
+          <View testID="bottom-nav-tabs" style={styles.tabs}>
+            {mode === "en" ? enLeft : miLeft}
+            {mode === "en" ? enRight : miRight}
+          </View>
         </View>
         {/* Reaches above the bar: screens keep MODE_SWITCH_CLEARANCE
             (constants/layout.ts) free under their content because of it. */}
@@ -348,12 +354,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: BAR_INNER_PADDING,
     paddingVertical: Spacing.sm,
   },
-  // Both halves are equally wide, so the dock above is always centred between
-  // the two groups of tabs — whatever the number of tabs on either side.
-  side: {
+  // The tabs are spread over the whole bar evenly. (They used to be two groups, one on each
+  // side of the dock.)
+  tabs: {
     flex: 1,
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-evenly",
   },
   dock: {
     position: "absolute",

@@ -13,8 +13,12 @@ export const NO_NEARBY_USERS = "Nincs még FiFe a környékeden";
 export const NO_NEARBY_USERS_HINT =
   "Csak azok jelennek meg, akik megadták a környéküket a profiljukban.";
 
-export function useFifeSearch() {
-  const PAGE_SIZE = Math.floor(Dimensions.get("window").height / 100);
+/**
+ * `pageSize` defaults to what fits the screen as rows; the map view asks for more, since every
+ * fife on it is a pin.
+ */
+export function useFifeSearch(pageSize?: number) {
+  const PAGE_SIZE = pageSize ?? Math.floor(Dimensions.get("window").height / 100);
 
   const { myLocation } = useMyLocation();
 
