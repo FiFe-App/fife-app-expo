@@ -17,6 +17,7 @@ import { useCallback } from "react";
 import { useKeyboardScrollIntoView } from "@/hooks/useKeyboardScrollIntoView";
 import { useAppTheme } from "@/assets/theme";
 import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
+import { useBreakpoint } from "@/components/layout/ResponsiveLayout";
 
 /** Until the newest in_app_messages row has loaded, or when it sets none. */
 const DEFAULT_OPEN_ICON = "message-draw";
@@ -28,6 +29,8 @@ export default function MeScreen() {
   const theme = useAppTheme();
   const { scrollRef, keyboardHeight, handleScroll, registerFocusedInput } = useKeyboardScrollIntoView();
   const openIcon = useSelector((state: RootState) => state.info.inAppMessageOpenIcon) ?? DEFAULT_OPEN_ICON;
+  // Next to the sidebar the mood card and the lists sit side by side.
+  const { isWide } = useBreakpoint();
 
   useFocusEffect(
     useCallback(() => {
@@ -58,36 +61,44 @@ export default function MeScreen() {
         automaticallyAdjustKeyboardInsets
       >
         <Mantra />
-        <View style={{ gap: Spacing.sm }}>
+        <View style={styles.column}>
           <NotificationPrompts />
-          {emotionAvailable && <EmotionCheckCard onNoteFocus={registerFocusedInput} />}
-          <ToDoList onInputFocus={registerFocusedInput} />
-          {/* A Mi page, linked from home because people keep coming back to it. */}
-          <Link asChild href="/user/saved-buzinesses">
-            <TouchableRipple accessibilityRole="link" style={{ borderRadius: BorderRadius.lg }}>
-              <Surface
-                elevation={1}
-                style={{
-                  borderRadius: BorderRadius.lg,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: Spacing.md,
-                  paddingVertical: Spacing.md,
-                  paddingHorizontal: Spacing.lg,
-                }}
-              >
-                <Icon source="archive-outline" size={24} color={theme.colors.tertiary} />
-                <ThemedText style={{ flex: 1 }} type="defaultSemiBold">Elmentett bizniszek</ThemedText>
-                <ThemedText
-                  accessibilityLabel={`${savedCount} elmentett biznisz`}
-                  style={{ color: theme.colors.onSurfaceVariant }}
-                >
-                  {savedCount} db
-                </ThemedText>
-                <Icon source="chevron-right" size={20} color={theme.colors.outline} />
-              </Surface>
-            </TouchableRipple>
-          </Link>
+          <View style={isWide ? styles.wideColumns : styles.column}>
+            {emotionAvailable && (
+              <View style={isWide ? styles.wideColumn : undefined}>
+                <EmotionCheckCard onNoteFocus={registerFocusedInput} />
+              </View>
+            )}
+            <View style={[styles.column, isWide && styles.wideColumn]}>
+              <ToDoList onInputFocus={registerFocusedInput} />
+              {/* A Mi page, linked from home because people keep coming back to it. */}
+              <Link asChild href="/user/saved-buzinesses">
+                <TouchableRipple accessibilityRole="link" style={{ borderRadius: BorderRadius.lg }}>
+                  <Surface
+                    elevation={1}
+                    style={{
+                      borderRadius: BorderRadius.lg,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: Spacing.md,
+                      paddingVertical: Spacing.md,
+                      paddingHorizontal: Spacing.lg,
+                    }}
+                  >
+                    <Icon source="archive-outline" size={24} color={theme.colors.tertiary} />
+                    <ThemedText style={{ flex: 1 }} type="defaultSemiBold">Elmentett bizniszek</ThemedText>
+                    <ThemedText
+                      accessibilityLabel={`${savedCount} elmentett biznisz`}
+                      style={{ color: theme.colors.onSurfaceVariant }}
+                    >
+                      {savedCount} db
+                    </ThemedText>
+                    <Icon source="chevron-right" size={20} color={theme.colors.outline} />
+                  </Surface>
+                </TouchableRipple>
+              </Link>
+            </View>
+          </View>
           {false && <View style={styles.cardRow}>
             <Card style={[styles.card, styles.cardSpacing]} theme={{colors: {shadow:"red"}}} onPress={() => {}}>
               <Card.Content style={styles.cardContent}>
@@ -117,6 +128,21 @@ export default function MeScreen() {
 }
 
 const styles = StyleSheet.create({
+  column: {
+    gap: Spacing.sm,
+  },
+  wideColumns: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "flex-start",
+    gap: Spacing.lg,
+  },
+  wideColumn: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 360,
+    minWidth: 0,
+  },
   cardRow: {
     flexDirection: "row",
     marginTop: Spacing.md,
