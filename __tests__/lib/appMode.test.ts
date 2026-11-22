@@ -13,6 +13,7 @@ describe("modeForPath", () => {
     ["/search", "mi"],
     ["/chats", "mi"],
     ["/chat/abc", "mi"],
+    ["/chat/beszelgetnek", "mi"],
     ["/user/edit", "mi"],
     ["/user/some-uid", "mi"],
     ["/biznisz/123", "mi"],

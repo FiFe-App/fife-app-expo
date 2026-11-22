@@ -35,8 +35,24 @@ const types: {
   { label: "Facebook", value: "FACEBOOK" },
   { label: "Cím/Hely", value: "PLACE" },
   { label: "Közvetlen üzenet", value: "MESSAGE" },
+  { label: "Rám írhatsz", value: "I-HELP-YOU" },
   { label: "Más", value: "OTHER" },
 ];
+
+// On/off contacts: `data` is "true" when switched on, instead of free text.
+const SWITCH_TYPES: Enums<"contact_type">[] = ["MESSAGE", "I-HELP-YOU"];
+const SWITCH_ON = "true";
+
+// Switches come first, in this order, above the free-text contacts.
+const typeRank = (type: Enums<"contact_type">) => {
+  const i = SWITCH_TYPES.indexOf(type);
+  return i === -1 ? SWITCH_TYPES.length : i;
+};
+
+const switchOnText = (type: Enums<"contact_type">) =>
+  type === "I-HELP-YOU"
+    ? "Megjelensz a Beszélgetnék valakivel listában, bárki rád írhat, akinek támogatásra van szüksége."
+    : "A közvetlen üzenet engedélyezve van";
 
 type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 
@@ -67,9 +83,9 @@ const ContactEditScreen = forwardRef<{
   const dispatch = useDispatch();
   const [contacts, setContacts] = useState<IContact[]>([]);
   const [buzinessCount, setBuzinessCount] = useState(0);
-  const [revealedTypes, setRevealedTypes] = useState<Enums<"contact_type">[]>([
-    "MESSAGE",
-  ]);
+  const [revealedTypes, setRevealedTypes] = useState<Enums<"contact_type">[]>(
+    SWITCH_TYPES,
+  );
   const [addMenuVisible, setAddMenuVisible] = useState(false);
   const loadContacts = () => {
     if (!uid) return;
@@ -112,9 +128,11 @@ const ContactEditScreen = forwardRef<{
   const saveContact = (c_ind: number, contact: Partial<IContact>) => {
     if (uid === undefined) return;
 
-    const newArray = types
+    // Functional update, so two calls in a row (a switch that also flips
+    // another one) both land instead of the second overwriting the first.
+    setContacts((prev) => types
       .map((type, ind) => {
-        const current = contacts.find((c) => c?.type === type.value);
+        const current = prev.find((c) => c?.type === type.value);
 
         if (c_ind === ind) {
           const newContact = {
@@ -130,8 +148,23 @@ const ContactEditScreen = forwardRef<{
           return newContact;
         } else return current;
       })
-      .filter((item): item is NonNullable<typeof item> => item !== undefined);
-    setContacts(newArray);
+      .filter((item): item is NonNullable<typeof item> => item !== undefined));
+  };
+
+  const setSwitch = (type: Enums<"contact_type">, on: boolean) => {
+    const index = (t: Enums<"contact_type">) =>
+      types.findIndex((x) => x.value === t);
+    // Switching off also clears the note, otherwise saving would complain
+    // that a contact with a note has no value.
+    saveContact(index(type), on ? { data: SWITCH_ON } : { data: "", title: null });
+    // Helpers are reached through in-app chat, which needs MESSAGE on, so
+    // the two switches move together.
+    if (type === "I-HELP-YOU" && on) {
+      saveContact(index("MESSAGE"), { data: SWITCH_ON });
+    }
+    if (type === "MESSAGE" && !on) {
+      saveContact(index("I-HELP-YOU"), { data: "", title: null });
+    }
   };
   const save = async () => {
     const invalid = contacts.find((c) => c && !c.data && !!c.title);
@@ -214,12 +247,8 @@ const ContactEditScreen = forwardRef<{
       {!loading &&
         types
           .filter((type) => revealedTypes.includes(type.value))
-          // ensure MESSAGE type appears first
-          .sort((a, b) => {
-            if (a.value === "MESSAGE" && b.value !== "MESSAGE") return -1;
-            if (b.value === "MESSAGE" && a.value !== "MESSAGE") return 1;
-            return 0;
-          })
+          // MESSAGE first, then I-HELP-YOU, then the rest
+          .sort((a, b) => typeRank(a.value) - typeRank(b.value))
           .map((type) => {
           const current = {
             title: "",
@@ -229,8 +258,11 @@ const ContactEditScreen = forwardRef<{
           
           // Regular contact types
           const filled = !!current.data;
+          const isSwitch = SWITCH_TYPES.includes(type.value);
+          const canBeFeatured =
+            props.showFeaturedToggle && type.value !== "I-HELP-YOU";
           const isFeatured =
-            props.showFeaturedToggle &&
+            canBeFeatured &&
             typeof current.id === "number" &&
             props.defaultContactId === current.id;
           // saveContact still expects an index into the full `types` array
@@ -267,7 +299,7 @@ const ContactEditScreen = forwardRef<{
                 >
                   {type.label}
                 </ThemedText>
-                {props.showFeaturedToggle &&
+                {canBeFeatured &&
                   filled &&
                   typeof current.id === "number" && (
                     <IconButton
@@ -293,7 +325,7 @@ const ContactEditScreen = forwardRef<{
                     />
                   )}
               </View>
-              {type.value === "MESSAGE" ? (
+              {isSwitch ? (
                 <View
                   style={{
                     flexDirection: "row",
@@ -304,16 +336,14 @@ const ContactEditScreen = forwardRef<{
                 ><View  style={{flex:1}}>
                   
                     <ThemedText variant="bodyMedium">
-                      {current?.data === "true"
-                        ? "A közvetlen üzenet engedélyezve van"
+                      {current?.data === SWITCH_ON
+                        ? switchOnText(type.value)
                         : typeToPlaceholder(type?.value)}
                     </ThemedText>
                 </View>
                   <Switch
-                    value={current?.data === "true"}
-                    onValueChange={(value) =>
-                      saveContact(typeIndex, { data: value ? "true" : "" })
-                    }
+                    value={current?.data === SWITCH_ON}
+                    onValueChange={(value) => setSwitch(type.value, value)}
                     disabled={loading || !type.label}
                   />
                 </View>
@@ -335,8 +365,17 @@ const ContactEditScreen = forwardRef<{
                   mode="outlined"
                   value={current?.title || ""}
                   disabled={loading}
-                  label={"Egyéb infó a elérhetőségedről"}
-                  placeholder="Munkanapokon keress / csak hétvégén"
+                  label={
+                    type.value === "I-HELP-YOU"
+                      ? "Pár szó rólad (nem kötelező)"
+                      : "Egyéb infó a elérhetőségedről"
+                  }
+                  placeholder={
+                    type.value === "I-HELP-YOU"
+                      ? "Szívesen meghallgatlak, esténként írj bátran"
+                      : "Munkanapokon keress / csak hétvégén"
+                  }
+                  multiline={type.value === "I-HELP-YOU"}
                   onChangeText={(t) => saveContact(typeIndex, { title: t })}
                 />
               )}
