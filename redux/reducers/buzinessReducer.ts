@@ -9,10 +9,8 @@ const initialState: BuzinessState = {
   buzinesses: [],
   searchParams: {
     skip: 0,
-    text: "",
     loading: false,
     searchCircle: undefined,
-    searchType: "list",
   },
   hasMore: true,
 };
@@ -49,10 +47,6 @@ const buzinessReducer = createSlice({
       if (state.searchParams)
         state.searchParams.loading = action.payload;
     },
-    storeBuzinessSearchType: (state, action: PayloadAction<"map" | "list">) => {
-      if (state.searchParams)
-        state.searchParams.searchType = action.payload;
-    },
     clearBuzinessSearchParams: (state) => {
       state.searchParams = {};
     },
@@ -88,7 +82,6 @@ export const {
   removeTrailingDivider,
   clearBuziness,
   storeBuzinessSearchParams,
-  storeBuzinessSearchType,
   storeBuzinessLoading,
   clearBuzinessSearchParams,
 } = buzinessReducer.actions;

@@ -1,22 +1,19 @@
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
-import { RootState } from "@/redux/store";
 import { SearchMode } from "@/redux/store.type";
 import { Icon } from "react-native-paper";
-import { useSelector } from "react-redux";
 import { useAppTheme } from "@/assets/theme";
 import { ThemedView } from "./ThemedView";
 import Smiley from "./Smiley";
 import { Pressable, Text, View } from "react-native";
 import { useMemo } from "react";
 import { router } from "expo-router";
+import { searchHref } from "@/lib/search/href";
+import { useAppMode } from "@/lib/mode/appMode";
 
 const FakeSearchInput = ({ mode = "biznisz" }: { mode?: SearchMode }) => {
   const theme = useAppTheme();
-  // Both selectors always run — only which one is displayed depends on mode.
-  const buzinessText = useSelector((state: RootState) => state.buziness.searchParams?.text ?? "");
-  const fifeText = useSelector((state: RootState) => state.users.userSearchParams?.text ?? "");
-  const searchText = mode === "fife" ? fifeText : buzinessText;
+  const appMode = useAppMode();
 
   const greeting = useMemo(() => {
     if (mode === "fife") return "Keress fifékre...";
@@ -26,9 +23,9 @@ const FakeSearchInput = ({ mode = "biznisz" }: { mode?: SearchMode }) => {
 
   return (
     <ThemedView style={{ flex: 1, flexDirection: "row", gap: Spacing.md, alignItems: "center", justifyContent: "center" }} type="card">
-      <Smiley style={{ width: 35, height: 35, zIndex: 100000 }} />
+      {appMode == "en" && <Smiley style={{ width: 35, height: 35, zIndex: 100000 }} />}
       <Pressable
-        onPress={() => router.push({ pathname: "/search", params: { mode } })}
+        onPress={() => router.push(searchHref(mode, { focus: true }))}
         style={{
           flex: 1,
           height: 40,
@@ -46,11 +43,11 @@ const FakeSearchInput = ({ mode = "biznisz" }: { mode?: SearchMode }) => {
             style={{
               fontFamily: "RedHatText",
               fontWeight: "300",
-              color: searchText ? theme.colors.onSurface : theme.colors.onSurfaceVariant,
-              textAlign: searchText ? "left" : "center",
+              color: theme.colors.onSurfaceVariant,
+              textAlign: "center",
             }}
           >
-            {searchText || greeting}
+            {greeting}
           </Text>
         </View>
       </Pressable>

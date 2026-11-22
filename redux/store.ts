@@ -11,6 +11,8 @@ import usersReducer from "./reducers/usersReducer";
 import appReducer from "./reducers/appReducer";
 import emotionLogsSlice from "./reducers/emotionLogsReducer";
 import chatReducer from "./reducers/chatReducer";
+import requestsReducer from "./reducers/requestsReducer";
+import searchReducer from "./reducers/searchReducer";
 
 /**
  * `info` holds what is on screen right now: open dialogs, the loading overlay,
@@ -41,14 +43,17 @@ export const rootReducer = combineReducers({
   tutorial: tutorialReducer.reducer,
   app: appReducer.reducer,
   chat: chatReducer,
+  requests: requestsReducer.reducer,
+  search: searchReducer.reducer,
   emotionLogs: emotionLogsSlice.reducer,
 });
 
 export type RootReducer = ReturnType<typeof rootReducer>;
 
 const persistedReducer = persistReducer<RootReducer, AnyAction>(
-  // `info` is persisted separately, by the nested config above.
-  { key: "root", storage: AsyncStorage, blacklist: ["info"] },
+  // `info` is persisted separately, by the nested config above. `requests` (the open modal)
+  // and `search` (the text being searched) are the moment, not the user.
+  { key: "root", storage: AsyncStorage, blacklist: ["info", "requests", "search"] },
   rootReducer,
 );
 export const store = configureStore({

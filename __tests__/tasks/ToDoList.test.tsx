@@ -191,25 +191,29 @@ describe("ToDoList", () => {
     });
 
     it("searches bizniszek with what the user typed", async () => {
-      const store = await openSheet();
+      await openSheet();
 
       await fireEvent.changeText(screen.getByLabelText("Keresés a bizniszek között"), "költöztetés");
       await fireEvent.press(screen.getByText("Keresés"));
 
-      expect(store.getState().buziness.searchParams?.text).toBe("költöztetés");
-      expect(router.navigate).toHaveBeenCalledWith("/biznisz");
+      expect(router.push).toHaveBeenCalledWith({
+        pathname: "/search",
+        params: { mode: "biznisz", q: "költöztetés" },
+      });
       expect(screen.queryByText("Ki segít ebben a környéken?")).toBeNull();
     });
 
     it("searches fifék when that is picked", async () => {
-      const store = await openSheet();
+      await openSheet();
 
       await fireEvent.press(screen.getByText("Fifék"));
       await fireEvent.changeText(screen.getByLabelText("Keresés a fifék között"), "Marci");
       await fireEvent.press(screen.getByText("Keresés"));
 
-      expect(store.getState().users.userSearchParams?.text).toBe("Marci");
-      expect(router.navigate).toHaveBeenCalledWith("/fifeRadar");
+      expect(router.push).toHaveBeenCalledWith({
+        pathname: "/search",
+        params: { mode: "fife", q: "Marci" },
+      });
     });
   });
 });

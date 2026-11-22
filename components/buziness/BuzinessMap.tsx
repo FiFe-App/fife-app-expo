@@ -15,16 +15,17 @@ import NewMarkerIcon from "@/assets/images/newMarkerIcon";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import locationToCoords from "@/lib/functions/locationToCoords";
 import { storeBuzinessSearchParams } from "@/redux/reducers/buzinessReducer";
-import { Button, FAB, IconButton } from "react-native-paper";
-import mapStyles from "../mapView/style";
-import { Spacing } from "@/constants/spacing";
+import { Button } from "react-native-paper";
+import { MapBottom, MapControls } from "../mapView/MapControls";
 import { showDialog } from "@/redux/reducers/infoReducer";
 
 interface BuzinessBuzinessMapProps {
   load: (arg0?: number) => void;
+  /** The list / map switch, shown in the map's column of buttons. */
+  viewSwitch?: React.ReactNode;
 }
 
-export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
+export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load, viewSwitch }) => {
   const dispatch = useDispatch();
   const { buzinesses, searchParams } = useSelector(
     (state: RootState) => state.buziness,
@@ -153,59 +154,23 @@ export const BuzinessMap: React.FC<BuzinessBuzinessMapProps> = ({ load }) => {
           </Marker>
         )}
       </FiFeMap>
-      <FAB
-        style={mapStyles.myLocationButton}
-        icon={myLocation ? "map-marker" : "map-marker-question"}
-        onPress={panToMyLocation}
+      <MapControls
+        located={!!myLocation}
+        onLocate={panToMyLocation}
+        onZoom={zoom}
+        viewSwitch={viewSwitch}
       />
-      <View
-        pointerEvents="box-none"
-        style={{
-          position: "absolute",
-          bottom: Spacing.sm,
-          userSelect: "none",
-          width: "100%",
-          alignItems: "flex-end",
-          flexDirection: "column",
-        }}
-      >
-        <View style={{ padding: Spacing.sm, bottom: Spacing.xxxl }}>
-          <IconButton
-            icon="plus"
-            style={{
-              borderBottomLeftRadius: 0,
-              borderBottomRightRadius: 0,
-              margin: 0,
-            }}
-            onPress={() => zoom(1)}
-            mode="contained"
-          />
-          <IconButton
-            icon="minus"
-            style={{
-              borderTopLeftRadius: 0,
-              borderTopRightRadius: 0,
-              margin: 0,
-            }}
-            onPress={() => zoom(-1)}
-            mode="contained"
-          />
-        </View>
+      <MapBottom>
         {selectedBuziness ? (
           <View style={{ width: "100%" }}>
             <BuzinessItem data={selectedBuziness} />
           </View>
         ) : (
-          <Button
-            mode="contained-tonal"
-            loading={loading}
-            style={{ alignSelf: "center" }}
-            onPress={() => load()}
-          >
+          <Button mode="contained-tonal" loading={loading} onPress={() => load()}>
             Keress ezen a környéken
           </Button>
         )}
-      </View>
+      </MapBottom>
     </View>
   );
 };

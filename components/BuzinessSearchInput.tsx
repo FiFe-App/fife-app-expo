@@ -1,43 +1,55 @@
 import { Spacing } from "@/constants/spacing";
 import { BorderRadius } from "@/constants/borderRadius";
-import {
-  storeBuzinessSearchParams
-} from "@/redux/reducers/buzinessReducer";
-import { storeUserSearchParams } from "@/redux/reducers/usersReducer";
-import { RootState } from "@/redux/store";
 import { SearchMode } from "@/redux/store.type";
 import { Icon, TouchableRipple } from "react-native-paper";
-import { useDispatch, useSelector } from "react-redux";
 import { useAppTheme } from "@/assets/theme";
 import { ThemedView } from "./ThemedView";
 import Smiley from "./Smiley";
 import { TextInput, View, FlatList, Pressable, Text, StyleSheet } from "react-native";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
+import { useAppMode } from "@/lib/mode/appMode";
 
-const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropdown = true, mode = "biznisz" }: { onSearch: (query: string) => void; autoFocus?: boolean; showSuggestionsDropdown?: boolean; mode?: SearchMode }) => {
-  const dispatch = useDispatch();
+interface BuzinessSearchInputProps {
+  onSearch: (query: string) => void;
+  autoFocus?: boolean;
+  showSuggestionsDropdown?: boolean;
+  mode?: SearchMode;
+  /** What the box starts with: the query of the search on screen. */
+  initialText?: string;
+  onFocus?: () => void;
+  /** Fires a moment after the box lost focus, so a press on a list row still lands. */
+  onBlur?: () => void;
+  onChangeText?: (text: string) => void;
+}
+
+/**
+ * The search box of the search screen. It keeps no search state of its own beyond what is
+ * typed: the query being searched lives in the route, which is what makes Back step through
+ * the searches.
+ */
+const BuzinessSearchInput = ({
+  onSearch,
+  autoFocus = false,
+  showSuggestionsDropdown = true,
+  mode = "biznisz",
+  initialText = "",
+  onFocus,
+  onBlur,
+  onChangeText,
+}: BuzinessSearchInputProps) => {
   const theme = useAppTheme();
+  const appMode = useAppMode();
 
   const canSearch = true;
-  // The two searches are distinct: a name typed here must never land in the
-  // buziness query behind /biznisz's "Találatok: …" header, and vice versa.
-  const buzinessText = useSelector((state: RootState) => state.buziness.searchParams?.text ?? "");
-  const fifeText = useSelector((state: RootState) => state.users.userSearchParams?.text ?? "");
-  const searchText = mode === "fife" ? fifeText : buzinessText;
-  const [inputText, setInputText] = useState(searchText);
+  const [inputText, setInputText] = useState(initialText);
   const [focused, setFocused] = useState(autoFocus);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const greeting = mode === "fife"
     ? "Keress fifékre (név vagy @felhasználónév)..."
-    : "Keress bizniszekre...";
-
-  const storeText = useCallback((text: string) => {
-    dispatch(mode === "fife"
-      ? storeUserSearchParams({ text })
-      : storeBuzinessSearchParams({ text }));
-  }, [dispatch, mode]);
+    : mode === "kerelem"
+      ? "Keress kérések között..."
+      : "Keress bizniszekre...";
 
   // get_popular_search_queries is fed by buziness searches only.
   const showSuggestions = focused && showSuggestionsDropdown && mode === "biznisz";
@@ -46,18 +58,15 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
   const handleChangeText = useCallback((text: string) => {
     if (text.includes("$")) return;
     setInputText(text);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      storeText(text);
-    }, 400);
-  }, [storeText]);
+    onChangeText?.(text);
+  }, [onChangeText]);
 
   const handleSelectSuggestion = useCallback((query: string) => {
     setInputText(query);
-    storeText(query);
+    onChangeText?.(query);
     setFocused(false);
     onSearch(query);
-  }, [storeText, onSearch]);
+  }, [onChangeText, onSearch]);
 
   const handleSubmit = useCallback(() => {
     setFocused(false);
@@ -66,28 +75,38 @@ const BuzinessSearchInput = ({ onSearch, autoFocus = false, showSuggestionsDropd
 
   const handleClear = () => {
     setInputText("");
+    onChangeText?.("");
   };
 
   return (
     <View style={{ flex: 1 }}>
       <ThemedView style={{ flex: 1, flexDirection: "row", gap: Spacing.md, alignItems: "center", justifyContent: "center" }} type="card">
-        <Smiley style={{ width: 35, height: 35, zIndex: 100000 }} />
+        {appMode == "en" && <Smiley style={{ width: 35, height: 35, zIndex: 100000 }} />}
         <View style={{ flex: 1, height: 40, flexDirection: "row", alignItems: "center", backgroundColor: theme.colors.background, borderRadius: BorderRadius.full, paddingHorizontal: Spacing.md }}>
-          <TouchableRipple onPress={handleSubmit} disabled={!canSearch} borderless style={{ borderRadius: 20, padding: Spacing.xs }}>
-            <Icon source="magnify" size={22} color={theme.colors.onSurface} />
-          </TouchableRipple>
+
           <TextInput
             value={inputText}
             autoFocus={autoFocus}
             style={{ flex: 1, height: 40, fontFamily: "RedHatText", fontWeight: "300", color: theme.colors.onSurface, paddingHorizontal: Spacing.sm }}
             onChangeText={handleChangeText}
             onSubmitEditing={handleSubmit}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setTimeout(() => setFocused(false), 150)}
+            onFocus={() => {
+              setFocused(true);
+              onFocus?.();
+            }}
+            onBlur={() =>
+              setTimeout(() => {
+                setFocused(false);
+                onBlur?.();
+              }, 150)
+            }
             enterKeyHint="search"
             placeholderTextColor={theme.colors.onSurfaceVariant}
             placeholder={greeting}
           />
+          <TouchableRipple onPress={handleSubmit} disabled={!canSearch} borderless style={{ borderRadius: 20, padding: Spacing.xs }}>
+            <Icon source="magnify" size={22} color={theme.colors.backdrop}/>
+          </TouchableRipple>
           {!!inputText.length && <TouchableRipple onPress={handleClear} disabled={!canSearch} borderless style={{ borderRadius: 20, padding: Spacing.xs }}>
             <Icon source="close" size={22} color={theme.colors.onSurface} />
           </TouchableRipple>}

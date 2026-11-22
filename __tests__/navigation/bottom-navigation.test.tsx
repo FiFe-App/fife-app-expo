@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react-native";
 import React from "react";
 
 import BottomNavigation from "@/components/navigation/BottomNavigation";
@@ -49,6 +49,19 @@ describe("BottomNavigation", () => {
     fireEvent.press(screen.getByText("Üzenetek"));
 
     expect(router.navigate).toHaveBeenCalledWith("/chats");
+  });
+
+  it("lays all the tabs out in one row, evenly, not as two groups", async () => {
+    const store = signedInStore();
+    store.dispatch(setMessagingEnabled(true));
+
+    await renderWithProviders(<BottomNavigation />, { store });
+
+    const row = screen.getByTestId("bottom-nav-tabs");
+    expect(within(row).getAllByRole("tab")).toHaveLength(4);
+    expect(row.props.style).toEqual(
+      expect.objectContaining({ flexDirection: "row", justifyContent: "space-evenly" }),
+    );
   });
 
   it("shows the unread messages badge", async () => {
