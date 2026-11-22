@@ -218,9 +218,12 @@ export default function Index() {
   // A visitor with no account cannot open a chat, so the in-app message
   // contact is left out for them; every other kind (phone, e-mail, web) works
   // just as well from a shared link.
-  const visibleContacts = myUid
+  // "Rám írhatsz" is a personal offer of support, not a way to reach the
+  // biznisz, so it stays on the profile only.
+  const visibleContacts = (myUid
     ? contacts
-    : contacts.filter((c) => c.type !== "MESSAGE");
+    : contacts.filter((c) => c.type !== "MESSAGE")
+  ).filter((c) => c.type !== "I-HELP-YOU");
   const visibleDefaultContact =
     myUid || defaultContact?.type !== "MESSAGE" ? defaultContact : null;
   const { myLocation } = useMyLocation();
