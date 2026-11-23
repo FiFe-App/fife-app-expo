@@ -209,17 +209,16 @@ export default function SearchScreen() {
               icon={m.icon}
               selected={selected}
               showSelectedCheck={false}
-              mode={selected ? "flat" : "outlined"}
+              mode={"outlined"}
               onPress={() => openMode(m.key)}
               accessibilityState={{ selected }}
-              selectedColor={selected ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
+              //selectedColor={selected ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
               style={{
-                borderRadius: BorderRadius.full,
-                backgroundColor: selected ? theme.colors.primary : "transparent",
-                borderColor: selected ? theme.colors.primary : theme.colors.outlineVariant,
+                backgroundColor: selected ? theme.colors.elevation.level4 : theme.colors.elevation.level2,
+                borderStyle: selected ? "solid" : "dashed",
+                borderRadius: BorderRadius.full
               }}
               textStyle={{
-                color: selected ? theme.colors.onPrimary : theme.colors.onSurfaceVariant,
                 fontFamily: selected ? "RedHatText-Bold" : "RedHatText",
               }}
             >
@@ -237,7 +236,7 @@ export default function SearchScreen() {
           gap: Spacing.sm,
           paddingLeft: Spacing.lg,
           paddingRight: Spacing.sm,
-          paddingVertical: Spacing.xs,
+          paddingVertical: Spacing.sm,
         }}
       >
         <View style={{ flex: 1 }}>
@@ -270,7 +269,7 @@ export default function SearchScreen() {
               mode="text"
               onPress={() => setFilterOpen(true)}
             >
-              Finomítás
+              Szűrés
             </Button>
           </View>
         </Measure>

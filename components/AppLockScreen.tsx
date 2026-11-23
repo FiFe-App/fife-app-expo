@@ -27,7 +27,7 @@ export default function AppLockScreen({ onUnlock, onLeave }: AppLockScreenProps)
   const { top } = useSafeAreaInsets();
 
   useEffect(() => {
-    onUnlock();
+    //onUnlock();
   }, [onUnlock]);
 
   return (

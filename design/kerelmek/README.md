@@ -56,7 +56,7 @@ Ugyanaz a `Surface elevation=2` (`elevation.level2`), `BorderRadius.lg`, `Spacin
 | **Saját** | A felhasználó összes kérése: nyitott és megoldott is, megoldottnál jelvénnyel. |
 | **Megoldott** | Archivált kérések, legutóbb megoldott elöl. Alapértelmezés: mindenkié a körzetben (lásd nyitott kérdések). |
 
-Alatta egysoros fejléc (mint a `/biznisz` `listTitle` + „Finomítás”): „Kérések neked” / „Összes kérés” / „Saját kéréseid” / „Megoldott kérések”, jobbra a `Finomítás` a meglévő MapSelector-os körzetmódosítást nyitja.
+Alatta egysoros fejléc (mint a `/biznisz` `listTitle` + „Szűrés”): „Kérések neked” / „Összes kérés” / „Saját kéréseid” / „Megoldott kérések”, jobbra a `Szűrés` a meglévő MapSelector-os körzetmódosítást nyitja.
 
 ### Archiválás („Megoldva”)
 
@@ -268,7 +268,7 @@ Korlátok, amiket a tervezésnél figyelembe kell venni:
 - **Minden chip alapkeresést indít:** Bizniszek → új bizniszek, Fifék → FiFe Radar, Kérések → kérések neked. Az aktív chip kitöltött (primary) színű. Ugyanarra a chipre koppintva (üres kereséssel) újratölt, nem halmoz egy ikerbejegyzést.
 - **Korábbi keresések** csak akkor látszanak, ha a felhasználó a keresőmezőbe koppint (a lista a mező elhagyásakor eltűnik). A kéréseknek nincs keresési előzménye. A billentyűzet csak akkor nyílik meg, ha a keresőmezőre koppintva (a Környék és az Otthon álkeresője, `focus=1`) érkezik a felhasználó.
 - **Cím ("Találatok")** a kategóriától és a szűrőtől függ: "Új bizniszek", "FiFe Radar", "Kérések neked", "Találatok a kérések között: kert · saját", "Új bizniszek · ingyenes, kiválasztott helyen".
-- **Finomítás** mindig látszik; a modal a kategóriától függ (bizniszek: hely, ingyenes, AI; fifék: hely; kérések: Mind / Neked / Saját / Megoldott). A szűrő a keresést helyben finomítja, nem új előzmény-bejegyzés. Kérések szöveges keresése alapból az összes kérésben keres (nem csak a "Neked" szeleten).
+- **Szűrés** mindig látszik; a modal a kategóriától függ (bizniszek: hely, ingyenes, AI; fifék: hely; kérések: Mind / Neked / Saját / Megoldott). A szűrő a keresést helyben finomítja, nem új előzmény-bejegyzés. Kérések szöveges keresése alapból az összes kérésben keres (nem csak a "Neked" szeleten).
 - **Új kérés** gomb a bizniszek és a kérések listájának tetején és alján is, a keresőmező aktuális szövegével: "Új kérés ezzel a szöveggel: „…”".
 
 ## Kérés oldala (`/kerelmek/[id]`)

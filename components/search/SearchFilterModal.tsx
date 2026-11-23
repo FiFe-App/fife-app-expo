@@ -18,7 +18,7 @@ interface SearchFilterModalProps {
 }
 
 /**
- * The search screen's "Finomítás" modal. What it refines depends on what is being searched:
+ * The search screen's "Szűrés" modal. What it refines depends on what is being searched:
  * bizniszek (place, free-only, AI), fifék (place) or kérések (which slice).
  */
 export const SearchFilterModal = ({

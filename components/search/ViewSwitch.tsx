@@ -1,5 +1,4 @@
 import { Spacing } from "@/constants/spacing";
-import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 import { storeSearchView, type SearchView } from "@/redux/reducers/searchReducer";
 import { RootState } from "@/redux/store";
 import { FAB } from "react-native-paper";
@@ -22,12 +21,12 @@ export const ViewSwitch = ({ inMap = false }: { inMap?: boolean }) => {
         testID="search-view-switch"
         icon={view === "map" ? "format-list-bulleted" : "map"}
         accessibilityLabel={view === "map" ? "Lista nézet" : "Térkép nézet"}
-        size={inMap ? "small" : "medium"}
+        size={inMap ? "small" : "large"}
         variant="tertiary"
         style={
           inMap
             ? undefined
-            : { position: "absolute", bottom: Spacing.lg + MODE_SWITCH_CLEARANCE, right: Spacing.lg }
+            : { position: "absolute", bottom: Spacing.lg, right: Spacing.lg }
         }
         onPress={() => dispatch(storeSearchView(next))}
       />

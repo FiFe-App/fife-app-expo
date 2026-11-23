@@ -20,7 +20,7 @@ interface RequestFilterModalProps {
   onScopeChange: (scope: RequestScope) => void;
 }
 
-/** "Finomítás" for kérések: which slice of them the search looks in. */
+/** "Szűrés" for kérések: which slice of them the search looks in. */
 export const RequestFilterModal = ({
   visible,
   onDismiss,
