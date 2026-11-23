@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { Button } from "../Button";
 
 /**
- * "Új kérés" at the top and the bottom of the lists of the search screen. With something typed
+ * "Új kérés" at the top of the lists of the search screen. With something typed
  * in the search box it carries that text into the modal: nobody found what they looked for? Ask.
  */
 export const NewRequestButton = ({

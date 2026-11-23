@@ -288,13 +288,13 @@ describe("the search screen: Új kérés", () => {
     expect(screen.queryByTestId("search-new-request-bottom")).toBeNull();
   });
 
-  it("is above and under the list of the bizniszek", async () => {
+  it("is above, and not under, the list of the bizniszek", async () => {
     supabase.functions.invoke.mockResolvedValue({ data: biznisz(2), error: null });
     await renderWithProviders(<SearchScreen />, { store: createTestStore() });
 
     await waitFor(() => expect(screen.getByText("Új biznisz 1")).toBeTruthy());
     expect(screen.getByTestId("search-new-request-top")).toBeTruthy();
-    expect(screen.getByTestId("search-new-request-bottom")).toBeTruthy();
+    expect(screen.queryByTestId("search-new-request-bottom")).toBeNull();
   });
 
   it("is there on an empty list of the kérések, too", async () => {

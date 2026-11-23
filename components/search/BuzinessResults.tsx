@@ -19,7 +19,7 @@ interface BuzinessResultsProps {
 
 /**
  * The bizniszek of the search screen: the list (or the map), with the "Új kérés" button above
- * and under the list. What is listed is whatever useBuzinessSearch last searched for.
+ * the list (not under it). What is listed is whatever useBuzinessSearch last searched for.
  */
 export const BuzinessResults = ({ canLoadMore, loadNext, error, reload, typed }: BuzinessResultsProps) => {
   const view = useSelector((state: RootState) => state.search.view);
@@ -34,7 +34,6 @@ export const BuzinessResults = ({ canLoadMore, loadNext, error, reload, typed }:
           canLoadMore={canLoadMore}
           error={error}
           header={<NewRequestButton text={typed} testID="search-new-request-top" />}
-          footer={<NewRequestButton text={typed} testID="search-new-request-bottom" />}
         />
       )}
     </View>

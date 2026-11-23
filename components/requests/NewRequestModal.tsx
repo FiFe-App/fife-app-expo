@@ -22,7 +22,7 @@ import { CircleType } from "@/redux/store.type";
 import { Image } from "expo-image";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import {
   HelperText,
@@ -49,11 +49,13 @@ import { ThemedText } from "../ThemedText";
 import { ThemedView } from "../ThemedView";
 
 // An accordion's header keeps the dialog's side padding; its content does not: it is as wide as
-// the dialog.
+// the dialog. Paper gives an accordion's children a paddingLeft of its own (40) that beats
+// paddingHorizontal, so the left side is set explicitly to take the indent away.
 const accordionHeaderStyle = { backgroundColor: "transparent", paddingHorizontal: Spacing.md };
 const accordionContentStyle = {
   gap: Spacing.lg,
-  paddingHorizontal: Spacing.sm,
+  paddingLeft: Spacing.sm,
+  paddingRight: Spacing.sm,
   paddingBottom: Spacing.md,
 };
 
@@ -84,10 +86,13 @@ const TITLE_HORIZONTAL_PADDING = 18;
 const NewRequestForm = ({
   initialTitle,
   dismiss,
+  keepVisible,
 }: {
   initialTitle: string;
   /** Closes the modal (the same way the Back button does) and resolves once it is gone. */
   dismiss: () => Promise<void>;
+  /** Scrolls the sheet so that the given (growing) field stays in view above the keyboard. */
+  keepVisible: (field: View | null) => void;
 }) => {
   const theme = useAppTheme();
   const dispatch = useDispatch();
@@ -103,6 +108,7 @@ const NewRequestForm = ({
   const [mapModalVisible, setMapModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [titleTextHeight, setTitleTextHeight] = useState(0);
+  const descriptionRef = useRef<View>(null);
 
   // How tall the title input is: the lines its text takes, one at least, TITLE_MAX_LINES at most.
   const titleFont = theme.fonts.bodyLarge;
@@ -265,7 +271,7 @@ const NewRequestForm = ({
       <Surface elevation={1} style={{ borderRadius: BorderRadius.lg, overflow: "hidden" }}>
         <List.Accordion
           testID="request-targeting"
-          title="Targetálás"
+          title="Kiknek szeretnél üzenni?"
           description={targetingSummary || "Kulcsszavak és hely: kihez jusson el"}
           left={(props) => <List.Icon {...props} icon="target" />}
           style={accordionHeaderStyle}
@@ -334,16 +340,22 @@ const NewRequestForm = ({
           titleStyle={{ fontFamily: "RedHatText-Bold" }}
         >
           <View style={accordionContentStyle}>
-            <TextInput
-              testID="request-description"
-              mode="outlined"
-              label="Leírás"
-              value={description}
-              multiline
-              numberOfLines={4}
-              maxLength={REQUEST_LIMITS.descriptionMax}
-              onChangeText={setDescription}
-            />
+            {/* The description grows with the text; the wrapper is what gets measured, so the
+                last line is never left under the keyboard (or below the sheet's own edge). */}
+            <View ref={descriptionRef} collapsable={false}>
+              <TextInput
+                testID="request-description"
+                mode="outlined"
+                label="Leírás"
+                value={description}
+                multiline
+                numberOfLines={4}
+                maxLength={REQUEST_LIMITS.descriptionMax}
+                onChangeText={setDescription}
+                onContentSizeChange={() => keepVisible(descriptionRef.current)}
+                onSelectionChange={() => keepVisible(descriptionRef.current)}
+              />
+            </View>
 
             <View style={{ gap: Spacing.sm }}>
               <ThemedText type="bold">Képek</ThemedText>
@@ -441,6 +453,23 @@ export const NewRequestModal = () => {
   const close = useCallback(() => {
     dispatch(closeRequestComposer());
   }, [dispatch]);
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollY = useRef(0);
+  // When a field grows while typing, its bottom can slip out of the sheet's visible part (the
+  // sheet sits above the keyboard and scrolls on its own): scroll just enough to show it again.
+  const keepVisible = useCallback((field: View | null) => {
+    const scroll = scrollRef.current;
+    if (!scroll || !field) return;
+    field.measureInWindow((_x, fieldY, _w, fieldHeight) => {
+      scroll.measureInWindow((_sx, sheetY, _sw, sheetHeight) => {
+        const margin = Spacing.md;
+        const below = fieldY + fieldHeight + margin - (sheetY + sheetHeight);
+        const above = sheetY - (fieldY - margin);
+        if (below > 0) scroll.scrollTo({ y: scrollY.current + below, animated: false });
+        else if (above > 0) scroll.scrollTo({ y: Math.max(0, scrollY.current - above), animated: false });
+      });
+    });
+  }, []);
   // The system Back button closes the modal (and the tap on the backdrop does the same).
   const { dismiss } = useComposerBack(open, close);
 
@@ -462,11 +491,16 @@ export const NewRequestModal = () => {
           style={{ width: "100%", maxWidth: 560, alignSelf: "center" }}
         >
           <ScrollView
+            ref={scrollRef}
             keyboardShouldPersistTaps="handled"
+            onScroll={(e) => {
+              scrollY.current = e.nativeEvent.contentOffset.y;
+            }}
+            scrollEventThrottle={16}
             style={{ maxHeight: (windowHeight - keyboardHeight) * 0.9 }}
             contentContainerStyle={{ gap: Spacing.md }}
           >
-            <NewRequestForm initialTitle={initialTitle} dismiss={dismiss} />
+            <NewRequestForm initialTitle={initialTitle} dismiss={dismiss} keepVisible={keepVisible} />
           </ScrollView>
         </View>
       </KeyboardAwareModal>

@@ -16,8 +16,8 @@ import { invokeFunction } from "@/lib/supabase/invokeFunction";
 import { countBucket, trackEvent } from "@/lib/analytics";
 import { router, Stack, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ScrollView, View } from "react-native";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { View } from "react-native";
+import { KeyboardAvoidingView, KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import {
   Dialog,
   HelperText,
@@ -449,7 +449,11 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
           style={{ flex: 1 }}
           behavior="padding"
         >
-        <ScrollView
+        {/* KeyboardAwareScrollView follows the focused input as it grows while typing (the
+            description is multiline), so its last line stays above the keyboard. The Mentés
+            bar below the list also covers part of the visible area, hence the larger offset. */}
+        <KeyboardAwareScrollView
+          bottomOffset={140}
           style={{ flex: 1 }}
           contentContainerStyle={{
             paddingHorizontal: Spacing.md,
@@ -745,7 +749,7 @@ Ha, mondjuk, futószalagon gyártod a sütiket, és ezt felveszed a bizniszeid k
               }}
             />
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
 
         <Surface
           elevation={2}

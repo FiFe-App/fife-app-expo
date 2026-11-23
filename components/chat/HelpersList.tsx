@@ -14,7 +14,7 @@ import { useSelector } from "react-redux";
 
 const AVATAR_SIZE = 96;
 
-function HelperCard({ helper }: { helper: Helper }) {
+function HelperCard({ helper, isMe }: { helper: Helper; isMe: boolean }) {
   const theme = useAppTheme();
   return (
     <Surface
@@ -69,15 +69,24 @@ function HelperCard({ helper }: { helper: Helper }) {
       {!!helper.note && (
         <ThemedText variant="bodyMedium">{helper.note}</ThemedText>
       )}
-      <Button
-        mode="contained"
-        icon="message"
-        onPress={() =>
-          router.push({ pathname: "/chat/[uid]", params: { uid: helper.id } })
-        }
-      >
-        Üzenet
-      </Button>
+      {isMe ? (
+        <ThemedText
+          variant="labelMedium"
+          style={{ color: theme.colors.onSurfaceVariant }}
+        >
+          Te vagy, így látnak mások
+        </ThemedText>
+      ) : (
+        <Button
+          mode="contained"
+          icon="message"
+          onPress={() =>
+            router.push({ pathname: "/chat/[uid]", params: { uid: helper.id } })
+          }
+        >
+          Üzenet
+        </Button>
+      )}
     </Surface>
   );
 }
@@ -142,7 +151,7 @@ export default function HelpersList() {
           </ThemedText>
         ) : (
           helpers.map((helper) => (
-            <HelperCard key={helper.id} helper={helper} />
+            <HelperCard key={helper.id} helper={helper} isMe={helper.id === myUid} />
           ))
         )}
       </ScrollView>

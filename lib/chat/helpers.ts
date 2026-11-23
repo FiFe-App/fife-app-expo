@@ -21,8 +21,8 @@ const shuffle = <T,>(items: T[]) => {
 
 /**
  * Everyone who switched on "Rám írhatsz" (an I-HELP-YOU contact) and can
- * actually be messaged, i.e. also has MESSAGE on. Leaves out `myUid` and the
- * people they blocked. Shuffled, so the same few people are not always on top.
+ * actually be messaged, i.e. also has MESSAGE on. Includes `myUid` itself (so
+ * the list shows what others see); leaves out the people they blocked. Shuffled, so the same few people are not always on top.
  */
 export const fetchHelpers = async (
   myUid: string | undefined,
@@ -37,7 +37,6 @@ export const fetchHelpers = async (
   // One note per author, even if old duplicate rows exist.
   const notes = new Map<string, string | null>();
   for (const o of offers ?? []) {
-    if (o.author === myUid) continue;
     if (!notes.has(o.author) || (!notes.get(o.author) && o.title)) {
       notes.set(o.author, o.title?.trim() || null);
     }
