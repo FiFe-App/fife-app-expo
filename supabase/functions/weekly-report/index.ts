@@ -20,7 +20,8 @@ const smtpPass = Deno.env.get("SMTP_PASS") || "";
 const smtpFrom = Deno.env.get("SMTP_FROM") || smtpUser;
 
 const reportEmail = Deno.env.get("ADMIN_REPORT_EMAIL") || "kristofakos1229@gmail.com";
-const adminUrl = Deno.env.get("ADMIN_URL") || null;
+// Az "Admin megnyitása" gomb célja; ADMIN_URL secrettel felülírható.
+const adminUrl = Deno.env.get("ADMIN_URL") || "https://admin.fifeapp.hu";
 
 const TIME_ZONE = "Europe/Budapest";
 const SEND_HOUR = 8;

@@ -90,32 +90,37 @@ hírlevél küldhető mindenkinek, ezért:
 
 ## Deploy checklist
 
-Az admin adatbázis-függvényei a `requests` táblára is hivatkoznak, ami a `dev` ágon jött
-be, ezért ezt az ágat a **`dev`** felé kell merge-ölni (onnan megy tovább a masterre).
+Az admin címe: **https://admin.fifeapp.hu**
 
-1. **Merge** a `dev`-be.
-2. **Adatbázis:** `supabase db push`. Ez felviszi az admin migrációkat
-   (`20260930120000_admin_insights`, `20261111120000_harden_admin`,
-   `20261124120000_admin_content`). Ha a pg_cron miatt elhasal, kapcsold be: Dashboard →
-   Database → Extensions → pg_cron, és futtasd újra.
-3. **Edge function-ök:** `supabase functions deploy notify weekly-report`.
-4. **Supabase secretek:** `supabase secrets set ADMIN_URL=https://<admin site címe>`
-   (opcionálisan `ADMIN_REPORT_EMAIL`, lásd lent). Az `SMTP_*` secretek már megvannak a
-   `notify` miatt.
-5. **Netlify site:**
+Az admin adatbázis-függvényei a `requests` táblára is hivatkoznak, ami a `dev` ágon jött
+be, ezért ezt az ágat a **`dev`** felé kell merge-ölni, onnan megy tovább a masterre.
+
+1. **Merge** `dev`-be, majd `dev` → `master`.
+2. **Supabase — automatikus.** A `.github/workflows/supabase-deploy.yml` minden masterre
+   pusholt migráció- vagy function-változásnál lefuttatja a `supabase db push`-t és
+   deployolja az összes edge function-t (köztük a `notify`-t és a `weekly-report`-ot).
+   Kézi teendő nincs. Ha az Action a pg_cron miatt elhasal: Dashboard → Database →
+   Extensions → pg_cron bekapcsolása, majd az Action újrafuttatása a GitHubon
+   (Actions → Deploy Supabase → Re-run).
+3. **Netlify site** (egyszer kell létrehozni):
    1. Hozz létre egy **új** Netlify site-ot, ami ugyanerre a repóra mutat.
    2. Site settings → Build & deploy → **Base directory**: `admin`
       (a `netlify.toml` az `admin` mappán belül van, ez alapján a build/publish/functions
-      útvonalak is onnan relatívak). **Production branch**: `dev` vagy `master`, attól
-      függően, honnan akarsz élesíteni.
+      útvonalak is onnan relatívak). **Production branch**: `master`.
    3. Site settings → Environment variables: a fenti változók
       (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_PASSWORD`,
       `ADMIN_SESSION_SECRET`, és ajánlott: `ADMIN_IP_ALLOWLIST`).
    4. Deploy — a site a `/` alatt a login oldalt, `/api/*` alatt a function-öket
-      szolgálja ki.
-6. **Első belépés** és körbenézés: Felhasználók, Bizniszek, Kérések, Feljelentések,
-   Biztonság.
-7. **Heti riport teszt:**
+      szolgálja ki. Ezután minden masterre pusholt változásnál magától újraépül.
+4. **Domain:**
+   1. Netlify → Domain management → Add a domain → `admin.fifeapp.hu`.
+   2. A fifeapp.hu DNS-ében egy CNAME rekord: név `admin`, érték
+      `<a-site-neve>.netlify.app` (a Netlify a domain hozzáadásakor pontosan kiírja).
+   3. A HTTPS tanúsítványt a Netlify magától intézi, amint a DNS beállt (pár perc, néha
+      pár óra).
+5. **Első belépés** az admin.fifeapp.hu-n, és körbenézés: Felhasználók, Bizniszek,
+   Kérések, Feljelentések, Biztonság.
+6. **Heti riport teszt:**
 
    ```bash
    curl -X POST "$SUPABASE_URL/functions/v1/weekly-report?force=1" \
@@ -169,19 +174,12 @@ számok, és ha van, hány segítség kontakt javaslat vár jóváhagyásra.
   megy ki.
 - Opcionális Supabase secretek:
   - `ADMIN_REPORT_EMAIL`: a címzett. Alapértéke `kristofakos1229@gmail.com`.
-  - `ADMIN_URL`: az admin site címe. Ha be van állítva, a levélben egy „Admin megnyitása”
-    gomb mutat rá.
+  - `ADMIN_URL`: a levél „Admin megnyitása” gombjának célja. Alapértéke
+    `https://admin.fifeapp.hu`, csak más cím esetén kell beállítani.
 
-Élesítés:
-
-```bash
-supabase db push                          # migráció (pg_cron + a függvények + a job)
-supabase functions deploy weekly-report
-supabase secrets set ADMIN_URL=https://<admin site>
-```
-
-Ha a `db push` a pg_cron miatt elhasal, kapcsold be a Dashboardon (Database →
-Extensions → pg_cron), és futtasd újra.
+Élesítés: a migrációt és a function-t a masterre merge-ölés után a GitHub Action
+deployolja (lásd a Deploy checklistet). Ha a pg_cron miatt elhasal, kapcsold be a
+Dashboardon (Database → Extensions → pg_cron), és futtasd újra az Actiont.
 
 Kézi tesztküldés, az időponttól függetlenül:
 
