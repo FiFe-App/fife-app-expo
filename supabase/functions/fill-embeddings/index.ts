@@ -1,6 +1,6 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import OpenAI from "npm:openai";
-import { embedding_instructions } from "../_shared/embedding.ts";
+import { embedding_instructions, embedText, requestEmbeddingInput } from "../_shared/embedding.ts";
 import { isServiceRoleRequest } from "../_shared/auth.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || Deno.env.get("URL") || "http://127.0.0.1:54321";
@@ -101,6 +101,49 @@ Deno.serve(async (req) => {
           })
           .eq("id", business.id);
         console.log(res);
+      }
+    }
+
+    // The kérések get the same treatment: the ones with no vector yet (saved while the author's
+    // AI was off and switched on since, or when OpenAI failed), but only for authors who turned the AI on.
+    const { data: requests, error: requestsError } = await supabase
+      .from("requests")
+      .select("id, author, title, tags, description")
+      .is("embedding", null);
+    if (requestsError) {
+      console.error("Could not read the requests:", requestsError.message);
+    }
+    // Only authors who switched the AI on: with no settings row the text stays put, exactly as
+    // create-request decides.
+    const { data: optedIn, error: optedInError } = await supabase
+      .from("user_settings")
+      .select("author")
+      .eq("ai_enhance", true);
+    if (optedInError) {
+      console.error("Could not read the opt-in list:", optedInError.message);
+      return new Response(JSON.stringify({ error: "Could not read the opt-in list" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
+    const allowedAuthors = new Set((optedIn ?? []).map((row: { author: string }) => row.author));
+    for (const request of requests ?? []) {
+      if (!allowedAuthors.has(request.author)) {
+        console.log("skipping request", request.id, "— its author has not turned the AI on");
+        continue;
+      }
+      try {
+        const { embedding, embedding_text } = await embedText(
+          openai,
+          requestEmbeddingInput(request),
+        );
+        const res = await supabase
+          .from("requests")
+          .update({ embedding, embedding_text })
+          .eq("id", request.id);
+        console.log("request", request.id, res.error ? res.error.message : "ok");
+      } catch (e) {
+        console.error("request", request.id, "embedding failed:", e);
       }
     }
     return new Response("ok", { headers: corsHeaders });

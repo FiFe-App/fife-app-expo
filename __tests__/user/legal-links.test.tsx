@@ -1,5 +1,5 @@
 /**
- * The legal documents in Profil → Beállítások.
+ * The legal documents in Én › Beállítások ("Ezen a telefonon").
  *
  * They used to be reachable only from the registration flow, so somebody who
  * already had an account could not read them again — and Google Play expects
@@ -9,6 +9,10 @@ import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { openBrowserAsync } from "expo-web-browser";
 
 jest.mock("expo-router", () => require("@/test-utils/mocks/expo-router"));
+jest.mock("@/lib/appLock", () => ({
+  authenticateOwner: jest.fn(),
+  deviceLockAvailable: jest.fn(),
+}));
 // Leaf native modules pulled in through useNotificationPrefs; nothing here
 // touches them.
 jest.mock("@/lib/notifications/registerForPushNotifications", () => ({
@@ -20,6 +24,7 @@ jest.mock("@/lib/notifications/scheduleDailyEmotionReminder", () => ({
   cancelDailyEmotionReminder: jest.fn().mockResolvedValue(undefined),
 }));
 
+import EnSettings from "@/components/settings/EnSettings";
 import BeallitasokTab from "@/components/user/edit/BeallitasokTab";
 import { CSAE_URL, LEGAL_DOCUMENTS, PRIVACY_URL, TERMS_URL } from "@/constants/legal";
 import { login } from "@/redux/reducers/userReducer";
@@ -37,9 +42,9 @@ beforeEach(() => {
   auth.getSession.mockResolvedValue({ data: { session: null }, error: null });
 });
 
-describe("the legal documents in Beállítások", () => {
+describe("the legal documents in the Én settings", () => {
   it("lists every document the app has", async () => {
-    await renderWithProviders(<BeallitasokTab />, { store: signedIn() });
+    await renderWithProviders(<EnSettings />, { store: signedIn() });
 
     expect(await screen.findByText("Jogi dokumentumok")).toBeOnTheScreen();
     for (const document of LEGAL_DOCUMENTS) {
@@ -52,24 +57,17 @@ describe("the legal documents in Beállítások", () => {
     ["Adatkezelési tájékoztató", PRIVACY_URL],
     ["Gyermekvédelmi irányelvek (CSAE)", CSAE_URL],
   ])("opens %s", async (label, url) => {
-    await renderWithProviders(<BeallitasokTab />, { store: signedIn() });
+    await renderWithProviders(<EnSettings />, { store: signedIn() });
 
     fireEvent.press(await screen.findByText(label));
 
     await waitFor(() => expect(openBrowserAsync).toHaveBeenCalledWith(url));
   });
 
-  it("keeps them above the danger zone, not buried under it", async () => {
-    // Deleting your account sits at the very bottom on purpose; the documents
-    // have to come before it.
+  it("are not on the account's settings, which link to the Én side instead", async () => {
     await renderWithProviders(<BeallitasokTab />, { store: signedIn() });
 
-    await screen.findByText("Jogi dokumentumok");
-    // Matches come back in tree order, so the first of the two headings is the
-    // one rendered first.
-    const headings = screen.getAllByText(/^(Jogi dokumentumok|Veszélyes szekció)$/);
-
-    expect(headings).toHaveLength(2);
-    expect(headings[0].props.children).toBe("Jogi dokumentumok");
+    expect(await screen.findByText("Én oldal beállításai")).toBeOnTheScreen();
+    expect(screen.queryByText("Jogi dokumentumok")).toBeNull();
   });
 });

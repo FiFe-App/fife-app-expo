@@ -12,17 +12,24 @@ import {
 import { useMyLocation } from "@/hooks/useMyLocation";
 import Measure from "../tutorial/Measure";
 import { ThemedView } from "../ThemedView";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 interface BuzinessListProps {
   load: () => void;
   canLoadMore: boolean;
   error: string | null;
+  /** Above the first row, e.g. the "new request" button. */
+  header?: React.ReactElement;
+  /** Under the last row (and under the loading / error line). */
+  footer?: React.ReactNode;
 }
 
 export const BuzinessList: React.FC<BuzinessListProps> = ({
   load,
   canLoadMore,
   error,
+  header,
+  footer,
 }) => {
   const dispatch = useDispatch();
 
@@ -88,9 +95,10 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
             Nem található több biznisz
           </ThemedText>
         ) : null}
+        {footer}
       </View>
     ),
-    [error, loading, buzinesses.length],
+    [error, loading, buzinesses.length, footer],
   );
 
   const listEmpty = useMemo(
@@ -115,6 +123,7 @@ export const BuzinessList: React.FC<BuzinessListProps> = ({
         onEndReached={onEndReached}
         onEndReachedThreshold={0.3}
         ListEmptyComponent={listEmpty}
+        ListHeaderComponent={header}
         ListFooterComponent={listFooter}
       />
     </View>
@@ -129,6 +138,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
+    paddingBottom: MODE_SWITCH_CLEARANCE,
   },
   footer: {
     padding: Spacing.lg,

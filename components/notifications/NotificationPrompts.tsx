@@ -85,7 +85,7 @@ export default function NotificationPrompts() {
       kind: "pref",
       key: "emotionDailyPrompt",
       icon: "calendar-heart",
-      title: "Kérsz napi emlékeztetőt?",
+      title: "Hogy vagy ma?",
       body: "Minden este megkérdezzük, milyen napod volt, hogy vezethesd a hangulatnaplódat.",
       nativeOnly: true,
       available: emotionAvailable,

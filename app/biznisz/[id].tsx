@@ -67,6 +67,7 @@ import {
   TouchableRipple,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 // Stable empties for a signed-out visitor while the public data is loading.
 const NO_COMMENTS: Comment[] = [];
@@ -217,9 +218,12 @@ export default function Index() {
   // A visitor with no account cannot open a chat, so the in-app message
   // contact is left out for them; every other kind (phone, e-mail, web) works
   // just as well from a shared link.
-  const visibleContacts = myUid
+  // "Rám írhatsz" is a personal offer of support, not a way to reach the
+  // biznisz, so it stays on the profile only.
+  const visibleContacts = (myUid
     ? contacts
-    : contacts.filter((c) => c.type !== "MESSAGE");
+    : contacts.filter((c) => c.type !== "MESSAGE")
+  ).filter((c) => c.type !== "I-HELP-YOU");
   const visibleDefaultContact =
     myUid || defaultContact?.type !== "MESSAGE" ? defaultContact : null;
   const { myLocation } = useMyLocation();
@@ -508,7 +512,7 @@ export default function Index() {
             stickyHeaderIndices={[1]}
             automaticallyAdjustKeyboardInsets
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ paddingBottom: Spacing.xxl, minHeight: windowHeight+ 100 }}
+            contentContainerStyle={{ paddingBottom: Spacing.xxl + MODE_SWITCH_CLEARANCE, minHeight: windowHeight+ 100 }}
           >
             {/* HEADER (index 0) */}
             <View

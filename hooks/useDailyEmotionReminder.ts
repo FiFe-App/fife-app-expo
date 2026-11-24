@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { AppState } from "react-native";
+import { AppState, Platform } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
 import { emotionAvailable } from "@/constants/emotionTiming";
@@ -38,7 +38,8 @@ export function useDailyEmotionReminder() {
   const warnedAboutPermission = useRef(false);
 
   const sync = useCallback(async () => {
-    if (!emotionAvailable) return;
+    // The web has no local notifications to schedule the evening question with.
+    if (!emotionAvailable || Platform.OS === "web") return;
 
     if (!uid) {
       await cancelDailyEmotionReminder();
@@ -66,7 +67,8 @@ export function useDailyEmotionReminder() {
   }, [sync]);
 
   useEffect(() => {
-    if (!emotionAvailable) return;
+    // The web has no local notifications to schedule the evening question with.
+    if (!emotionAvailable || Platform.OS === "web") return;
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") sync();
     });

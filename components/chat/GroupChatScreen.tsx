@@ -43,6 +43,8 @@ import { MessageActionsSheet } from "./MessageActionsSheet";
 import { MessageInput } from "./MessageInput";
 import { MessageItem } from "./MessageItem";
 import { ReplyPreview } from "./ReplyPreview";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
+import { useKeyboardHeight } from "@/components/KeyboardAwareModal";
 
 type AuthorProfile = Pick<Tables<"profiles">, "id" | "full_name" | "username" | "avatar_url">;
 type Member = { user_id: string; joined_at: string; profiles: AuthorProfile | null };
@@ -91,6 +93,7 @@ export default function GroupChatScreen() {
   // message id → ids of the users who hearted it
   const [hearts, setHearts] = useState<Map<number, Set<string>>>(new Map());
   const listRef = useRef<FlatList<GroupChatMessage>>(null);
+  const keyboardHeight = useKeyboardHeight();
   const channelRef = useRef<RealtimeChannel | null>(null);
   const requestedProfiles = useRef(new Set<string>());
   const mountId = useRef(Date.now()).current;
@@ -658,6 +661,8 @@ export default function GroupChatScreen() {
               allowImage={false}
               disabled={sending}
             />
+            {/* Room for the Én/Mi switch over the bottom bar; the keyboard covers the bar. */}
+            <View style={{ height: keyboardHeight > 0 ? 0 : MODE_SWITCH_CLEARANCE }} />
           </>
         ) : (
           <View style={styles.joinContainer}>
