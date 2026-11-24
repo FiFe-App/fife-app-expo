@@ -16,3 +16,17 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Biztonsági headerek az egész site-ra. Az admin csak saját forrásból tölt be
+# scriptet és stílust (a Mantine inline stílusai miatt kell az 'unsafe-inline'
+# a style-src-ben); képet a hírlevél-szerkesztő előnézete miatt https-ről is.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; font-src 'self' data:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    X-Robots-Tag = "noindex, nofollow"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"

@@ -1,9 +1,21 @@
 import type {
+  AdminBuziness,
+  AdminHelpContact,
+  AdminRequest,
+  AdminReport,
+  AdminUser,
+  BuzinessFilters,
+  HelpContactFilters,
+  RequestFilters,
+  SecurityState,
   InAppMessage,
   InAppMessageInput,
   Newsletter,
   NewsletterAudience,
   NewsletterInput,
+  Page,
+  ReportFilters,
+  UserFilters,
 } from "./types";
 
 export class AuthError extends Error {}
@@ -81,6 +93,62 @@ export async function createNewsletter(input: NewsletterInput): Promise<Newslett
   return data.newsletter as Newsletter;
 }
 
+export async function fetchUsers(filters: UserFilters): Promise<Page<AdminUser>> {
+  const params = new URLSearchParams({ page: String(filters.page) });
+  if (filters.search.trim()) params.set("search", filters.search.trim());
+  if (filters.badBoy !== "all") params.set("badBoy", filters.badBoy);
+  if (filters.reported) params.set("reported", "true");
+
+  const res = await fetch(`/api/users?${params}`, { credentials: "same-origin" });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  const data = await res.json();
+  return { items: data.users, total: data.total, page: data.page, pageSize: data.pageSize };
+}
+
+export async function setBadBoy(id: string, badBoy: boolean): Promise<boolean> {
+  const res = await fetch("/api/users", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ id, badBoy }),
+  });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  const data = await res.json();
+  return Boolean(data.bad_boy);
+}
+
+export async function fetchReports(filters: ReportFilters): Promise<Page<AdminReport>> {
+  const params = new URLSearchParams({ page: String(filters.page) });
+  if (filters.reportedId) params.set("reportedId", filters.reportedId);
+  if (filters.contentType && filters.contentId) {
+    params.set("contentType", filters.contentType);
+    params.set("contentId", String(filters.contentId));
+  }
+  if (filters.reason) params.set("reason", filters.reason);
+  if (filters.targetType) params.set("targetType", filters.targetType);
+
+  const res = await fetch(`/api/reports?${params}`, { credentials: "same-origin" });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  const data = await res.json();
+  return { items: data.reports, total: data.total, page: data.page, pageSize: data.pageSize };
+}
+
+export async function fetchBuzinesses(filters: BuzinessFilters): Promise<Page<AdminBuziness>> {
+  const params = new URLSearchParams({ page: String(filters.page) });
+  if (filters.search.trim()) params.set("search", filters.search.trim());
+  if (filters.reported) params.set("reported", "true");
+  if (filters.public !== "all") params.set("public", filters.public);
+
+  const res = await fetch(`/api/buzinesses?${params}`, { credentials: "same-origin" });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  const data = await res.json();
+  return { items: data.buzinesses, total: data.total, page: data.page, pageSize: data.pageSize };
+}
+
 export async function fetchInAppMessage(): Promise<InAppMessage | null> {
   const res = await fetch("/api/in-app-messages", { credentials: "same-origin" });
   if (res.status === 401) throw new AuthError();
@@ -101,4 +169,60 @@ export async function createInAppMessage(input: InAppMessageInput): Promise<InAp
   if (!res.ok) throw new Error(await parseErrorBody(res));
   const data = await res.json();
   return data.message as InAppMessage;
+}
+
+export async function fetchRequests(filters: RequestFilters): Promise<Page<AdminRequest>> {
+  const params = new URLSearchParams({ page: String(filters.page) });
+  if (filters.search.trim()) params.set("search", filters.search.trim());
+  if (filters.reported) params.set("reported", "true");
+  if (filters.status !== "all") params.set("status", filters.status);
+
+  const res = await fetch(`/api/requests?${params}`, { credentials: "same-origin" });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  const data = await res.json();
+  return { items: data.requests, total: data.total, page: data.page, pageSize: data.pageSize };
+}
+
+export async function fetchHelpContacts(
+  filters: HelpContactFilters,
+): Promise<Page<AdminHelpContact> & { pending: number }> {
+  const params = new URLSearchParams({ page: String(filters.page), status: filters.status });
+  if (filters.search.trim()) params.set("search", filters.search.trim());
+
+  const res = await fetch(`/api/help-contacts?${params}`, { credentials: "same-origin" });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  const data = await res.json();
+  return { items: data.contacts, total: data.total, page: data.page, pageSize: data.pageSize, pending: data.pending };
+}
+
+async function sendJson(url: string, method: "PATCH" | "DELETE", body: unknown): Promise<void> {
+  const res = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify(body),
+  });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+}
+
+export function setHelpContactPublic(id: number, isPublic: boolean): Promise<void> {
+  return sendJson("/api/help-contacts", "PATCH", { id, public: isPublic });
+}
+
+export function deleteHelpContact(id: number): Promise<void> {
+  return sendJson("/api/help-contacts", "DELETE", { id });
+}
+
+export async function fetchSecurity(): Promise<SecurityState> {
+  const res = await fetch("/api/security", { credentials: "same-origin" });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  return (await res.json()) as SecurityState;
+}
+
+export function unbanIp(ip: string): Promise<void> {
+  return sendJson("/api/security", "DELETE", { ip });
 }

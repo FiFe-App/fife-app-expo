@@ -1,6 +1,7 @@
 import { Badge, Group, Table, Text, Tooltip } from "@mantine/core";
 import { IconAlertTriangle } from "@tabler/icons-react";
 
+import { formatDate } from "../format";
 import type { Newsletter, NewsletterStatus } from "../types";
 
 const STATUS_COLOR: Record<NewsletterStatus, string> = {
@@ -16,16 +17,6 @@ const STATUS_LABEL: Record<NewsletterStatus, string> = {
   sent: "Kiküldve",
   failed: "Sikertelen",
 };
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString("hu-HU", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export function NewsletterList({ newsletters }: { newsletters: Newsletter[] }) {
   if (newsletters.length === 0) {
