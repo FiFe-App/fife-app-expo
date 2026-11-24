@@ -1214,9 +1214,31 @@ export type Database = {
           total_count: number
         }[]
       }
+      admin_list_help_contacts: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_status?: string
+        }
+        Returns: {
+          author_email: string
+          author_id: string
+          author_name: string
+          created_at: string
+          data: string
+          description: string
+          id: number
+          public: boolean
+          title: string
+          total_count: number
+          type: string
+        }[]
+      }
       admin_list_reports: {
         Args: {
-          p_buziness_id?: number
+          p_content_id?: number
+          p_content_type?: string
           p_limit?: number
           p_offset?: number
           p_reason?: string
@@ -1227,8 +1249,9 @@ export type Database = {
           author_email: string
           author_id: string
           author_name: string
-          buziness_id: number
-          buziness_title: string
+          content_id: number
+          content_title: string
+          content_type: string
           created_at: string
           description: string
           id: number
@@ -1240,6 +1263,31 @@ export type Database = {
           target_excerpt: string
           target_id: string
           target_type: string
+          total_count: number
+        }[]
+      }
+      admin_list_requests: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_reported?: boolean
+          p_search?: string
+          p_status?: string
+        }
+        Returns: {
+          author_bad_boy: boolean
+          author_email: string
+          author_id: string
+          author_name: string
+          comment_report_count: number
+          created_at: string
+          description: string
+          id: number
+          report_count: number
+          solved_at: string
+          status: string
+          tags: string[]
+          title: string
           total_count: number
         }[]
       }

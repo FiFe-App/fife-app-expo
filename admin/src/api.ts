@@ -1,8 +1,13 @@
 import type {
   AdminBuziness,
+  AdminHelpContact,
+  AdminRequest,
   AdminReport,
   AdminUser,
   BuzinessFilters,
+  HelpContactFilters,
+  RequestFilters,
+  SecurityState,
   InAppMessage,
   InAppMessageInput,
   Newsletter,
@@ -117,7 +122,10 @@ export async function setBadBoy(id: string, badBoy: boolean): Promise<boolean> {
 export async function fetchReports(filters: ReportFilters): Promise<Page<AdminReport>> {
   const params = new URLSearchParams({ page: String(filters.page) });
   if (filters.reportedId) params.set("reportedId", filters.reportedId);
-  if (filters.buzinessId) params.set("buzinessId", String(filters.buzinessId));
+  if (filters.contentType && filters.contentId) {
+    params.set("contentType", filters.contentType);
+    params.set("contentId", String(filters.contentId));
+  }
   if (filters.reason) params.set("reason", filters.reason);
   if (filters.targetType) params.set("targetType", filters.targetType);
 
@@ -161,4 +169,60 @@ export async function createInAppMessage(input: InAppMessageInput): Promise<InAp
   if (!res.ok) throw new Error(await parseErrorBody(res));
   const data = await res.json();
   return data.message as InAppMessage;
+}
+
+export async function fetchRequests(filters: RequestFilters): Promise<Page<AdminRequest>> {
+  const params = new URLSearchParams({ page: String(filters.page) });
+  if (filters.search.trim()) params.set("search", filters.search.trim());
+  if (filters.reported) params.set("reported", "true");
+  if (filters.status !== "all") params.set("status", filters.status);
+
+  const res = await fetch(`/api/requests?${params}`, { credentials: "same-origin" });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  const data = await res.json();
+  return { items: data.requests, total: data.total, page: data.page, pageSize: data.pageSize };
+}
+
+export async function fetchHelpContacts(
+  filters: HelpContactFilters,
+): Promise<Page<AdminHelpContact> & { pending: number }> {
+  const params = new URLSearchParams({ page: String(filters.page), status: filters.status });
+  if (filters.search.trim()) params.set("search", filters.search.trim());
+
+  const res = await fetch(`/api/help-contacts?${params}`, { credentials: "same-origin" });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  const data = await res.json();
+  return { items: data.contacts, total: data.total, page: data.page, pageSize: data.pageSize, pending: data.pending };
+}
+
+async function sendJson(url: string, method: "PATCH" | "DELETE", body: unknown): Promise<void> {
+  const res = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify(body),
+  });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+}
+
+export function setHelpContactPublic(id: number, isPublic: boolean): Promise<void> {
+  return sendJson("/api/help-contacts", "PATCH", { id, public: isPublic });
+}
+
+export function deleteHelpContact(id: number): Promise<void> {
+  return sendJson("/api/help-contacts", "DELETE", { id });
+}
+
+export async function fetchSecurity(): Promise<SecurityState> {
+  const res = await fetch("/api/security", { credentials: "same-origin" });
+  if (res.status === 401) throw new AuthError();
+  if (!res.ok) throw new Error(await parseErrorBody(res));
+  return (await res.json()) as SecurityState;
+}
+
+export function unbanIp(ip: string): Promise<void> {
+  return sendJson("/api/security", "DELETE", { ip });
 }

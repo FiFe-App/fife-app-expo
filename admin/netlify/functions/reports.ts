@@ -6,7 +6,9 @@ const PAGE_SIZE = 50;
 const MAX_PAGE = 10_000;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Ugyanaz a lista, mint a reports_target_type_check constraintben.
-const TARGET_TYPES = new Set(["profile", "message", "group_message", "biznisz", "comment"]);
+const TARGET_TYPES = new Set(["profile", "message", "group_message", "biznisz", "comment", "request"]);
+// Tartalom, amire szűrni lehet: a saját feljelentései és az alatta lévő kommenteké.
+const CONTENT_TYPES = new Set(["biznisz", "request"]);
 
 function json(statusCode: number, body: unknown) {
   return { statusCode, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
@@ -26,14 +28,17 @@ export const handler: Handler = async (event) => {
     const page = Math.min(MAX_PAGE, Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1));
     const reportedId = params.reportedId && UUID_RE.test(params.reportedId) ? params.reportedId : null;
     const targetType = params.targetType && TARGET_TYPES.has(params.targetType) ? params.targetType : null;
-    const buzinessId = /^[1-9][0-9]{0,15}$/.test(params.buzinessId ?? "") ? Number(params.buzinessId) : null;
+    const contentType = params.contentType && CONTENT_TYPES.has(params.contentType) ? params.contentType : null;
+    const contentId =
+      contentType && /^[1-9][0-9]{0,15}$/.test(params.contentId ?? "") ? Number(params.contentId) : null;
 
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase.rpc("admin_list_reports", {
       p_reported_id: reportedId,
       p_reason: (params.reason ?? "").trim() || null,
       p_target_type: targetType,
-      p_buziness_id: buzinessId,
+      p_content_type: contentId ? contentType : null,
+      p_content_id: contentId,
       p_limit: PAGE_SIZE,
       p_offset: (page - 1) * PAGE_SIZE,
     });

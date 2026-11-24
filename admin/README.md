@@ -1,30 +1,41 @@
 # FiFe Admin
 
 Önálló admin app. Vite + React + Mantine frontend, Netlify Functions backend, ami a
-Supabase service role kulccsal olvas és ír. Fülek:
+Supabase service role kulccsal olvas és ír. Az oldalak a bal oldali menüből érhetők el
+(mobilon a ☰ gombbal):
 
+**Kommunikáció**
 - **Hírlevelek** (`#hirlevelek`): kiküldés és nyomon követés, lásd lent.
 - **App üzenet** (`#app-uzenet`): az appban felugró üzenet szerkesztése.
+
+**Közösség**
 - **Felhasználók** (`#felhasznalok`): név, email, regisztráció, utolsó belépés, bizniszek
   és feljelentések száma. Kereshető név/felhasználónév/email alapján, szűrhető badboyokra és
   a feljelentettekre. A badboy kapcsoló megerősítés után azonnal átállítja a
-  `profiles.bad_boy`-t. A feljelentések számára kattintva a Feljelentések fül nyílik meg,
-  erre a felhasználóra szűrve.
+  `profiles.bad_boy`-t.
 - **Bizniszek** (`#bizniszek`): cím (linkkel az appbeli oldalra), szerző, létrehozás,
-  láthatóság (nyilvános / csak tagoknak) és a feljelentések száma — a bizniszre és az alatta
-  lévő kommentekre érkezettek együtt. Kereshető cím, leírás és szerző alapján, szűrhető
-  láthatóságra és a feljelentettekre. Itt is átállítható a szerző badboy állapota. A
-  feljelentések számára kattintva a Feljelentések fül nyílik meg erre a bizniszre szűrve.
-- **Feljelentések** (`#feljelentesek`): a `reports` tábla, a bejelentővel és a
-  bejelentettel együtt. A „Tartalom” oszlop mutatja, mit jelentettek (profil, üzenet,
-  csoportüzenet, biznisz vagy komment), a tartalom akkori szövegét, és biznisznél /
-  kommentnél a biznisz linkjét. Szűrhető típusra, indokra, bejelentett felhasználóra és
-  bizniszre, és innen is át lehet állítani a badboy állapotot.
+  láthatóság és a feljelentések száma (a bizniszre és a kommentjeire együtt). Kereshető,
+  szűrhető láthatóságra és a feljelentettekre; a szerző badboy állapota itt is állítható.
+- **Kérések** (`#kerelmek`): a Közösség részben feladott kérések — cím (linkkel a
+  `/kerelmek/<id>` oldalra), címkék, szerző, állapot (nyitott / megoldott) és a
+  feljelentések száma. Kereshető címben, leírásban, címkében és szerzőben, szűrhető
+  állapotra és a feljelentettekre.
+- **Segítség kontaktok** (`#segitseg`): a „Segítség kell?” oldal elérhetőségei. A
+  felhasználók javaslatai jóváhagyásig rejtve maradnak; itt lehet őket jóváhagyni,
+  elrejteni vagy törölni. A menüben a várakozók száma látszik.
 
-A listák az `admin_list_users` / `admin_list_buzinesses` / `admin_list_reports`
-adatbázis-függvényekből jönnek (`supabase/migrations/20260930120000_admin_insights.sql`,
-`20261112120000_admin_content_reports.sql`). Ezek csak a service role kulccsal hívhatók,
-mert emailt adnak vissza.
+**Moderáció**
+- **Feljelentések** (`#feljelentesek`): a „Tartalom” oszlop mutatja, mit jelentettek
+  (profil, üzenet, csoportüzenet, biznisz, kérés vagy komment), a tartalom akkori
+  szövegét, és biznisznél / kérésnél / a hozzájuk írt kommentnél a tartalom linkjét.
+  Szűrhető típusra, indokra, felhasználóra és tartalomra. A Felhasználók, Bizniszek és
+  Kérések oldalon a feljelentésszámra kattintva ide jutsz, arra szűrve.
+- **Biztonság** (`#biztonsag`): a kitiltott IP címek feloldással, és az utolsó 24 óra
+  sikertelen belépései.
+
+A listák az `admin_list_*` adatbázis-függvényekből jönnek
+(`supabase/migrations/20260930120000_admin_insights.sql`, `20261124120000_admin_content.sql`).
+Ezek csak a service role kulccsal hívhatók, mert emailt adnak vissza.
 
 ## Helyi futtatás
 
@@ -46,6 +57,7 @@ A `netlify dev` szükséges ahhoz, hogy a `/api/*` hívások eljussanak a
 | `SUPABASE_SERVICE_ROLE_KEY`  | Service role kulcs — csak a Netlify function-ök látják, sosem kerül a böngészőbe |
 | `ADMIN_PASSWORD`             | A belépéshez használt jelszó                                     |
 | `ADMIN_SESSION_SECRET`       | Hosszú random string a bejelentkezési süti aláírásához (pl. `openssl rand -hex 32`) |
+| `ADMIN_IP_ALLOWLIST`         | Opcionális. Vesszővel elválasztott IP címek, amelyeket a login soha nem tilt ki |
 
 ## Biztonság
 
@@ -54,24 +66,61 @@ hírlevél küldhető mindenkinek, ezért:
 
 - Az `ADMIN_PASSWORD` legyen hosszú, véletlenszerű jelszó (legalább 20 karakter), pl.
   `openssl rand -base64 24`.
-- **Login korlát:** egy IP-ről 15 percen belül 10 sikertelen próba után a belépés 429-et ad
-  az ablak végéig, akkor is, ha közben jó jelszót írnak be. A próbálkozásokat az
-  `admin_login_attempts` tábla tartja nyilván, amelyet csak a service role ér el. Az IP a
-  Netlify által beállított `x-nf-client-connection-ip` headerből jön, amit a kliens nem
-  tud hamisítani. Ha a Supabase nem érhető el, a login korlát nélkül működik tovább (a
-  hibát naplózza), hogy egy beállítási hiba ne zárja ki az admint.
+- **Végleges IP-tiltás:** ha egy IP címről 15 percen belül 10 hibás jelszó érkezik, az IP
+  véglegesen ki lesz tiltva (403), akkor is, ha később jó jelszót írnak be. A tiltás
+  addig marad, amíg kézzel fel nem oldod a **Biztonság** oldalon. A próbálkozásokat az
+  `admin_login_attempts`, a tiltásokat az `admin_ip_bans` tábla tárolja; mindkettőt csak a
+  service role éri el. Az IP a Netlify által beállított `x-nf-client-connection-ip`
+  headerből jön, amit a kliens nem tud hamisítani. Ha a Supabase nem érhető el, a login
+  korlát nélkül működik tovább (a hibát naplózza), hogy egy beállítási hiba ne zárja ki
+  az admint.
+- **Ha kizártad magad:** egy másik IP-ről (pl. mobilnet) belépve a Biztonság oldalon
+  feloldhatod, vagy a Supabase SQL editorban:
+
+  ```sql
+  delete from public.admin_ip_bans where ip = '1.2.3.4';
+  ```
+
+  Hogy ne forduljon elő: tedd a saját fix IP-d az `ADMIN_IP_ALLOWLIST`-be.
+- **HTTP headerek:** a `netlify.toml` szigorú Content-Security-Policy-t, `X-Frame-Options:
+  DENY`-t, HSTS-t és `noindex`-et állít be; a `robots.txt` is tiltja az indexelést.
 - **Session visszavonása:** a süti 7 napig érvényes, és a kijelentkezés csak az adott
   böngészőből törli. Minden kiadott session azonnali érvénytelenítéséhez cseréld le az
   `ADMIN_SESSION_SECRET`-et, és deployold újra a site-ot.
 
-## Netlify deploy
+## Deploy checklist
 
-1. Hozz létre egy **új** Netlify site-ot, ami ugyanerre a repóra mutat.
-2. Site settings → Build & deploy → **Base directory**: `admin`
-   (a `netlify.toml` az `admin` mappán belül van, ez alapján a build/publish/functions
-   útvonalak is onnan relatívak).
-3. Site settings → Environment variables: állítsd be a fenti négy változót.
-4. Deploy — a site a `/` alatt a login oldalt, `/api/*` alatt a function-öket szolgálja ki.
+Az admin adatbázis-függvényei a `requests` táblára is hivatkoznak, ami a `dev` ágon jött
+be, ezért ezt az ágat a **`dev`** felé kell merge-ölni (onnan megy tovább a masterre).
+
+1. **Merge** a `dev`-be.
+2. **Adatbázis:** `supabase db push`. Ez felviszi az admin migrációkat
+   (`20260930120000_admin_insights`, `20261111120000_harden_admin`,
+   `20261124120000_admin_content`). Ha a pg_cron miatt elhasal, kapcsold be: Dashboard →
+   Database → Extensions → pg_cron, és futtasd újra.
+3. **Edge function-ök:** `supabase functions deploy notify weekly-report`.
+4. **Supabase secretek:** `supabase secrets set ADMIN_URL=https://<admin site címe>`
+   (opcionálisan `ADMIN_REPORT_EMAIL`, lásd lent). Az `SMTP_*` secretek már megvannak a
+   `notify` miatt.
+5. **Netlify site:**
+   1. Hozz létre egy **új** Netlify site-ot, ami ugyanerre a repóra mutat.
+   2. Site settings → Build & deploy → **Base directory**: `admin`
+      (a `netlify.toml` az `admin` mappán belül van, ez alapján a build/publish/functions
+      útvonalak is onnan relatívak). **Production branch**: `dev` vagy `master`, attól
+      függően, honnan akarsz élesíteni.
+   3. Site settings → Environment variables: a fenti változók
+      (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_PASSWORD`,
+      `ADMIN_SESSION_SECRET`, és ajánlott: `ADMIN_IP_ALLOWLIST`).
+   4. Deploy — a site a `/` alatt a login oldalt, `/api/*` alatt a function-öket
+      szolgálja ki.
+6. **Első belépés** és körbenézés: Felhasználók, Bizniszek, Kérések, Feljelentések,
+   Biztonság.
+7. **Heti riport teszt:**
+
+   ```bash
+   curl -X POST "$SUPABASE_URL/functions/v1/weekly-report?force=1" \
+     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+   ```
 
 ## Hogyan működik a küldés
 
@@ -108,8 +157,9 @@ A lista 5 másodpercenként frissül, amíg van `pending`/`sending` állapotú h
 ## Heti riport email
 
 Minden hétfőn 8:00-kor (budapesti idő) megy ki egy riport az előző hétről: új
-felhasználók, új bizniszek (címmel felsorolva), új feljelentések, új regisztrált
-badboyok, mindegyiknél a változás az előző héthez képest, és az összesített számok.
+felhasználók, új bizniszek (címmel felsorolva), új kérések, új feljelentések, új
+regisztrált badboyok, mindegyiknél a változás az előző héthez képest, az összesített
+számok, és ha van, hány segítség kontakt javaslat vár jóváhagyásra.
 
 - Küldi a `weekly-report` edge function (`supabase/functions/weekly-report`). Ugyanazokat
   az `SMTP_*` secreteket használja, mint a `notify`.

@@ -21,29 +21,37 @@ import {
   REPORT_REASONS,
   REPORT_TARGETS,
   type AdminReport,
+  type ContentType,
   type Page,
   type ReportTargetType,
 } from "../types";
 
+const APP_URL = "https://fifeapp.hu";
+
 /**
- * Honnan érkeztünk ide szűrve: egy felhasználó (Felhasználók fül) vagy egy
- * biznisz (Bizniszek fül) feljelentései. A biznisz szűrő a biznisz alatti
- * kommentek feljelentéseit is mutatja.
+ * Honnan érkeztünk ide szűrve: egy felhasználó (Felhasználók fül), vagy egy
+ * biznisz / kérés (Bizniszek, Kérések fül) feljelentései. A tartalom szűrő az
+ * alatta lévő kommentek feljelentéseit is mutatja.
  */
 export interface ReportsScope {
   user: { id: string; label: string } | null;
-  buziness: { id: number; label: string } | null;
+  content: { type: ContentType; id: number; label: string } | null;
 }
 
-export const EMPTY_SCOPE: ReportsScope = { user: null, buziness: null };
+export const EMPTY_SCOPE: ReportsScope = { user: null, content: null };
+
+const CONTENT_LABEL: Record<ContentType, string> = { biznisz: "Biznisz", request: "Kérés" };
+
+/** Az appbeli oldal: /biznisz/<id> vagy /kerelmek/<id>. */
+export function contentUrl(type: ContentType, id: number): string {
+  return `${APP_URL}/${type === "biznisz" ? "biznisz" : "kerelmek"}/${id}`;
+}
 
 interface Props {
   onLoggedOut: () => void;
   scope: ReportsScope;
   onScopeChange: (scope: ReportsScope) => void;
 }
-
-const APP_URL = "https://fifeapp.hu";
 
 const REASON_OPTIONS = Object.entries(REPORT_REASONS).map(([value, label]) => ({ value, label }));
 const TARGET_OPTIONS = Object.entries(REPORT_TARGETS).map(([value, label]) => ({ value, label }));
@@ -53,6 +61,7 @@ const TARGET_COLOR: Record<ReportTargetType, string> = {
   message: "blue",
   group_message: "cyan",
   biznisz: "teal",
+  request: "lime",
   comment: "indigo",
 };
 
@@ -79,15 +88,15 @@ function ContentCell({ report }: { report: AdminReport }) {
         <Badge size="sm" variant="light" color={TARGET_COLOR[type]}>
           {REPORT_TARGETS[type]}
         </Badge>
-        {report.buziness_id !== null && (
+        {report.content_type !== null && report.content_id !== null && (
           <Anchor
-            href={`${APP_URL}/biznisz/${report.buziness_id}`}
+            href={contentUrl(report.content_type, report.content_id)}
             target="_blank"
             rel="noopener noreferrer"
             size="sm"
           >
             <Group gap={2} wrap="nowrap">
-              {report.buziness_title ?? `Biznisz #${report.buziness_id}`}
+              {report.content_title ?? `${CONTENT_LABEL[report.content_type]} #${report.content_id}`}
               <IconExternalLink size={12} />
             </Group>
           </Anchor>
@@ -119,7 +128,7 @@ export function ReportsPage({ onLoggedOut, scope, onScopeChange }: Props) {
 
   useEffect(() => {
     setPage(1);
-  }, [reason, targetType, scope.user?.id, scope.buziness?.id]);
+  }, [reason, targetType, scope.user?.id, scope.content?.type, scope.content?.id]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -127,7 +136,8 @@ export function ReportsPage({ onLoggedOut, scope, onScopeChange }: Props) {
       setResult(
         await fetchReports({
           reportedId: scope.user?.id ?? null,
-          buzinessId: scope.buziness?.id ?? null,
+          contentType: scope.content?.type ?? null,
+          contentId: scope.content?.id ?? null,
           reason,
           targetType,
           page,
@@ -143,7 +153,7 @@ export function ReportsPage({ onLoggedOut, scope, onScopeChange }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [scope.user?.id, scope.buziness?.id, reason, targetType, page, onLoggedOut]);
+  }, [scope.user?.id, scope.content?.type, scope.content?.id, reason, targetType, page, onLoggedOut]);
 
   useEffect(() => {
     load();
@@ -207,7 +217,7 @@ export function ReportsPage({ onLoggedOut, scope, onScopeChange }: Props) {
             Feljelentett: {scope.user.label}
           </Badge>
         )}
-        {scope.buziness && (
+        {scope.content && (
           <Badge
             size="lg"
             variant="light"
@@ -216,12 +226,12 @@ export function ReportsPage({ onLoggedOut, scope, onScopeChange }: Props) {
               <CloseButton
                 size="xs"
                 variant="transparent"
-                aria-label="Biznisz szűrés törlése"
-                onClick={() => onScopeChange({ ...scope, buziness: null })}
+                aria-label="Tartalom szűrés törlése"
+                onClick={() => onScopeChange({ ...scope, content: null })}
               />
             }
           >
-            Biznisz: {scope.buziness.label}
+            {CONTENT_LABEL[scope.content.type]}: {scope.content.label}
           </Badge>
         )}
       </Group>

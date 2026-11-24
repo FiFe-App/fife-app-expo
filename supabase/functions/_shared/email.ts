@@ -320,6 +320,8 @@ export interface WeeklyStats {
   new_users_prev: number;
   new_buziness: number;
   new_buziness_prev: number;
+  new_requests: number;
+  new_requests_prev: number;
   new_reports: number;
   new_reports_prev: number;
   new_bad_boys: number;
@@ -327,6 +329,7 @@ export interface WeeklyStats {
   total_users: number;
   total_buziness: number;
   total_bad_boys: number;
+  pending_help_contacts: number;
   buzinesses: { id: number; title: string; author_name: string | null; author_bad_boy: boolean }[];
 }
 
@@ -363,12 +366,18 @@ export function weeklyReportHtml(
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       ${statRow("Új felhasználók", stats.new_users, stats.new_users_prev)}
       ${statRow("Új bizniszek", stats.new_buziness, stats.new_buziness_prev)}
+      ${statRow("Új kérések", stats.new_requests, stats.new_requests_prev)}
       ${statRow("Új feljelentések", stats.new_reports, stats.new_reports_prev)}
       ${statRow("Új regisztrált badboyok", stats.new_bad_boys, stats.new_bad_boys_prev)}
     </table>
     <p style="font-size:14px;color:${COLOR.textMuted};margin:16px 0 28px 0;">
       Összesen: ${stats.total_users} felhasználó, ${stats.total_buziness} biznisz, ${stats.total_bad_boys} badboy.
     </p>
+    ${stats.pending_help_contacts > 0
+      ? `<p style="font-size:15px;color:${COLOR.text};margin:-12px 0 28px 0;">
+      <strong>${stats.pending_help_contacts}</strong> segítség kontakt javaslat vár jóváhagyásra.
+    </p>`
+      : ""}
     <p style="font-size:16px;font-weight:bold;color:${COLOR.text};margin:0 0 8px 0;">A hét új bizniszei</p>
     ${list}
     ${adminUrl ? ctaButton("Admin megnyitása", adminUrl) : ""}`;
