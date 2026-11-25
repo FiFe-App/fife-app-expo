@@ -16,7 +16,8 @@ export function HelpersListLink() {
       <TouchableRipple
         accessibilityRole="link"
         testID="helpers-list-link"
-        style={[styles.card, { backgroundColor: theme.colors.secondaryContainer }]}
+        // Flat, not an array: a child of <Slot> (Link asChild) must not get an array of styles.
+        style={StyleSheet.flatten([styles.card, { backgroundColor: theme.colors.secondaryContainer }])}
       >
         <View style={styles.content}>
           <Icon source="hand-heart" size={28} color={theme.colors.onSecondaryContainer} />
