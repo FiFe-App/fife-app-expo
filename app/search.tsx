@@ -11,7 +11,7 @@ import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 import BuzinessItem from "@/components/buziness/BuzinessItem";
 import BuzinessResults from "@/components/search/BuzinessResults";
 import NewRequestButton from "@/components/search/NewRequestButton";
-import { BuzinessPin, FifePin, RequestPin } from "@/components/search/pins";
+import { BuzinessPin, FifeMarker, PinMarker, RequestPin } from "@/components/search/pins";
 import RequestCard from "@/components/requests/RequestCard";
 import RequestList from "@/components/search/RequestList";
 import SearchFilterModal from "@/components/search/SearchFilterModal";
@@ -19,7 +19,6 @@ import SearchMap from "@/components/search/SearchMap";
 import ViewSwitch from "@/components/search/ViewSwitch";
 import UserItem from "@/components/user/UserItem";
 import { UsersList } from "@/components/user/UsersList";
-import { Marker } from "@/components/mapView/mapView";
 import Measure from "@/components/tutorial/Measure";
 import { Button } from "@/components/Button";
 import { MyAppbar } from "@/components/MyAppBar";
@@ -289,15 +288,16 @@ export default function SearchScreen() {
       const selected = biznisPins.find((p) => p.buziness.id === selectedId);
       return {
         markers: biznisPins.map(({ buziness, latitude, longitude }) => (
-          <Marker
+          <PinMarker
             key={buziness.id}
             coordinate={{ latitude, longitude }}
             anchor={{ x: 0.5, y: 0.5 }}
             zIndex={buziness.id === selectedId ? 10 : 1}
+            selected={buziness.id === selectedId}
             onPress={pick(buziness.id)}
           >
             <BuzinessPin selected={buziness.id === selectedId} />
-          </Marker>
+          </PinMarker>
         )),
         card: selected ? <BuzinessItem data={selected.buziness} /> : undefined,
         loading: buzinessLoading,
@@ -315,15 +315,15 @@ export default function SearchScreen() {
       const selected = fife.pinned.find((p) => p.id === selectedId);
       return {
         markers: fife.pinned.map((profile) => (
-          <Marker
+          <FifeMarker
             key={profile.id}
+            profile={profile}
             coordinate={{ latitude: profile.lat, longitude: profile.long }}
             anchor={{ x: 0.5, y: 0.5 }}
             zIndex={profile.id === selectedId ? 10 : 1}
+            selected={profile.id === selectedId}
             onPress={pick(profile.id)}
-          >
-            <FifePin profile={profile} selected={profile.id === selectedId} />
-          </Marker>
+          />
         )),
         card: selected ? <UserItem data={selected} /> : undefined,
         loading: fife.loading,
@@ -342,15 +342,16 @@ export default function SearchScreen() {
     const selected = requests.pinned.find((r) => r.id === selectedId);
     return {
       markers: requests.pinned.map((request) => (
-        <Marker
+        <PinMarker
           key={request.id}
           coordinate={{ latitude: request.lat as number, longitude: request.long as number }}
           anchor={{ x: 0.5, y: 0.5 }}
           zIndex={request.id === selectedId ? 10 : 1}
+          selected={request.id === selectedId}
           onPress={pick(request.id)}
         >
           <RequestPin selected={request.id === selectedId} solved={request.status === "solved"} />
-        </Marker>
+        </PinMarker>
       )),
       card: selected ? (
         <RequestCard

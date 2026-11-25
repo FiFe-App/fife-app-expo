@@ -268,3 +268,12 @@ describe("the search screen: a tall card", () => {
     expect(await screen.findByTestId("the-map")).toBeTruthy();
   });
 });
+
+describe("the search screen: the map's locate button", () => {
+  it("is one button, with a question mark while no position is known", async () => {
+    await renderWithProviders(<SearchScreen />, { store: mapStore() });
+    await screen.findAllByTestId("map-pin");
+
+    expect(screen.getAllByTestId("map-locate")).toHaveLength(1);
+  });
+});

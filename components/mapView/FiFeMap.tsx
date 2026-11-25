@@ -47,6 +47,8 @@ const FiFeMap = forwardRef<MapView, FiFeMapProps>(
     return (
       <MapView
         ref={ref}
+        // The app has its own locate button (MapControls): the map's built-in one would be a second.
+        showsMyLocationButton={false}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         {...(platformProps as any)}
         initialCamera={{

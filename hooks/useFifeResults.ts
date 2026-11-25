@@ -6,6 +6,8 @@ import {
 } from "@/hooks/useProfileSearch";
 import { RootState } from "@/redux/store";
 import type { NearestProfile } from "@/redux/store.type";
+import { avatarThumbnailUrls } from "@/components/search/pins";
+import { Image } from "expo-image";
 import { useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 
@@ -55,6 +57,14 @@ export function useFifeResults({ enabled, q, reloadKey, view }: Options) {
         : radar.data.filter((p) => p.id !== "-1" && p.lat != null && p.long != null),
     [isSearching, radar.data],
   );
+
+  // Have every thumbnail in the cache before the pins ask for them: the map then draws the
+  // pictures at once instead of one network wait per pin.
+  useEffect(() => {
+    if (enabled && view === "map" && pinned.length > 0) {
+      Image.prefetch(avatarThumbnailUrls(pinned), "memory-disk").catch(() => {});
+    }
+  }, [enabled, view, pinned]);
 
   const list = isSearching
     ? {

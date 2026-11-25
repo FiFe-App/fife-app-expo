@@ -1,7 +1,7 @@
 import MyLocationIcon from "@/assets/images/myLocationIcon";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import { addSnack } from "@/redux/reducers/infoReducer";
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Button } from "react-native-paper";
 import { useDispatch } from "react-redux";
@@ -79,6 +79,19 @@ export const SearchMap = ({
 
   // Where the user is: the device's position when it may be asked for (a simulator or a phone
   // without a profile place has no other), the profile's place otherwise.
+  // Whether the device may tell where it is (asked of the system once, and after a locate).
+  const [deviceLocated, setDeviceLocated] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    import("expo-location")
+      .then((Location) => Location.getForegroundPermissionsAsync())
+      .then((permission) => alive && setDeviceLocated(permission.granted))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const locate = async () => {
     let coords: { latitude: number; longitude: number } | undefined = myLocation?.coords;
     try {
@@ -87,6 +100,7 @@ export const SearchMap = ({
       if (permission.granted) {
         const position = await Location.getCurrentPositionAsync({});
         coords = position.coords;
+        setDeviceLocated(true);
       }
     } catch (error) {
       console.log("locate failed", error);
@@ -139,7 +153,7 @@ export const SearchMap = ({
           </Marker>
         )}
       </FiFeMap>
-      <MapOverlay controls={<MapControls located={!!myLocation} onLocate={locate} onZoom={zoom} />}>
+      <MapOverlay controls={<MapControls located={deviceLocated || !!myLocation} onLocate={locate} onZoom={zoom} />}>
         {card ? (
           <ScrollView
             testID="map-card"
