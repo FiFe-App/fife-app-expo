@@ -74,6 +74,7 @@ function RootContent() {
   const userThemePreference = useSelector((state: RootState) => state.user.themePreference);
   const { uid, messagingEnabled } = useSelector((state: RootState) => state.user);
   const lastReadAt = useSelector((state: RootState) => state.chat.lastReadAt);
+  const searchView = useSelector((state: RootState) => state.search.view);
   const { statusBarColor, bottomBarColor } = useSelector((state: RootState) => state.info);
   const hasInitialized = React.useRef(false);
 
@@ -448,7 +449,9 @@ function RootContent() {
                         {/* Only inside the app itself — the nudge has no business on the
                 public landing page or in the middle of signing up. */}
             {versionGate.updateAvailable && versionGate.status && !!uid &&
-              pathname !== "/" && !pathname.includes("csatlakozom") && (
+              pathname !== "/" && !pathname.includes("csatlakozom") &&
+              // It would sit on the map's buttons and card: the search map is no place for it.
+              !(pathname === "/search" && searchView === "map") && (
               <UpdateAvailableCard
                 status={versionGate.status}
                 onDismiss={versionGate.dismissUpdate}

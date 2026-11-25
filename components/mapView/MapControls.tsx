@@ -44,7 +44,8 @@ export const MapControls = ({ located, onLocate, onZoom }: MapControlsProps) => 
  * (which rises out of the bottom bar over the map), holding — from the top — the map buttons at
  * the right and then the card of the picked pin or the "search around here" button. Because they
  * are rows of one column and not separately placed, they cannot land on one another, whatever
- * the height of the card is.
+ * the height of the card is. The column is bounded by the map on both ends: a card taller than
+ * the room left scrolls instead of covering the screen's header.
  */
 export const MapOverlay = ({
   controls,
@@ -61,15 +62,19 @@ export const MapOverlay = ({
       left: 0,
       right: 0,
       bottom: MODE_SWITCH_CLEARANCE + Spacing.sm,
+      // Bounded by the map: a tall card can never push the column up over the header rows
+      // (the view switch, Finomítás); it shrinks and scrolls instead.
+      top: Spacing.sm,
+      justifyContent: "flex-end",
       paddingHorizontal: Spacing.sm,
       gap: Spacing.sm,
       zIndex: 10,
     }}
   >
-    <View pointerEvents="box-none" style={{ alignItems: "flex-end" }}>
+    <View pointerEvents="box-none" style={{ alignItems: "flex-end", flexShrink: 0 }}>
       {controls}
     </View>
-    <View pointerEvents="box-none" style={{ alignItems: "center" }}>
+    <View pointerEvents="box-none" style={{ alignItems: "center", flexShrink: 1, minHeight: 0 }}>
       {children}
     </View>
   </View>

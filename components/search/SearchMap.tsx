@@ -2,7 +2,7 @@ import MyLocationIcon from "@/assets/images/myLocationIcon";
 import { useMyLocation } from "@/hooks/useMyLocation";
 import { addSnack } from "@/redux/reducers/infoReducer";
 import { useRef, type ReactNode } from "react";
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { Button } from "react-native-paper";
 import { useDispatch } from "react-redux";
 import FiFeMap from "../mapView/FiFeMap";
@@ -141,7 +141,14 @@ export const SearchMap = ({
       </FiFeMap>
       <MapOverlay controls={<MapControls located={!!myLocation} onLocate={locate} onZoom={zoom} />}>
         {card ? (
-          <View style={{ width: "100%" }}>{card}</View>
+          <ScrollView
+            testID="map-card"
+            style={{ width: "100%", flexGrow: 0 }}
+            nestedScrollEnabled
+            keyboardShouldPersistTaps="handled"
+          >
+            {card}
+          </ScrollView>
         ) : (
           onSearchHere && (
             <Button

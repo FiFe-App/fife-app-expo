@@ -3,9 +3,9 @@ import { StyleSheet } from "react-native";
 
 import SearchScreen from "@/app/search";
 import { storeSearchView } from "@/redux/reducers/searchReducer";
-import { init, setLocation } from "@/redux/reducers/userReducer";
+import { addPreviousSearch, init, setLocation } from "@/redux/reducers/userReducer";
 import { makeRequest } from "@/test-utils/fixtures/requests";
-import { __resetRouter, __setLocalSearchParams } from "@/test-utils/mocks/expo-router";
+import { __resetRouter, __setLocalSearchParams, navigation } from "@/test-utils/mocks/expo-router";
 import { __resetSupabase, supabase } from "@/test-utils/mocks/supabase";
 import { createTestStore, renderWithProviders } from "@/test-utils/renderWithProviders";
 
@@ -234,5 +234,32 @@ describe("the search screen: nothing blocks anything", () => {
     // Only the overlay column is placed over the map: everything else flows inside it. (The
     // map itself is the layer below, filling its container.)
     expect(absolute.filter((id) => id !== "(anonymous)")).toEqual(["map-overlay"]);
+  });
+});
+
+describe("the search screen: a tall card", () => {
+  it("is bounded by the map and scrolls, instead of covering the header", async () => {
+    __setLocalSearchParams({ mode: "kerelem", scope: "for_me" });
+    await renderWithProviders(<SearchScreen />, { store: mapStore() });
+    await fireEvent.press((await screen.findAllByTestId("map-pin"))[0]);
+
+    const overlay = StyleSheet.flatten(screen.getByTestId("map-overlay").props.style);
+    expect(overlay.top).toBeDefined();
+    expect(overlay.bottom).toBeDefined();
+    expect(within(screen.getByTestId("map-overlay")).getByTestId("map-card")).toBeTruthy();
+  });
+
+  it("switches the view in one tap even while the previous searches are open", async () => {
+    const store = mapStore();
+    store.dispatch(storeSearchView("list"));
+    store.dispatch(addPreviousSearch({ query: "régi keresés", mode: "biznisz" }));
+    await renderWithProviders(<SearchScreen />, { store });
+    const { header } = navigation.setOptions.mock.calls.at(-1)![0];
+    await act(async () => header().props.center.props.onFocus());
+    expect(await screen.findByText("Korábbi kereséseid")).toBeTruthy();
+
+    await fireEvent.press(screen.getByTestId("search-view-switch"));
+
+    expect(await screen.findByTestId("the-map")).toBeTruthy();
   });
 });

@@ -35,7 +35,7 @@ import { RootState } from "@/redux/store";
 import { SearchMode } from "@/redux/store.type";
 import { useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, Pressable, View } from "react-native";
+import { FlatList, Keyboard, Pressable, View } from "react-native";
 import { Chip, Icon, Text } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
@@ -443,7 +443,14 @@ export default function SearchScreen() {
           </View>
         </Measure>
         {/* The top right corner, in the list and on the map alike. */}
-        <ViewSwitch />
+        <ViewSwitch
+          onBeforeSwitch={() => {
+            // The previous searches stand in for the results while the box is focused: leave
+            // it, or the switch would flip its icon and show nothing new.
+            Keyboard.dismiss();
+            setInputFocused(false);
+          }}
+        />
       </ThemedView>
 
       {showHistory ? (

@@ -9,7 +9,7 @@ import Measure from "../tutorial/Measure";
  * header rows, the same place in both views and on every tab, and looks like the map's own
  * buttons.
  */
-export const ViewSwitch = () => {
+export const ViewSwitch = ({ onBeforeSwitch }: { onBeforeSwitch?: () => void }) => {
   const dispatch = useDispatch();
   const view = useSelector((state: RootState) => state.search.view);
   const next: SearchView = view === "map" ? "list" : "map";
@@ -20,7 +20,10 @@ export const ViewSwitch = () => {
         testID="search-view-switch"
         icon={view === "map" ? "format-list-bulleted" : "map"}
         accessibilityLabel={view === "map" ? "Lista nézet" : "Térkép nézet"}
-        onPress={() => dispatch(storeSearchView(next))}
+        onPress={() => {
+          onBeforeSwitch?.();
+          dispatch(storeSearchView(next));
+        }}
       />
     </Measure>
   );
