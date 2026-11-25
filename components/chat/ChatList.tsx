@@ -221,14 +221,17 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 8 + MODE_SWITCH_CLEARANCE,
   },
+  // No chats: the header (the Rám írhatsz link, the groups) keeps the full width at the top —
+  // centring the container itself would shrink it to its content — and only the empty text
+  // is centred, in the room that is left.
   emptyContainer: {
-    flex: 1,
+    flexGrow: 1,
     paddingBottom: MODE_SWITCH_CLEARANCE,
-    justifyContent: "center",
-    alignItems: "center",
   },
   emptyTextContainer: {
+    flex: 1,
     padding: 20,
     alignItems: "center",
+    justifyContent: "center",
   },
 });
