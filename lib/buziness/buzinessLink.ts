@@ -27,7 +27,7 @@ export async function shareBuziness(
   title?: string,
 ): Promise<ShareResult> {
   const url = getBuzinessUrl(id);
-  const message = title ? `${title} – FiFe App\n${url}` : url;
+  const message = title ? `${title} - FiFe App\n${url}` : url;
 
   if (Platform.OS === "web") {
     const webNavigator =

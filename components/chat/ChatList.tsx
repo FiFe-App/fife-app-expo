@@ -12,6 +12,7 @@ import { ChatListItem } from "./ChatListItem";
 import { useFocusEffect } from "expo-router";
 import { MessagingDisabledCard } from "./MessagingDisabledCard";
 import { GroupChatListItem } from "./GroupChatListItem";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 import {
   fetchPublicGroupChats,
   groupChatKey,
@@ -174,7 +175,7 @@ export default function ChatList() {
       <FlatList
         data={chats}
         keyExtractor={(item) => item.otherUser.id}
-        ListHeaderComponent={groupChatsHeader || null}
+        ListHeaderComponent={groupChatsHeader || undefined}
         renderItem={({ item }) => (
           <ChatListItem
             otherUser={item.otherUser}
@@ -214,10 +215,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   listContent: {
-    paddingVertical: 8,
+    paddingTop: 8,
+    paddingBottom: 8 + MODE_SWITCH_CLEARANCE,
   },
   emptyContainer: {
     flex: 1,
+    paddingBottom: MODE_SWITCH_CLEARANCE,
     justifyContent: "center",
     alignItems: "center",
   },

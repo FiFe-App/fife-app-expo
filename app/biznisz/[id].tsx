@@ -53,7 +53,7 @@ import {
   useGlobalSearchParams,
 } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { Platform, ScrollView, useWindowDimensions, View } from "react-native";
+import { Platform, ScrollView, useWindowDimensions, View, type ScrollViewInstance } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import openMap from "react-native-open-maps";
 import {
@@ -67,6 +67,7 @@ import {
   TouchableRipple,
 } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
+import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 
 // Stable empties for a signed-out visitor while the public data is loading.
 const NO_COMMENTS: Comment[] = [];
@@ -226,7 +227,7 @@ export default function Index() {
   const [commentsCount, setCommentsCount] = useState<number>();
   const isNew = data?.created_at && new Date().getTime() - new Date(data.created_at).getTime() < 1000 * 60 * 60 * 24 * 10;
 
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const [tab, setTab] = useState<"overview" | "reviews">("overview");
   // Height of the (non-sticky) header block. Since it sits at y=0, its height
   // equals the sticky tab bar's scroll offset. Measuring the header instead of
@@ -508,7 +509,7 @@ export default function Index() {
             stickyHeaderIndices={[1]}
             automaticallyAdjustKeyboardInsets
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ paddingBottom: Spacing.xxl, minHeight: windowHeight+ 100 }}
+            contentContainerStyle={{ paddingBottom: Spacing.xxl + MODE_SWITCH_CLEARANCE, minHeight: windowHeight+ 100 }}
           >
             {/* HEADER (index 0) */}
             <View

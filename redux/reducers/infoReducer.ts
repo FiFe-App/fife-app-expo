@@ -15,6 +15,7 @@ const initialState: InfoState = {
   policiesAccepted: false,
   statusBarColor: null,
   bottomBarColor: null,
+  screenTint: null,
   inAppMessageVisible: false,
   inAppMessageOpenIcon: null,
 };
@@ -79,6 +80,9 @@ const infoReducer = createSlice({
     setBottomBarColor: (state, action: PayloadAction<string | null>) => {
       state.bottomBarColor = action.payload;
     },
+    setScreenTint: (state, action: PayloadAction<{ path: string; color: string } | null>) => {
+      state.screenTint = action.payload;
+    },
     setInAppMessageVisible: (state, action: PayloadAction<boolean>) => {
       state.inAppMessageVisible = action.payload;
     },
@@ -103,6 +107,7 @@ export const {
   resetPolicies,
   setStatusBarColor,
   setBottomBarColor,
+  setScreenTint,
   setInAppMessageVisible,
   setInAppMessageOpenIcon,
 } = infoReducer.actions;

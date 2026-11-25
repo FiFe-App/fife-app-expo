@@ -35,7 +35,7 @@ describe("buildBuzinessMeta", () => {
       OPTIONS,
     );
 
-    expect(meta.title).toBe("Kerékpárszerviz – FiFe App");
+    expect(meta.title).toBe("Kerékpárszerviz - FiFe App");
     expect(meta.description).toBe("Bármit megjavítok.");
     expect(meta.url).toBe("https://fifeapp.hu/biznisz/12");
     expect(meta.type).toBe("article");
@@ -139,7 +139,7 @@ describe("injectSocialMeta", () => {
   ].join("");
 
   const meta = {
-    title: "Kerékpárszerviz – FiFe App",
+    title: "Kerékpárszerviz - FiFe App",
     description: "Bármit megjavítok.",
     url: "https://fifeapp.hu/biznisz/12",
     image: "https://project.supabase.co/storage/v1/object/public/buzinessImages/uid/bike.jpg",
@@ -151,7 +151,7 @@ describe("injectSocialMeta", () => {
 
     expect(result.match(/<title>/g)).toHaveLength(1);
     expect(result.match(/property="og:title"/g)).toHaveLength(1);
-    expect(result).toContain("<title>Kerékpárszerviz – FiFe App</title>");
+    expect(result).toContain("<title>Kerékpárszerviz - FiFe App</title>");
     expect(result).toContain("content=\"Bármit megjavítok.\"");
     expect(result).not.toContain("content=\"FiFe App\"/>");
   });

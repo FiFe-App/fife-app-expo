@@ -30,4 +30,4 @@ INSERT INTO "public"."help_contacts" ("type", "title", "data", "description") VA
 ('TEL', 'NANE Egyesület Segélyvonala', '0680505101', 'Segítség nőbántalmazás és családon belüli erőszak áldozatainak. H, K, Cs, P: 18-22, Sze: 12-14 óráig.'),
 ('TEL', 'Áldozatsegítő Vonal', '0680225225', 'Ingyenes, 24 órás segítség bűncselekmények áldozatainak, az ország egész területéről hívható.'),
 ('TEL', 'Háttér Társaság (LMBTQI Segélyvonal)', '1737', 'Segítségnyújtás LMBTQI embereknek és hozzátartozóiknak, naponta 18-23 óráig.'),
-('PLACE', 'Krízis Ambulancia – Péterfy Kórház', '1076 Budapest, Péterfy Sándor utca 8-20.', 'Lélektani krízisben lévők, öngyilkossági gondolatokkal küzdők személyes, ambuláns ellátása.');
+('PLACE', 'Krízis Ambulancia - Péterfy Kórház', '1076 Budapest, Péterfy Sándor utca 8-20.', 'Lélektani krízisben lévők, öngyilkossági gondolatokkal küzdők személyes, ambuláns ellátása.');

@@ -1,4 +1,4 @@
-import { ScrollViewStyleReset } from "expo-router/html";
+import { ScrollViewStyleReset, useServerDocumentContext } from "expo-router/html";
 import { type PropsWithChildren } from "react";
 
 import { SITE_URL } from "@/lib/siteUrl";
@@ -11,8 +11,13 @@ const DESCRIPTION =
  * The contents of this function only run in Node.js environments and do not have access to the DOM or browser APIs.
  */
 export default function Root({ children }: PropsWithChildren) {
+  // Since SDK 58 the page is streamed, and the app's own <script> tags, its
+  // CSS and fonts arrive through this context: a root HTML that leaves
+  // headNodes/bodyNodes out exports pages that never load any JavaScript —
+  // the web build then opens on an empty screen.
+  const { htmlAttributes, headNodes, bodyAttributes, bodyNodes } = useServerDocumentContext();
   return (
-    <html lang="hu">
+    <html lang="hu" {...htmlAttributes}>
       <head>
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
@@ -51,8 +56,12 @@ export default function Root({ children }: PropsWithChildren) {
         {/* Using raw CSS styles as an escape-hatch to ensure the background color never flickers in dark-mode. */}
         <style dangerouslySetInnerHTML={{ __html: responsiveBackground }} />
         {/* Add any additional <head> elements that you want globally available on web... */}
+        {headNodes}
       </head>
-      <body>{children}</body>
+      <body {...bodyAttributes}>
+        {children}
+        {bodyNodes}
+      </body>
     </html>
   );
 }

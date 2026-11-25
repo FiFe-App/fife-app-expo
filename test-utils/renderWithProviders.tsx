@@ -5,6 +5,7 @@ import {
 } from "@testing-library/react-native";
 import { configureStore } from "@reduxjs/toolkit";
 import type { ReactElement, ReactNode } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import { Provider } from "react-redux";
 
@@ -34,10 +35,14 @@ export const renderWithProviders = async (
   ui: ReactElement,
   { store = createTestStore(), ...options }: RenderWithProvidersOptions = {},
 ) => {
+  // Gesture Handler 3 refuses to mount a GestureDetector outside its root
+  // view, which app/_layout.tsx puts around the whole app.
   const AppProviders = ({ children }: { children: ReactNode }) => (
-    <Provider store={store}>
-      <PaperProvider theme={lightTheme}>{children}</PaperProvider>
-    </Provider>
+    <GestureHandlerRootView>
+      <Provider store={store}>
+        <PaperProvider theme={lightTheme}>{children}</PaperProvider>
+      </Provider>
+    </GestureHandlerRootView>
   );
 
   const result = await render(ui, { wrapper: AppProviders, ...options });
