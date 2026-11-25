@@ -63,7 +63,7 @@ export const MapOverlay = ({
       right: 0,
       bottom: MODE_SWITCH_CLEARANCE + Spacing.sm,
       // Bounded by the map: a tall card can never push the column up over the header rows
-      // (the view switch, Finomítás); it shrinks and scrolls instead.
+      // (the view switch, Szűrés); it shrinks and scrolls instead.
       top: Spacing.sm,
       justifyContent: "flex-end",
       paddingHorizontal: Spacing.sm,

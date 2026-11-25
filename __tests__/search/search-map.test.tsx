@@ -157,8 +157,13 @@ describe("the search screen: a picked pin", () => {
       expect(await screen.findByText(name)).toBeTruthy();
       expect(screen.queryByTestId(SEARCH_HERE)).toBeNull();
 
-      // A tap on the bare map ends the selection: the button is back.
+      // A tap on the bare map ends the selection: the button is back. (Not the very tap that
+      // picked the pin, which some maps also report as a map press.)
       await fireEvent.press(screen.getByTestId("map-background"));
+      expect(screen.queryByTestId(SEARCH_HERE)).toBeNull();
+      jest.spyOn(Date, "now").mockReturnValue(Date.now() + 1000);
+      await fireEvent.press(screen.getByTestId("map-background"));
+      jest.restoreAllMocks();
       await waitFor(() => expect(screen.getByTestId(SEARCH_HERE)).toBeTruthy());
       expect(screen.queryByText(name)).toBeNull();
     },

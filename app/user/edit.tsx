@@ -25,8 +25,8 @@ import { PostgrestSingleResponse } from "@supabase/supabase-js";
 import * as ExpoImagePicker from "expo-image-picker";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { ScrollView, View, Platform } from "react-native";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { View, Platform } from "react-native";
+import { KeyboardAvoidingView, KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Button, IconButton, Surface } from "react-native-paper";
 import { Tabs, TabScreen, TabsProvider } from "react-native-paper-tabs";
 import { useDispatch, useSelector } from "react-redux";
@@ -369,7 +369,7 @@ export default function Index() {
             >
               <Tabs style={{}}>
                 <TabScreen label="Adatok">
-                  <ScrollView
+                  <KeyboardAwareScrollView
                     style={{ flex: 1 }}
                     contentContainerStyle={{ padding: Spacing.sm }}
                     keyboardShouldPersistTaps="handled"
@@ -427,24 +427,24 @@ export default function Index() {
                       setLocationMenuVisible={setLocationMenuVisible}
                       contactEditRef={contactEditRef}
                     />
-                  </ScrollView>
+                  </KeyboardAwareScrollView>
                 </TabScreen>
 
                 <TabScreen label="Bizniszeim">
-                  <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: Spacing.sm }}>
+                  <KeyboardAwareScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: Spacing.sm }}>
                     <MyBuzinesses
                       buzinesses={buzinesses}
                       loading={buzinessesLoading}
                       myProfile
                       name={profile.full_name ?? undefined}
                     />
-                  </ScrollView>
+                  </KeyboardAwareScrollView>
                 </TabScreen>
                 <TabScreen label="Beállítások">
-                  <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: Spacing.sm }}>
+                  <KeyboardAwareScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: Spacing.sm }}>
                     <BeallitasokTab />
                     <VersionFooter />
-                  </ScrollView>
+                  </KeyboardAwareScrollView>
                 </TabScreen>
               </Tabs>
             </TabsProvider>

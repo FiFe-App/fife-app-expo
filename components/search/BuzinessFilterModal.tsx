@@ -23,7 +23,7 @@ interface BuzinessFilterModalProps {
 }
 
 /**
- * "Finomítás" for bizniszek: where to look and free-only. Used by the biznisz results page and
+ * "Szűrés" for bizniszek: where to look and free-only. Used by the biznisz results page and
  * by the search screen, so both refine the same search parameters.
  */
 export const BuzinessFilterModal = ({ visible, onDismiss, onApply }: BuzinessFilterModalProps) => {

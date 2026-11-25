@@ -12,6 +12,7 @@ import { ChatListItem } from "./ChatListItem";
 import { useFocusEffect } from "expo-router";
 import { MessagingDisabledCard } from "./MessagingDisabledCard";
 import { GroupChatListItem } from "./GroupChatListItem";
+import { HelpersListLink } from "./HelpersListLink";
 import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 import {
   fetchPublicGroupChats,
@@ -140,8 +141,10 @@ export default function ChatList() {
     );
   }
 
-  const groupChatsHeader = groupChats.length > 0 && (
+  // The first row is always there: the link to the "Rám írhatsz" list, then the public groups.
+  const groupChatsHeader = (
     <View>
+      <HelpersListLink />
       {groupChats.map((summary) => {
         const readAt = lastReadAt[groupChatKey(summary.group.id)];
         const unread =
@@ -175,7 +178,7 @@ export default function ChatList() {
       <FlatList
         data={chats}
         keyExtractor={(item) => item.otherUser.id}
-        ListHeaderComponent={groupChatsHeader || null}
+        ListHeaderComponent={groupChatsHeader}
         renderItem={({ item }) => (
           <ChatListItem
             otherUser={item.otherUser}
@@ -184,7 +187,7 @@ export default function ChatList() {
           />
         )}
         contentContainerStyle={
-          chats.length === 0 && groupChats.length === 0 ? styles.emptyContainer : styles.listContent
+          chats.length === 0 ? styles.emptyContainer : styles.listContent
         }
         ListEmptyComponent={
           <View style={styles.emptyTextContainer}>

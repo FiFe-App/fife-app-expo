@@ -270,6 +270,19 @@ export default function SearchScreen() {
     });
   }, [mode, view, buzinesses]);
 
+  // A tap on a pin picks it. (No `title` on the markers: the map's own callout would open
+  // instead of, or over, the quick list item.) The tap must not also reach the bare map, whose
+  // press clears the selection.
+  const lastPickAt = useRef(0);
+  const pick = (id: string | number) => (event?: { stopPropagation?: () => void }) => {
+    event?.stopPropagation?.();
+    lastPickAt.current = Date.now();
+    setSelectedId(id);
+  };
+  const clearPick = () => {
+    if (Date.now() - lastPickAt.current > 300) setSelectedId(null);
+  };
+
   const mapContent = (() => {
     if (view !== "map") return null;
     if (mode === "biznisz") {
@@ -279,10 +292,9 @@ export default function SearchScreen() {
           <Marker
             key={buziness.id}
             coordinate={{ latitude, longitude }}
-            title={buziness.title.split(" $ ")[0]}
             anchor={{ x: 0.5, y: 0.5 }}
             zIndex={buziness.id === selectedId ? 10 : 1}
-            onPress={() => setSelectedId(buziness.id)}
+            onPress={pick(buziness.id)}
           >
             <BuzinessPin selected={buziness.id === selectedId} />
           </Marker>
@@ -308,7 +320,7 @@ export default function SearchScreen() {
             coordinate={{ latitude: profile.lat, longitude: profile.long }}
             anchor={{ x: 0.5, y: 0.5 }}
             zIndex={profile.id === selectedId ? 10 : 1}
-            onPress={() => setSelectedId(profile.id)}
+            onPress={pick(profile.id)}
           >
             <FifePin profile={profile} selected={profile.id === selectedId} />
           </Marker>
@@ -335,7 +347,7 @@ export default function SearchScreen() {
           coordinate={{ latitude: request.lat as number, longitude: request.long as number }}
           anchor={{ x: 0.5, y: 0.5 }}
           zIndex={request.id === selectedId ? 10 : 1}
-          onPress={() => setSelectedId(request.id)}
+          onPress={pick(request.id)}
         >
           <RequestPin selected={request.id === selectedId} solved={request.status === "solved"} />
         </Marker>
@@ -378,17 +390,16 @@ export default function SearchScreen() {
               icon={m.icon}
               selected={selected}
               showSelectedCheck={false}
-              mode={selected ? "flat" : "outlined"}
+              mode={"outlined"}
               onPress={() => openMode(m.key)}
               accessibilityState={{ selected }}
-              selectedColor={selected ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
+              //selectedColor={selected ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
               style={{
-                borderRadius: BorderRadius.full,
-                backgroundColor: selected ? theme.colors.primary : "transparent",
-                borderColor: selected ? theme.colors.primary : theme.colors.outlineVariant,
+                backgroundColor: selected ? theme.colors.elevation.level4 : theme.colors.elevation.level2,
+                borderStyle: selected ? "solid" : "dashed",
+                borderRadius: BorderRadius.full
               }}
               textStyle={{
-                color: selected ? theme.colors.onPrimary : theme.colors.onSurfaceVariant,
                 fontFamily: selected ? "RedHatText-Bold" : "RedHatText",
               }}
             >
@@ -405,7 +416,7 @@ export default function SearchScreen() {
           gap: Spacing.sm,
           paddingLeft: Spacing.lg,
           paddingRight: Spacing.md,
-          paddingVertical: Spacing.xs,
+          paddingVertical: Spacing.sm,
         }}
       >
         <View style={{ flex: 1 }}>
@@ -438,7 +449,7 @@ export default function SearchScreen() {
               mode="text"
               onPress={() => setFilterOpen(true)}
             >
-              Finomítás
+              Szűrés
             </Button>
           </View>
         </Measure>
@@ -511,7 +522,7 @@ export default function SearchScreen() {
       ) : mapContent ? (
         <View style={{ flex: 1 }}>
           <SearchMap
-            onBackgroundPress={() => setSelectedId(null)}
+            onBackgroundPress={clearPick}
             card={mapContent.card}
             onSearchHere={mapContent.searchHere}
             searchHereLoading={mapContent.loading}

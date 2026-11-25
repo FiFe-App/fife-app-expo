@@ -53,18 +53,18 @@ describe("NewRequestModal", () => {
     await renderWithProviders(<NewRequestModal />, { store });
 
     expect(await screen.findByTestId("request-title")).toBeTruthy();
-    expect(screen.getByText("Targetálás")).toBeTruthy();
+    expect(screen.getByText("Kiknek szeretnél üzenni?")).toBeTruthy();
     expect(screen.getByText("További infók")).toBeTruthy();
     expect(screen.queryByTestId("request-description")).toBeNull();
     expect(screen.queryByText("Kulcsszavak")).toBeNull();
   });
 
-  it("has the keywords and the place under Targetálás, the text and pictures under További infók", async () => {
+  it("has the keywords and the place under Kiknek szeretnél üzenni?, the text and pictures under További infók", async () => {
     const store = signedIn();
     store.dispatch(openRequestComposer());
     await renderWithProviders(<NewRequestModal />, { store });
 
-    await fireEvent.press(await screen.findByText("Targetálás"));
+    await fireEvent.press(await screen.findByText("Kiknek szeretnél üzenni?"));
     expect(await screen.findByText("Kulcsszavak")).toBeTruthy();
     expect(screen.getByText("Hol kell a segítség?")).toBeTruthy();
     expect(screen.queryByTestId("request-description")).toBeNull();
@@ -177,7 +177,7 @@ describe("NewRequestModal", () => {
     store.dispatch(openRequestComposer());
     await renderWithProviders(<NewRequestModal />, { store });
 
-    await fireEvent.press(await screen.findByText("Targetálás"));
+    await fireEvent.press(await screen.findByText("Kiknek szeretnél üzenni?"));
     await fireEvent.press(await screen.findByText("Térképen"));
 
     expect(screen.queryByText(/körzetből/)).toBeNull();

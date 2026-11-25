@@ -180,12 +180,12 @@ export default function BeallitasokTab() {
         <Link href="/beallitasok" asChild>
           <TouchableRipple
             accessibilityRole="link"
-            style={{ borderRadius: BorderRadius.lg, backgroundColor: "#ffedc8ff" }}
+            style={{ borderRadius: BorderRadius.lg, backgroundColor: theme.colors.surface }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.md, padding: Spacing.lg }}>
               <View style={{ flex: 1 }}>
-                <ThemedText type="defaultSemiBold">Én oldal beállításai</ThemedText>
-                <ThemedText type="label">téma, app-zár, push, esti kérdés, jogi dokumentumok</ThemedText>
+                <ThemedText type="defaultSemiBold" style={{ color: theme.colors.onSurface }}>Én oldal beállításai</ThemedText>
+                <ThemedText type="label" style={{ color: theme.colors.onSurfaceVariant }}>téma, app-zár, push, esti kérdés, jogi dokumentumok</ThemedText>
               </View>
               <Icon source="chevron-right" size={20} color={theme.colors.onSurfaceVariant} />
             </View>

@@ -54,7 +54,7 @@ export default function RequestScreen() {
       .from("requests")
       // Explicit columns: the embedding columns are server-side only and large.
       .select(
-        "id, created_at, author, title, description, tags, images, location, radius, status, solved_at, profiles(full_name, avatar_url)",
+        "id, created_at, author, title, description, tags, images, location, status, solved_at, profiles(full_name, avatar_url)",
       )
       .eq("id", id)
       .maybeSingle();

@@ -11,7 +11,7 @@ interface BuzinessResultsProps {
 }
 
 /**
- * The list of the bizniszek of the search screen, with the "Új kérés" button above and under it.
+ * The list of the bizniszek of the search screen, with the "Új kérés" button above it (not under it).
  * What is listed is whatever useBuzinessSearch last searched for. (The map view has no list:
  * the search screen shows the bizniszek as pins of its one map.)
  */
@@ -21,7 +21,6 @@ export const BuzinessResults = ({ canLoadMore, loadNext, error, typed }: Buzines
     canLoadMore={canLoadMore}
     error={error}
     header={<NewRequestButton text={typed} testID="search-new-request-top" />}
-    footer={<NewRequestButton text={typed} testID="search-new-request-bottom" />}
   />
 );
 

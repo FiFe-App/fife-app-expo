@@ -27,7 +27,7 @@ export default function AppLockScreen({ onUnlock, onLeave }: AppLockScreenProps)
   const { top } = useSafeAreaInsets();
 
   useEffect(() => {
-    onUnlock();
+    //onUnlock();
   }, [onUnlock]);
 
   return (
@@ -49,13 +49,8 @@ export default function AppLockScreen({ onUnlock, onLeave }: AppLockScreenProps)
         A Mi mód zár nélkül is használható.
       </ThemedText>
       <Button mode="contained" icon="lock-open" onPress={onUnlock} style={{ marginTop: Spacing.md }}>
-        Feloldás
+        Feloldom
       </Button>
-      {onLeave && (
-        <Button mode="text" icon="account-group-outline" onPress={onLeave}>
-          Vissza a Mi módba
-        </Button>
-      )}
       <View style={{position:"absolute",width:"100%",bottom:0}}>
         <BottomNavigation />
       </View>

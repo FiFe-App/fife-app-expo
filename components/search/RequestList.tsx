@@ -14,7 +14,7 @@ const EMPTY: Record<RequestScope, { title: string; hint: string }> = {
   all: { title: "Még nincs kérés.", hint: "Légy te az első, aki kér valamit a közösségtől!" },
   for_me: {
     title: "Most nincs a környékeden, ami neked való kérés.",
-    hint: "Nézd meg a Finomítás › Mind szűrőt, vagy kérj te valamit.",
+    hint: "Nézd meg a Szűrés › Mind szűrőt, vagy kérj te valamit.",
   },
   mine: { title: "Még nem kértél semmit.", hint: "Ha elakadtál valamivel, kérdezd meg a közösséget!" },
   solved: { title: "Még nincs megoldott kérés.", hint: "Itt jelennek meg az archivált kérések." },

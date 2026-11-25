@@ -323,13 +323,13 @@ describe("the search screen: Új kérés", () => {
     expect(screen.queryByTestId("search-new-request-bottom")).toBeNull();
   });
 
-  it("is above and under the list of the bizniszek", async () => {
+  it("is above, and not under, the list of the bizniszek", async () => {
     supabase.functions.invoke.mockResolvedValue({ data: biznisz(2), error: null });
     await renderWithProviders(<SearchScreen />, { store: createTestStore() });
 
     await waitFor(() => expect(screen.getByText("Új biznisz 1")).toBeTruthy());
     expect(screen.getByTestId("search-new-request-top")).toBeTruthy();
-    expect(screen.getByTestId("search-new-request-bottom")).toBeTruthy();
+    expect(screen.queryByTestId("search-new-request-bottom")).toBeNull();
   });
 
   it("is there on an empty list of the kérések, too", async () => {
@@ -487,14 +487,14 @@ describe("the search screen: the title", () => {
   });
 });
 
-describe("the search screen: Finomítás", () => {
+describe("the search screen: Szűrés", () => {
   it.each(["biznisz", "fife", "kerelem"] as const)("is always there, in %s mode", async (mode) => {
     __setLocalSearchParams({ mode });
     supabase.rpc.mockResolvedValue({ data: [], error: null });
     await renderWithProviders(<SearchScreen />, { store: createTestStore() });
 
     expect(screen.getByTestId("search-filter")).toBeTruthy();
-    expect(screen.getByText("Finomítás")).toBeTruthy();
+    expect(screen.getByText("Szűrés")).toBeTruthy();
   });
 
   it("opens the bizniszek filter (place, free-only) in biznisz mode", async () => {

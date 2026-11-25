@@ -15,7 +15,7 @@ beforeEach(() => {
 const byId = (helpers: { id: string }[]) => helpers.map((h) => h.id).sort();
 
 describe("fetchHelpers", () => {
-  it("lists people with I-HELP-YOU on, with their note, leaving out me and people I blocked", async () => {
+  it("lists people with I-HELP-YOU on, with their note, including me but leaving out people I blocked", async () => {
     // The mock ignores filters, so the same rows answer both the I-HELP-YOU
     // and the MESSAGE read: everyone here can be messaged.
     __setTableRows("contacts", {
@@ -31,6 +31,7 @@ describe("fetchHelpers", () => {
       data: [
         { id: "anna", full_name: "Anna", username: "anna", avatar_url: null },
         { id: "bela", full_name: "Béla", username: null, avatar_url: null },
+        { id: "me", full_name: "Én", username: null, avatar_url: null },
         { id: "blocked", full_name: "X", username: null, avatar_url: null },
       ],
       error: null,
@@ -43,7 +44,7 @@ describe("fetchHelpers", () => {
     const { helpers, error } = await fetchHelpers("me");
 
     expect(error).toBeNull();
-    expect(byId(helpers)).toEqual(["anna", "bela"]);
+    expect(byId(helpers)).toEqual(["anna", "bela", "me"]);
     expect(helpers.find((h) => h.id === "anna")?.note).toBe("Esténként ráérek");
     expect(helpers.find((h) => h.id === "bela")?.note).toBeNull();
   });

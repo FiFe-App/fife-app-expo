@@ -3,7 +3,7 @@ const {ic,pair,gap,row,shell,frame,statusBar,appBar,fakeSearch,slimey,nav,fab,me
 
 const FILTERS=['Neked','Mind','Saját','Megoldott'];
 const filterBand=(sel)=>`<div style="background:var(--surface);padding:var(--sp-sm) var(--sp-lg);display:flex;gap:var(--sp-sm);flex:none;overflow:hidden">${FILTERS.map(f=>chip(f,{sel:f===sel})).join('')}</div>`;
-const subHead=(title,right)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:0 var(--sp-lg);min-height:44px;flex:none"><span class="t-label-l c-sec">${title}</span>${right===undefined?`<span class="btn text sm">${ic('filter',18)}Finomítás</span>`:right}</div>`;
+const subHead=(title,right)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:0 var(--sp-lg);min-height:44px;flex:none"><span class="t-label-l c-sec">${title}</span>${right===undefined?`<span class="btn text sm">${ic('filter',18)}Szűrés</span>`:right}</div>`;
 const listWrap=(inner)=>`<div style="padding:0 var(--sp-md) var(--sp-lg);display:flex;flex-direction:column;gap:var(--sp-sm)">${inner}</div>`;
 const divider=(t)=>`<div style="padding:var(--sp-sm) var(--sp-xs) 0"><div class="t-label-m c-bg">${t}</div><div style="height:1px;background:var(--outline-variant);margin:var(--sp-sm) 0 0"></div></div>`;
 const clickAway=`<div style="position:absolute;inset:0;z-index:19"></div>`;
@@ -80,7 +80,7 @@ const rows=[
   'Az archivált kérések csak itt (és a Saját alatt a létrehozónak) látszanak; a feedekből („Neked”, „Mind”, home szekció) kikerülnek. Kártya-tartalom változatlan, a „Megoldva · 3 napja” jelvény kerül a szöveg fölé, a lábléc CTA-ja „Megnézem”.',
   pair(f4)),
  row('5. Betöltő állapot (első betöltés)',
-  'Vázlat-kártyák (skeleton) a végleges kártya arányaival, hogy ne ugorjon a tartalom. Lapozásnál (görgetés alján) marad a megszokott <code>ActivityIndicator</code>. Skeleton helyett elfogadható a sima ActivityIndicator is (mint a BuzinessList); ez csak finomítás.',
+  'Vázlat-kártyák (skeleton) a végleges kártya arányaival, hogy ne ugorjon a tartalom. Lapozásnál (görgetés alján) marad a megszokott <code>ActivityIndicator</code>. Skeleton helyett elfogadható a sima ActivityIndicator is (mint a BuzinessList); ez csak szűrés.',
   pair(f5)),
  row('6. Üres állapotok',
   'A „Neked” üres szövege a briefben szereplő „Nincs kérés a környékeden” + „Kérj te valamit” (a home-on lévő „Hirdesd meg te az elsőt!” testvére). A „Megoldott” üres állapota csak tájékoztat, CTA nélkül.',
