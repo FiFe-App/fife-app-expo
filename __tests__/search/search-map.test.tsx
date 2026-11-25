@@ -277,3 +277,45 @@ describe("the search screen: the map's locate button", () => {
     expect(screen.getAllByTestId("map-locate")).toHaveLength(1);
   });
 });
+
+describe("the search screen: leftover pins", () => {
+  it("are cleared when the tab changes, until the new search has come back", async () => {
+    await renderWithProviders(<SearchScreen />, { store: mapStore() });
+    expect(await screen.findAllByTestId("map-pin")).toHaveLength(1);
+
+    let finish: (value: unknown) => void = () => {};
+    supabase.rpc.mockImplementation(
+      () => new Promise((resolve) => { finish = resolve; }) as never,
+    );
+    await fireEvent.press(screen.getByTestId("search-mode-fife"));
+
+    expect(screen.queryAllByTestId("map-pin")).toHaveLength(0);
+    await act(async () => finish({ data: [fifeRow], error: null }));
+    expect(await screen.findAllByTestId("map-pin")).toHaveLength(1);
+  });
+
+  it("are cleared by a new query, until its results have come back", async () => {
+    await renderWithProviders(<SearchScreen />, { store: mapStore() });
+    expect(await screen.findAllByTestId("map-pin")).toHaveLength(1);
+
+    let finish: (value: unknown) => void = () => {};
+    supabase.functions.invoke.mockImplementation(
+      () => new Promise((resolve) => { finish = resolve; }) as never,
+    );
+    await act(async () => navigation.setOptions.mock.calls.at(-1)![0].header().props.center.props.onSearch("kert"));
+
+    expect(screen.queryAllByTestId("map-pin")).toHaveLength(0);
+    await act(async () => finish({ data: [biznisz], error: null }));
+    expect(await screen.findAllByTestId("map-pin")).toHaveLength(1);
+  });
+
+  it("are cleared by a reload of the same search", async () => {
+    await renderWithProviders(<SearchScreen />, { store: mapStore() });
+    expect(await screen.findAllByTestId("map-pin")).toHaveLength(1);
+    supabase.functions.invoke.mockImplementation(() => new Promise(() => {}) as never);
+
+    await fireEvent.press(screen.getByTestId("search-mode-biznisz"));
+
+    expect(screen.queryAllByTestId("map-pin")).toHaveLength(0);
+  });
+});

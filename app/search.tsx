@@ -254,8 +254,33 @@ export default function SearchScreen() {
   });
 
   // ── The map: one instance, the pins of the open tab, and a quick list item for the picked one.
+  // The pins belong to a search: after a new query, filter, place, reload, view or tab, the old
+  // ones go at once and the new ones appear when the search has come back — never a mix, never
+  // a leftover from the tab that was open before.
+  const openLoading =
+    mode === "biznisz" ? buzinessLoading : mode === "fife" ? fife.loading : requests.loading;
+  const searchKey = [
+    mode,
+    q,
+    scope,
+    reloadKey,
+    view,
+    mode === "fife" ? JSON.stringify(fifeCircle ?? null) : JSON.stringify(buzinessCircle ?? null),
+    buzinessIngyen,
+    JSON.stringify(requests.activeCenter ?? null),
+  ].join("|");
+  const [loadedKey, setLoadedKey] = useState("");
+  const wasLoading = useRef(false);
+  useEffect(() => {
+    // A search that finished: its results are the ones of the key it was started for (the
+    // latest, since a newer search cancels the answer of an older one on its own).
+    if (wasLoading.current && !openLoading) setLoadedKey(searchKey);
+    wasLoading.current = openLoading;
+  }, [openLoading, searchKey]);
+  const pinsFresh = loadedKey === searchKey;
+
   const biznisPins = useMemo(() => {
-    if (mode !== "biznisz" || view !== "map") return [];
+    if (mode !== "biznisz" || view !== "map" || !pinsFresh) return [];
     return buzinesses.flatMap((b) => {
       if (b.id < 0 || !b.location) return [];
       try {
@@ -267,7 +292,7 @@ export default function SearchScreen() {
         return [];
       }
     });
-  }, [mode, view, buzinesses]);
+  }, [mode, view, buzinesses, pinsFresh]);
 
   // A tap on a pin picks it. (No `title` on the markers: the map's own callout would open
   // instead of, or over, the quick list item.) The tap must not also reach the bare map, whose
@@ -312,9 +337,10 @@ export default function SearchScreen() {
       };
     }
     if (mode === "fife") {
-      const selected = fife.pinned.find((p) => p.id === selectedId);
+      const fifePins = pinsFresh ? fife.pinned : [];
+      const selected = fifePins.find((p) => p.id === selectedId);
       return {
-        markers: fife.pinned.map((profile) => (
+        markers: fifePins.map((profile) => (
           <FifeMarker
             key={profile.id}
             profile={profile}
@@ -339,9 +365,10 @@ export default function SearchScreen() {
         },
       };
     }
-    const selected = requests.pinned.find((r) => r.id === selectedId);
+    const requestPins = pinsFresh ? requests.pinned : [];
+    const selected = requestPins.find((r) => r.id === selectedId);
     return {
-      markers: requests.pinned.map((request) => (
+      markers: requestPins.map((request) => (
         <PinMarker
           key={request.id}
           coordinate={{ latitude: request.lat as number, longitude: request.long as number }}
