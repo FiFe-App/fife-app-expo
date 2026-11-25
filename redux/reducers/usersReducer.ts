@@ -9,7 +9,6 @@ const initialState: UsersState = {
   users: [],
   userSearchParams: {
     skip: 0,
-    text: "",
     loading: false,
     searchCircle: undefined,
     searchType: "list",

@@ -26,6 +26,9 @@ export const router = {
   dismissTo: jest.fn(),
 };
 
+/** The one navigation object every `useNavigation()` returns, so a test can read what a screen set. */
+export const navigation = { setOptions: jest.fn(), addListener: jest.fn() };
+
 let pathname = "/csatlakozom";
 // The real hook returns undefined until the navigator has mounted; code that
 // navigates on startup has to wait for it, so tests can take it away.
@@ -60,6 +63,7 @@ export const __resetRouter = () => {
   globalSearchParams = {};
   localSearchParams = {};
   (Object.values(router) as jest.Mock[]).forEach((fn) => fn.mockClear());
+  (Object.values(navigation) as jest.Mock[]).forEach((fn) => fn.mockClear());
 };
 
 export const usePathname = () => pathname;
@@ -68,7 +72,7 @@ export const useLocalSearchParams = () => localSearchParams;
 export const useSegments = () => pathname.split("/").filter(Boolean);
 export const useRouter = () => router;
 export const useRootNavigationState = () => rootNavigationState;
-export const useNavigation = () => ({ setOptions: jest.fn(), addListener: jest.fn() });
+export const useNavigation = () => navigation;
 
 /**
  * The real hook re-runs the effect every time the screen regains focus. Screens

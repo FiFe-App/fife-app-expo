@@ -45,29 +45,29 @@ const tutorialSteps: { message?: string; description?: string; key?: string; pag
   {
     message: "Ez a biznisz kereső oldal",
     description: "Itt kereshetsz a környékeden segítséget.",
-    page: "/biznisz"
+    page: "/search"
   },
   {
     key: "first-biznisz",
     message: "Ez egy biznisz",
     description: "Láthatod, hogy az adott emberhez milyen témákban fordulhatsz. ",
-    page: "/biznisz"
+    page: "/search"
   },
   {
     key: "filter",
     message: "Ha egy külön helyen keresnél, az kiválaszthatod ezzel a gombbal.",
-    page: "/biznisz"
+    page: "/search"
   },
   {
     key: "map-switch",
     message: "Térkép",
     description: "Ezeket a találatokat láthatod térképen is, ha erre a gombra nyomsz.",
-    page: "/biznisz"
+    page: "/search"
   },
   {
     key: "user",
     message: "A profil oldalon a saját adataidat láthatod",
-    page: "/biznisz"
+    page: "/search"
   },
   {
     key: "edit-profile",
