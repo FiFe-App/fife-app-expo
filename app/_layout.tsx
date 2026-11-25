@@ -355,7 +355,9 @@ function RootContent() {
 
                 <Stack.Screen
                   name="search"
-                  options={{ headerShown: true }}
+                  // One screen whatever it shows (the chips, queries and filters never route),
+                  // so even getting there is a cut, not a slide.
+                  options={{ headerShown: true, animation: "none" }}
                 />
 
                 <Stack.Screen

@@ -48,7 +48,6 @@ jest.mock("@/components/mapView/FiFeMap", () => {
   const FiFeMap = ({ children }: { children?: React.ReactNode }) => <View>{children}</View>;
   return FiFeMap;
 });
-jest.mock("@/components/buziness/BuzinessMap", () => ({ BuzinessMap: () => null }));
 jest.mock("@/hooks/useNotificationPrefs", () => ({
   useNotificationPrefs: () => ({ prefs: { aiEnhance: false }, setPref: jest.fn(), hydrated: true }),
 }));
@@ -94,6 +93,15 @@ const searchBox = () => {
   };
 };
 
+/** The app bar's Back: steps through the searches of the screen, true while there was one. */
+const pressBack = () => {
+  const { header } = navigation.setOptions.mock.calls.at(-1)?.[0] ?? {};
+  return header().props.onBack() as boolean;
+};
+
+const selected = (mode: string) =>
+  screen.getByTestId(`search-mode-${mode}`).props.accessibilityState?.selected;
+
 beforeEach(() => {
   __resetRouter();
   __resetSupabase();
@@ -119,22 +127,24 @@ describe("the search screen: every chip starts a search", () => {
     supabase.rpc.mockResolvedValue({ data: [], error: null });
     await renderWithProviders(<SearchScreen />, { store: createTestStore() });
 
-    const selected = (mode: string) =>
-      screen.getByTestId(`search-mode-${mode}`).props.accessibilityState?.selected;
     expect(selected("kerelem")).toBe(true);
     expect(selected("biznisz")).toBe(false);
     expect(selected("fife")).toBe(false);
   });
 
   it.each([
-    ["fife", { pathname: "/search", params: { mode: "fife" } }],
-    ["kerelem", { pathname: "/search", params: { mode: "kerelem", scope: "for_me" } }],
-  ] as const)("starts the default %s search from its chip, as a new history entry", async (mode, href) => {
+    ["fife", "FiFe Radar"],
+    ["kerelem", "Kérések neked"],
+  ] as const)("starts the default %s search from its chip, on the same screen", async (mode, title) => {
+    supabase.rpc.mockResolvedValue({ data: [], error: null });
     await renderWithProviders(<SearchScreen />, { store: createTestStore() });
 
     await fireEvent.press(screen.getByTestId(`search-mode-${mode}`));
 
-    expect(router.push).toHaveBeenCalledWith(href);
+    // One screen: nothing is routed, the chip, the title and the data change.
+    expect(router.push).not.toHaveBeenCalled();
+    expect(selected(mode)).toBe(true);
+    expect(screen.getByTestId("search-title")).toHaveTextContent(title);
   });
 
   it("reloads instead of stacking a twin when the active chip is tapped again", async () => {
@@ -151,9 +161,12 @@ describe("the search screen: every chip starts a search", () => {
     __setLocalSearchParams({ mode: "biznisz", q: "kert" });
     await renderWithProviders(<SearchScreen />, { store: createTestStore() });
 
+    expect(screen.getByTestId("search-title")).toHaveTextContent("Találatok a bizniszek között: kert");
+
     await fireEvent.press(screen.getByTestId("search-mode-biznisz"));
 
-    expect(router.push).toHaveBeenCalledWith({ pathname: "/search", params: { mode: "biznisz" } });
+    expect(router.push).not.toHaveBeenCalled();
+    expect(screen.getByTestId("search-title")).toHaveTextContent("Új bizniszek");
   });
 
   it("lists the FiFe Radar in fifék mode", async () => {
@@ -179,27 +192,46 @@ describe("the search screen: every chip starts a search", () => {
 });
 
 describe("the search screen: a search is a history entry", () => {
-  it("pushes a query search as a new entry and records it in the history", async () => {
+  it("adds a query search to the history of the screen, without routing", async () => {
     const store = createTestStore();
     await renderWithProviders(<SearchScreen />, { store });
 
     await act(async () => searchBox().onSearch("kert"));
 
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: "/search",
-      params: { mode: "biznisz", q: "kert" },
-    });
+    expect(router.push).not.toHaveBeenCalled();
+    expect(searchBox().initialText).toBe("kert");
+    expect(screen.getByTestId("search-title")).toHaveTextContent("Találatok a bizniszek között: kert");
     expect(store.getState().user.previousSearches).toEqual(["kert"]);
   });
 
-  it("pushes the empty search too, so Back can return to it", async () => {
+  it("adds the empty search too, so Back can return to it", async () => {
     __setLocalSearchParams({ mode: "biznisz", q: "kert" });
-    const store = createTestStore();
-    await renderWithProviders(<SearchScreen />, { store });
+    await renderWithProviders(<SearchScreen />, { store: createTestStore() });
 
     await act(async () => searchBox().onSearch(""));
+    expect(searchBox().initialText).toBe("");
 
-    expect(router.push).toHaveBeenCalledWith({ pathname: "/search", params: { mode: "biznisz" } });
+    // Back steps to the query search first, and only then leaves the screen.
+    await act(async () => {
+      expect(pressBack()).toBe(true);
+    });
+    expect(searchBox().initialText).toBe("kert");
+    await act(async () => {
+      expect(pressBack()).toBe(false);
+    });
+  });
+
+  it("steps back through the chips, too", async () => {
+    supabase.rpc.mockResolvedValue({ data: [], error: null });
+    await renderWithProviders(<SearchScreen />, { store: createTestStore() });
+    await fireEvent.press(screen.getByTestId("search-mode-fife"));
+    expect(selected("fife")).toBe(true);
+
+    await act(async () => {
+      expect(pressBack()).toBe(true);
+    });
+
+    expect(selected("biznisz")).toBe(true);
   });
 
   it("searches the kérések in the whole of them, not only the ones for the user", async () => {
@@ -210,10 +242,15 @@ describe("the search screen: a search is a history entry", () => {
 
     await act(async () => searchBox().onSearch("fúrógép"));
 
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: "/search",
-      params: { mode: "kerelem", q: "fúrógép", scope: "all" },
-    });
+    expect(router.push).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(supabase.functions.invoke).toHaveBeenLastCalledWith(
+        "request-search",
+        expect.objectContaining({
+          body: expect.objectContaining({ scope: "all", query: "fúrógép" }),
+        }),
+      ),
+    );
     expect(store.getState().user.previousSearches).toEqual([]);
   });
 
@@ -248,10 +285,8 @@ describe("the search screen: the previous searches", () => {
 
     await fireEvent.press(await screen.findByText("léckerítés"));
 
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: "/search",
-      params: { mode: "biznisz", q: "léckerítés" },
-    });
+    expect(router.push).not.toHaveBeenCalled();
+    expect(searchBox().initialText).toBe("léckerítés");
   });
 
   it("are kept apart per mode", async () => {
@@ -358,22 +393,22 @@ describe("the search screen: the map view", () => {
     const store = createTestStore();
     await renderWithProviders(<SearchScreen />, { store });
     await waitFor(() => expect(screen.getByText("Valami")).toBeTruthy());
-    expect(screen.queryByTestId("results-map")).toBeNull();
+    expect(screen.queryByTestId("search-map")).toBeNull();
 
     await fireEvent.press(screen.getByTestId("search-view-switch"));
 
     expect(store.getState().search.view).toBe("map");
-    expect(await screen.findByTestId("results-map")).toBeTruthy();
+    expect(await screen.findByTestId("search-map")).toBeTruthy();
     // No list on the map: the request shows only as a pin, and as a card once it is picked.
     expect(screen.queryByText("Valami")).toBeNull();
     await fireEvent.press((await screen.findAllByTestId("map-pin"))[0]);
     expect(await screen.findByText("Valami")).toBeTruthy();
 
-    // The switch is among the map's own buttons now, still one.
+    // One switch, at the same place in both views.
     expect(screen.getAllByTestId("search-view-switch")).toHaveLength(1);
     await fireEvent.press(screen.getByTestId("search-view-switch"));
     expect(store.getState().search.view).toBe("list");
-    await waitFor(() => expect(screen.queryByTestId("results-map")).toBeNull());
+    await waitFor(() => expect(screen.queryByTestId("search-map")).toBeNull());
   });
 
   it("asks for a big page of the kérések for the map", async () => {
@@ -491,7 +526,15 @@ describe("the search screen: Finomítás", () => {
     await fireEvent.press(await screen.findByTestId("requests-scope-mine"));
 
     // Not a new history entry: the filter refines the search on screen.
-    expect(router.setParams).toHaveBeenCalledWith({ scope: "mine" });
     expect(router.push).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(supabase.rpc).toHaveBeenLastCalledWith(
+        "requests_feed",
+        expect.objectContaining({ p_scope: "mine" }),
+      ),
+    );
+    await act(async () => {
+      expect(pressBack()).toBe(false);
+    });
   });
 });

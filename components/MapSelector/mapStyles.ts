@@ -248,3 +248,91 @@ export const darkMapStyle = [
     stylers: [{ color: "#4fc3f7" }],                                       // light blue
   },
 ];
+
+
+// ── Mi side (the lavender community side, see modeTokens.mi in assets/theme.ts) ─────────────────
+interface MapPalette {
+  base: string;       // land
+  background: string; // label halo
+  text: string;
+  textMuted: string;
+  accent: string;     // POI / station labels
+  poi: string;
+  park: string;
+  road: string;
+  arterial: string;
+  highway: string;
+  highwayStroke: string;
+  transit: string;
+  water: string;
+  waterText: string;
+}
+
+const buildMapStyle = (p: MapPalette) => [
+  { elementType: "geometry", stylers: [{ color: p.base }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: p.text }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: p.background }] },
+  { featureType: "administrative.land_parcel", elementType: "labels.text.fill", stylers: [{ color: p.textMuted }] },
+  { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: p.textMuted }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: p.poi }] },
+  { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: p.accent }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: p.park }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: p.road }] },
+  { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: p.arterial }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: p.highway }] },
+  { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: p.text }] },
+  { featureType: "road.highway", elementType: "labels.text.stroke", stylers: [{ color: p.highwayStroke }] },
+  { featureType: "road.local", elementType: "labels.text.fill", stylers: [{ color: p.textMuted }] },
+  { featureType: "transit.line", elementType: "geometry", stylers: [{ color: p.transit }] },
+  { featureType: "transit.station", elementType: "geometry", stylers: [{ color: p.poi }] },
+  { featureType: "transit.station", elementType: "labels.text.fill", stylers: [{ color: p.accent }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: p.water }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: p.waterText }] },
+];
+
+/** Lavender map: the Mi tokens (background #faf8ff, surfaceVariant #EFEAFF, accent #4B2FB8). */
+export const miLightMapStyle = buildMapStyle({
+  base: "#EFEAFF",
+  background: "#faf8ff",
+  text: "#2A1F5C",
+  textMuted: "#6E62A6",
+  accent: "#4B2FB8",
+  poi: "#E4DCFF",
+  park: "#D8E6DC",
+  road: "#FFFFFF",
+  arterial: "#F6F2FF",
+  highway: "#CFC4F2",
+  highwayStroke: "#E4DCFF",
+  transit: "#CFC4F2",
+  water: "#B9C8F5",
+  waterText: "#3A4A9E",
+});
+
+/** Deep purple map: the dark Mi tokens (background #1C1830, surface #2A2447, accent #CFC4FF). */
+export const miDarkMapStyle = buildMapStyle({
+  base: "#1C1830",
+  background: "#1C1830",
+  text: "#CFC4FF",
+  textMuted: "#9C90D0",
+  accent: "#CFC4FF",
+  poi: "#2A2447",
+  park: "#203540",
+  road: "#352E57",
+  arterial: "#3F3766",
+  highway: "#4A4270",
+  highwayStroke: "#1C1830",
+  transit: "#4A4270",
+  water: "#120F24",
+  waterText: "#8F9EE8",
+});
+
+/** The map style that goes with a side of the app and the light / dark theme. */
+export const mapStyleFor = (mode: "en" | "mi", isDark: boolean) =>
+  mode === "mi"
+    ? isDark
+      ? miDarkMapStyle
+      : miLightMapStyle
+    : isDark
+      ? darkMapStyle
+      : lightMapStyle;

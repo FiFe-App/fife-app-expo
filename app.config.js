@@ -28,6 +28,11 @@ export default {
     supportsTablet: false,
     bundleIdentifier: "com.fife.app",
     appleTeamId: "BRWA92BF9J",
+    // Google Maps on iOS (react-native-maps' google provider) so the map can wear the app's
+    // style: without a key iOS keeps using Apple Maps, which cannot be styled.
+    ...(process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS
+      ? { config: { googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS } }
+      : {}),
     associatedDomains: [
       "applinks:fifeapp.hu",
       "webcredentials:fifeapp.hu"
@@ -82,7 +87,8 @@ export default {
     [
       "react-native-maps",
       {
-        "androidGoogleMapsApiKey": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_ANDROID
+        "androidGoogleMapsApiKey": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_ANDROID,
+        "iosGoogleMapsApiKey": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS
       }
     ],
     [

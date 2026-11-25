@@ -10,7 +10,20 @@ import { BorderRadius } from "@/constants/borderRadius";
 import { useAppTheme } from "@/assets/theme";
 import FakeSearchInput from "./FakeSearchInput";
 
-export const MyAppbar = ({ center, title, style, actions }: { center?: ReactNode, title?: string, style?: ViewStyle, actions?: ReactNode }) => {
+export const MyAppbar = ({
+  center,
+  title,
+  style,
+  actions,
+  onBack,
+}: {
+  center?: ReactNode;
+  title?: string;
+  style?: ViewStyle;
+  actions?: ReactNode;
+  /** Gets the first go at the back arrow: return true when it stepped back itself. */
+  onBack?: () => boolean;
+}) => {
   const navigation = useNavigation();
   const theme = useAppTheme();
   const { options } = useSelector((state: RootState) => state.info);
@@ -31,9 +44,11 @@ export const MyAppbar = ({ center, title, style, actions }: { center?: ReactNode
           {
             pathname !== "/home" && pathname !== "/" && pathname !== "/me"
             && <Appbar.BackAction
-              onPress={() =>
-                navigation.canGoBack() ? navigation.goBack() : router.push("/")
-              }
+              onPress={() => {
+                if (onBack?.()) return;
+                if (navigation.canGoBack()) navigation.goBack();
+                else router.push("/");
+              }}
             />
           }
         </View>

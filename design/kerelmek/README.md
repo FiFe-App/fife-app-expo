@@ -264,7 +264,7 @@ Korlátok, amiket a tervezésnél figyelembe kell venni:
 
 ## Keresés oldal újratervezve (`/search`)
 
-- **Egyetlen hely minden kereséshez.** A `/biznisz` oldal megszűnt (a route csak átirányít a keresésre), a bizniszek, fifék és kérések találatai is a `search.tsx`-en vannak. A keresés állapota a route-ban él (`/search?mode=…&q=…&scope=…`), ezért minden konkrét keresés — az üres is — külön előzmény-bejegyzés, és a Vissza gomb az előzőre visz.
+- **Egyetlen hely minden kereséshez.** A `/biznisz` oldal megszűnt (a route csak átirányít a keresésre), a bizniszek, fifék és kérések találatai is a `search.tsx`-en vannak. A route csak a kezdő keresést adja (`/search?mode=…&q=…&scope=…`); ezután a képernyő a saját előzményét vezeti (`useSearchHistory`), így minden konkrét keresés — az üres is — külön bejegyzés, a Vissza gomb (nyíl, hardveres, böngészős) az előzőre visz, és semmi nem routol: nincs animáció a keresések között.
 - **Minden chip alapkeresést indít:** Bizniszek → új bizniszek, Fifék → FiFe Radar, Kérések → kérések neked. Az aktív chip kitöltött (primary) színű. Ugyanarra a chipre koppintva (üres kereséssel) újratölt, nem halmoz egy ikerbejegyzést.
 - **Korábbi keresések** csak akkor látszanak, ha a felhasználó a keresőmezőbe koppint (a lista a mező elhagyásakor eltűnik). A kéréseknek nincs keresési előzménye. A billentyűzet csak akkor nyílik meg, ha a keresőmezőre koppintva (a Környék és az Otthon álkeresője, `focus=1`) érkezik a felhasználó.
 - **Cím ("Találatok")** a kategóriától és a szűrőtől függ: "Új bizniszek", "FiFe Radar", "Kérések neked", "Találatok a kérések között: kert · saját", "Új bizniszek · ingyenes, kiválasztott helyen".
@@ -297,3 +297,12 @@ Korlátok, amiket a tervezésnél figyelembe kell venni:
 - **Nincs sugár.** A kérés helye egy pont vagy "Bárhol": a modalból kikerült a sugár-választó, a `create-request` nem fogad el sugarat, és a `requests.radius` oszlop megszűnt (migráció: `20261121120000_drop_requests_radius.sql`). Hogy egy kérés kinek "való" (Neked szelet), azt a `requests_feed` egyetlen, hívótól függő távolsággal dönti el (`p_max_distance`, alapból 20 km).
 - **A Vissza gomb zárja a modalt**: Androidon a hardveres gomb, weben a böngésző Vissza gombja (a modal egy saját előzmény-bejegyzést tesz, amit bezáráskor kivesz), nem a modal alatti képernyőről lép el.
 - **A cím mindig teljesen látszik**: alapból egy sor, a szöveg hosszával nő, legfeljebb 7 sorig, onnan görgethető.
+
+## Egy képernyő, egy térkép (`/search`)
+
+- **Nincs routolás a keresésen belül.** A chipek, a lekérdezések és a szűrők nem váltanak route-ot (`router.push` / `setParams` helyett belső előzmény), a `search` képernyő animációja `none`, így az egész egyetlen képernyőnek tűnik. Kívülről érkező új paraméter (link, tab) új első keresést indít.
+- **Egyetlen térkép-példány** (`components/search/SearchMap.tsx`): a három fül adatát a `search.tsx` tölti (`useBuzinessSearch`, `useFifeResults`, `useRequestResults`, csak a nyitott fül kér), a térkép csak a pinjeit cseréli (`pins.tsx`: `BuzinessPin`, `FifePin`, `RequestPin`). A lista nézet külön komponens (`BuzinessResults`, `UsersList`, `RequestList`).
+- **Nézetváltó a jobb felső sarokban**, a cím / Finomítás sorban, mindkét nézetben ugyanazon a helyen. A térkép gombjai (pozícióm, zoom +/−) a jobb alsó sarokban, ugyanazzal a tonális `MapButton` stílussal; az egyetlen abszolút réteg a `MapOverlay` (gombok + kártya / "Keress ezen a környéken" egy oszlopban az Én/Mi váltó fölött), ezért nem akadhatnak össze.
+- **Pin-választás mindhárom fülön azonos:** a pinre koppintva a "Keress ezen a környéken" gomb helyén a rekord gyors lista-eleme jelenik meg (`BuzinessItem` / `UserItem` / `RequestCard`); a térkép hátterére koppintva vagy fület váltva a kijelölés megszűnik.
+- **Térkép- és pin-téma az Én / Mi módhoz:** `mapStyleFor(mode, isDark)` — Mi módban lila (levendula) térkép és pinek, világos és sötét változatban. A pinek a téma `secondaryContainer` színeit követik.
+- **iOS (Apple Maps):** a kamera `altitude`-ot használ (nem `zoom`-ot), a nagyítás régió-alapú (`animateToRegion`), a pozíció-gomb az eszköz helyét kéri (a szimulátornak nincs profil-helye). Apple Maps-en nincs egyéni stílus, ezért a lila téma ott nem jelenik meg; ha kell, `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS` megadásával és natív újraépítéssel iOS-en is Google Maps jön.

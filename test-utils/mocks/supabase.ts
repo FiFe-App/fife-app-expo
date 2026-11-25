@@ -105,6 +105,7 @@ export const storageBucket = (bucket: string) => {
   return existing;
 };
 
+/* eslint-disable @typescript-eslint/no-unused-vars -- the parameters only give the mocks their call types */
 export const supabase = {
   auth,
   from: jest.fn((table: string) => createQueryBuilder(table)),
@@ -120,9 +121,16 @@ export const supabase = {
     unsubscribe: jest.fn(),
   })),
   removeChannel: jest.fn(),
-  functions: { invoke: jest.fn(() => Promise.resolve({ data: null, error: null })) },
+  functions: {
+    invoke: jest.fn(
+      (_name?: string, _options?: Record<string, unknown>): Promise<QueryResult> =>
+        Promise.resolve({ data: null, error: null }),
+    ),
+  },
   storage: { from: jest.fn((bucket: string) => storageBucket(bucket)) },
 };
+
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 /** Clears recorded calls and registered table results. Call from `beforeEach`. */
 export const __resetSupabase = () => {

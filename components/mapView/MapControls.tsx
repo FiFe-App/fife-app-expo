@@ -2,67 +2,59 @@ import { MODE_SWITCH_CLEARANCE } from "@/constants/layout";
 import { Spacing } from "@/constants/spacing";
 import type { ReactNode } from "react";
 import { View } from "react-native";
-import { FAB, IconButton } from "react-native-paper";
+import MapButton from "./MapButton";
 
 interface MapControlsProps {
   /** Whether the user's position is known (decides the icon of the locate button). */
   located: boolean;
   onLocate: () => void;
   onZoom: (by: number) => void;
-  /** The list / map switch: it lives in the same column as the other buttons. */
-  viewSwitch?: ReactNode;
 }
 
-/**
- * The buttons floating over a map, in ONE column at the top right: locate, zoom, and the
- * list / map switch. Keeping them together (and clear of the bottom) is what stops them from
- * landing on each other, on the Én/Mi switch of the bottom bar, or on the card of a picked pin.
- */
-export const MapControls = ({ located, onLocate, onZoom, viewSwitch }: MapControlsProps) => (
-  <View
-    pointerEvents="box-none"
-    style={{
-      position: "absolute",
-      top: Spacing.sm,
-      right: Spacing.sm,
-      alignItems: "flex-end",
-      gap: Spacing.sm,
-      zIndex: 10,
-    }}
-  >
-    <FAB
+/** Locate, zoom in, zoom out: one column of the same round buttons. */
+export const MapControls = ({ located, onLocate, onZoom }: MapControlsProps) => (
+  <View style={{ gap: Spacing.sm, alignItems: "flex-end" }}>
+    <MapButton
       testID="map-locate"
-      size="small"
-      icon={located ? "map-marker" : "map-marker-question"}
+      icon={located ? "crosshairs-gps" : "crosshairs-question"}
       accessibilityLabel="Ugrás a pozíciómra"
       onPress={onLocate}
     />
     <View>
-      <IconButton
+      <MapButton
         testID="map-zoom-in"
         icon="plus"
-        style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0, margin: 0 }}
+        accessibilityLabel="Nagyítás"
+        style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }}
         onPress={() => onZoom(1)}
-        mode="contained"
       />
-      <IconButton
+      <MapButton
         testID="map-zoom-out"
         icon="minus"
-        style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, margin: 0 }}
+        accessibilityLabel="Kicsinyítés"
+        style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
         onPress={() => onZoom(-1)}
-        mode="contained"
       />
     </View>
-    {viewSwitch}
   </View>
 );
 
 /**
- * What sits at the bottom of a map: the card of the picked pin, or the "search around here"
- * button. It rests above the Én/Mi switch, which rises out of the bottom bar over the map.
+ * The ONE absolutely positioned layer over the map: a column resting above the Én/Mi switch
+ * (which rises out of the bottom bar over the map), holding — from the top — the map buttons at
+ * the right and then the card of the picked pin or the "search around here" button. Because they
+ * are rows of one column and not separately placed, they cannot land on one another, whatever
+ * the height of the card is.
  */
-export const MapBottom = ({ children }: { children?: ReactNode }) => (
+export const MapOverlay = ({
+  controls,
+  children,
+}: {
+  controls: ReactNode;
+  children?: ReactNode;
+}) => (
   <View
+    testID="map-overlay"
     pointerEvents="box-none"
     style={{
       position: "absolute",
@@ -70,10 +62,15 @@ export const MapBottom = ({ children }: { children?: ReactNode }) => (
       right: 0,
       bottom: MODE_SWITCH_CLEARANCE + Spacing.sm,
       paddingHorizontal: Spacing.sm,
-      alignItems: "center",
+      gap: Spacing.sm,
       zIndex: 10,
     }}
   >
-    {children}
+    <View pointerEvents="box-none" style={{ alignItems: "flex-end" }}>
+      {controls}
+    </View>
+    <View pointerEvents="box-none" style={{ alignItems: "center" }}>
+      {children}
+    </View>
   </View>
 );
